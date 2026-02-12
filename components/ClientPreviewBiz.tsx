@@ -18,13 +18,22 @@ type DeviceMode = 'desktop' | 'tablet' | 'mobile' | 'foldable';
 type FrameOption = 'dynamicIsland' | 'cameraDot' | 'none';
 
 // --- MOCK STATUS BAR COMPONENT ---
-const MockStatusBar = ({ width, isDark }: { width: number; isDark: boolean }) => {
+const MockStatusBar = ({ width, isDark, heightPx }: { width: number; isDark: boolean; heightPx: number }) => {
     const textColor = isDark ? 'text-white' : 'text-black';
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     return (
-        <div className={`absolute top-0 left-0 right-0 z-[65] flex items-center justify-between px-6 ${textColor} pointer-events-none`}
-            style={{ fontSize: width < 500 ? '12px' : '13px', fontWeight: 600, letterSpacing: '0.01em', height: '44px' }}>
+        <div
+            className={`absolute top-0 left-0 right-0 z-[65] flex items-center justify-between px-6 ${textColor} pointer-events-none`}
+            style={{
+                fontSize: width < 500 ? '12px' : '13px',
+                fontWeight: 600,
+                letterSpacing: '0.01em',
+                height: `${heightPx}px`,
+                // In light mode, the status bar should read as a "white" bar like iOS.
+                backgroundColor: isDark ? 'transparent' : 'rgba(241,245,249,0.96)',
+            }}
+        >
             <span>{timeStr}</span>
             <div className="flex items-center gap-1.5" style={{ fontSize: width < 500 ? '10px' : '11px' }}>
                 <Signal className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -76,6 +85,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [pendingMode, setPendingMode] = useState<DeviceMode | null>(null);
     const [isDesktopFadingIn, setIsDesktopFadingIn] = useState(false);
+    const [iframeThemeIsDark, setIframeThemeIsDark] = useState<boolean | null>(null);
 
     // --- VIEWPORT DETECTION ---
     const [viewportClass, setViewportClass] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -96,6 +106,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     const isRawMode = searchParams.get('raw') === '1';
     const resolvedThemeMode: 'light' | 'dark' | 'system' = themeMode || 'system';
     const isDarkForStatusBar = resolvedThemeMode === 'dark' || (resolvedThemeMode === 'system' && isDarkMode);
+    const statusBarIsDark = iframeThemeIsDark ?? isDarkForStatusBar;
 
     // State
     const [accessDenied, setAccessDenied] = useState(false);
@@ -114,6 +125,26 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
 
     // Sync state if prop changes (important for Creator Editor live preview)
     useEffect(() => { setProject(initialProject); }, [initialProject]);
+
+    // Theme bridge: when the preview runs inside an iframe, its local theme toggles do not automatically
+    // affect the outer simulator chrome. Listen for theme updates so the mock status bar always matches.
+    useEffect(() => {
+        const onMessage = (event: MessageEvent) => {
+            if (event.origin !== window.location.origin) return;
+            const data = event.data as any;
+            if (!data || data.type !== 'TRUEHANDOVER_PREVIEW_THEME') return;
+            if (typeof data.isDarkMode !== 'boolean') return;
+            setIframeThemeIsDark(data.isDarkMode);
+        };
+        window.addEventListener('message', onMessage);
+        return () => window.removeEventListener('message', onMessage);
+    }, []);
+
+    // If the canvas toggles theme/device, let the status bar follow the canvas immediately
+    // (the iframe will re-report its theme after reload).
+    useEffect(() => {
+        setIframeThemeIsDark(null);
+    }, [deviceMode, themeMode]);
 
     // Access Control Logic (One-Time Links)
     useEffect(() => {
@@ -251,10 +282,18 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     }, [deviceMode, orientation, isRawMode]);
 
     // Construct iframe URL — include safe-area padding params
+    const statusBarHeightPx =
+        deviceMode === 'mobile' && orientation === 'portrait' ? 44 :
+            deviceMode === 'mobile' && orientation === 'landscape' ? 24 :
+                deviceMode === 'tablet' && orientation === 'portrait' ? 32 :
+                    deviceMode === 'tablet' && orientation === 'landscape' ? 24 :
+                        deviceMode === 'foldable' && orientation === 'portrait' ? 32 :
+                            24;
+
     const iframeSrc = useMemo(() => {
         const base = window.location.origin + window.location.pathname;
-        return `${base}#/preview/${project.id}?raw=1&theme=${themeMode || 'system'}&pt=44&pb=20&device=${deviceMode}`;
-    }, [project.id, themeMode, deviceMode]);
+        return `${base}#/preview/${project.id}?raw=1&theme=${themeMode || 'system'}&pt=${statusBarHeightPx}&pb=20&device=${deviceMode}`;
+    }, [project.id, themeMode, deviceMode, statusBarHeightPx]);
 
     // --- RENDER: ClientPreviewPage (props bundle) ---
     const previewProps = {
@@ -498,7 +537,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                             style={{ borderRadius: device.bezelRadius, border: `${device.bezelWidth}px solid #222230` }}
                         >
                             {/* === MOCK STATUS BAR === */}
-                            <MockStatusBar width={frameW} isDark={isDarkForStatusBar} />
+                            <MockStatusBar width={frameW} isDark={statusBarIsDark} heightPx={statusBarHeightPx} />
 
                             {/* Pill-shaped Dynamic Island — mobile only, portrait only */}
                             {isMobile && isPortrait && frameOption === 'dynamicIsland' && (

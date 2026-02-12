@@ -218,7 +218,8 @@ const Nav = ({ onStart, currentTheme, toggleTheme, isHidden }: { onStart: () => 
     return (
         <nav
             className={`fixed top-0 left-0 right-0 z-50 px-6 pb-6 transition-all duration-500 ${isHidden ? 'opacity-0 -translate-y-full pointer-events-none' : 'opacity-100 translate-y-0'}`}
-            style={{ paddingTop: 'max(24px, calc(env(safe-area-inset-top, 0px) + 12px))' }}
+            // Nudge the nav pill down slightly so it never feels cramped against the status bar.
+            style={{ paddingTop: 'max(32px, calc(env(safe-area-inset-top, 0px) + 18px))' }}
         >
             <div className="max-w-[1200px] mx-auto bg-white/80 dark:bg-[#0E0E11]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
                 <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
