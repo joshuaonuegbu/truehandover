@@ -34,8 +34,8 @@ interface ClientPreviewPageProps {
     onPaymentComplete: () => void;
     handleSubmitRevision: (text: string) => void;
     handleDeleteRevision: (index: number) => void;
-    activeFilter: string;
-    setActiveFilter: (filter: 'all' | 'image' | 'doc') => void;
+    activeFilter: 'all' | 'image' | 'doc' | 'video' | 'audio' | 'archive';
+    setActiveFilter: (filter: 'all' | 'image' | 'doc' | 'video' | 'audio' | 'archive') => void;
     theme: any;
     filteredFiles: FileAsset[];
     handleRequestCorrection: (index: number) => void;
@@ -702,6 +702,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     const deviceType = deviceParam === 'tablet' || deviceParam === 'mobile' || deviceParam === 'foldable' ? deviceParam : null;
     const isCanvasSim = Boolean(deviceType);
     const isPhoneLike = Math.min(viewport.width, viewport.height) < 500;
+    const isRealTabletViewport = !deviceType && isBelowLg && !isPhoneLike;
 
     // Enable a true split layout for any landscape device inside the simulator, and for real devices
     // below `lg` (this includes phone landscape, where the sidebar can be collapsed).
@@ -719,7 +720,8 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     // Extra top breathing room below the (mock) status bar:
     // - Mobile portrait can afford slightly more
     // - Everything else sits a touch closer for tighter, more premium spacing.
-    const headerExtraTopPx = deviceType === 'mobile' && !isLandscape ? 8 : 4;
+    // Real tablet responsive (no mock status bar): add a bit more breathing room so the glass header doesn't feel cramped.
+    const headerExtraTopPx = deviceType === 'mobile' && !isLandscape ? 8 : isRealTabletViewport ? 10 : 4;
     const headerChromePadTop = `calc(${headerSafeTop} + ${headerExtraTopPx}px)`;
     const hasMockStatusBar = Boolean(deviceType);
     const isActualDesktopViewport = !deviceType && !isBelowLg;
@@ -1046,7 +1048,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
             `}>
                 <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden">
                     {theme.wallpaper ? (
-                        // ADJUSTED: Opacity adjusted per user request â€” Light boosted to full, Dark: 60%
+                        // ADJUSTED: Opacity adjusted per user request — Light boosted to full, Dark: 60%
                         <img src={theme.wallpaper} className={`w-full h-full object-cover transition-all duration-700 ${isDarkMode ? 'opacity-60 grayscale-[20%]' : 'opacity-100 grayscale-0'}`} alt="Background" />
                     ) : (
                         // GOLDILOCKS STYLE: If no wallpaper, show a subtle radial gradient to create "nice" depth without being overwhelming
@@ -1066,7 +1068,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                 <div className={`absolute inset-0 z-10 bg-gradient-to-b ${sidebarOverlay} backdrop-blur-[1px]`} />
                 <div className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.1)_100%)]" />
 
-                {/* Drag handle removed per user feedback â€” X button is sufficient */}
+                {/* Drag handle removed per user feedback — X button is sufficient */}
 
                 {/* Mobile/Tablet Header (stacked layout) */}
                  {!isEmbedded && !isLandscapeSplit && (
@@ -1110,7 +1112,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                     </div>
                 )}
 
-                {/* Split Header (Landscape) â€” docked sidebar with collapse control */}
+                {/* Split Header (Landscape) — docked sidebar with collapse control */}
                 {!isEmbedded && isLandscapeSplit && (
                     <div
                         className={`lg:hidden relative shrink-0 z-50 border-b border-slate-200 dark:border-white/5 ${isDarkMode ? 'bg-[#2b2b38]' : 'bg-[#f1f5f9]'}`}
@@ -1156,9 +1158,9 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                     <span className="text-xs font-bold uppercase tracking-widest">Back</span>
                                 </button>
                             )}
-                            {/* Creator Preview Disclaimer â€” shown on full preview routes (not embedded editor preview). */}
+                            {/* Creator Preview Disclaimer — shown on full preview routes (not embedded editor preview). */}
                             {!isEmbedded && !project.clientViewedAt && (
-                                <div className={`px-4 py-2 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-50 border-amber-200 text-amber-600'}`}>
+                                <div className={`px-4 py-2 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-700'}`}>
                                     <Eye className="w-3.5 h-3.5" />
                                     <span>Creator Preview</span>
                                 </div>
@@ -1309,7 +1311,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
 
                             <div className="flex items-center gap-3 pointer-events-auto">
                                 {!isEmbedded && !project.clientViewedAt && (
-                                    <div className={`px-3 py-1.5 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-50 border-amber-200 text-amber-600'}`}>
+                                    <div className={`px-3 py-1.5 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-700'}`}>
                                         <Eye className="w-3.5 h-3.5" />
                                         <span>Creator Preview</span>
                                     </div>
@@ -1330,7 +1332,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             >
                                 <div
                                     className={`border-b backdrop-blur-md ${isDarkMode ? 'bg-black/20 border-white/10' : 'bg-white/70 border-slate-200'}`}
-                                    style={{ paddingTop: hasMockStatusBar ? headerChromePadTop : '0px' }}
+                                    style={{ paddingTop: hasMockStatusBar ? headerChromePadTop : (isRealTabletViewport ? '12px' : '0px') }}
                                 >
                                     {isTrueDesktop && (
                                         <style>{`
@@ -1384,7 +1386,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                         </div>
 
                                         {!project.clientViewedAt && (
-                                            <div className={`hidden md:flex px-3 py-1.5 rounded-full items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-50 border-amber-200 text-amber-600'}`}>
+                                            <div className={`hidden md:flex px-3 py-1.5 rounded-full items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-700'}`}>
                                                 <Eye className="w-3.5 h-3.5" />
                                                 <span>Creator Preview</span>
                                             </div>
@@ -1420,7 +1422,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                         </section>
                     )}
 
-                    {/* Inline back/details row â€” appears when mobile header hides, scrolls with content */}
+                    {/* Inline back/details row — appears when mobile header hides, scrolls with content */}
                     {!isEmbedded && !isLandscapeSplit && isMobileHeaderHidden && !isMobileInfoOpen && (
                         <div className="lg:hidden sticky top-0 z-40 flex items-center justify-between mb-3 py-2 animate-fade-in">
                             <button
@@ -1471,7 +1473,27 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 <div className={`h-8 w-px ${isDarkMode ? 'bg-white/10' : 'bg-slate-200'} shrink-0`} />
                                 <div className={`flex p-1 ${isDarkMode ? 'bg-white/5 border-white/5' : 'bg-slate-100 border-slate-200'} rounded-lg border shrink-0`}><button aria-label="Toggle Theme" onClick={onToggleTheme} className={`p-2 rounded-md transition-all shadow-sm hover:shadow-md ${isDarkMode ? 'hover:bg-white/10 text-slate-400' : 'hover:bg-white text-slate-500'}`} title={`Theme: ${themeMode ? themeMode.charAt(0).toUpperCase() + themeMode.slice(1) : 'Toggle'}`}>{(!themeMode || themeMode === 'light') && <Sun className="w-4 h-4" />}{themeMode === 'dark' && <Moon className="w-4 h-4" />}{themeMode === 'system' && <Monitor className="w-4 h-4" />}</button></div>
                                 <div className={`h-8 w-px ${isDarkMode ? 'bg-white/10' : 'bg-slate-200'} shrink-0`} />
-                                <div className="flex gap-2 shrink-0">{['all', 'image', 'doc'].map((filter) => (<button key={filter} onClick={() => setActiveFilter(filter as any)} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeFilter === filter ? (isDarkMode ? 'bg-white text-black shadow-lg' : 'bg-slate-900 text-white shadow-lg') : (isDarkMode ? 'text-slate-500 hover:bg-white/5' : 'text-slate-500 hover:bg-slate-100')}`}>{filter}</button>))}</div>
+                                <div className="flex gap-2 shrink-0">
+                                    {[
+                                        { id: 'all', label: 'All' },
+                                        { id: 'image', label: 'Image' },
+                                        { id: 'doc', label: 'Doc' },
+                                        { id: 'video', label: 'Video' },
+                                        { id: 'audio', label: 'Audio' },
+                                        { id: 'archive', label: 'Archive' },
+                                    ].map(({ id, label }) => (
+                                        <button
+                                            key={id}
+                                            onClick={() => setActiveFilter(id as any)}
+                                            title={label}
+                                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeFilter === id
+                                                ? (isDarkMode ? 'bg-white text-black shadow-lg' : 'bg-slate-900 text-white shadow-lg')
+                                                : (isDarkMode ? 'text-slate-500 hover:bg-white/5' : 'text-slate-500 hover:bg-slate-100')}`}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
@@ -1541,28 +1563,58 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
             {isCanvasSim && isLearnMoreOpen && (
                 <div className="fixed inset-0 z-[120] flex items-center justify-center p-5 sm:p-6" role="dialog" aria-modal="true">
                     <div className="absolute inset-0 bg-black/50 backdrop-blur-xl" onClick={() => setIsLearnMoreOpen(false)} />
-                    <div className={`relative w-full max-w-lg rounded-[2rem] border shadow-2xl overflow-hidden ${isDarkMode ? 'bg-[#181822]/95 border-white/10 text-white' : 'bg-white/95 border-slate-200 text-slate-900'}`}>
+                    <div className={`relative w-full max-w-lg max-h-[85vh] rounded-[2rem] border shadow-2xl overflow-hidden flex flex-col ${isDarkMode ? 'bg-[#181822]/95 border-white/10 text-white' : 'bg-white/95 border-slate-200 text-slate-900'}`}>
                         <div className={`px-6 py-5 border-b ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
-                            <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center justify-between gap-4">
                                 <div className="min-w-0">
                                     <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Preview Mode</p>
                                     <h3 className="font-serif text-xl font-bold truncate">About TrueHandover</h3>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsLearnMoreOpen(false)}
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border-white/10 hover:bg-white/15 text-white' : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'}`}
-                                    aria-label="Close"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
+                                <div className="flex items-center gap-2 shrink-0">
+                                    <a
+                                        href="https://truehandover.com"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-white/10 border-white/10 text-white hover:bg-white/15' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}`}
+                                        title="Opens in a new tab (exits simulation)"
+                                    >
+                                        <span>truehandover.com</span>
+                                        <ExternalLink className="w-3.5 h-3.5" />
+                                    </a>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsLearnMoreOpen(false)}
+                                        className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border-white/10 hover:bg-white/15 text-white' : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'}`}
+                                        aria-label="Close"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div className="px-6 py-6 space-y-4">
+                        <div className="px-6 py-6 space-y-4 overflow-y-auto">
                             <p className={`text-sm leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
                                 You're viewing a simulated client preview. This environment helps you sanity-check layout, navigation,
                                 and how your deliverables feel across devices.
                             </p>
+                            <div className={`rounded-2xl px-4 py-3 border ${isDarkMode ? 'bg-white/5 border-white/10 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
+                                <p className="text-[11px] leading-relaxed">
+                                    Visiting <span className={`${isDarkMode ? 'text-white' : 'text-slate-900'} font-bold`}>truehandover.com</span> opens the product website in a new tab.
+                                    It is not your client portal domain (whitelabel/custom domains are separate).
+                                </p>
+                                <a
+                                    href="https://truehandover.com"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`mt-3 inline-flex sm:hidden items-center gap-2 px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${isDarkMode ? 'bg-white/10 border-white/10 text-white hover:bg-white/15' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                                >
+                                    <span>truehandover.com</span>
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                </a>
+                                <p className={`mt-2 text-[9px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                                    Opens in new tab (exits simulation)
+                                </p>
+                            </div>
                             <div className={`rounded-2xl p-4 border ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                                 <p className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Tip</p>
                                 <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
@@ -1570,24 +1622,11 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 </p>
                             </div>
                         </div>
-                        <div className="px-6 pb-6 flex items-end justify-end gap-2 flex-wrap">
-                            <div className="flex flex-col items-end gap-1">
-                                <a
-                                    href={`${window.location.origin}${window.location.pathname}#/`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-white/10 border-white/10 text-white hover:bg-white/15' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
-                                >
-                                    Open TrueHandover Site
-                                </a>
-                                <span className={`text-[9px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                                    Opens in new tab (exits simulation)
-                                </span>
-                            </div>
+                        <div className="px-6 pb-6 pt-1 flex items-center justify-end">
                             <button
                                 type="button"
                                 onClick={() => setIsLearnMoreOpen(false)}
-                                className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-[#bef264] hover:bg-[#a3e635] text-black' : 'bg-slate-900 hover:bg-slate-800 text-white'}`}
+                                className={`w-full sm:w-auto px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-[#bef264] hover:bg-[#a3e635] text-black' : 'bg-slate-900 hover:bg-slate-800 text-white'}`}
                             >
                                 Continue Preview
                             </button>

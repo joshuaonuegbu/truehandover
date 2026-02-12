@@ -72,7 +72,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
     const [project, setProject] = useState<Project>(initialProject);
-    const [activeFilter, setActiveFilter] = useState<'all' | 'image' | 'doc'>('all');
+    const [activeFilter, setActiveFilter] = useState<'all' | 'image' | 'doc' | 'video' | 'audio' | 'archive'>('all');
 
     // --- DEVICE MODE STATE ---
     const [deviceMode, setDeviceMode] = useState<DeviceMode>('desktop');
@@ -228,7 +228,10 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     const filteredFiles = project.files.filter(f => {
         if (activeFilter === 'all') return true;
         if (activeFilter === 'image') return f.type === 'image' || f.type === 'design';
-        if (activeFilter === 'doc') return f.type === 'pdf' || f.type === 'archive';
+        if (activeFilter === 'doc') return f.type === 'pdf';
+        if (activeFilter === 'video') return f.type === 'video';
+        if (activeFilter === 'audio') return f.type === 'audio';
+        if (activeFilter === 'archive') return f.type === 'archive';
         return true;
     });
 
