@@ -511,6 +511,16 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
 
     return (
         <div className="flex h-screen overflow-hidden bg-[#F2F5F3] dark:bg-cosmic">
+            <style>{`
+                /* Ensure the native date picker icon stays visible in dark mode without forcing a light color-scheme. */
+                .dark .th-date-input::-webkit-calendar-picker-indicator {
+                    filter: invert(1) brightness(1.15);
+                    opacity: 0.85;
+                }
+                .th-date-input::-webkit-calendar-picker-indicator {
+                    cursor: pointer;
+                }
+            `}</style>
             {/* Hidden Input for Wallpaper Upload */}
             <input
                 type="file"
@@ -607,9 +617,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                                         type="date"
                                         value={formData.dueDate}
                                         onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                                        // Keep the date picker UI readable in dark mode by forcing a light color-scheme.
-                                        style={{ colorScheme: 'light' }}
-                                        className="w-full p-3 bg-slate-50 dark:bg-white/15 border border-slate-200 dark:border-white/15 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-colors text-sm text-slate-900 dark:text-white"
+                                        className="th-date-input w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-colors text-sm text-slate-900 dark:text-white"
                                     />
                                 </div>
                             </div>
@@ -811,8 +819,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                                                 type="date"
                                                 value={milestone.dueDate}
                                                 onChange={e => updateMilestone(index, 'dueDate', e.target.value)}
-                                                style={{ colorScheme: 'light' }}
-                                                className="flex-1 p-2 bg-white dark:bg-white/15 rounded-lg text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white"
+                                                className="th-date-input flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white"
                                             />
                                         </div>
                                     </div>

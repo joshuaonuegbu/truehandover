@@ -275,6 +275,18 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         }
     }, [deviceMode]);
 
+    // Simulator exit bridge: if the iframe requests an exit (e.g. via its Back button), return to desktop mode.
+    useEffect(() => {
+        const onMessage = (event: MessageEvent) => {
+            if (event.origin !== window.location.origin) return;
+            const data = event.data as any;
+            if (!data || data.type !== 'TRUEHANDOVER_SIM_EXIT') return;
+            if (deviceMode !== 'desktop') switchDevice('desktop');
+        };
+        window.addEventListener('message', onMessage);
+        return () => window.removeEventListener('message', onMessage);
+    }, [deviceMode, switchDevice]);
+
     // --- DEVICE CANVAS: Responsive Scaling ---
     useEffect(() => {
         if (deviceMode === 'desktop' || isRawMode) return;
@@ -320,10 +332,22 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     }, [deviceMode, orientation, iframeRefreshKey, iframeLoadedTick, project, isRawMode, viewportClass]);
 
     // --- RENDER: ClientPreviewPage (props bundle) ---
+    const handlePreviewBack = useCallback(() => {
+        // Inside the simulator iframe, "Back" should exit the simulation rather than navigating within the app.
+        // This prevents creators from accidentally landing in /vault or other admin routes in the iframe.
+        if (isRawMode) {
+            try {
+                window.parent.postMessage({ type: 'TRUEHANDOVER_SIM_EXIT' }, window.location.origin);
+            } catch { }
+            return;
+        }
+        onBack();
+    }, [isRawMode, onBack]);
+
     const previewProps = {
         project, user, isDarkMode,
         themeMode: themeMode || 'system' as const,
-        onToggleTheme, onBack, isEmbedded, isLocked, lightboxIndex,
+        onToggleTheme, onBack: handlePreviewBack, isEmbedded, isLocked, lightboxIndex,
         setLightboxIndex: handleSetLightboxIndex, revisions,
         onPaymentComplete: handlePaymentComplete,
         handleSubmitRevision, handleDeleteRevision,
@@ -439,9 +463,9 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
             <div className="relative z-50 flex items-center justify-center pt-4 pb-2 gap-2 px-4 shrink-0 flex-wrap">
                 {/* Back button */}
                 {!isEmbedded && (
-                    <button onClick={() => { playClick(); onBack(); }}
+                    <button onClick={() => { playClick(); switchDevice('desktop'); }}
                         className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 hover:text-white/80 transition-all backdrop-blur-xl shadow-sm"
-                        title="Back"
+                        title="Exit Preview"
                     ><ChevronLeft className="w-4 h-4" /></button>
                 )}
 

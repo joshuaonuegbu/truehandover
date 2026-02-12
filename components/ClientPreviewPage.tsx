@@ -428,9 +428,10 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
     const pt = searchParams.get('pt');
     const paddingTop = pt ? `${pt}px` : undefined;
 
+    // Push lightbox controls slightly lower on smaller devices so they don't feel glued to the status bar.
     const headerPaddingTop = paddingTop
-        ? `max(24px, ${paddingTop})`
-        : 'max(24px, calc(16px + env(safe-area-inset-top)))';
+        ? `max(28px, calc(${paddingTop} + 8px))`
+        : 'max(28px, calc(20px + env(safe-area-inset-top)))';
 
     const [isClosing, setIsClosing] = useState(false);
 
@@ -488,13 +489,13 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                         <button
                             aria-label="Close Lightbox"
                             onClick={handleClose}
-                            className={`w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all border ${isDarkMode ? 'bg-white/25 hover:bg-white/35 border-white/15 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}
+                            className={`w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all border ${isDarkMode ? 'bg-white/45 hover:bg-white/60 border-white/25 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}
                         >
                             <X className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                     </div>
                     <div className="pointer-events-auto justify-self-center">
-                        <div className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-mono text-[11px] sm:text-xs font-bold shadow-sm flex items-center gap-2 border ${isDarkMode ? 'bg-white/25 text-white border-white/15' : 'bg-white/95 text-slate-700 border-slate-200'}`}>
+                        <div className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full font-mono text-[11px] sm:text-xs font-bold shadow-sm flex items-center gap-2 border ${isDarkMode ? 'bg-white/45 text-white border-white/25' : 'bg-white/95 text-slate-700 border-slate-200'}`}>
                             <span>{currentIndex + 1}</span><span className="opacity-30">/</span><span>{allFiles.length}</span>
                         </div>
                     </div>
@@ -502,7 +503,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                         <button
                             aria-label="Toggle Sidebar"
                             onClick={() => { playClick(); setShowSidebar(!showSidebar); }}
-                            className={`w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all border ${isDarkMode ? 'bg-white/25 hover:bg-white/35 border-white/15 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}
+                            className={`w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all border ${isDarkMode ? 'bg-white/45 hover:bg-white/60 border-white/25 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}
                         >
                             {showSidebar ? <PanelRightClose className="w-4 h-4 sm:w-5 sm:h-5" /> : <PanelRightOpen className="w-4 h-4 sm:w-5 sm:h-5" />}
                         </button>
@@ -511,8 +512,8 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
 
                 {/* Image Area - Centers and Fits Content. Added pt-24 for Mobile so image isn't hidden by header controls */}
                 <div className="flex-1 flex items-center justify-center p-4 pt-20 sm:pt-24 md:p-12 relative overflow-hidden z-10">
-                    <button aria-label="Previous Image" onClick={() => { setSlideDirection(-1); onPrev(); }} className={`absolute left-2 sm:left-3 md:left-8 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all z-40 group border ${isDarkMode ? 'bg-white/25 hover:bg-white/35 border-white/15 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}><ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 group-hover:-translate-x-0.5 transition-transform" strokeWidth={1.5} /></button>
-                    <button aria-label="Next Image" onClick={() => { setSlideDirection(1); onNext(); }} className={`absolute right-2 sm:right-3 md:right-8 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all z-40 group border ${isDarkMode ? 'bg-white/25 hover:bg-white/35 border-white/15 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}><ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.5} /></button>
+                    <button aria-label="Previous Image" onClick={() => { setSlideDirection(-1); onPrev(); }} className={`absolute left-2 sm:left-3 md:left-8 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all z-40 group border ${isDarkMode ? 'bg-white/45 hover:bg-white/60 border-white/25 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}><ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 group-hover:-translate-x-0.5 transition-transform" strokeWidth={1.5} /></button>
+                    <button aria-label="Next Image" onClick={() => { setSlideDirection(1); onNext(); }} className={`absolute right-2 sm:right-3 md:right-8 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all z-40 group border ${isDarkMode ? 'bg-white/45 hover:bg-white/60 border-white/25 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}><ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.5} /></button>
 
                     <div key={file.id} className={`relative w-full h-full max-w-full max-h-full flex items-center justify-center ${slideDirection === 1 ? 'animate-slide-right' : slideDirection === -1 ? 'animate-slide-left' : 'animate-fade-in'}`}>
                         {file.previewUrl ? (
@@ -647,6 +648,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     const [isMobileHeaderHidden, setIsMobileHeaderHidden] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [isSplitSidebarCollapsed, setIsSplitSidebarCollapsed] = useState(false);
+    const [isLearnMoreOpen, setIsLearnMoreOpen] = useState(false);
 
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['client']));
     const toggleSection = (id: string) => { setExpandedSections(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; }); };
@@ -697,6 +699,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     const isBelowLg = viewport.width < 1024;
     const isLandscape = viewport.width > viewport.height;
     const deviceType = deviceParam === 'tablet' || deviceParam === 'mobile' || deviceParam === 'foldable' ? deviceParam : null;
+    const isCanvasSim = Boolean(deviceType);
     const isPhoneLike = Math.min(viewport.width, viewport.height) < 500;
 
     // Enable a true split layout for any landscape device inside the simulator, and for real devices
@@ -810,7 +813,8 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     const patternColorClass = isDarkMode ? 'bg-white' : 'bg-slate-900';
     const patternOpacityClass = isDarkMode ? 'opacity-[0.1]' : 'opacity-[0.15]';
     // OPTIMIZED OVERLAY: Reduced opacity by 10%, increased depth/color by 10%
-    const sidebarOverlay = isDarkMode ? 'from-[#1a1a24]/80 via-[#1a1a24]/60 to-[#1a1a24]/30' : 'from-[#f1f5f9]/85 via-[#f1f5f9]/75 to-[#f1f5f9]/50';
+    // Light mode: reduce overlay tint so the wallpaper + film grain read more clearly (requested).
+    const sidebarOverlay = isDarkMode ? 'from-[#1a1a24]/80 via-[#1a1a24]/60 to-[#1a1a24]/30' : 'from-[#f1f5f9]/70 via-[#f1f5f9]/60 to-[#f1f5f9]/35';
     const glassPanelClass = isDarkMode ? 'bg-[#2a2a35] border-white/5 shadow-black/20' : 'bg-white/60 border-slate-200 shadow-slate-200/50';
     const textPrimary = isDarkMode ? 'text-white' : 'text-slate-900';
     const textSecondary = isDarkMode ? 'text-slate-400' : 'text-slate-500';
@@ -1052,7 +1056,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                 {/* CRANKED GRAIN: Stronger film grain (requested). */}
                 {theme.showGrain && (
                     <div
-                        className={`absolute inset-0 z-0 pointer-events-none ${isDarkMode ? 'opacity-85 mix-blend-overlay' : 'opacity-65 mix-blend-multiply'}`}
+                        className={`absolute inset-0 z-0 pointer-events-none ${isDarkMode ? 'opacity-85 mix-blend-overlay' : 'opacity-80 mix-blend-overlay'}`}
                         style={{ backgroundImage: NOISE_SVG, filter: 'contrast(450%) brightness(110%)' }}
                     ></div>
                 )}
@@ -1281,22 +1285,15 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                     {/* Desktop-only: when the docked sidebar is collapsed, use minimal controls (no glass header). */}
                     {isActualDesktopViewport && isDockedSidebarCollapsed && (!isEmbedded || allowSidebarCollapse) && (
                         <div className="hidden lg:flex absolute top-8 left-8 right-8 z-40 items-center justify-between pointer-events-none">
-                            <button
-                                type="button"
-                                onClick={() => { playClick(); onBack(); }}
-                                className={`pointer-events-auto w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${isDarkMode ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
-                                aria-label="Back"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-
-                            <div className="flex items-center gap-3 pointer-events-auto">
-                                {!isEmbedded && !project.clientViewedAt && (
-                                    <div className={`px-3 py-1.5 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-50 border-amber-200 text-amber-600'}`}>
-                                        <Eye className="w-3.5 h-3.5" />
-                                        <span>Creator Preview</span>
-                                    </div>
-                                )}
+                            <div className="flex items-center gap-2 pointer-events-auto">
+                                <button
+                                    type="button"
+                                    onClick={() => { playClick(); onBack(); }}
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${isDarkMode ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
+                                    aria-label="Back"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
                                 <button
                                     type="button"
                                     onClick={() => { playClick(); setIsSplitSidebarCollapsed(false); }}
@@ -1308,10 +1305,19 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                     <span>Details</span>
                                 </button>
                             </div>
+
+                            <div className="flex items-center gap-3 pointer-events-auto">
+                                {!isEmbedded && !project.clientViewedAt && (
+                                    <div className={`px-3 py-1.5 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-50 border-amber-200 text-amber-600'}`}>
+                                        <Eye className="w-3.5 h-3.5" />
+                                        <span>Creator Preview</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
-                    <main ref={mainScrollRef} onScroll={handleMainScroll} className={`flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 scroll-smooth relative z-10 w-full ${!isEmbedded && isLocked && !isPaid ? (isLandscapeSplit ? 'pb-8' : 'pb-24 lg:pb-8') : ''}`}>
+                    <main ref={mainScrollRef} onScroll={handleMainScroll} className={`flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 ${isTrueDesktop && isDockedSidebarCollapsed ? 'lg:pt-16' : ''} scroll-smooth relative z-10 w-full ${!isEmbedded && isLocked && !isPaid ? (isLandscapeSplit ? 'pb-8' : 'pb-24 lg:pb-8') : ''}`}>
 
                         {/* Collapsed Docked Sidebar Controls (Landscape split + Desktop) */}
                         {!isEmbedded && isDockedSidebarCollapsed && !isTrueDesktop && (
@@ -1401,7 +1407,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
 
                             {theme.showGrain && (
                                 <div
-                                    className={`absolute inset-0 z-0 pointer-events-none ${isDarkMode ? 'opacity-85 mix-blend-overlay' : 'opacity-65 mix-blend-multiply'}`}
+                                    className={`absolute inset-0 z-0 pointer-events-none ${isDarkMode ? 'opacity-85 mix-blend-overlay' : 'opacity-80 mix-blend-overlay'}`}
                                     style={{ backgroundImage: NOISE_SVG, filter: 'contrast(450%) brightness(110%)' }}
                                 />
                             )}
@@ -1492,10 +1498,27 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                         )}
 
                         <div className="flex flex-col items-center justify-center pb-20 pt-10 text-center space-y-8">
-                            <button className="group cursor-pointer bg-transparent border-none p-0 w-auto" onClick={() => { playClick(); navigate('/'); }}>
+                            <button
+                                className="group cursor-pointer bg-transparent border-none p-0 w-auto"
+                                onClick={() => {
+                                    playClick();
+                                    if (isCanvasSim) setIsLearnMoreOpen(true);
+                                    else navigate('/');
+                                }}
+                            >
                                 <div className={`flex items-center gap-5 px-6 py-3 rounded-full transition-all duration-300 backdrop-blur-md border ${isDarkMode ? 'bg-[#2a2a35] border-white/10 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] hover:shadow-white/5' : 'bg-slate-50 border-slate-200 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]'} hover:scale-[1.02] hover:-translate-y-1`}>
                                     <EditorialIcon className={`w-8 h-8 ${isDarkMode ? 'text-white' : 'text-slate-900'}`} /><div className={`h-8 w-px ${isDarkMode ? 'bg-white/10' : 'bg-slate-900/10'}`} />
-                                    <div className="flex flex-col items-start text-left"><span className={`text-[10px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-600'} mb-0.5`}>Impress your clients like this.</span><div className="flex items-center gap-1.5 group-hover:gap-2 transition-all"><span className={`font-serif font-bold text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Try TrueHandover</span><ArrowRight className={`w-4 h-4 ${isDarkMode ? 'text-lime-400' : 'text-lime-600'}`} /></div></div>
+                                    <div className="flex flex-col items-start text-left">
+                                        <span className={`text-[10px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-600'} mb-0.5`}>
+                                            {isCanvasSim ? 'Learn more' : 'Impress your clients like this.'}
+                                        </span>
+                                        <div className="flex items-center gap-1.5 group-hover:gap-2 transition-all">
+                                            <span className={`font-serif font-bold text-base ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                                                {isCanvasSim ? 'About TrueHandover' : 'Try TrueHandover'}
+                                            </span>
+                                            <ArrowRight className={`w-4 h-4 ${isDarkMode ? 'text-lime-400' : 'text-lime-600'}`} />
+                                        </div>
+                                    </div>
                                 </div>
                             </button>
                             <div className="opacity-30 hover:opacity-100 transition-opacity duration-300 max-w-md space-y-3 cursor-default">
@@ -1508,6 +1531,60 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 </p>
                             </div>
                         </div>
+
+                        {/* Simulation-only: keep "Learn more" self-contained so creators don't get kicked out of the preview. */}
+                        {isCanvasSim && isLearnMoreOpen && (
+                            <div className="fixed inset-0 z-[110] flex items-center justify-center p-6" role="dialog" aria-modal="true">
+                                <div className="absolute inset-0 bg-black/50 backdrop-blur-xl" onClick={() => setIsLearnMoreOpen(false)} />
+                                <div className={`relative w-full max-w-lg rounded-[2rem] border shadow-2xl overflow-hidden ${isDarkMode ? 'bg-[#181822]/95 border-white/10 text-white' : 'bg-white/95 border-slate-200 text-slate-900'}`}>
+                                    <div className={`px-6 py-5 border-b ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="min-w-0">
+                                                <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Preview Mode</p>
+                                                <h3 className="font-serif text-xl font-bold truncate">About TrueHandover</h3>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsLearnMoreOpen(false)}
+                                                className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border-white/10 hover:bg-white/15 text-white' : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'}`}
+                                                aria-label="Close"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="px-6 py-6 space-y-4">
+                                        <p className={`text-sm leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                                            You're viewing a simulated client preview. This environment is meant to help you sanity-check layout,
+                                            navigation, and how your deliverables feel on different devices.
+                                        </p>
+                                        <div className={`rounded-2xl p-4 border ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                                            <p className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Tip</p>
+                                            <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                                                Use the toolbar above to switch devices or exit back to the regular preview.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className={`px-6 pb-6 flex items-center justify-end gap-2`}>
+                                        <a
+                                            href={`${window.location.origin}${window.location.pathname}#/`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-white/10 border-white/10 text-white hover:bg-white/15' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                                        >
+                                            Open Landing Page
+                                        </a>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsLearnMoreOpen(false)}
+                                            className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-[#bef264] hover:bg-[#a3e635] text-black' : 'bg-slate-900 hover:bg-slate-800 text-white'}`}
+                                        >
+                                            Continue Preview
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </main>
             </div>
