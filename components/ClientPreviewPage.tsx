@@ -1244,24 +1244,29 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
 
                         {/* Collapsed Docked Sidebar Controls (Landscape split + Desktop) */}
                         {!isEmbedded && isDockedSidebarCollapsed && (
-                            <div className={`sticky top-0 z-40 -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 mb-4 ${isTrueDesktop ? '-mt-3 sm:-mt-4 md:-mt-6 lg:-mt-8' : ''}`}>
+                            <div
+                                className={`sticky top-0 z-40 -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 mb-4 ${isTrueDesktop ? '-mt-3 sm:-mt-4 md:-mt-6 lg:-mt-8' : ''}`}
+                                // Sticky positioning is relative to the scrollport (padding box). On desktop the scroll
+                                // container has `lg:p-8`, so we offset the sticky top by that padding to truly flush.
+                                style={{ top: isTrueDesktop ? '-32px' : '0px' }}
+                            >
                                 <div
-                                    className={`border-b backdrop-blur-md ${isTrueDesktop ? 'th-desktop-flush-in' : ''} ${isDarkMode ? 'bg-black/20 border-white/10' : 'bg-white/70 border-slate-200'}`}
+                                    className={`border-b backdrop-blur-md ${isDarkMode ? 'bg-black/20 border-white/10' : 'bg-white/70 border-slate-200'}`}
                                     style={{ paddingTop: hasMockStatusBar ? headerChromePadTop : '0px' }}
                                 >
                                     {isTrueDesktop && (
                                         <style>{`
-                                            @keyframes thDesktopFlushIn {
-                                                from { opacity: 0; transform: translateY(14px); }
+                                            @keyframes thDesktopFlushInContent {
+                                                from { opacity: 0; transform: translateY(10px); }
                                                 to { opacity: 1; transform: translateY(0); }
                                             }
-                                            .th-desktop-flush-in {
-                                                animation: thDesktopFlushIn 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+                                            .th-desktop-flush-content {
+                                                animation: thDesktopFlushInContent 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
                                                 will-change: transform, opacity;
                                             }
                                         `}</style>
                                     )}
-                                    <div className={`flex items-center justify-between gap-3 px-4 sm:px-5 md:px-6 lg:px-8 ${isTrueDesktop ? 'py-2.5' : 'pb-3'}`}>
+                                    <div className={`flex items-center justify-between gap-3 px-4 sm:px-5 md:px-6 lg:px-8 ${isTrueDesktop ? 'th-desktop-flush-content py-2.5' : 'pb-3'}`}>
                                         <div className="flex items-center gap-2 shrink-0">
                                             <button
                                                 type="button"
