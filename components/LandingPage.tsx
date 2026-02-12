@@ -1,0 +1,1263 @@
+
+import React, { useState, useEffect } from 'react';
+import {
+    ArrowRight, Shield, Zap, Globe,
+    Lock, Check, Eye, FileText, Smartphone,
+    HardDrive, CheckCircle, ShieldCheck,
+    CreditCard, DollarSign, Box,
+    Upload, Server,
+    Image as ImageIcon,
+    Crown,
+    Palette,
+    FileCheck,
+    PlayCircle,
+    X,
+    Moon,
+    Sun,
+    Mail,
+    Link as LinkIcon,
+    Monitor,
+    AlertCircle,
+    Cloud,
+    Disc,
+    Clock,
+    Unlock,
+    Plus,
+    PenTool,
+    Minus,
+    Gem,
+    Coins,
+    Banknote,
+    Menu,
+    LifeBuoy
+} from 'lucide-react';
+import { playClick } from '../utils/sound';
+
+// --- VISUAL PRIMITIVES ---
+
+// OPTIMIZED: Granular Film Grain SVG (Synced with App.tsx Vault Style)
+// baseFrequency=0.98 provides the "Ultra High Res" digital film look.
+const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.35' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
+
+const Logo = ({ className = "w-8 h-8" }) => (
+    <svg viewBox="0 0 32 32" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 15C4 10.6 9.4 7 16 7C22.6 7 28 10.6 28 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="12" cy="22" r="6" stroke="currentColor" strokeWidth="1.5" />
+        <circle cx="20" cy="22" r="6" fill="#bef264" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+);
+
+const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: () => void, onStart: () => void }) => {
+    const [render, setRender] = useState(false);
+    const [visible, setVisible] = useState(false);
+
+    // Reliable Abstract Video (Apple-style)
+    const videoId = "M7fi_R23Qv8";
+
+    // Stage 1: Mount/Unmount
+    useEffect(() => {
+        if (isOpen) {
+            setRender(true);
+        } else {
+            setVisible(false);
+            const timer = setTimeout(() => setRender(false), 500); // Wait for exit animation
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen]);
+
+    // Stage 2: Animate In (Triggered after Mount)
+    useEffect(() => {
+        if (render) {
+            // Force a small delay to ensure the browser paints the 'initial' state before transitioning to 'visible'
+            // Using requestAnimationFrame for smoother entry
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => setVisible(true));
+            });
+        }
+    }, [render]);
+
+    const handleClose = () => {
+        setVisible(false);
+        // Delay calling actual onClose until animation finishes
+        setTimeout(() => {
+            onClose();
+        }, 500);
+    };
+
+    if (!render) return null;
+
+    return (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 sm:p-8">
+            {/* Cinematic Backdrop with Original Blur Style */}
+            <div
+                className={`
+                    absolute inset-0 bg-slate-900/30 backdrop-blur-xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]
+                    ${visible ? 'opacity-100' : 'opacity-0'}
+                `}
+                onClick={handleClose}
+            />
+
+            {/* Content Wrapper */}
+            <div
+                className={`
+                    relative w-full max-w-6xl flex flex-col gap-8 z-10 items-center transform transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]
+                    ${visible ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-8'}
+                `}
+            >
+
+                {/* Video Container */}
+                <div className="relative w-full aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/10 group">
+                    <button
+                        onClick={handleClose}
+                        className="absolute top-6 right-6 z-20 p-3 rounded-full transition-all backdrop-blur-md border group bg-slate-200/50 hover:bg-slate-300/50 border-slate-300 text-slate-900 dark:bg-black/50 dark:hover:bg-white/20 dark:border-white/10 dark:text-white"
+                    >
+                        <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+                    </button>
+
+                    <iframe
+                        width="100%"
+                        height="100%"
+                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=0&loop=1&playlist=${videoId}`}
+                        title="TrueHandover Film"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full pointer-events-none scale-110"
+                    />
+                </div>
+
+                {/* CTA Actions - Staggered fade in */}
+                <div
+                    className={`
+                        flex flex-col sm:flex-row items-center gap-6 transition-all duration-700 delay-100
+                        ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+                    `}
+                >
+                    <button
+                        onClick={() => { playClick(); handleClose(); setTimeout(onStart, 300); }}
+                        className="px-8 py-4 bg-[#bef264] text-black rounded-full font-bold text-sm uppercase tracking-widest hover:scale-105 hover:shadow-[0_0_30px_rgba(190,242,100,0.4)] transition-all shadow-lg flex items-center gap-3"
+                    >
+                        Start for Free <ArrowRight className="w-4 h-4" />
+                    </button>
+
+                    <span className="text-white/40 hidden sm:block">|</span>
+
+                    {/* Sign In Button - Black in Light Mode, White in Dark Mode */}
+                    <button
+                        onClick={() => { playClick(); handleClose(); window.location.hash = '#/signin'; }}
+                        className="px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest transition-all shadow-lg hover:scale-105 bg-black text-white hover:bg-slate-900 dark:bg-white dark:text-black dark:hover:bg-slate-200"
+                    >
+                        Sign In
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const SectionHeading = ({ badge, title, subtitle, className = "" }: any) => (
+    <div className={`mb-20 ${className}`}>
+        {badge && (
+            <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-[#bef264] uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
+                {badge}
+            </span>
+        )}
+        <h2 className="font-serif text-4xl md:text-6xl mb-6 text-black dark:text-white transition-colors duration-500 leading-tight tracking-wide">
+            {title}
+        </h2>
+        {subtitle && <p className="text-slate-600 dark:text-slate-200 text-lg max-w-xl transition-colors duration-500 leading-relaxed">
+            {subtitle}
+        </p>}
+    </div>
+);
+
+const BentoCard = ({ children, className = "", title, subtitle, icon: Icon }: { children?: React.ReactNode, className?: string, title?: string, subtitle?: string, icon?: any }) => (
+    <div className={`
+        relative bg-white dark:bg-[#151519] border border-slate-200 dark:border-white/10 rounded-[2rem] overflow-hidden group flex flex-col
+        hover:border-slate-300 dark:hover:border-white/20 transition-all duration-500 shadow-xl dark:shadow-2xl dark:shadow-black/20
+        ${className}
+    `}>
+        {/* Header if Title Provided */}
+        {(title || Icon) && (
+            <div className="p-8 pb-4 relative z-10">
+                <div className="flex items-center gap-3 mb-3">
+                    {Icon && (
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center justify-center text-black dark:text-[#bef264]">
+                            <Icon className="w-5 h-5" />
+                        </div>
+                    )}
+                    <div>
+                        {title && <h3 className="font-serif text-xl text-black dark:text-white leading-none mb-1 tracking-wide">{title}</h3>}
+                        {subtitle && <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">{subtitle}</p>}
+                    </div>
+                </div>
+            </div>
+        )}
+
+        <div className="relative z-10 flex-1">{children}</div>
+    </div>
+);
+
+// --- SECTIONS ---
+
+// ... [Nav, Hero, ComparisonSection, BentoGrid Components remain unchanged] ...
+// Re-exporting unmodified components to keep file valid, but shortening for brevity in XML response where possible.
+// Assuming Nav, Hero, Comparison, BentoGrid are identical to previous version unless requested.
+// I will include them to ensure the file is complete and works.
+
+const Nav = ({ onStart, currentTheme, toggleTheme, isHidden }: { onStart: () => void, currentTheme: 'light' | 'dark' | 'system', toggleTheme: () => void, isHidden: boolean }) => {
+    // ... [Same implementation as before] ...
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    const scrollTo = (id: string) => {
+        setIsMenuOpen(false);
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    return (
+        <nav
+            className={`fixed top-0 left-0 right-0 z-50 px-6 pb-6 transition-all duration-500 ${isHidden ? 'opacity-0 -translate-y-full pointer-events-none' : 'opacity-100 translate-y-0'}`}
+            style={{ paddingTop: 'max(24px, calc(env(safe-area-inset-top, 0px) + 12px))' }}
+        >
+            <div className="max-w-[1200px] mx-auto bg-white/80 dark:bg-[#0E0E11]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
+                <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                    <Logo className="w-6 h-6 text-black dark:text-white group-hover:text-[#bef264] transition-colors" />
+                    <span className="font-serif font-bold text-lg tracking-tight text-black dark:text-white block tracking-wide">TrueHandover</span>
+                </div>
+
+                <div className="hidden md:flex items-center gap-8">
+                    <button onClick={() => scrollTo('comparison')} className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors">Why Us</button>
+                    <button onClick={() => scrollTo('how-it-works')} className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors">Process</button>
+                    <button onClick={() => scrollTo('pricing')} className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors">Pricing</button>
+                </div>
+
+                <div className="hidden md:flex items-center gap-4">
+                    <button
+                        onClick={toggleTheme}
+                        className="p-2 rounded-full text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all"
+                        title={`Current: ${currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)}`}
+                    >
+                        {currentTheme === 'light' && <Sun className="w-5 h-5" />}
+                        {currentTheme === 'dark' && <Moon className="w-5 h-5" />}
+                        {currentTheme === 'system' && <Monitor className="w-5 h-5" />}
+                    </button>
+
+                    <button
+                        onClick={() => { playClick(); window.location.hash = '#/signin'; }}
+                        className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors px-3 py-2"
+                    >
+                        Sign In
+                    </button>
+
+                    <button
+                        onClick={onStart}
+                        className="px-6 py-2.5 bg-black dark:bg-[#bef264] text-white dark:text-black rounded-full font-bold text-xs uppercase tracking-[0.15em] hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_20px_rgba(190,242,100,0.5)] transition-all shadow-lg border border-transparent dark:border-[#bef264]"
+                    >
+                        Start for Free
+                    </button>
+                </div>
+
+                {/* Mobile Menu Toggle */}
+                <div className="flex md:hidden items-center gap-3">
+                    <button
+                        onClick={toggleTheme}
+                        className="p-2 rounded-full text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all"
+                    >
+                        {currentTheme === 'light' && <Sun className="w-5 h-5" />}
+                        {currentTheme === 'dark' && <Moon className="w-5 h-5" />}
+                        {currentTheme === 'system' && <Monitor className="w-5 h-5" />}
+                    </button>
+                    <button
+                        onClick={() => { playClick(); setIsMenuOpen(!isMenuOpen); }}
+                        className="p-2 rounded-full text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300"
+                        aria-label="Toggle menu"
+                    >
+                        <div className={`transition-transform duration-300 ${isMenuOpen ? 'rotate-90' : 'rotate-0'}`}>
+                            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            {/* Mobile Dropdown Menu */}
+            <div className={`
+                absolute top-[80px] left-0 right-0 px-6 pb-6 md:hidden z-40
+                transition-all duration-300 ease-in-out origin-top transform
+                ${isMenuOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-95 -translate-y-4 pointer-events-none'}
+            `}>
+                <div className="bg-white/95 dark:bg-[#1a1a20]/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-[2rem] p-6 shadow-2xl flex flex-col gap-6">
+                    <div className="flex flex-col gap-4">
+                        <button onClick={() => scrollTo('comparison')} className="text-lg font-serif text-slate-900 dark:text-white text-left px-2">Why Us</button>
+                        <button onClick={() => scrollTo('how-it-works')} className="text-lg font-serif text-slate-900 dark:text-white text-left px-2">Process</button>
+                        <button onClick={() => scrollTo('pricing')} className="text-lg font-serif text-slate-900 dark:text-white text-left px-2">Pricing</button>
+                    </div>
+                    <div className="h-px bg-slate-100 dark:bg-white/10 w-full" />
+                    <div className="flex flex-col gap-4">
+                        <button
+                            onClick={() => { setIsMenuOpen(false); window.location.hash = '#/signin'; }}
+                            className="w-full py-4 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold text-xs uppercase tracking-widest"
+                        >
+                            Sign In
+                        </button>
+                        <button
+                            onClick={() => { setIsMenuOpen(false); onStart(); }}
+                            className="w-full py-4 rounded-xl bg-black dark:bg-[#bef264] text-white dark:text-black font-bold text-xs uppercase tracking-widest shadow-lg"
+                        >
+                            Start for Free
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    );
+};
+
+const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: () => void }) => {
+    // ... [Same implementation as before] ...
+    const [isHoveringCTA, setIsHoveringCTA] = useState(false);
+
+    return (
+        <section className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 pt-32 pb-20 overflow-hidden bg-[#fafbfc] dark:bg-[#08080B] text-black dark:text-white transition-colors duration-700">
+            {/* Film grain — light mode: subtle, dark mode: prominent */}
+            <div
+                className="absolute inset-0 opacity-[0.03] dark:opacity-0 mix-blend-multiply pointer-events-none z-0"
+                style={{
+                    backgroundImage: NOISE_SVG,
+                    filter: 'contrast(1200%) brightness(100%)'
+                }}
+            ></div>
+            <div
+                className="absolute inset-0 opacity-0 dark:opacity-70 mix-blend-overlay pointer-events-none z-0"
+                style={{
+                    backgroundImage: NOISE_SVG,
+                    filter: 'contrast(1500%) brightness(100%)'
+                }}
+            ></div>
+
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1200px] h-full pointer-events-none overflow-hidden z-0">
+                <div className={`
+                    absolute top-[20%] right-[5%] md:right-[15%] w-48 h-64 bg-white dark:bg-[#1a1a1a] rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl rotate-12 transition-all duration-700 ease-out overflow-hidden
+                    ${isHoveringCTA ? 'translate-y-[-20px] scale-110 shadow-[0_20px_50px_rgba(190,242,100,0.2)]' : 'translate-y-0 opacity-40'}
+                `}>
+                    <div
+                        className="absolute inset-0 opacity-0 dark:opacity-40 mix-blend-multiply dark:mix-blend-overlay pointer-events-none z-0"
+                        style={{
+                            backgroundImage: NOISE_SVG,
+                            filter: 'contrast(1000%)'
+                        }}
+                    ></div>
+
+                    <div className="p-4 h-full flex flex-col items-center justify-center relative z-10">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-all duration-500 ${isHoveringCTA ? 'bg-[#bef264] text-black' : 'bg-slate-100 dark:bg-white/10 text-slate-400'}`}>
+                            {isHoveringCTA ? <Unlock className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
+                        </div>
+                        <div className="w-20 h-2 bg-slate-100 dark:bg-white/10 rounded-full mb-2" />
+                        <div className="w-12 h-2 bg-slate-100 dark:bg-white/10 rounded-full" />
+                    </div>
+                </div>
+            </div>
+
+            <div className="mb-10 animate-fade-in relative z-10 flex flex-col md:flex-row items-center gap-4">
+                <a
+                    href="https://www.producthunt.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-lg hover:scale-105 transition-all cursor-pointer group"
+                >
+                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[#FF6154] text-white">
+                        <span className="font-bold text-[10px] pb-0.5">P</span>
+                    </div>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider group-hover:text-[#FF6154] transition-colors">
+                        Featured on Product Hunt
+                    </span>
+                </a>
+
+                <div className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-sm shadow-sm transition-all hover:bg-white dark:hover:bg-white/10 cursor-default">
+                    <div className="w-2 h-2 bg-[#bef264] rounded-full animate-pulse shadow-[0_0_8px_#bef264]"></div>
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-none uppercase tracking-wider">
+                        Now available in public beta
+                    </span>
+                </div>
+            </div>
+
+            <div className="relative z-10 max-w-5xl mx-auto text-center mb-16">
+                <h1 className="font-serif text-5xl md:text-8xl lg:text-9xl font-medium tracking-tight leading-[0.95] mb-10 animate-slide-up">
+                    <span className="text-red-600 dark:text-red-500 drop-shadow-sm">Stop Chasing.</span> <br />
+                    <span className="text-black dark:text-white">Start <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[#bef264] to-lime-600">Delivering.</span></span>
+                </h1>
+
+                <div className="max-w-4xl mx-auto leading-relaxed mb-12 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                    <p className="font-serif italic text-xl md:text-3xl text-slate-900 dark:text-white mb-6 tracking-wide">
+                        The end of the "You send first" standoff.
+                    </p>
+                    <p className="text-lg md:text-2xl text-slate-600 dark:text-slate-200 font-light leading-relaxed">
+                        TrueHandover ensures your assets are <span className="border-b-2 border-[#bef264] text-black dark:text-white font-medium">securely handed over</span> only when payment clears.
+                        We generate watermarked previews automatically, so your client reviews the excellence while you retain the master files.
+                    </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                    <button
+                        onClick={() => { playClick(); onStart(); }}
+                        onMouseEnter={() => setIsHoveringCTA(true)}
+                        onMouseLeave={() => setIsHoveringCTA(false)}
+                        className="group relative h-16 px-10 bg-[#bef264] text-black rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(190,242,100,0.6)] shadow-xl"
+                    >
+                        <span className="relative z-10 flex items-center gap-3">
+                            Start for Free <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                    </button>
+
+                    <button
+                        onClick={() => { playClick(); onWatchVideo(); }}
+                        className="h-16 px-10 rounded-full border border-slate-300 dark:border-white/20 text-black dark:text-white font-bold text-sm uppercase tracking-widest hover:bg-black/5 dark:hover:bg-white/5 transition-all backdrop-blur-sm flex items-center gap-3"
+                    >
+                        <PlayCircle className="w-4 h-4" /> Watch the Film
+                    </button>
+                </div>
+
+                <div className="mt-8 flex items-center justify-center gap-6 text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-400 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+                    <span className="flex items-center gap-2"><Check className="w-4 h-4 text-[#bef264]" /> Instant Payouts</span>
+                    <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-white/10" />
+                    <span className="flex items-center gap-2"><Check className="w-4 h-4 text-[#bef264]" /> Verified Transactions</span>
+                </div>
+            </div>
+
+            <div className="w-full max-w-[1200px] border-t border-slate-200 dark:border-white/5 pt-12 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+                <p className="text-center text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-400 mb-8">
+                    Built to integrate seamlessly with your stack
+                </p>
+                <div className="flex flex-wrap justify-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
+                    <div className="flex items-center gap-2 text-xl font-bold font-serif text-slate-500 dark:text-slate-400"><Server className="w-5 h-5" /> AWS S3</div>
+                    <div className="flex items-center gap-2 text-xl font-bold font-serif text-slate-500 dark:text-slate-400"><DollarSign className="w-5 h-5" /> Stripe Connect</div>
+                    <div className="flex items-center gap-2 text-xl font-bold font-serif text-slate-500 dark:text-slate-400"><Globe className="w-5 h-5" /> Cloudflare R2</div>
+                    <div className="flex items-center gap-2 text-xl font-bold font-serif text-slate-500 dark:text-slate-400"><Disc className="w-5 h-5" /> Google Drive</div>
+                    <div className="flex items-center gap-2 text-xl font-bold font-serif text-slate-500 dark:text-slate-400"><Box className="w-5 h-5" /> Dropbox</div>
+                    <div className="flex items-center gap-2 text-xl font-bold font-serif text-slate-500 dark:text-slate-400"><Smartphone className="w-5 h-5" /> Zelle</div>
+                    <div className="flex items-center gap-2 text-xl font-bold font-serif text-slate-500 dark:text-slate-400"><Cloud className="w-5 h-5" /> OneDrive</div>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+const ComparisonSection = () => {
+    // ... [Same implementation as before] ...
+    const [hoveredCard, setHoveredCard] = useState<null | 'old' | 'new'>(null);
+
+    return (
+        <section id="comparison" className="py-32 px-6 bg-white dark:bg-[#121215] transition-colors duration-700 relative overflow-hidden">
+            <div
+                className={`absolute top-1/2 left-0 w-[500px] h-[500px] bg-red-600 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all duration-700 ease-in-out
+                ${hoveredCard === 'old' ? 'opacity-25 scale-110' : 'opacity-10 scale-100'}
+                `}
+            />
+            <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-[#bef264]/5 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+
+            <div className="max-w-[1200px] mx-auto relative z-10">
+                <SectionHeading
+                    badge="The Upgrade"
+                    title={
+                        <span>
+                            Stop the <span className="line-through decoration-red-500 decoration-4 text-slate-400 dark:text-slate-500">"Send-then-Chase"</span> cycle.
+                        </span>
+                    }
+                    subtitle="Built for professionals who value their time, talent, and creative leverage."
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-stretch">
+                    {/* The Old Way */}
+                    <div
+                        onMouseEnter={() => setHoveredCard('old')}
+                        onMouseLeave={() => setHoveredCard(null)}
+                        className="p-10 rounded-[2.5rem] bg-slate-50 dark:bg-[#18181c] border border-dashed border-slate-300 dark:border-white/10 relative group transition-all duration-500 hover:bg-slate-100 dark:hover:bg-[#1e1e23]"
+                    >
+                        <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <X className="w-32 h-32 text-red-500 rotate-12" />
+                        </div>
+
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-900/20 flex items-center justify-center text-red-500 font-bold shadow-sm">
+                                <X className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-2xl font-serif text-slate-500 dark:text-slate-300 tracking-wide">The Old Way</h3>
+                        </div>
+
+                        <div className="space-y-8 relative z-10">
+                            {[
+                                { icon: Mail, title: "Chaotic Email Threads", desc: "\"Did you get the file?\" \"Can you resend?\" \"Check spam.\"" },
+                                { icon: LinkIcon, title: "Generic Links", desc: "Temporary links dying after 7 days. Creating new links endlessly." },
+                                { icon: DollarSign, title: "Chasing Invoices", desc: "Sending the work, then praying they pay the remaining 50%." },
+                                { icon: AlertCircle, title: "The \"Ghosting\" Risk", desc: "Sending the files, then silence. They have the work, you have nothing." },
+                                { icon: Coins, title: "Platform Taxes", desc: "Losing 10-20% of your revenue to marketplace fees." }
+                            ].map((item, i) => (
+                                <div key={i} className="flex gap-5 opacity-60 group-hover:opacity-100 transition-opacity">
+                                    <item.icon className="w-6 h-6 text-slate-400 dark:text-slate-400 shrink-0 mt-1" />
+                                    <div>
+                                        <h4 className="font-bold text-slate-700 dark:text-slate-200 text-lg">{item.title}</h4>
+                                        <p className="text-sm text-slate-500 dark:text-slate-300 mt-1 leading-relaxed">{item.desc}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* The TrueHandover Way */}
+                    <div
+                        onMouseEnter={() => setHoveredCard('new')}
+                        onMouseLeave={() => setHoveredCard(null)}
+                        className="relative p-10 rounded-[2.5rem] bg-[#bef264] text-black shadow-2xl shadow-lime-500/20 transform md:-translate-y-4 transition-transform hover:-translate-y-6 duration-500 overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 p-6 opacity-10">
+                            <Check className="w-32 h-32 text-black -rotate-12" />
+                        </div>
+
+                        <div className="flex items-center gap-4 mb-8 relative z-10">
+                            <div className="w-12 h-12 rounded-2xl bg-black text-[#bef264] flex items-center justify-center font-bold shadow-xl">
+                                <Check className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-2xl font-serif font-medium text-black tracking-wide">The New Standard</h3>
+                        </div>
+
+                        <div className="space-y-8 relative z-10">
+                            {[
+                                { icon: Globe, title: "Professional Portal", desc: "A persistent, branded home for your delivery. No more loose links." },
+                                { icon: Eye, title: "Smart Previews", desc: "We watermark and compress automatically. They look, but can't touch." },
+                                { icon: Lock, title: "Pay to Unlock", desc: "Payment clears, files unlock. Instant, automated, secure." },
+                                { icon: ShieldCheck, title: "Zero-Risk Leverage", desc: "Atomic transactions. Money in, files out. No awkward follow-ups." },
+                                { icon: Banknote, title: "Keep 100% of Revenue*", desc: "Zero transaction fees on paid plans. Just a flat monthly subscription." }
+                            ].map((item, i) => (
+                                <div key={i} className="flex gap-5">
+                                    <div className="p-1 rounded-full bg-black/5 h-fit">
+                                        <item.icon className="w-5 h-5 text-black shrink-0" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-black text-lg">{item.title}</h4>
+                                        <p className="text-sm text-black/70 mt-1 font-medium leading-relaxed">{item.desc}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="relative z-10 mt-8 pt-6 border-t border-black/10">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-black/60">
+                                * Starter plan includes a 1.5% transaction fee.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+const BentoGrid = () => {
+    // ... [Same implementation as before] ...
+    const [isCustom, setIsCustom] = useState(false);
+    const [accentColor, setAccentColor] = useState('#bef264');
+
+    const brandConfigs = [
+        { name: 'Default', color: '#bef264', domain: 'portal.truehandover.com' },
+        { name: 'Onyx', color: '#334155', domain: 'vault.agency.com' },
+        { name: 'Cobalt', color: '#3b82f6', domain: 'files.studio.io' }
+    ];
+
+    const currentBrand = brandConfigs.find(b => b.color === accentColor) || brandConfigs[0];
+
+    return (
+        <section id="how-it-works" className="py-32 px-6 bg-slate-50 dark:bg-[#0E0E11] text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
+            <div className="max-w-[1200px] mx-auto">
+                <SectionHeading
+                    badge="The Mechanism"
+                    title={<span>A structured workflow <br /><span className="italic text-slate-400 dark:text-slate-500">for peace of mind.</span></span>}
+                    subtitle="Replace scattered tools with a single, professional delivery pipeline."
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6">
+                    {/* 1. Smart Previews */}
+                    <BentoCard className="md:col-span-3 lg:col-span-4 min-h-[400px]" title="Smart Preview" subtitle="Lossy samples for assessment" icon={Eye}>
+                        <div className="p-8 pt-0 h-full flex flex-col">
+                            <p className="text-slate-600 dark:text-slate-200 text-sm leading-relaxed mb-8">
+                                Creators upload final files. We automatically generate secure, watermarked previews.
+                                Clients review the work without accessing the master files.
+                            </p>
+                            <div className="flex-1 relative rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 group-hover:border-[#bef264]/30 transition-colors">
+                                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600607686527-6fb886090705?w=500&q=50')] bg-cover bg-center opacity-40 blur-[2px]" />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="text-4xl font-black text-black/20 dark:text-white/10 -rotate-45 select-none pointer-events-none">PREVIEW</div>
+                                </div>
+                                <div className="absolute bottom-4 left-4 right-4 bg-white/90 dark:bg-black/80 backdrop-blur-md p-3 rounded-lg border border-slate-200 dark:border-white/10 shadow-lg">
+                                    <div className="flex items-center gap-2 text-xs font-mono text-slate-500 dark:text-slate-300">
+                                        <Lock className="w-3 h-3 text-amber-500" />
+                                        <span>Download Locked</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </BentoCard>
+
+                    {/* 2. Dispute Evidence */}
+                    <BentoCard className="md:col-span-3 lg:col-span-4 min-h-[400px]" title="Activity Logs" subtitle="Dispute Shield" icon={ShieldCheck}>
+                        <div className="p-8 pt-0 h-full flex flex-col">
+                            <p className="text-slate-600 dark:text-slate-200 text-sm leading-relaxed mb-6">
+                                We designed this to stop arguments before they start. Since files only unlock after payment,
+                                you never have to chase a client. But just in case, we keep a tidy history log for you.
+                            </p>
+                            <div className="flex-1 bg-slate-900 dark:bg-[#050505] rounded-xl border border-slate-200 dark:border-white/10 p-4 font-mono text-[10px] text-slate-400 dark:text-slate-500 overflow-hidden relative shadow-inner">
+                                <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-slate-900 dark:from-[#050505] to-transparent z-10" />
+                                <div className="space-y-3 opacity-80">
+                                    <div className="flex gap-2">
+                                        <span className="text-[#bef264]">GET</span>
+                                        <span className="text-slate-500 dark:text-slate-600">/v/preview</span>
+                                        <span className="ml-auto text-slate-500 dark:text-slate-700">200 OK</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <span className="text-blue-400">LOG</span>
+                                        <span className="text-slate-400 dark:text-slate-300">Client Viewing</span>
+                                        <span className="ml-auto text-slate-500 dark:text-slate-700">Active</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <span className="text-amber-500">LCK</span>
+                                        <span className="text-slate-400 dark:text-slate-300">Asset Download</span>
+                                        <span className="ml-auto text-amber-900">Blocked</span>
+                                    </div>
+                                </div>
+                                <div className="absolute bottom-4 right-4">
+                                    <div className="px-3 py-1 bg-[#bef264]/10 border border-[#bef264]/20 rounded text-[#bef264] text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                        <FileCheck className="w-3 h-3" /> Tracking Active
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </BentoCard>
+
+                    {/* 3. Direct Payments */}
+                    <BentoCard className="md:col-span-6 lg:col-span-4 min-h-[400px]" title="Direct Payouts" subtitle="Seamless Transfers" icon={DollarSign}>
+                        <div className="p-8 pt-0 h-full flex flex-col justify-between">
+                            <div className="space-y-4">
+                                <p className="text-slate-600 dark:text-slate-200 text-sm leading-relaxed">
+                                    A seamless financial bridge. Connect your Stripe account once, and payments flow directly to you.
+                                    We facilitate the instant unlocking of assets without holding or delaying your funds.
+                                </p>
+                                <ul className="space-y-2">
+                                    <li className="flex items-center gap-2 text-xs font-bold text-black dark:text-white">
+                                        <Check className="w-3 h-3 text-[#bef264]" /> Instant Availability
+                                    </li>
+                                    <li className="flex items-center gap-2 text-xs font-bold text-black dark:text-white">
+                                        <Check className="w-3 h-3 text-[#bef264]" /> Automated Receipts
+                                    </li>
+                                </ul>
+                            </div>
+                            <div className="mt-8 bg-white rounded-xl p-4 flex items-center justify-between shadow-lg border border-slate-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-[#635BFF] rounded-lg flex items-center justify-center text-white">
+                                        <CreditCard className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] font-bold text-slate-400 uppercase">Balance</div>
+                                        <div className="text-black font-bold text-lg">$2,450.00</div>
+                                    </div>
+                                </div>
+                                <div className="px-2 py-1 bg-green-100 text-green-700 text-[9px] font-bold uppercase rounded">Paid</div>
+                            </div>
+                        </div>
+                    </BentoCard>
+
+                    {/* 4. BRAND ORCHESTRATOR */}
+                    <BentoCard className="md:col-span-6 lg:col-span-8 !p-0 min-h-[540px]">
+                        <div className="flex flex-col md:flex-row h-full w-full">
+                            {/* LEFT: Control Panel */}
+                            <div className="w-full md:w-[340px] p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/10 flex flex-col bg-slate-50 dark:bg-[#0b0c15]">
+                                <div>
+                                    <div className="mb-8">
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div>
+                                                <h3 className="font-serif text-2xl text-black dark:text-white tracking-wide">Your Brand</h3>
+                                                <p className="text-sm text-slate-500">Custom Portal</p>
+                                            </div>
+                                            <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-black dark:text-[#bef264]">
+                                                <Palette className="w-5 h-5" />
+                                            </div>
+                                        </div>
+
+                                        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                            Make it yours. Swap the logo, pick your colors, and use your domain.
+                                            Clients see your brand, not ours.
+                                        </p>
+                                    </div>
+
+                                    {/* Brand Selection */}
+                                    <div className="space-y-3">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-4">Choose Identity</p>
+                                        {brandConfigs.map((brand, i) => (
+                                            <button
+                                                key={brand.name}
+                                                onClick={() => {
+                                                    playClick();
+                                                    setIsCustom(i > 0);
+                                                    setAccentColor(brand.color);
+                                                }}
+                                                className={`
+                                                    w-full p-4 rounded-xl border flex items-center gap-4 transition-all group
+                                                    ${accentColor === brand.color
+                                                        ? 'bg-white dark:bg-white/10 border-slate-300 dark:border-white/20 shadow-md'
+                                                        : 'bg-transparent border-slate-200 dark:border-white/5 hover:bg-white/50 dark:hover:bg-white/5'
+                                                    }
+                                                `}
+                                            >
+                                                <div className={`
+                                                    w-4 h-4 rounded-full border flex items-center justify-center
+                                                    ${accentColor === brand.color ? 'border-black dark:border-white' : 'border-slate-400 dark:border-slate-600'}
+                                                `}>
+                                                    {accentColor === brand.color && <div className="w-2 h-2 rounded-full bg-[#bef264]" />}
+                                                </div>
+
+                                                <div className="flex-1 text-left">
+                                                    <div className={`text-sm font-bold ${accentColor === brand.color ? 'text-black dark:text-white' : 'text-slate-500'}`}>
+                                                        {brand.name}
+                                                    </div>
+                                                    <div className="text-xs text-slate-400 dark:text-slate-500 font-mono">{brand.domain}</div>
+                                                </div>
+
+                                                {accentColor === brand.color && (
+                                                    <Check className="w-4 h-4 text-[#bef264]" />
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="mt-auto pt-6 border-t border-slate-200 dark:border-white/5">
+                                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                                        <ShieldCheck className="w-3 h-3" />
+                                        <span>Business Plan Feature</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* RIGHT: Live Preview */}
+                            <div className="flex-1 relative bg-slate-100 dark:bg-[#0E0E11] p-8 flex items-center justify-center overflow-hidden">
+                                <div
+                                    className="absolute inset-0 opacity-[0.08] transition-all duration-1000"
+                                    style={{ backgroundColor: accentColor }}
+                                />
+                                <div className="absolute inset-0 opacity-[0.03]" style={{
+                                    backgroundImage: `radial-gradient(circle at 1px 1px, black 1px, transparent 0)`,
+                                    backgroundSize: '24px 24px'
+                                }} />
+
+                                {/* Domain Badge */}
+                                <div className="absolute top-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 flex items-center gap-2 z-20 shadow-sm">
+                                    <Globe className="w-3 h-3 text-slate-500" />
+                                    <span className="text-xs font-mono text-slate-500 dark:text-slate-400 transition-all duration-500">
+                                        {currentBrand.domain}
+                                    </span>
+                                </div>
+
+                                {/* Portal Preview Card */}
+                                <div className="relative w-full max-w-[340px] transition-all duration-700 z-10">
+                                    <div className="bg-white dark:bg-[#1a1a20] rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden shadow-2xl">
+                                        {/* Header */}
+                                        <div className="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+                                            <div className="relative w-10 h-10">
+                                                <div className={`absolute inset-0 transition-all duration-500 ${isCustom ? 'opacity-0 scale-50' : 'opacity-100 scale-100'}`}>
+                                                    <Logo className="w-10 h-10 text-black dark:text-white" />
+                                                </div>
+                                                <div
+                                                    className={`absolute inset-0 transition-all duration-500 ${isCustom ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}
+                                                    style={{ color: accentColor }}
+                                                >
+                                                    <Crown className="w-10 h-10" />
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                                                <Lock className="w-3 h-3" />
+                                                <span className="font-mono">Secure</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Content Area */}
+                                        <div className="p-6 space-y-4">
+                                            <div className="aspect-video bg-slate-100 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/5" />
+                                            <div className="space-y-2">
+                                                <div className="h-2 bg-slate-100 dark:bg-white/5 rounded-full w-3/4" />
+                                                <div className="h-2 bg-slate-100 dark:bg-white/5 rounded-full w-full" />
+                                                <div className="h-2 bg-slate-100 dark:bg-white/5 rounded-full w-5/6" />
+                                            </div>
+                                        </div>
+
+                                        {/* Action Button */}
+                                        <div className="p-6 pt-0">
+                                            <div
+                                                className="w-full py-3 rounded-lg font-bold text-xs uppercase tracking-wider text-center transition-all duration-700 shadow-lg"
+                                                style={{
+                                                    backgroundColor: accentColor,
+                                                    color: '#fff' // Better contrast for dark onyx
+                                                }}
+                                            >
+                                                Unlock Files
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </BentoCard>
+
+                    {/* 5 & 6. VERTICAL STACK: STORAGE FREEDOM & SMART CONTRACTS */}
+                    <div className="md:col-span-6 lg:col-span-4 flex flex-col gap-6 h-[540px]">
+
+                        {/* 5. STORAGE FREEDOM (Compressed) */}
+                        <BentoCard className="h-[258px]" title="Storage Freedom" subtitle="BYOS (Bring Your Own Storage)" icon={HardDrive}>
+                            <div className="p-6 pt-0 h-full flex flex-col justify-between">
+                                <p className="text-slate-600 dark:text-slate-200 text-xs leading-relaxed mb-4">
+                                    All paid plans support BYOS (Bring Your Own Storage). Connect AWS S3, Google Drive, or Dropbox to keep full custody of your files.
+                                </p>
+                                <div className="space-y-4">
+                                    {/* Progress Bar */}
+                                    <div>
+                                        <div className="flex justify-between text-[10px] text-slate-500 mb-2">
+                                            <span>Native Cloud</span>
+                                            <span>34%</span>
+                                        </div>
+                                        <div className="w-full bg-slate-200 dark:bg-white/5 rounded-full h-1.5 overflow-hidden">
+                                            <div
+                                                className="bg-[#bef264] h-full shadow-[0_0_10px_#bef264]"
+                                                style={{ width: '34%' }}
+                                            />
+                                        </div>
+                                    </div>
+                                    {/* Options - Smaller */}
+                                    <div className="flex gap-3">
+                                        <div className="flex-1 p-2 rounded bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center gap-2">
+                                            <Server className="w-3 h-3 text-[#bef264]" />
+                                            <span className="text-[10px] font-bold text-black dark:text-white">Native</span>
+                                        </div>
+                                        <div className="flex-1 p-2 rounded bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center gap-2">
+                                            <Box className="w-3 h-3 text-slate-500" />
+                                            <span className="text-[10px] font-bold text-slate-500">S3</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </BentoCard>
+
+                        {/* 6. SMART CONTRACTS (New) */}
+                        <BentoCard className="h-[258px]" title="Formal Sign-off" subtitle="Integrated Signatures" icon={PenTool}>
+                            <div className="p-6 pt-0 h-full flex flex-col">
+                                <p className="text-slate-600 dark:text-slate-200 text-xs leading-relaxed mb-4">
+                                    Require a digital signature approval before assets are unlocked.
+                                </p>
+                                <div className="flex-1 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 p-3 relative overflow-hidden flex flex-col justify-center items-center">
+                                    {/* Signature visual */}
+                                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: NOISE_SVG }}></div>
+                                    <div className="w-full max-w-[140px] space-y-2 relative z-10">
+                                        <div className="h-1 w-full bg-slate-200 dark:bg-white/10 rounded-full" />
+                                        <div className="h-1 w-2/3 bg-slate-200 dark:bg-white/10 rounded-full" />
+                                        <div className="h-8 border-b border-slate-300 dark:border-white/20 mt-2 flex items-end">
+                                            <span className="font-serif italic text-lg text-black dark:text-white opacity-80">Alex Smith</span>
+                                        </div>
+                                        <div className="flex justify-between items-center mt-1">
+                                            <span className="text-[8px] text-slate-400 uppercase">Signed</span>
+                                            <div className="w-3 h-3 bg-[#bef264] rounded-full flex items-center justify-center">
+                                                <Check className="w-2 h-2 text-black" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </BentoCard>
+                    </div>
+                </div>
+            </div>
+
+            {/* Custom Animation CSS */}
+            <style>{`
+                html {
+                    scroll-behavior: smooth;
+                }
+
+                @keyframes float {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(-10px); }
+                }
+                
+                @keyframes float-delayed {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(-10px); }
+                }
+                
+                .animate-float {
+                    animation: float 8s ease-in-out infinite;
+                }
+                
+                .animate-float-delayed {
+                    animation: float-delayed 6s ease-in-out infinite 2s;
+                }
+                
+                .perspective-1000 {
+                    perspective: 1000px;
+                }
+                
+                @keyframes fade-in {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                
+                @keyframes slide-up {
+                    from {
+                        opacity: 0;
+                        transform: translateY(30px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                
+                /* Border Flow Animation */
+                @keyframes border-flow {
+                    0% { background-position: 0% 50%; }
+                    100% { background-position: 200% 50%; }
+                }
+                .group:hover .animate-border-flow {
+                    animation: border-flow 2s linear infinite;
+                }
+                
+                .animate-fade-in {
+                    animation: fade-in 0.6s ease-out;
+                }
+                
+                .animate-slide-up {
+                    animation: slide-up 0.8s ease-out forwards;
+                    opacity: 0;
+                }
+            `}</style>
+        </section>
+    );
+};
+
+const Pricing = ({ onStart }: { onStart: () => void }) => {
+    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+
+    return (
+        <section id="pricing" className="py-32 px-6 bg-slate-100 dark:bg-[#0E0E11] text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
+            <div className="max-w-[1200px] mx-auto">
+                <div className="text-center mb-12">
+                    <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-[#bef264] uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
+                        Plans
+                    </span>
+                    <h2 className="font-serif text-5xl md:text-6xl mb-6">
+                        Start free. <span className="italic text-lime-600 dark:text-[#bef264]">Scale as you succeed.</span>
+                    </h2>
+                    <p className="text-slate-500 dark:text-slate-300 text-lg max-w-2xl mx-auto">
+                        Simple pricing. Professional features.
+                    </p>
+
+                    {/* Toggle */}
+                    <div className="flex items-center justify-center gap-4 mt-8">
+                        <span className={`text-sm font-bold ${billingCycle === 'monthly' ? 'text-black dark:text-white' : 'text-slate-500'}`}>Monthly</span>
+                        <button
+                            onClick={() => { playClick(); setBillingCycle(prev => prev === 'monthly' ? 'yearly' : 'monthly'); }}
+                            className="w-14 h-8 bg-slate-200 dark:bg-white/10 rounded-full relative transition-colors p-1"
+                        >
+                            <div className={`w-6 h-6 bg-white dark:bg-[#bef264] rounded-full shadow-md transition-transform duration-300 ${billingCycle === 'yearly' ? 'translate-x-6' : ''}`} />
+                        </button>
+                        <span className={`text-sm font-bold ${billingCycle === 'yearly' ? 'text-black dark:text-white' : 'text-slate-500'}`}>Yearly <span className="text-[#bef264] text-[10px] ml-1 uppercase tracking-wider">Save 18%</span></span>
+                    </div>
+                </div>
+
+                {/* RESPONSIVE GRID FIX: Using lg:grid-cols-3 instead of md:grid-cols-3 to prevent squishing on tablets */}
+                <div className={`grid grid-cols-1 ${billingCycle === 'yearly' ? 'lg:grid-cols-2 max-w-4xl mx-auto' : 'lg:grid-cols-3'} gap-8 items-start`}>
+
+                    {/* Starter - Only visible in Monthly - ENHANCED BORDER */}
+                    {billingCycle === 'monthly' && (
+                        <div className="p-8 rounded-[2rem] border-2 border-slate-200 hover:border-slate-900/30 dark:border-white/10 dark:hover:border-white/20 bg-white dark:bg-[#151519] transition-all flex flex-col shadow-lg dark:shadow-none h-full animate-fade-in">
+                            <div className="font-mono text-xs uppercase tracking-widest text-slate-500 mb-6">Starter</div>
+                            <div className="flex items-baseline gap-1 mb-2">
+                                <span className="text-4xl font-serif font-bold">$0</span>
+                                <span className="text-sm text-slate-500">/mo</span>
+                            </div>
+                            <div className="text-sm text-slate-500 dark:text-slate-300 mb-8 min-h-[40px]">Perfect for your first secure handover.</div>
+
+                            <button onClick={onStart} className="w-full py-4 rounded-xl border border-slate-200 dark:border-white/20 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black font-bold text-xs uppercase tracking-widest transition-all mb-8">
+                                Start Free
+                            </button>
+
+                            <div className="space-y-4">
+                                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 dark:border-white/5 pb-2">Includes</p>
+                                <ul className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
+                                    <li className="flex gap-3 items-center font-bold text-black dark:text-white"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> 1.5% Platform Fee + Processing*</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> 5 Active Projects</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> 30GB Total Native Storage</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Standard Watermarking</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Stripe Payments Only</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Basic Audit Logs</li>
+                                </ul>
+                                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 dark:border-white/5 pb-2 pt-4">Limits</p>
+                                <ul className="space-y-4 text-sm text-slate-400">
+                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-slate-300 shrink-0" /> No BYOS Storage Links</li>
+                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-slate-300 shrink-0" /> 7-Day Link Expiry</li>
+                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-slate-300 shrink-0" /> "Powered by" Branding</li>
+                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-slate-300 shrink-0" /> No Manual Payments</li>
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Studio - SOLID DEFAULT BORDER + HOVER ANIMATION & SHIFT */}
+                    <div className="relative group z-10 h-full">
+                        {/* The Card Container - Handling the solid border and positioning */}
+                        <div className="
+                        relative h-full rounded-[2rem] p-[2px]
+                        bg-[#bef264] /* Default Solid Border */
+                        transform transition-all duration-300 ease-out
+                        lg:-translate-y-4 /* Default 'Sweet Spot' Lift only on desktop */
+                        group-hover:-translate-y-2 lg:group-hover:-translate-y-6 group-hover:shadow-[0_20px_40px_-10px_rgba(190,242,100,0.4)] /* Hover Lift + Glow */
+                    ">
+                            {/* The Animated Gradient Border Layer - Only visible on hover */}
+                            <div className="
+                            absolute inset-0 rounded-[2rem]
+                            bg-gradient-to-r from-[#bef264] via-emerald-400 to-[#bef264]
+                            bg-[length:200%_auto]
+                            opacity-0 group-hover:opacity-100
+                            group-hover:animate-border-flow
+                            transition-opacity duration-300
+                        " />
+
+                            {/* The Inner Content */}
+                            <div className="relative h-full bg-white dark:bg-[#1a1a1f] rounded-[1.9rem] p-8 flex flex-col overflow-hidden">
+                                <div className="absolute top-0 right-0 p-6">
+                                    <div className="px-3 py-1 bg-[#bef264] text-black text-[10px] font-bold uppercase tracking-widest rounded-full">Sweet Spot</div>
+                                </div>
+
+                                <div className="mb-6">
+                                    <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-[#bef264] uppercase tracking-widest border border-black/10 dark:border-white/10 shadow-lg">
+                                        Studio
+                                    </span>
+                                </div>
+
+                                <div className="flex items-baseline gap-1 mb-2">
+                                    <span className="text-5xl font-serif font-bold text-black dark:text-white">
+                                        {billingCycle === 'monthly' ? '$11.99' : '$119'}
+                                    </span>
+                                    <span className="text-sm text-slate-500">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                                </div>
+                                <div className="text-sm text-slate-500 dark:text-slate-300 mb-8 min-h-[40px]">For consistent delivery & branding.</div>
+
+                                <button onClick={onStart} className="w-full py-4 rounded-xl bg-[#bef264] text-black hover:bg-black hover:text-[#bef264] dark:hover:bg-white dark:hover:text-black font-bold text-xs uppercase tracking-widest transition-all shadow-lg mb-8">
+                                    Get Studio
+                                </button>
+
+                                <div className="space-y-4">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-white/10 pb-2">Everything in Starter, plus</p>
+                                    <ul className="space-y-4 text-sm font-medium text-black dark:text-white">
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> <span className="font-bold">0% Platform Fees (Standard Processing Only*)</span></li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> <span className="font-bold">Unlimited</span> Projects</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> 150GB Total Native Storage</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> <span className="font-bold">5 Active BYOS Storage Links (S3/Drive)</span></li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Custom Branding (Logo/Colors)</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Remove "Powered By" Badge</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Manual Payments (Zelle/Wire)</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Contract Signatures</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Permanent Links (No Expiry)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Business - Premium Dark Card - UPDATED COLOR (Lighter Slate Indigo) */}
+                    <div className="relative p-1 rounded-[2rem] bg-[#45455e] border border-[#565675] shadow-2xl h-full animate-fade-in group overflow-hidden transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]">
+                        {/* Background Color - Layer 0 */}
+                        <div className="absolute inset-0 bg-[#45455e] rounded-[1.9rem]"></div>
+
+                        {/* Cinematic Grain Texture Overlay - Layer 1 (On top of BG, below content) - Increased opacity slightly */}
+                        <div className="absolute inset-0 z-10 opacity-[0.2] pointer-events-none mix-blend-overlay" style={{ backgroundImage: NOISE_SVG }}></div>
+
+                        {/* Radial Ambient Glow - Layer 2 */}
+                        <div className="absolute top-0 right-0 w-[300px] h-[300px] z-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent pointer-events-none rounded-[2rem]"></div>
+
+                        {/* Content Container - Layer 3 (z-20) */}
+                        <div className="relative z-20 p-8 h-full flex flex-col text-white rounded-[1.9rem]">
+
+                            <div className="absolute top-0 right-0 p-6">
+                                <div className="px-3 py-1 bg-white/10 border border-white/20 text-white text-[10px] font-bold uppercase tracking-widest rounded-full flex items-center gap-2 shadow-sm backdrop-blur-md">
+                                    <Gem className="w-3 h-3" /> Power User
+                                </div>
+                            </div>
+
+                            <div className="mb-6">
+                                <span className="inline-block py-1.5 px-4 rounded-full bg-white/10 border border-white/20 font-mono text-xs text-white uppercase tracking-widest shadow-lg backdrop-blur-md">
+                                    Business
+                                </span>
+                            </div>
+
+                            {/* UNIFIED GLASS TEXT: Bold price + suffix in one gradient block */}
+                            <div className="font-serif font-bold text-white filter drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] mb-2">
+                                <span className="text-5xl">
+                                    {billingCycle === 'monthly' ? '$39.99' : '$390'}
+                                </span>
+                                <span className="text-2xl ml-1 font-normal text-indigo-200/80">
+                                    /{billingCycle === 'monthly' ? 'mo' : 'yr'}
+                                </span>
+                            </div>
+
+                            <div className="text-sm text-indigo-200/80 mb-8 min-h-[40px]">High volume infrastructure for elites.</div>
+
+                            {/* Glassmorphism Button */}
+                            <button onClick={onStart} className="w-full py-4 rounded-xl bg-white/5 backdrop-blur-md border border-white/20 text-white hover:bg-white/15 hover:border-white/30 font-bold text-xs uppercase tracking-widest transition-all mb-8 shadow-lg group relative overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                                Go Business
+                            </button>
+
+                            <div className="space-y-4">
+                                <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 border-b border-white/10 pb-2">Everything in Studio, plus</p>
+                                <ul className="space-y-4 text-sm text-indigo-50">
+                                    <li className="flex gap-3 items-center font-bold"><Check className="w-4 h-4 text-white shrink-0" /> 0% Platform Fees (Standard Processing Only*)</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> 1TB Total Native Storage</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Unlimited BYOS Storage Links</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Custom Domain (CNAME)</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Whitelabel Emails (SMTP)</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Dispute Evidence Packs</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Priority Support</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Client Portal Analytics</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p className="text-[10px] font-bold uppercase tracking-wider text-black/60 dark:text-white/40 mt-12 text-center max-w-2xl mx-auto">
+                    * Processing fees refer to standard Stripe credit card processing charges (typically 2.9% + 30¢), which are deducted automatically by the payment processor.
+                </p>
+            </div>
+        </section>
+    );
+};
+
+// ... (FAQItem, FAQSection, Footer, LandingPage export)
+const FAQItem = ({ question, answer }: { question: string, answer: string }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <div className="border-b border-slate-200 dark:border-white/10 last:border-0">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full py-6 flex items-center justify-between text-left group"
+            >
+                <span className="text-lg font-serif text-slate-900 dark:text-white group-hover:text-lime-600 dark:group-hover:text-[#bef264] transition-colors pr-8 tracking-wide">
+                    {question}
+                </span>
+                <div className={`shrink-0 w-8 h-8 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center transition-all ${isOpen ? 'bg-slate-900 text-white dark:bg-white dark:text-black rotate-45' : 'bg-transparent text-slate-400'}`}>
+                    <Plus className="w-4 h-4" />
+                </div>
+            </button>
+            <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${isOpen ? 'grid-rows-[1fr] pb-6' : 'grid-rows-[0fr]'}`}>
+                <div className="overflow-hidden">
+                    <p className="text-slate-500 dark:text-slate-200 leading-relaxed max-w-2xl">
+                        {answer}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const FAQSection = () => (
+    <section className="py-32 px-6 bg-slate-50 dark:bg-[#0E0E11] transition-colors duration-700">
+        <div className="max-w-[800px] mx-auto">
+            <div className="text-center mb-16">
+                <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-[#bef264] uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
+                    Support
+                </span>
+                <h2 className="font-serif text-4xl md:text-5xl text-slate-900 dark:text-white mb-6 tracking-wide">Common Questions</h2>
+            </div>
+
+            <div className="bg-white dark:bg-[#151519] rounded-[2.5rem] p-8 md:p-12 border border-slate-200 dark:border-white/5 shadow-sm">
+                <FAQItem
+                    question="What is TrueHandover?"
+                    answer="TrueHandover is a secure asset gateway designed for the creative economy. Think of it as a 'vending machine' for your business. It automates the final exchange of work for payment. You upload deliverables to a protected portal where clients can review watermarked previews. The high-resolution files are secured and instantly released only after payment is verified."
+                />
+                <FAQItem
+                    question="Is TrueHandover an escrow platform?"
+                    answer="No. TrueHandover is a technical delivery protocol, not a financial escrow service. We facilitate payments using Stripe Connect. We do not take custody of your funds. The payment is processed by Stripe and routed to your connected account immediately. This reduces liability and keeps you in control."
+                />
+                <FAQItem
+                    question="How do I get paid?"
+                    answer="We integrate with Stripe Connect to handle payouts instantly. We also support a 'Digital Handshake' for manual payments. If a client prefers Zelle, Venmo, or Wire Transfer, they can mark the invoice as 'Paid' manually. The files remain locked in a 'Verification Pending' state until you, the creator, confirm receipt of funds in your banking app. Once confirmed, the vault unlocks automatically."
+                />
+                <FAQItem
+                    question="Can I accept Zelle or Venmo?"
+                    answer="Yes. Using our 'Digital Handshake' feature, you can provide your Zelle/Venmo details in the payment terminal. The system handles the asset security workflow while you handle the money transfer directly with the client."
+                />
+                <FAQItem
+                    question="Are there platform fees?"
+                    answer="The Starter plan has a 1.5% platform fee per transaction. The Studio and Business plans have 0% platform fees. Please note that standard payment processing fees (charged by Stripe) apply to all transactions regardless of your plan."
+                />
+                <FAQItem
+                    question="Do my clients need to create an account?"
+                    answer="No. Simplicity is our core value. Clients receive a secure, unique link to view their portal. They can review assets and make payments as a guest, ensuring zero friction for them."
+                />
+                <FAQItem
+                    question="What file types are supported?"
+                    answer="We support all major file types. Images (JPG, PNG) and PDFs get instant watermarked previews. Video files get short clip previews. Other file types (ZIP, specialized formats) are secured in the storage gateway and only downloadable after payment."
+                />
+                <FAQItem
+                    question="Is this a replacement for Dropbox/Drive?"
+                    answer="It can be! We offer secure native storage where we hold the files for you. However, for Agency plans, we also offer 'BYOS' (Bring Your Own Storage). In BYOS mode, files remain in your own S3 bucket or Drive account—we simply gate access to the download links, meaning we never take custody of your actual files."
+                />
+                <FAQItem
+                    question="How do you handle disputes?"
+                    answer="Ideally, we prevent them entirely! Since the client can't access the final files until they pay, the power dynamic is balanced from the start. You stay in control. If things do get tricky, though, we provide a clean 'Evidence Pack' showing exactly who viewed what, and when."
+                />
+            </div>
+        </div>
+    </section>
+);
+
+const Footer = () => (
+    <footer className="bg-white dark:bg-[#0a0a0a] text-black dark:text-white py-20 px-6 border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
+        <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="flex flex-col items-start gap-4">
+                <div className="flex items-center gap-3">
+                    <Logo className="w-6 h-6 text-black dark:text-white" />
+                    <span className="font-serif text-xl tracking-tight">TrueHandover</span>
+                </div>
+                <p className="text-slate-500 dark:text-slate-400 font-serif italic text-lg tracking-wide">The standard for creative closure.</p>
+            </div>
+
+            <div className="flex gap-8 text-xs font-bold uppercase tracking-widest text-slate-500">
+                <a href="#" className="hover:text-black dark:hover:text-white transition-colors">Manifesto</a>
+                <a href="#" className="hover:text-black dark:hover:text-white transition-colors">Legal</a>
+                <a href="#" className="hover:text-black dark:hover:text-white transition-colors">Contact</a>
+            </div>
+
+            <div className="text-[10px] text-slate-500 font-mono">
+                © 2026 TrueHandover Inc.
+            </div>
+        </div>
+    </footer>
+);
+
+export default function LandingPage({ onGetStarted, currentTheme, toggleTheme }: { onGetStarted: () => void, currentTheme: 'light' | 'dark' | 'system', toggleTheme: () => void }) {
+
+    // Removed internal state management for theme to rely on parent App state
+    const [isVideoOpen, setIsVideoOpen] = useState(false);
+
+    return (
+        <div className="min-h-screen bg-slate-50 dark:bg-[#0E0E11] text-black dark:text-white font-sans selection:bg-[#bef264] selection:text-black transition-colors duration-700">
+            {/* Nav receives isHidden prop to create cinema mode */}
+            <Nav onStart={onGetStarted} currentTheme={currentTheme} toggleTheme={toggleTheme} isHidden={isVideoOpen} />
+            <main>
+                <Hero onStart={onGetStarted} onWatchVideo={() => setIsVideoOpen(true)} />
+                <ComparisonSection />
+                <BentoGrid />
+                <Pricing onStart={onGetStarted} />
+                <FAQSection />
+            </main>
+            <VideoModal isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} onStart={onGetStarted} />
+            <Footer />
+        </div>
+    );
+}

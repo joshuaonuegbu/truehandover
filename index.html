@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+
+  <title>TrueHandover | Secure Delivery Protocol</title>
+  <meta name="title" content="TrueHandover | Secure Delivery Protocol" />
+  <meta name="description"
+    content="Professional asset delivery for freelancers. Files are secured and automatically released only when payment is verified." />
+
+  <!-- Favicon: Arch & Handshake Concept - Updated to Thinner Stroke (1.5) -->
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'%3E%3Cpath d='M4 15C4 10.6 9.4 7 16 7C22.6 7 28 10.6 28 15' stroke='%23fff' stroke-width='1.5' stroke-linecap='round'/%3E%3Ccircle cx='12' cy='22' r='6' stroke='%23fff' stroke-width='1.5'/%3E%3Ccircle cx='20' cy='22' r='6' fill='%23bef264' stroke='%23fff' stroke-width='1.5'/%3E%3C/svg%3E" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            // Base Colors
+            cosmic: '#323242',
+            obsidian: '#0f0f15',
+            charcoal: '#23232e', // Updated card background color
+            surface: '#2D2E45',
+            editorial: '#F5F5F0', // New Editorial Background
+
+            // Brand Colors - Restored Lime Green
+            brand: {
+              DEFAULT: '#bef264',
+              hover: '#a3e635',
+              glow: 'rgba(190, 242, 100, 0.5)'
+            },
+          },
+          fontFamily: {
+            sans: ['"Space Grotesk"', 'sans-serif'],
+            serif: ['"Playfair Display"', 'Times New Roman', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.6s ease-out',
+            'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+            'ticker': 'ticker 545s linear infinite',
+            'blob': 'blob 7s infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'sheet-up': 'sheetUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+            'sheet-down': 'sheetDown 0.3s cubic-bezier(0.4, 0, 1, 1) forwards',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(20px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            ticker: {
+              '0%': { transform: 'translateX(0)' },
+              '100%': { transform: 'translateX(-50%)' },
+            },
+            blob: {
+              '0%': { transform: 'translate(0px, 0px) scale(1)' },
+              '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+              '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+              '100%': { transform: 'translate(0px, 0px) scale(1)' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            sheetUp: {
+              '0%': { transform: 'translateY(100%)' },
+              '100%': { transform: 'translateY(0)' },
+            },
+            sheetDown: {
+              '0%': { transform: 'translateY(0)', opacity: '1' },
+              '100%': { transform: 'translateY(100%)', opacity: '0' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    /* Global UI Scaling - Simple and reliable approach using font-size only */
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 95%;
+      /* Slightly smaller base font for compact UI */
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #F5F5F0;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+      font-size: 15px;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      height: 100%;
+    }
+
+    /* Ensure root fills entire viewport without gaps */
+    #root {
+      min-height: 100vh;
+      height: 100%;
+      width: 100%;
+      background: #F5F5F0;
+      position: relative;
+    }
+
+    /* Dark Mode */
+    .dark body {
+      background-color: #323242;
+      color: #ffffff;
+    }
+
+    .dark #root {
+      background: #323242;
+    }
+
+    /* Mobile: Reset to standard size for readability */
+    @media (max-width: 768px) {
+      html {
+        font-size: 100%;
+      }
+
+      body {
+        font-size: 16px;
+      }
+    }
+
+    /* Grainy Texture Utility - Optimized Base64 PNG */
+    .bg-grain {
+      position: relative;
+    }
+
+    .bg-grain::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.05;
+      /* Lightweight 128x128 noise pattern instead of heavy SVG filter */
+      background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAGFBMVEUAAAA5OTkAAAAAAAAAAABMTExERERmZmZnOtmWAAAACHRSTlMAMwAqzMzM/wO30gAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAwSURBVDjLY2AYBaNgKLHgAgNDgwMdwMAwqwUqhqJhqBqIaqCqgaggqgGqBqgGqBoADxwC+3R2Vz4AAAAASUVORK5CYII=");
+      background-repeat: repeat;
+    }
+
+    /* --- GLOBAL CUSTOM SCROLLBAR --- */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      /* Light mode thumb */
+      border-radius: 10px;
+      border: 2px solid transparent;
+      background-clip: content-box;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: #94a3b8;
+    }
+
+    /* Dark Mode Scrollbar - HIGH VISIBILITY WHITE */
+    .dark ::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.3);
+      /* More visible white */
+    }
+
+    .dark ::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .glass-panel {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+    }
+
+    .dark .glass-panel {
+      background: #23232e;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^6.28.0",
+    "@remix-run/router": "https://aistudiocdn.com/@remix-run/router@1.21.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.0",
+    "@aws-sdk/client-s3": "https://esm.sh/@aws-sdk/client-s3@3.454.0",
+    "@aws-sdk/s3-request-presigner": "https://esm.sh/@aws-sdk/s3-request-presigner@3.454.0"
+  }
+}
+</script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+
+<body
+  class="selection:bg-lime-200 dark:selection:bg-lime-900 text-slate-900 dark:text-slate-100 font-sans overflow-x-hidden">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>
