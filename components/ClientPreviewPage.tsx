@@ -1244,11 +1244,23 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
 
                         {/* Collapsed Docked Sidebar Controls (Landscape split + Desktop) */}
                         {!isEmbedded && isDockedSidebarCollapsed && (
-                            <div className="sticky top-0 z-40 -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 mb-4">
+                            <div className={`sticky top-0 z-40 -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 mb-4 ${isTrueDesktop ? '-mt-3 sm:-mt-4 md:-mt-6 lg:-mt-8' : ''}`}>
                                 <div
-                                    className={`border-b backdrop-blur-md ${isDarkMode ? 'bg-black/20 border-white/10' : 'bg-white/70 border-slate-200'}`}
+                                    className={`border-b backdrop-blur-md ${isTrueDesktop ? 'th-desktop-flush-in' : ''} ${isDarkMode ? 'bg-black/20 border-white/10' : 'bg-white/70 border-slate-200'}`}
                                     style={{ paddingTop: hasMockStatusBar ? headerChromePadTop : '0px' }}
                                 >
+                                    {isTrueDesktop && (
+                                        <style>{`
+                                            @keyframes thDesktopFlushIn {
+                                                from { opacity: 0; transform: translateY(14px); }
+                                                to { opacity: 1; transform: translateY(0); }
+                                            }
+                                            .th-desktop-flush-in {
+                                                animation: thDesktopFlushIn 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+                                                will-change: transform, opacity;
+                                            }
+                                        `}</style>
+                                    )}
                                     <div className={`flex items-center justify-between gap-3 px-4 sm:px-5 md:px-6 lg:px-8 ${isTrueDesktop ? 'py-2.5' : 'pb-3'}`}>
                                         <div className="flex items-center gap-2 shrink-0">
                                             <button
