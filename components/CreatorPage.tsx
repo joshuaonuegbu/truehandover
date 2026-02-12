@@ -104,14 +104,16 @@ const WALLPAPER_PRESETS: ProjectTheme[] = [
     {
         name: 'Aero Steel',
         // Unsplash: pink/green/blue abstract painting (UYgrVfIhBec)
-        wallpaper: 'https://source.unsplash.com/UYgrVfIhBec/2000x2000',
+        // NOTE: Avoid source.unsplash.com (often 503 / slow). Use direct CDN image instead.
+        wallpaper: 'https://images.unsplash.com/photo-1617791160505-6f00504e3519?auto=format&fit=crop&w=2000&q=80',
         brightness: 'dark',
         showGrain: true
     },
     {
         name: 'Ultraviolet Waves',
         // Unsplash: abstract purple wavy lines (WNkrBt0CiDQ)
-        wallpaper: 'https://source.unsplash.com/WNkrBt0CiDQ/2000x2000',
+        // NOTE: Avoid source.unsplash.com (often 503 / slow). Use direct CDN image instead.
+        wallpaper: 'https://plus.unsplash.com/premium_photo-1667423711626-01ef87e78ec9?auto=format&fit=crop&w=2000&q=80',
         brightness: 'dark',
         showGrain: true
     }
@@ -605,7 +607,9 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                                         type="date"
                                         value={formData.dueDate}
                                         onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                                        className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-colors text-sm text-slate-900 dark:text-white"
+                                        // Keep the date picker UI readable in dark mode by forcing a light color-scheme.
+                                        style={{ colorScheme: 'light' }}
+                                        className="w-full p-3 bg-slate-50 dark:bg-white/15 border border-slate-200 dark:border-white/15 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-colors text-sm text-slate-900 dark:text-white"
                                     />
                                 </div>
                             </div>
@@ -807,7 +811,8 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                                                 type="date"
                                                 value={milestone.dueDate}
                                                 onChange={e => updateMilestone(index, 'dueDate', e.target.value)}
-                                                className="flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white"
+                                                style={{ colorScheme: 'light' }}
+                                                className="flex-1 p-2 bg-white dark:bg-white/15 rounded-lg text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white"
                                             />
                                         </div>
                                     </div>
@@ -1211,6 +1216,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                         onSetThemeMode={setPreviewTheme}
                         user={user} // Pass user to allow sync
                         isEmbedded={true}
+                        allowSidebarCollapse={true}
                     />
                 </div>
             </div>

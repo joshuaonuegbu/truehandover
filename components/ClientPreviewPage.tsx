@@ -26,6 +26,7 @@ interface ClientPreviewPageProps {
     onToggleTheme: () => void;
     onBack: () => void;
     isEmbedded?: boolean;
+    allowSidebarCollapse?: boolean; // allow collapse controls even when embedded (Creator/editor preview)
     isLocked: boolean;
     lightboxIndex: number | null;
     setLightboxIndex: (index: number | null) => void;
@@ -482,16 +483,36 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
             {/* MAIN VIEWER CONTAINER */}
             <div className="flex-1 relative flex flex-col w-full h-full overflow-hidden z-10 transition-all duration-500">
                 {/* Header Controls */}
-                <div className="absolute top-0 left-0 right-0 p-4 md:p-6 grid grid-cols-3 items-start gap-3 z-50 pointer-events-none" style={{ paddingTop: headerPaddingTop }}>
-                    <div className="pointer-events-auto justify-self-start"><button aria-label="Close Lightbox" onClick={handleClose} className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all ${isDarkMode ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white hover:bg-slate-50 text-slate-700'}`}><X className="w-5 h-5 md:w-6 md:h-6" /></button></div>
-                    <div className="pointer-events-auto justify-self-center"><div className={`px-4 py-2 rounded-full font-mono text-xs font-bold shadow-sm flex items-center gap-2 ${isDarkMode ? 'bg-white/10 text-white backdrop-blur-md' : 'bg-white text-slate-700'}`}><span>{currentIndex + 1}</span><span className="opacity-30">/</span><span>{allFiles.length}</span></div></div>
-                    <div className="pointer-events-auto justify-self-end"><button aria-label="Toggle Sidebar" onClick={() => { playClick(); setShowSidebar(!showSidebar); }} className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all ${isDarkMode ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white hover:bg-slate-50 text-slate-700'}`}>{showSidebar ? <PanelRightClose className="w-5 h-5 md:w-6 md:h-6" /> : <PanelRightOpen className="w-5 h-5 md:w-6 md:h-6" />}</button></div>
+                <div className="absolute top-0 left-0 right-0 p-3 sm:p-4 md:p-6 grid grid-cols-3 items-start gap-3 z-50 pointer-events-none" style={{ paddingTop: headerPaddingTop }}>
+                    <div className="pointer-events-auto justify-self-start">
+                        <button
+                            aria-label="Close Lightbox"
+                            onClick={handleClose}
+                            className={`w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all border ${isDarkMode ? 'bg-white/25 hover:bg-white/35 border-white/15 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}
+                        >
+                            <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                    </div>
+                    <div className="pointer-events-auto justify-self-center">
+                        <div className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-mono text-[11px] sm:text-xs font-bold shadow-sm flex items-center gap-2 border ${isDarkMode ? 'bg-white/25 text-white border-white/15' : 'bg-white/95 text-slate-700 border-slate-200'}`}>
+                            <span>{currentIndex + 1}</span><span className="opacity-30">/</span><span>{allFiles.length}</span>
+                        </div>
+                    </div>
+                    <div className="pointer-events-auto justify-self-end">
+                        <button
+                            aria-label="Toggle Sidebar"
+                            onClick={() => { playClick(); setShowSidebar(!showSidebar); }}
+                            className={`w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all border ${isDarkMode ? 'bg-white/25 hover:bg-white/35 border-white/15 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}
+                        >
+                            {showSidebar ? <PanelRightClose className="w-4 h-4 sm:w-5 sm:h-5" /> : <PanelRightOpen className="w-4 h-4 sm:w-5 sm:h-5" />}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Image Area - Centers and Fits Content. Added pt-24 for Mobile so image isn't hidden by header controls */}
-                <div className="flex-1 flex items-center justify-center p-4 pt-24 md:p-12 relative overflow-hidden z-10">
-                    <button aria-label="Previous Image" onClick={() => { setSlideDirection(-1); onPrev(); }} className={`absolute left-2 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-lg transition-all z-40 group ${isDarkMode ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white hover:bg-slate-50 text-slate-700'}`}><ArrowLeft className="w-6 h-6 md:w-7 md:h-7 group-hover:-translate-x-0.5 transition-transform" strokeWidth={1.5} /></button>
-                    <button aria-label="Next Image" onClick={() => { setSlideDirection(1); onNext(); }} className={`absolute right-2 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-lg transition-all z-40 group ${isDarkMode ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white hover:bg-slate-50 text-slate-700'}`}><ArrowRight className="w-6 h-6 md:w-7 md:h-7 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.5} /></button>
+                <div className="flex-1 flex items-center justify-center p-4 pt-20 sm:pt-24 md:p-12 relative overflow-hidden z-10">
+                    <button aria-label="Previous Image" onClick={() => { setSlideDirection(-1); onPrev(); }} className={`absolute left-2 sm:left-3 md:left-8 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all z-40 group border ${isDarkMode ? 'bg-white/25 hover:bg-white/35 border-white/15 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}><ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 group-hover:-translate-x-0.5 transition-transform" strokeWidth={1.5} /></button>
+                    <button aria-label="Next Image" onClick={() => { setSlideDirection(1); onNext(); }} className={`absolute right-2 sm:right-3 md:right-8 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all z-40 group border ${isDarkMode ? 'bg-white/25 hover:bg-white/35 border-white/15 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}><ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.5} /></button>
 
                     <div key={file.id} className={`relative w-full h-full max-w-full max-h-full flex items-center justify-center ${slideDirection === 1 ? 'animate-slide-right' : slideDirection === -1 ? 'animate-slide-left' : 'animate-fade-in'}`}>
                         {file.previewUrl ? (
@@ -614,6 +635,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
 
 export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     project, user, isDarkMode, themeMode, onToggleTheme, onBack, isEmbedded = false,
+    allowSidebarCollapse = false,
     isLocked, lightboxIndex, setLightboxIndex, revisions, onPaymentComplete,
     handleSubmitRevision, handleDeleteRevision, activeFilter, setActiveFilter, theme,
     filteredFiles, handleRequestCorrection, accessDenied, refreshAccess
@@ -683,7 +705,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     // Docked sidebar collapse is supported for:
     // - Split landscape (mobile/tablet/foldable)
     // - Desktop (lg+) where the sidebar is docked
-    const canCollapseDockedSidebar = !isEmbedded && (isLandscapeSplit || !isBelowLg);
+    const canCollapseDockedSidebar = (!isEmbedded || allowSidebarCollapse) && (isLandscapeSplit || !isBelowLg);
     // Sidebar placement:
     // - Docked in split-landscape + desktop
     // - Inline in the main scroll for stacked (portrait) small screens so users can scroll past it to the asset gallery.
@@ -696,7 +718,8 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     const headerExtraTopPx = deviceType === 'mobile' && !isLandscape ? 8 : 4;
     const headerChromePadTop = `calc(${headerSafeTop} + ${headerExtraTopPx}px)`;
     const hasMockStatusBar = Boolean(deviceType);
-    const isTrueDesktop = !isEmbedded && !deviceType && !isBelowLg;
+    const isActualDesktopViewport = !deviceType && !isBelowLg;
+    const isTrueDesktop = !isEmbedded && isActualDesktopViewport;
 
     // Auto-hide mobile header after 5 seconds of inactivity (portrait + stacked only)
     // Disabled: users expect the project title header to remain visible and stable.
@@ -1026,11 +1049,11 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                     )}
                 </div>
 
-                {/* CRANKED GRAIN: Boosted contrast significantly (300%) for extreme film texture */}
+                {/* CRANKED GRAIN: Stronger film grain (requested). */}
                 {theme.showGrain && (
                     <div
-                        className={`absolute inset-0 z-0 pointer-events-none ${isDarkMode ? 'opacity-60 mix-blend-overlay' : 'opacity-40 mix-blend-multiply'}`}
-                        style={{ backgroundImage: NOISE_SVG, filter: 'contrast(300%) brightness(100%)' }}
+                        className={`absolute inset-0 z-0 pointer-events-none ${isDarkMode ? 'opacity-85 mix-blend-overlay' : 'opacity-65 mix-blend-multiply'}`}
+                        style={{ backgroundImage: NOISE_SVG, filter: 'contrast(450%) brightness(110%)' }}
                     ></div>
                 )}
 
@@ -1119,21 +1142,24 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                 )}
 
                 {/* Desktop Back Button Area (with Creator Preview Badge) */}
-                {!isEmbedded && (
+                {(!isEmbedded || allowSidebarCollapse) && (
                     <div className="hidden lg:flex relative z-20 px-8 pt-8 pb-2 justify-between items-center" style={{ paddingTop: paddingTop ? `max(32px, ${paddingTop})` : '32px' }}>
                         <div className="flex items-center gap-4">
-                            <button onClick={onBack} className={`group flex items-center gap-2 px-4 py-2 rounded-full ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-300 hover:text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-600 hover:text-slate-900'} backdrop-blur-md border shadow-sm transition-all duration-300 hover:scale-105`}>
-                                <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                                <span className="text-xs font-bold uppercase tracking-widest">Back</span>
-                            </button>
-                            {/* Creator Preview Disclaimer — moved here */}
-                            {!project.clientViewedAt && (
+                            {!isEmbedded && (
+                                <button onClick={onBack} className={`group flex items-center gap-2 px-4 py-2 rounded-full ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-300 hover:text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-600 hover:text-slate-900'} backdrop-blur-md border shadow-sm transition-all duration-300 hover:scale-105`}>
+                                    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                    <span className="text-xs font-bold uppercase tracking-widest">Back</span>
+                                </button>
+                            )}
+                            {/* Creator Preview Disclaimer — shown on full preview routes (not embedded editor preview). */}
+                            {!isEmbedded && !project.clientViewedAt && (
                                 <div className={`px-4 py-2 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-50 border-amber-200 text-amber-600'}`}>
                                     <Eye className="w-3.5 h-3.5" />
                                     <span>Creator Preview</span>
                                 </div>
                             )}
-                            {canCollapseDockedSidebar && !isDockedSidebarCollapsed && (
+                            {/* Non-desktop layouts keep the collapse control here (left group). */}
+                            {canCollapseDockedSidebar && !isDockedSidebarCollapsed && !isActualDesktopViewport && (
                                 <button
                                     type="button"
                                     onClick={() => { playClick(); setIsSplitSidebarCollapsed(true); }}
@@ -1145,6 +1171,18 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 </button>
                             )}
                         </div>
+                        {/* Desktop-only: collapse button lives on the far right (red-spot placement). */}
+                        {canCollapseDockedSidebar && !isDockedSidebarCollapsed && isActualDesktopViewport && (
+                            <button
+                                type="button"
+                                onClick={() => { playClick(); setIsSplitSidebarCollapsed(true); }}
+                                className={`p-2.5 rounded-full border shadow-sm transition-all duration-300 hover:scale-105 ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-300 hover:text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-600 hover:text-slate-900'} backdrop-blur-md`}
+                                aria-label="Collapse Details"
+                                title="Hide Details"
+                            >
+                                <PanelRightClose className="w-4 h-4" />
+                            </button>
+                        )}
                     </div>
                 )}
 
@@ -1240,10 +1278,43 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                     {pattern && pattern !== 'none' && <div className="absolute inset-0 pointer-events-none z-0"><div className={`w-full h-full transition-all duration-500 ${patternColorClass} ${patternOpacityClass}`} style={{ maskImage: maskImage, WebkitMaskImage: maskImage, maskSize: maskSize, WebkitMaskSize: maskSize, maskRepeat: maskRepeat, WebkitMaskRepeat: maskRepeat }} /></div>}
                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-slate-100/50 dark:bg-white/[0.02] rounded-full blur-[100px] -z-10 pointer-events-none" />
 
+                    {/* Desktop-only: when the docked sidebar is collapsed, use minimal controls (no glass header). */}
+                    {isActualDesktopViewport && isDockedSidebarCollapsed && (!isEmbedded || allowSidebarCollapse) && (
+                        <div className="hidden lg:flex absolute top-8 left-8 right-8 z-40 items-center justify-between pointer-events-none">
+                            <button
+                                type="button"
+                                onClick={() => { playClick(); onBack(); }}
+                                className={`pointer-events-auto w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${isDarkMode ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
+                                aria-label="Back"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+
+                            <div className="flex items-center gap-3 pointer-events-auto">
+                                {!isEmbedded && !project.clientViewedAt && (
+                                    <div className={`px-3 py-1.5 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-50 border-amber-200 text-amber-600'}`}>
+                                        <Eye className="w-3.5 h-3.5" />
+                                        <span>Creator Preview</span>
+                                    </div>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => { playClick(); setIsSplitSidebarCollapsed(false); }}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                                    aria-label="Show Details"
+                                    title="Show Details"
+                                >
+                                    <PanelRightOpen className="w-3.5 h-3.5" />
+                                    <span>Details</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     <main ref={mainScrollRef} onScroll={handleMainScroll} className={`flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 scroll-smooth relative z-10 w-full ${!isEmbedded && isLocked && !isPaid ? (isLandscapeSplit ? 'pb-8' : 'pb-24 lg:pb-8') : ''}`}>
 
                         {/* Collapsed Docked Sidebar Controls (Landscape split + Desktop) */}
-                        {!isEmbedded && isDockedSidebarCollapsed && (
+                        {!isEmbedded && isDockedSidebarCollapsed && !isTrueDesktop && (
                             <div
                                 className={`sticky top-0 z-40 -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 mb-4 ${isTrueDesktop ? '-mt-3 sm:-mt-4 md:-mt-6 lg:-mt-8' : ''}`}
                                 // Sticky positioning is relative to the scrollport (padding box). On desktop the scroll
@@ -1330,8 +1401,8 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
 
                             {theme.showGrain && (
                                 <div
-                                    className={`absolute inset-0 z-0 pointer-events-none ${isDarkMode ? 'opacity-60 mix-blend-overlay' : 'opacity-40 mix-blend-multiply'}`}
-                                    style={{ backgroundImage: NOISE_SVG, filter: 'contrast(300%) brightness(100%)' }}
+                                    className={`absolute inset-0 z-0 pointer-events-none ${isDarkMode ? 'opacity-85 mix-blend-overlay' : 'opacity-65 mix-blend-multiply'}`}
+                                    style={{ backgroundImage: NOISE_SVG, filter: 'contrast(450%) brightness(110%)' }}
                                 />
                             )}
 

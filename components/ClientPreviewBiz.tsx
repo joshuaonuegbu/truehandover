@@ -54,6 +54,7 @@ interface ClientPreviewBizProps {
     onSetThemeMode?: (mode: 'light' | 'dark' | 'system') => void;
     user?: UserProfile;
     isEmbedded?: boolean;
+    allowSidebarCollapse?: boolean;
 }
 
 const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
@@ -64,7 +65,8 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     onSetThemeMode,
     themeMode,
     user,
-    isEmbedded = false
+    isEmbedded = false,
+    allowSidebarCollapse = false
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -78,8 +80,10 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     const [frameOption, setFrameOption] = useState<FrameOption>('dynamicIsland');
     const [showFrameSettings, setShowFrameSettings] = useState(false);
     const canvasRef = useRef<HTMLDivElement>(null);
+    const iframeRef = useRef<HTMLIFrameElement | null>(null);
     const [scale, setScale] = useState(1);
     const [iframeRefreshKey, setIframeRefreshKey] = useState(0);
+    const [iframeLoadedTick, setIframeLoadedTick] = useState(0);
 
     // --- TRANSITION STATE for smooth desktop <-> device switching ---
     const [isTransitioning, setIsTransitioning] = useState(false);
@@ -132,9 +136,21 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         const onMessage = (event: MessageEvent) => {
             if (event.origin !== window.location.origin) return;
             const data = event.data as any;
-            if (!data || data.type !== 'TRUEHANDOVER_PREVIEW_THEME') return;
-            if (typeof data.isDarkMode !== 'boolean') return;
-            setIframeThemeIsDark(data.isDarkMode);
+            if (!data || typeof data.type !== 'string') return;
+
+            // Child (iframe) -> parent: keep mock status bar in sync with the preview theme.
+            if (data.type === 'TRUEHANDOVER_PREVIEW_THEME') {
+                if (typeof data.isDarkMode !== 'boolean') return;
+                setIframeThemeIsDark(data.isDarkMode);
+                return;
+            }
+
+            // Parent (creator/editor) -> child: push live project edits into the canvas iframe so it stays in sync.
+            if (data.type === 'TRUEHANDOVER_PREVIEW_SET_PROJECT') {
+                if (!data.project) return;
+                setProject(data.project as Project);
+                return;
+            }
         };
         window.addEventListener('message', onMessage);
         return () => window.removeEventListener('message', onMessage);
@@ -295,6 +311,14 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         return `${base}#/preview/${project.id}?raw=1&theme=${themeMode || 'system'}&pt=${statusBarHeightPx}&pb=20&device=${deviceMode}`;
     }, [project.id, themeMode, deviceMode, statusBarHeightPx]);
 
+    // Live-sync the canvas iframe with the current project data (important for Creator/editor embedded previews).
+    useEffect(() => {
+        if (deviceMode === 'desktop' || isRawMode || viewportClass === 'mobile') return;
+        const target = iframeRef.current?.contentWindow;
+        if (!target) return;
+        target.postMessage({ type: 'TRUEHANDOVER_PREVIEW_SET_PROJECT', project }, window.location.origin);
+    }, [deviceMode, orientation, iframeRefreshKey, iframeLoadedTick, project, isRawMode, viewportClass]);
+
     // --- RENDER: ClientPreviewPage (props bundle) ---
     const previewProps = {
         project, user, isDarkMode,
@@ -305,7 +329,8 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         handleSubmitRevision, handleDeleteRevision,
         activeFilter, setActiveFilter, theme, filteredFiles,
         handleRequestCorrection, accessDenied,
-        refreshAccess: () => { localStorage.removeItem(`viewed_${project.id}`); window.location.reload(); }
+        refreshAccess: () => { localStorage.removeItem(`viewed_${project.id}`); window.location.reload(); },
+        allowSidebarCollapse
     };
 
     // --- RAW MODE: Render component directly (used inside iframes) ---
@@ -578,6 +603,8 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                                 src={iframeSrc}
                                 className="w-full h-full border-0"
                                 title={`${deviceLabel} Preview`}
+                                ref={iframeRef}
+                                onLoad={() => setIframeLoadedTick(t => t + 1)}
                                 style={{
                                     borderRadius: `calc(${device.bezelRadius} - ${device.bezelWidth}px)`,
                                     backgroundColor: isDarkMode ? '#0f0f15' : '#ffffff',
