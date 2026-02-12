@@ -1266,6 +1266,9 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                             }
                                         `}</style>
                                     )}
+                                    {/* Desktop-only: keep the glass background flush to the top, but align the controls
+                                        to the same y-level as the expanded desktop sidebar header (which sits below 32px padding). */}
+                                    {isTrueDesktop && <div aria-hidden className="h-[22px]" />}
                                     <div className={`flex items-center justify-between gap-3 px-4 sm:px-5 md:px-6 lg:px-8 ${isTrueDesktop ? 'th-desktop-flush-content py-2.5' : 'pb-3'}`}>
                                         <div className="flex items-center gap-2 shrink-0">
                                             <button
