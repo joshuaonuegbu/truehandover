@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Lock, Unlock, Download, ShieldCheck,
@@ -717,11 +717,34 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     const showDockedSidebar = isEmbedded || isLandscapeSplit || !isBelowLg;
     const showInlineSidebar = !isEmbedded && !isLandscapeSplit && isBelowLg && isMobileInfoOpen;
     const isDockedSidebarCollapsed = canCollapseDockedSidebar && isSplitSidebarCollapsed;
+
+    // Simulator chrome: in light mode + landscape + collapsed sidebar, the status bar should blend with the vault
+    // (transparent over the iframe) rather than forcing a solid bar that fights the vault background.
+    useEffect(() => {
+        let inIframe = false;
+        try {
+            inIframe = window.self !== window.top;
+        } catch {
+            inIframe = false;
+        }
+        if (!inIframe) return;
+
+        const wantsTransparentLightStatusBar =
+            !isDarkMode &&
+            Boolean(deviceType) &&
+            isLandscapeSplit &&
+            isDockedSidebarCollapsed;
+
+        window.parent.postMessage({
+            type: 'TRUEHANDOVER_PREVIEW_STATUSBAR',
+            mode: wantsTransparentLightStatusBar ? 'transparent' : 'solid',
+        }, window.location.origin);
+    }, [isDarkMode, deviceType, isLandscapeSplit, isDockedSidebarCollapsed]);
     // Extra top breathing room below the (mock) status bar:
     // - Mobile portrait can afford slightly more
     // - Everything else sits a touch closer for tighter, more premium spacing.
     // Real tablet responsive (no mock status bar): add a bit more breathing room so the glass header doesn't feel cramped.
-    const headerExtraTopPx = deviceType === 'mobile' && !isLandscape ? 8 : isRealTabletViewport ? 10 : 4;
+    const headerExtraTopPx = deviceType === 'mobile' && !isLandscape ? 8 : isRealTabletViewport ? 10 : (deviceType && isLandscape ? 0 : 4);
     const headerChromePadTop = `calc(${headerSafeTop} + ${headerExtraTopPx}px)`;
     const hasMockStatusBar = Boolean(deviceType);
     const isActualDesktopViewport = !deviceType && !isBelowLg;
@@ -1150,8 +1173,8 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
 
                 {/* Desktop Back Button Area (with Creator Preview Badge) */}
                 {(!isEmbedded || allowSidebarCollapse) && (
-                    <div className="hidden lg:flex relative z-20 px-8 pt-8 pb-2 justify-between items-center" style={{ paddingTop: paddingTop ? `max(32px, ${paddingTop})` : '32px' }}>
-                        <div className="flex items-center gap-4">
+                    <div className="hidden lg:flex relative z-20 px-8 pt-8 pb-2 justify-between items-center flex-wrap gap-y-2" style={{ paddingTop: paddingTop ? `max(32px, ${paddingTop})` : '32px' }}>
+                        <div className="flex items-center gap-4 min-w-0">
                             {!isEmbedded && (
                                 <button onClick={onBack} className={`group flex items-center gap-2 px-4 py-2 rounded-full ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-300 hover:text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-600 hover:text-slate-900'} backdrop-blur-md border shadow-sm transition-all duration-300 hover:scale-105`}>
                                     <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
@@ -1289,18 +1312,20 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                     {isActualDesktopViewport && isDockedSidebarCollapsed && (!isEmbedded || allowSidebarCollapse) && (
                         <div className="hidden lg:flex absolute top-8 left-8 right-8 z-40 items-center justify-between pointer-events-none">
                             <div className="flex items-center gap-2 pointer-events-auto">
-                                <button
-                                    type="button"
-                                    onClick={() => { playClick(); onBack(); }}
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${isDarkMode ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
-                                    aria-label="Back"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
+                                {!isEmbedded && (
+                                    <button
+                                        type="button"
+                                        onClick={() => { playClick(); onBack(); }}
+                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${isDarkMode ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
+                                        aria-label="Back"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                )}
                                 <button
                                     type="button"
                                     onClick={() => { playClick(); setIsSplitSidebarCollapsed(false); }}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isEmbedded ? (isDarkMode ? 'bg-[#bef264] text-black hover:bg-[#a3e635] border border-[#bef264]/40 shadow-lg shadow-black/20' : 'bg-slate-900 text-white hover:bg-slate-800 border border-slate-900/40 shadow-lg') : (isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50')}`}
                                     aria-label="Show Details"
                                     title="Show Details"
                                 >
@@ -1320,7 +1345,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                         </div>
                     )}
 
-                    <main ref={mainScrollRef} onScroll={handleMainScroll} className={`flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 ${isTrueDesktop && isDockedSidebarCollapsed ? 'lg:pt-24' : ''} scroll-smooth relative z-10 w-full ${!isEmbedded && isLocked && !isPaid ? (isLandscapeSplit ? 'pb-8' : 'pb-24 lg:pb-8') : ''}`}>
+                    <main ref={mainScrollRef} onScroll={handleMainScroll} className={`flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 ${isActualDesktopViewport && isDockedSidebarCollapsed && (!isEmbedded || allowSidebarCollapse) ? 'lg:pt-24' : ''} scroll-smooth relative z-10 w-full ${!isEmbedded && isLocked && !isPaid ? (isLandscapeSplit ? 'pb-8' : 'pb-24 lg:pb-8') : ''}`}>
 
                         {/* Collapsed Docked Sidebar Controls (Landscape split + Desktop) */}
                         {!isEmbedded && isDockedSidebarCollapsed && !isTrueDesktop && (
@@ -1349,7 +1374,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                     {/* Desktop-only: keep the glass background flush to the top, but align the controls
                                         to the same y-level as the expanded desktop sidebar header (which sits below 32px padding). */}
                                     {isTrueDesktop && <div aria-hidden className="h-[22px]" />}
-                                    <div className={`flex items-center justify-between gap-3 px-4 sm:px-5 md:px-6 lg:px-8 ${isTrueDesktop ? 'th-desktop-flush-content py-2.5' : 'pb-3'}`}>
+                        <div className={`flex items-center justify-between gap-3 px-4 sm:px-5 md:px-6 lg:px-8 ${isTrueDesktop ? 'th-desktop-flush-content py-2.5' : 'pb-2'}`}>
                                         <div className="flex items-center gap-2 shrink-0">
                                             <button
                                                 type="button"

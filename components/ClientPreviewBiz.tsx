@@ -18,10 +18,11 @@ type DeviceMode = 'desktop' | 'tablet' | 'mobile' | 'foldable';
 type FrameOption = 'dynamicIsland' | 'cameraDot' | 'none';
 
 // --- MOCK STATUS BAR COMPONENT ---
-const MockStatusBar = ({ width, isDark, heightPx }: { width: number; isDark: boolean; heightPx: number }) => {
+const MockStatusBar = ({ width, isDark, heightPx, lightModeStyle }: { width: number; isDark: boolean; heightPx: number; lightModeStyle?: 'solid' | 'transparent' }) => {
     const textColor = isDark ? 'text-white' : 'text-black';
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const isTransparentLight = !isDark && lightModeStyle === 'transparent';
     return (
         <div
             className={`absolute top-0 left-0 right-0 z-[65] flex items-center justify-between px-6 ${textColor} pointer-events-none`}
@@ -30,8 +31,11 @@ const MockStatusBar = ({ width, isDark, heightPx }: { width: number; isDark: boo
                 fontWeight: 600,
                 letterSpacing: '0.01em',
                 height: `${heightPx}px`,
-                // In light mode, the status bar should read as a "white" bar like iOS.
-                backgroundColor: isDark ? 'transparent' : 'rgba(241,245,249,0.96)',
+                // In light mode we usually render a "white" bar like iOS. In some simulated states (landscape + collapsed),
+                // we intentionally go transparent so the bar blends with the vault background beneath.
+                backgroundColor: isDark ? 'transparent' : (isTransparentLight ? 'transparent' : 'rgba(241,245,249,0.96)'),
+                backdropFilter: isTransparentLight ? 'blur(10px)' : undefined,
+                textShadow: isTransparentLight ? '0 1px 6px rgba(255,255,255,0.35)' : undefined,
             }}
         >
             <span>{timeStr}</span>
@@ -90,6 +94,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     const [pendingMode, setPendingMode] = useState<DeviceMode | null>(null);
     const [isDesktopFadingIn, setIsDesktopFadingIn] = useState(false);
     const [iframeThemeIsDark, setIframeThemeIsDark] = useState<boolean | null>(null);
+    const [iframeStatusBarLightModeStyle, setIframeStatusBarLightModeStyle] = useState<'solid' | 'transparent'>('solid');
 
     // --- VIEWPORT DETECTION ---
     const [viewportClass, setViewportClass] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -145,6 +150,13 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                 return;
             }
 
+            // Child (iframe) -> parent: tweak mock status bar background based on preview layout state.
+            if (data.type === 'TRUEHANDOVER_PREVIEW_STATUSBAR') {
+                if (data.mode !== 'solid' && data.mode !== 'transparent') return;
+                setIframeStatusBarLightModeStyle(data.mode);
+                return;
+            }
+
             // Parent (creator/editor) -> child: push live project edits into the canvas iframe so it stays in sync.
             if (data.type === 'TRUEHANDOVER_PREVIEW_SET_PROJECT') {
                 if (!data.project) return;
@@ -160,6 +172,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     // (the iframe will re-report its theme after reload).
     useEffect(() => {
         setIframeThemeIsDark(null);
+        setIframeStatusBarLightModeStyle('solid');
     }, [deviceMode, themeMode]);
 
     // Access Control Logic (One-Time Links)
@@ -589,7 +602,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                             style={{ borderRadius: device.bezelRadius, border: `${device.bezelWidth}px solid #222230` }}
                         >
                             {/* === MOCK STATUS BAR === */}
-                            <MockStatusBar width={frameW} isDark={statusBarIsDark} heightPx={statusBarHeightPx} />
+                            <MockStatusBar width={frameW} isDark={statusBarIsDark} heightPx={statusBarHeightPx} lightModeStyle={iframeStatusBarLightModeStyle} />
 
                             {/* Pill-shaped Dynamic Island — mobile only, portrait only */}
                             {isMobile && isPortrait && frameOption === 'dynamicIsland' && (

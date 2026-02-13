@@ -11,7 +11,7 @@ import {
     Wallet, Smartphone, Mail, Coins, ShieldAlert,
     Infinity, Hourglass, Flame, Camera, Type,
     Target, Radio, Crosshair, Box, Play, Hash,
-    Monitor, AlertCircle, Loader2, Key
+    Monitor, AlertCircle, Loader2, Key, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import { Project, FileAsset, ProjectTheme, Milestone, UserProfile, CredentialBlock } from '../types';
 import { playClick, playSuccess } from '../utils/sound';
@@ -238,6 +238,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
 
     const [showAvatarSelector, setShowAvatarSelector] = useState(false);
     const [customWallpapers, setCustomWallpapers] = useState<ProjectTheme[]>([]);
+    const [isEditorCollapsed, setIsEditorCollapsed] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const assetInputRef = React.useRef<HTMLInputElement>(null); // For asset uploads
 
@@ -539,7 +540,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
             />
 
             {/* LEFT PANEL: EDITOR (25%) */}
-            <div className="w-[25%] min-w-[340px] flex flex-col border-r border-slate-200 dark:border-white/5 bg-white/80 dark:bg-[#1a1a23]/80 backdrop-blur-xl relative z-20 overflow-hidden">
+            <div className={`${isEditorCollapsed ? 'w-0 min-w-0 opacity-0 pointer-events-none' : 'w-[25%] min-w-[340px] opacity-100'} flex flex-col border-r border-slate-200 dark:border-white/5 bg-white/80 dark:bg-[#1a1a23]/80 backdrop-blur-xl relative z-20 overflow-hidden transition-all duration-300`}>
                 {/* Film Grain Overlay - Switched to SVG with stronger opacity & mix-blend-multiply for light mode */}
                 <div
                     className="absolute inset-0 pointer-events-none z-0 mix-blend-multiply dark:mix-blend-overlay opacity-15 dark:opacity-30"
@@ -568,6 +569,15 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                             <span className="w-2 h-2 rounded-full bg-lime-600 dark:bg-[#bef264] animate-pulse"></span>
                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Live Editor</span>
                         </div>
+                        <button
+                            type="button"
+                            onClick={() => { playClick(); setIsEditorCollapsed(true); }}
+                            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10 transition-all"
+                            title="Collapse Editor"
+                            aria-label="Collapse Editor"
+                        >
+                            <PanelLeftClose className="w-4 h-4" />
+                        </button>
                     </div>
                 </div>
 
@@ -1204,11 +1214,29 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
 
             {/* RIGHT PANEL: LIVE PREVIEW (75%) */}
             <div className="flex-1 relative bg-black overflow-hidden shadow-2xl">
+                {/* Collapsed editor restore control */}
+                {isEditorCollapsed && (
+                    <div className="absolute top-6 left-6 z-[60] flex flex-col items-start gap-2">
+                        <button
+                            type="button"
+                            onClick={() => { playClick(); setIsEditorCollapsed(false); }}
+                            className="px-4 py-2 rounded-full bg-[#bef264] hover:bg-[#a3e635] text-black text-[10px] font-bold uppercase tracking-widest shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-[#bef264]/40 flex items-center gap-2 transition-all hover:scale-[1.02]"
+                            aria-label="Show Editor"
+                            title="Show Editor"
+                        >
+                            <PanelLeftOpen className="w-4 h-4" />
+                            Show Editor
+                        </button>
+                        <div className="px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/70">
+                            Editor collapsed (preview-only)
+                        </div>
+                    </div>
+                )}
                 {/* Overlay Badge */}
                 <div className="absolute top-6 right-6 z-50 pointer-events-none">
                     <div className="bg-black/50 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full flex items-center gap-2 shadow-2xl">
                         <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_red]"></div>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-white">Client View Preview</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white">Live Preview Editor</span>
                     </div>
                 </div>
 
