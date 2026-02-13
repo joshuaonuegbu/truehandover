@@ -203,8 +203,26 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
     const [expandedSpecs, setExpandedSpecs] = useState<Set<string>>(new Set());
 
     return (
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 ${!isEmbedded ? 'xl:grid-cols-3' : ''} gap-3 sm:gap-4 lg:gap-6 pb-24`}>
-            {files.map((file: FileAsset, index: number) => {
+        // Use container-responsive columns so embedded previews behave like real desktop when there's room.
+        // (Avoid hardcoding "embedded = 2 columns", which feels dumb/unpredictable.)
+        <div
+            className="th-asset-grid-wrap"
+            style={{ ['containerType' as any]: 'inline-size' }}
+        >
+            <style>{`
+                .th-asset-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                }
+                @container (min-width: 640px) {
+                    .th-asset-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                }
+                @container (min-width: 980px) {
+                    .th-asset-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+                }
+            `}</style>
+            <div className={`th-asset-grid gap-3 sm:gap-4 lg:gap-6 pb-24`}>
+                {files.map((file: FileAsset, index: number) => {
                 const isRevisionSent = !!(revisions[file.id]?.length);
                 return (
                     <div
@@ -282,7 +300,8 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                         </div>
                     </div>
                 );
-            })}
+                })}
+            </div>
         </div>
     );
 };
@@ -435,6 +454,19 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
         : 'max(28px, calc(20px + env(safe-area-inset-top)))';
 
     const [isClosing, setIsClosing] = useState(false);
+    const isProtectedPreview = Boolean(file?.locked && isLocked);
+    const viewerType: 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other' =
+        (file?.type === 'image' || file?.type === 'design') ? 'image'
+            : (file?.type === 'video') ? 'video'
+                : (file?.type === 'audio') ? 'audio'
+                    : (file?.type === 'pdf') ? 'pdf'
+                        : (file?.type === 'archive') ? 'archive'
+                            : 'other';
+    const playableUrl: string | undefined = file?.downloadUrl || file?.externalUrl;
+
+    useEffect(() => {
+        setIsImageLoaded(false);
+    }, [file?.id]);
 
     const handleClose = () => {
         setIsClosing(true);
@@ -511,26 +543,84 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                     </div>
                 </div>
 
-                {/* Image Area - Centers and Fits Content. Added pt-24 for Mobile so image isn't hidden by header controls */}
+                {/* Viewer Area - Centers and Fits Content. Added pt-24 for Mobile so content isn't hidden by header controls */}
                 <div className="flex-1 flex items-center justify-center p-4 pt-20 sm:pt-24 md:p-12 relative overflow-hidden z-10">
-                    <button aria-label="Previous Image" onClick={() => { setSlideDirection(-1); onPrev(); }} className={`absolute left-2 sm:left-3 md:left-8 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all z-40 group border ${isDarkMode ? 'bg-white/60 hover:bg-white/75 border-white/30 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}><ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 group-hover:-translate-x-0.5 transition-transform" strokeWidth={1.5} /></button>
-                    <button aria-label="Next Image" onClick={() => { setSlideDirection(1); onNext(); }} className={`absolute right-2 sm:right-3 md:right-8 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all z-40 group border ${isDarkMode ? 'bg-white/60 hover:bg-white/75 border-white/30 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}><ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.5} /></button>
+                    <button aria-label="Previous" onClick={() => { setSlideDirection(-1); onPrev(); }} className={`absolute left-2 sm:left-3 md:left-8 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all z-40 group border ${isDarkMode ? 'bg-white/60 hover:bg-white/75 border-white/30 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}><ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 group-hover:-translate-x-0.5 transition-transform" strokeWidth={1.5} /></button>
+                    <button aria-label="Next" onClick={() => { setSlideDirection(1); onNext(); }} className={`absolute right-2 sm:right-3 md:right-8 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all z-40 group border ${isDarkMode ? 'bg-white/60 hover:bg-white/75 border-white/30 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}><ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.5} /></button>
 
                     <div key={file.id} className={`relative w-full h-full max-w-full max-h-full flex items-center justify-center ${slideDirection === 1 ? 'animate-slide-right' : slideDirection === -1 ? 'animate-slide-left' : 'animate-fade-in'}`}>
                         {file.previewUrl ? (
                             <div className={`relative flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl transition-all z-20 ${isDarkMode ? 'bg-[#23232e] border border-white/5' : 'bg-white border border-slate-200'}`} style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '100%' }}>
-                                {!isImageLoaded && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-slate-100 dark:bg-white/5 z-10">
-                                        <Loader2 className="w-10 h-10 animate-spin text-slate-400" />
+                                {(viewerType === 'image' || isProtectedPreview) && (
+                                    <>
+                                        {!isImageLoaded && (
+                                            <div className="absolute inset-0 flex items-center justify-center bg-slate-100 dark:bg-white/5 z-10">
+                                                <Loader2 className="w-10 h-10 animate-spin text-slate-400" />
+                                            </div>
+                                        )}
+                                        <img
+                                            src={file.previewUrl}
+                                            alt={file.name}
+                                            onLoad={() => setIsImageLoaded(true)}
+                                            className={`block max-w-full max-h-full w-auto h-auto object-contain transition-opacity duration-300 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                                        />
+                                    </>
+                                )}
+
+                                {!isProtectedPreview && viewerType === 'video' && (
+                                    <video
+                                        className="block max-w-full max-h-full w-auto h-auto object-contain"
+                                        controls
+                                        playsInline
+                                        poster={file.previewUrl}
+                                        src={playableUrl}
+                                    />
+                                )}
+
+                                {!isProtectedPreview && viewerType === 'audio' && (
+                                    <div className="w-[min(880px,92vw)] p-6 md:p-10 flex flex-col md:flex-row items-center gap-6">
+                                        <div className={`w-full md:w-[360px] aspect-square rounded-2xl overflow-hidden border ${isDarkMode ? 'border-white/10 bg-black/20' : 'border-slate-200 bg-slate-50'}`}>
+                                            <img src={file.previewUrl} alt={file.name} className="w-full h-full object-cover" />
+                                        </div>
+                                        <div className="flex-1 w-full">
+                                            <div className={`text-xs font-bold uppercase tracking-widest ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`}>Audio Preview</div>
+                                            <div className={`mt-1 text-lg font-bold ${textPrimary} truncate`}>{file.name}</div>
+                                            <audio className="w-full mt-4" controls src={playableUrl} />
+                                            {!playableUrl && (
+                                                <div className={`mt-3 text-xs ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>
+                                                    Playback URL not available.
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
-                                <img
-                                    src={file.previewUrl}
-                                    alt={file.name}
-                                    onLoad={() => setIsImageLoaded(true)}
-                                    className={`block max-w-full max-h-full w-auto h-auto object-contain transition-opacity duration-300 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                                />
-                                {file.locked && isLocked && (
+
+                                {!isProtectedPreview && viewerType === 'pdf' && (
+                                    <div className="w-[min(1100px,92vw)] h-[min(720px,70vh)] rounded-2xl overflow-hidden border border-white/10 bg-black/10">
+                                        {playableUrl ? (
+                                            <iframe
+                                                title={file.name}
+                                                src={playableUrl}
+                                                className="w-full h-full"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center gap-4 text-slate-400">
+                                                <FileText className="w-10 h-10" />
+                                                <span className="text-sm font-mono uppercase tracking-widest">PDF preview unavailable</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {!isProtectedPreview && viewerType === 'archive' && (
+                                    <div className="w-[min(820px,92vw)] p-10 flex flex-col items-center justify-center gap-4 text-center">
+                                        <FileCode className={`w-14 h-14 ${isDarkMode ? 'text-white/70' : 'text-slate-700'}`} />
+                                        <div className={`text-sm font-bold ${textPrimary}`}>{file.name}</div>
+                                        <div className={`text-xs ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>Archives don't have an inline preview. Download after unlock.</div>
+                                    </div>
+                                )}
+
+                                {isProtectedPreview && (
                                     <>
                                         <div className="absolute inset-0 z-20 pointer-events-none select-none opacity-100" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='300' height='300' viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-weight='900' font-size='24' fill='${isDarkMode ? 'white' : 'black'}' fill-opacity='0.03' transform='rotate(-45 150 150)' text-anchor='middle' dominant-baseline='middle' letter-spacing='4'%3ETRUEHANDOVER PREVIEW%3C/text%3E%3C/svg%3E")`, backgroundRepeat: 'repeat' }} />
                                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">

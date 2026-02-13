@@ -49,7 +49,8 @@ const WALLPAPER_PRESETS: ProjectTheme[] = [
     },
     {
         name: 'Midnight Silk',
-        wallpaper: 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2000&auto=format&fit=crop',
+        // Unsplash: a stone head with floral patterns (f5MVCuuriig)
+        wallpaper: 'https://images.unsplash.com/photo-1753301638967-af6527de668e?auto=format&fit=crop&w=2000&q=80',
         brightness: 'dark',
         showGrain: true
     },
@@ -67,13 +68,15 @@ const WALLPAPER_PRESETS: ProjectTheme[] = [
     },
     {
         name: 'Obsidian Geometric',
-        wallpaper: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=2000&auto=format&fit=crop',
+        // Unsplash: abstract metallic sculpture with swirling blue/silver forms (J0TVQwQ0wqE)
+        wallpaper: 'https://images.unsplash.com/photo-1768928955656-ee026c4baf15?auto=format&fit=crop&w=2000&q=80',
         brightness: 'dark',
         showGrain: true
     },
     {
         name: 'Deep Cosmos',
-        wallpaper: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2000&auto=format&fit=crop',
+        // Unsplash: snowy mountain peak under a clear blue sky (l6x954tJsaA)
+        wallpaper: 'https://images.unsplash.com/photo-1770909010343-47e39d4fa0b3?auto=format&fit=crop&w=2000&q=80',
         brightness: 'dark',
         showGrain: true
     },
@@ -164,6 +167,22 @@ const MESSAGE_PRESETS = [
     {
         label: 'Short',
         text: "Final assets ready. Payment required to unlock download."
+    },
+    {
+        label: 'Warm',
+        text: "Hi {{name}} - everything is ready. Take a look at the previews, and when you're happy, you can complete payment to unlock the full-resolution files immediately. Appreciate you!"
+    },
+    {
+        label: 'Hand-Off',
+        text: "Hi {{name}}, here's your delivery. You can preview everything now, and the secure download unlocks as soon as the remaining balance is paid. If you'd like any tweaks, just request a correction on the specific file."
+    },
+    {
+        label: 'Milestones',
+        text: "Hi {{name}}, your deliverables are ready for review. Once the current milestone is settled, the matching files will unlock for download right away."
+    },
+    {
+        label: 'Contract',
+        text: "Hi {{name}}, the final package is ready. Please review the previews and sign/pay to unlock the production files. Thank you."
     }
 ];
 
@@ -929,37 +948,57 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                                 <Toggle checked={formData.paymentMethods?.stripeEnabled || false} onChange={v => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, stripeEnabled: v } })} />
                             </div>
 
-                            <div className="space-y-3 pt-2">
-                                <input
-                                    value={formData.paymentMethods?.venmo}
-                                    onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, venmo: e.target.value } })}
-                                    placeholder="Venmo Handle (@user)"
-                                    className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs text-slate-900 dark:text-white"
-                                />
-                                <input
-                                    value={formData.paymentMethods?.cashapp}
-                                    onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, cashapp: e.target.value } })}
-                                    placeholder="CashApp Tag ($tag)"
-                                    className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs text-slate-900 dark:text-white"
-                                />
-                                <input
-                                    value={formData.paymentMethods?.paypal}
-                                    onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, paypal: e.target.value } })}
-                                    placeholder="PayPal.me Link"
-                                    className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs text-slate-900 dark:text-white"
-                                />
-                                <input
-                                    value={formData.paymentMethods?.zelle}
-                                    onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, zelle: e.target.value } })}
-                                    placeholder="Zelle Email/Phone"
-                                    className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs text-slate-900 dark:text-white"
-                                />
-                                <textarea
-                                    value={formData.paymentMethods?.bankInfo}
-                                    onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, bankInfo: e.target.value } })}
-                                    placeholder="Bank / Wire Details"
-                                    className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs h-20 resize-none text-slate-900 dark:text-white"
-                                />
+                            <div className="pt-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="space-y-1.5">
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Venmo</div>
+                                        <input
+                                            value={formData.paymentMethods?.venmo}
+                                            onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, venmo: e.target.value } })}
+                                            placeholder="@username"
+                                            className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs text-slate-900 dark:text-white"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Cash App</div>
+                                        <input
+                                            value={formData.paymentMethods?.cashapp}
+                                            onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, cashapp: e.target.value } })}
+                                            placeholder="$tag"
+                                            className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs text-slate-900 dark:text-white"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">PayPal</div>
+                                        <input
+                                            value={formData.paymentMethods?.paypal}
+                                            onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, paypal: e.target.value } })}
+                                            placeholder="paypal.me/you"
+                                            className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs text-slate-900 dark:text-white"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Zelle</div>
+                                        <input
+                                            value={formData.paymentMethods?.zelle}
+                                            onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, zelle: e.target.value } })}
+                                            placeholder="Email or phone"
+                                            className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs text-slate-900 dark:text-white"
+                                        />
+                                    </div>
+                                    <div className="sm:col-span-2 space-y-1.5">
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Bank / Wire</div>
+                                        <textarea
+                                            value={formData.paymentMethods?.bankInfo}
+                                            onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, bankInfo: e.target.value } })}
+                                            placeholder="Routing / account / instructions"
+                                            className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs h-24 resize-none text-slate-900 dark:text-white"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="mt-3 text-[10px] text-slate-400">
+                                    Tip: Stripe is best for instant unlock. Add manual methods only if you need them.
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -997,7 +1036,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                     <div className="bg-white/80 dark:bg-[#23232e] border border-slate-200 dark:border-white/5 p-5 rounded-2xl shadow-sm">
                         {/* ... Theme selector content ... */}
                         <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
-                            <LayoutTemplate className="w-3 h-3" /> Pattern Style
+                            <LayoutTemplate className="w-3 h-3" /> Wallpapers
                         </h3>
                         <div className="grid grid-cols-2 gap-2 mb-6">
                             {/* Upload Custom Tile */}
@@ -1077,7 +1116,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                                    <Layers className="w-3 h-3" /> Texture
+                                    <Layers className="w-3 h-3" /> Pattern Style
                                 </h3>
                                 <button
                                     onClick={toggleGrain}
@@ -1218,7 +1257,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                 {/* Collapsed editor restore control */}
                 {isEditorCollapsed && (
                     <div
-                        className={`absolute z-[60] pointer-events-auto ${isPreviewDockedSidebarCollapsed ? 'top-6 left-6 flex items-center gap-3' : 'top-6 left-6 flex flex-col items-start gap-2'}`}
+                        className={`absolute z-[60] pointer-events-auto ${isPreviewDockedSidebarCollapsed ? 'top-8 left-3 flex items-center gap-3' : 'top-6 left-6 flex flex-col items-start gap-2'}`}
                         // When the embedded preview is in desktop + collapsed-docked-sidebar mode, the preview's "Details"
                         // pill sits at the top-left. Nudge this restore control to the right so it can share that row
                         // without overlapping it (and without covering Vault Contents).

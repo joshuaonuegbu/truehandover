@@ -76,7 +76,7 @@ const INITIAL_PROJECTS: Project[] = [
                 version: 1,
                 uploadDate: '2023-10-28',
                 tag: 'FINAL',
-                previewUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60',
+                previewUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=900&q=70',
                 metadata: { resolution: '4096x4096', colorProfile: 'CMYK', dpi: 300, hash: '8f434346648f6b96df89dda901c5176b' }
             },
             {
@@ -85,10 +85,12 @@ const INITIAL_PROJECTS: Project[] = [
                 size: '4.2 MB',
                 type: 'pdf',
                 locked: true,
+                externalUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
                 version: 1,
                 uploadDate: '2023-10-28',
                 tag: 'DOCS',
-                previewUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=60',
+                // Abstract, premium cover (no people)
+                previewUrl: 'https://images.unsplash.com/photo-1533228876829-65c94e7b5025?auto=format&fit=crop&w=900&q=70',
                 metadata: { pages: 24, resolution: 'Print Ready', hash: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6' }
             },
             {
@@ -100,8 +102,35 @@ const INITIAL_PROJECTS: Project[] = [
                 version: 1,
                 uploadDate: '2023-10-28',
                 tag: 'ASSETS',
-                previewUrl: 'https://images.unsplash.com/photo-1611926653458-09294b3142bf?w=800&auto=format&fit=crop&q=60',
+                // Abstract, premium cover (no people)
+                previewUrl: 'https://images.unsplash.com/photo-1621619856624-42fd193a0661?auto=format&fit=crop&w=900&q=70',
                 metadata: { hash: 'e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0', software: 'Archive' }
+            },
+            {
+                id: 'f6',
+                name: 'logo_reveal.mp4',
+                size: '18.4 MB',
+                type: 'video',
+                locked: true,
+                externalUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+                version: 1,
+                uploadDate: '2023-10-28',
+                tag: 'VIDEO',
+                previewUrl: 'https://images.unsplash.com/photo-1536514498073-50e69d39c6cf?auto=format&fit=crop&w=900&q=70',
+                metadata: { duration: '00:30', resolution: '1080p', hash: 'vid_8f434346648f6b96df89dda901c5176b' }
+            },
+            {
+                id: 'f7',
+                name: 'brand_theme.mp3',
+                size: '3.1 MB',
+                type: 'audio',
+                locked: true,
+                externalUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3',
+                version: 1,
+                uploadDate: '2023-10-28',
+                tag: 'AUDIO',
+                previewUrl: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=900&q=70',
+                metadata: { duration: '00:07', hash: 'aud_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6' }
             }
         ]
     },
@@ -130,7 +159,8 @@ const INITIAL_PROJECTS: Project[] = [
                 version: 1,
                 uploadDate: '2023-10-28',
                 tag: 'SOURCE',
-                previewUrl: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800&h=800&fit=crop',
+                // Abstract, premium cover (no people)
+                previewUrl: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=900&q=70',
                 metadata: { software: 'Figma', hash: 'c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8' }
             },
             {
@@ -139,10 +169,12 @@ const INITIAL_PROJECTS: Project[] = [
                 size: '45 MB',
                 type: 'video',
                 locked: false,
+                externalUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
                 version: 1,
                 uploadDate: '2023-10-28',
                 tag: 'DEMO',
-                previewUrl: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=800&h=800&fit=crop',
+                // Abstract, premium cover (no people)
+                previewUrl: 'https://images.unsplash.com/photo-1536514498073-50e69d39c6cf?auto=format&fit=crop&w=900&q=70',
                 metadata: { duration: '00:45', resolution: '1080p', hash: '5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u' }
             },
         ]

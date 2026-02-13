@@ -320,9 +320,9 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
                             <Plus className="w-4 h-4" /> New Project
                         </button>
                         <div className="w-px h-6 bg-slate-200 dark:bg-white/10 mx-1" />
-                        <button onClick={() => navigate('/vault')} className="px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 font-serif font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap">Vault</button>
-                        <button onClick={() => navigate('/activity')} className="px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 font-serif font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap">Activity</button>
-                        <button onClick={() => navigate('/reports')} className="px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 font-serif font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap">Reports</button>
+                        <button onClick={() => navigate('/vault')} className="px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 font-sans font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap">Vault</button>
+                        <button onClick={() => navigate('/activity')} className="px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 font-sans font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap">Activity</button>
+                        <button onClick={() => navigate('/reports')} className="px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 font-sans font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap">Reports</button>
                     </div>
                 </div>
             </div>
