@@ -1217,7 +1217,13 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
             <div className="flex-1 relative bg-black overflow-hidden shadow-2xl">
                 {/* Collapsed editor restore control */}
                 {isEditorCollapsed && (
-                    <div className={`absolute z-[60] flex flex-col gap-2 ${isPreviewDockedSidebarCollapsed ? 'top-20 right-6 items-end' : 'top-6 left-6 items-start'}`}>
+                    <div
+                        className={`absolute z-[60] pointer-events-auto ${isPreviewDockedSidebarCollapsed ? 'top-6 left-6 flex items-center gap-3' : 'top-6 left-6 flex flex-col items-start gap-2'}`}
+                        // When the embedded preview is in desktop + collapsed-docked-sidebar mode, the preview's "Details"
+                        // pill sits at the top-left. Nudge this restore control to the right so it can share that row
+                        // without overlapping it (and without covering Vault Contents).
+                        style={isPreviewDockedSidebarCollapsed ? { transform: 'translateX(140px)' } : undefined}
+                    >
                         <button
                             type="button"
                             onClick={() => { playClick(); setIsEditorCollapsed(false); }}
@@ -1228,7 +1234,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                             <PanelLeftOpen className="w-4 h-4" />
                             Show Editor
                         </button>
-                        <div className="px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/70">
+                        <div className="px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/70 whitespace-nowrap">
                             Editor collapsed (preview-only)
                         </div>
                     </div>
