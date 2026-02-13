@@ -239,6 +239,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
     const [showAvatarSelector, setShowAvatarSelector] = useState(false);
     const [customWallpapers, setCustomWallpapers] = useState<ProjectTheme[]>([]);
     const [isEditorCollapsed, setIsEditorCollapsed] = useState(false);
+    const [isPreviewDockedSidebarCollapsed, setIsPreviewDockedSidebarCollapsed] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const assetInputRef = React.useRef<HTMLInputElement>(null); // For asset uploads
 
@@ -1216,7 +1217,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
             <div className="flex-1 relative bg-black overflow-hidden shadow-2xl">
                 {/* Collapsed editor restore control */}
                 {isEditorCollapsed && (
-                    <div className="absolute top-6 left-6 z-[60] flex flex-col items-start gap-2">
+                    <div className={`absolute z-[60] flex flex-col gap-2 ${isPreviewDockedSidebarCollapsed ? 'top-20 right-6 items-end' : 'top-6 left-6 items-start'}`}>
                         <button
                             type="button"
                             onClick={() => { playClick(); setIsEditorCollapsed(false); }}
@@ -1252,6 +1253,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                         user={user} // Pass user to allow sync
                         isEmbedded={true}
                         allowSidebarCollapse={true}
+                        onDockedSidebarCollapseChange={setIsPreviewDockedSidebarCollapsed}
                     />
                 </div>
             </div>

@@ -27,6 +27,7 @@ interface ClientPreviewPageProps {
     onBack: () => void;
     isEmbedded?: boolean;
     allowSidebarCollapse?: boolean; // allow collapse controls even when embedded (Creator/editor preview)
+    onDockedSidebarCollapseChange?: (collapsed: boolean) => void; // for embedded editor overlay positioning/sync
     isLocked: boolean;
     lightboxIndex: number | null;
     setLightboxIndex: (index: number | null) => void;
@@ -638,6 +639,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
 export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     project, user, isDarkMode, themeMode, onToggleTheme, onBack, isEmbedded = false,
     allowSidebarCollapse = false,
+    onDockedSidebarCollapseChange,
     isLocked, lightboxIndex, setLightboxIndex, revisions, onPaymentComplete,
     handleSubmitRevision, handleDeleteRevision, activeFilter, setActiveFilter, theme,
     filteredFiles, handleRequestCorrection, accessDenied, refreshAccess
@@ -717,6 +719,26 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     const showDockedSidebar = isEmbedded || isLandscapeSplit || !isBelowLg;
     const showInlineSidebar = !isEmbedded && !isLandscapeSplit && isBelowLg && isMobileInfoOpen;
     const isDockedSidebarCollapsed = canCollapseDockedSidebar && isSplitSidebarCollapsed;
+
+    // Allow parent containers (Creator/editor embedded previews) to reposition overlay UI when the docked sidebar collapses.
+    useEffect(() => {
+        onDockedSidebarCollapseChange?.(isDockedSidebarCollapsed);
+    }, [isDockedSidebarCollapsed, onDockedSidebarCollapseChange]);
+
+    // When inside the simulator iframe, publish sidebar collapse state so the outer shell/editor can stay in sync.
+    useEffect(() => {
+        let inIframe = false;
+        try {
+            inIframe = window.self !== window.top;
+        } catch {
+            inIframe = false;
+        }
+        if (!inIframe) return;
+        window.parent.postMessage({
+            type: 'TRUEHANDOVER_PREVIEW_SIDEBAR_STATE',
+            collapsed: isDockedSidebarCollapsed,
+        }, window.location.origin);
+    }, [isDockedSidebarCollapsed]);
 
     // Simulator chrome: in light mode + landscape + collapsed sidebar, the status bar should blend with the vault
     // (transparent over the iframe) rather than forcing a solid bar that fights the vault background.
@@ -1325,7 +1347,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => { playClick(); setIsSplitSidebarCollapsed(false); }}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isEmbedded ? (isDarkMode ? 'bg-[#bef264] text-black hover:bg-[#a3e635] border border-[#bef264]/40 shadow-lg shadow-black/20' : 'bg-slate-900 text-white hover:bg-slate-800 border border-slate-900/40 shadow-lg') : (isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50')}`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
                                     aria-label="Show Details"
                                     title="Show Details"
                                 >

@@ -34,8 +34,9 @@ const MockStatusBar = ({ width, isDark, heightPx, lightModeStyle }: { width: num
                 // In light mode we usually render a "white" bar like iOS. In some simulated states (landscape + collapsed),
                 // we intentionally go transparent so the bar blends with the vault background beneath.
                 backgroundColor: isDark ? 'transparent' : (isTransparentLight ? 'transparent' : 'rgba(241,245,249,0.96)'),
-                backdropFilter: isTransparentLight ? 'blur(10px)' : undefined,
-                textShadow: isTransparentLight ? '0 1px 6px rgba(255,255,255,0.35)' : undefined,
+                // No glassmorphism in light mode: keep it truly transparent so the vault background shows through.
+                backdropFilter: undefined,
+                textShadow: undefined,
             }}
         >
             <span>{timeStr}</span>
@@ -59,6 +60,7 @@ interface ClientPreviewBizProps {
     user?: UserProfile;
     isEmbedded?: boolean;
     allowSidebarCollapse?: boolean;
+    onDockedSidebarCollapseChange?: (collapsed: boolean) => void; // used by Creator/editor overlays to avoid UI overlap
 }
 
 const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
@@ -70,7 +72,8 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     themeMode,
     user,
     isEmbedded = false,
-    allowSidebarCollapse = false
+    allowSidebarCollapse = false,
+    onDockedSidebarCollapseChange
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -95,6 +98,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     const [isDesktopFadingIn, setIsDesktopFadingIn] = useState(false);
     const [iframeThemeIsDark, setIframeThemeIsDark] = useState<boolean | null>(null);
     const [iframeStatusBarLightModeStyle, setIframeStatusBarLightModeStyle] = useState<'solid' | 'transparent'>('solid');
+    const [iframeDockedSidebarCollapsed, setIframeDockedSidebarCollapsed] = useState<boolean>(false);
 
     // --- VIEWPORT DETECTION ---
     const [viewportClass, setViewportClass] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -157,6 +161,14 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                 return;
             }
 
+            // Child (iframe) -> parent: keep track of docked sidebar collapse state so overlays can avoid collisions.
+            if (data.type === 'TRUEHANDOVER_PREVIEW_SIDEBAR_STATE') {
+                if (typeof data.collapsed !== 'boolean') return;
+                setIframeDockedSidebarCollapsed(data.collapsed);
+                onDockedSidebarCollapseChange?.(data.collapsed);
+                return;
+            }
+
             // Parent (creator/editor) -> child: push live project edits into the canvas iframe so it stays in sync.
             if (data.type === 'TRUEHANDOVER_PREVIEW_SET_PROJECT') {
                 if (!data.project) return;
@@ -173,6 +185,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     useEffect(() => {
         setIframeThemeIsDark(null);
         setIframeStatusBarLightModeStyle('solid');
+        setIframeDockedSidebarCollapsed(false);
     }, [deviceMode, themeMode]);
 
     // Access Control Logic (One-Time Links)
@@ -370,7 +383,8 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         activeFilter, setActiveFilter, theme, filteredFiles,
         handleRequestCorrection, accessDenied,
         refreshAccess: () => { localStorage.removeItem(`viewed_${project.id}`); window.location.reload(); },
-        allowSidebarCollapse
+        allowSidebarCollapse,
+        onDockedSidebarCollapseChange
     };
 
     // --- RAW MODE: Render component directly (used inside iframes) ---
