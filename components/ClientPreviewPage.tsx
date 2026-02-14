@@ -201,31 +201,31 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
     const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#bef264]' : 'shadow-[0_0_10px_rgba(101,163,13,0.5)]';
     const borderColor = isDarkMode ? 'border-white/5' : 'border-slate-200';
     const [expandedSpecs, setExpandedSpecs] = useState<Set<string>>(new Set());
+    const gridRef = useRef<HTMLDivElement | null>(null);
+    const [gridCols, setGridCols] = useState(1);
+
+    // Container-width based columns so embedded previews behave like real desktop when there's room.
+    // Thresholds tuned for split-landscape: keep 2-up even when the docked sidebar is open.
+    useEffect(() => {
+        const el = gridRef.current;
+        if (!el || typeof ResizeObserver === 'undefined') return;
+        const computeCols = (w: number) => (w >= 980 ? 3 : (w >= 500 ? 2 : 1));
+        const ro = new ResizeObserver((entries) => {
+            const w = entries[0]?.contentRect?.width ?? 0;
+            setGridCols(computeCols(w));
+        });
+        ro.observe(el);
+        setGridCols(computeCols(el.getBoundingClientRect().width));
+        return () => ro.disconnect();
+    }, []);
 
     return (
-        // Use container-responsive columns so embedded previews behave like real desktop when there's room.
-        // (Avoid hardcoding "embedded = 2 columns", which feels dumb/unpredictable.)
-        <div
-            className="th-asset-grid-wrap"
-            style={{ ['containerType' as any]: 'inline-size' }}
-        >
-            <style>{`
-                .th-asset-grid {
-                    display: grid;
-                    grid-template-columns: 1fr;
-                }
-                @container (min-width: 640px) {
-                    .th-asset-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-                }
-                @container (min-width: 980px) {
-                    .th-asset-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-                }
-            `}</style>
-            <div className={`th-asset-grid gap-3 sm:gap-4 lg:gap-6 pb-24`}>
+        <div ref={gridRef} className="w-full">
+            <div className="grid gap-3 sm:gap-4 lg:gap-6 pb-24" style={{ gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))` }}>
                 {files.map((file: FileAsset, index: number) => {
-                const isRevisionSent = !!(revisions[file.id]?.length);
-                return (
-                    <div
+                    const isRevisionSent = !!(revisions[file.id]?.length);
+                    return (
+                        <div
                         key={file.id}
                         className={`group relative ${isDarkMode ? 'bg-[#23232e] border-white/5 hover:shadow-white/5 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)]' : 'bg-white border-slate-100 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]'} rounded-[1.5rem] border overflow-hidden transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-[1.01]`}
                         style={{ animationDelay: `${index * 100}ms` }}
@@ -861,6 +861,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     const hasMockStatusBar = Boolean(deviceType);
     const isActualDesktopViewport = !deviceType && !isBelowLg;
     const isTrueDesktop = !isEmbedded && isActualDesktopViewport;
+    const isCompactDesktopHeader = isActualDesktopViewport && viewport.width < 1240;
 
     // Auto-hide mobile header after 5 seconds of inactivity (portrait + stacked only)
     // Disabled: users expect the project title header to remain visible and stable.
@@ -1285,18 +1286,21 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
 
                 {/* Desktop Back Button Area (with Creator Preview Badge) */}
                 {(!isEmbedded || allowSidebarCollapse) && (
-                    <div className="hidden lg:flex relative z-20 px-8 pt-8 pb-2 justify-between items-center flex-wrap gap-y-2" style={{ paddingTop: paddingTop ? `max(32px, ${paddingTop})` : '32px' }}>
+                    <div
+                        className="hidden lg:flex relative z-20 px-8 pt-8 pb-2 justify-between items-center gap-3 overflow-x-auto no-scrollbar"
+                        style={{ paddingTop: paddingTop ? `max(32px, ${paddingTop})` : '32px' }}
+                    >
                         <div className="flex items-center gap-4 min-w-0">
                             {!isEmbedded && (
-                                <button onClick={onBack} className={`group flex items-center gap-2 px-4 py-2 rounded-full ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-300 hover:text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-600 hover:text-slate-900'} backdrop-blur-md border shadow-sm transition-all duration-300 hover:scale-105`}>
-                                    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                                    <span className="text-xs font-bold uppercase tracking-widest">Back</span>
+                                <button onClick={onBack} className={`group flex items-center gap-2 ${isCompactDesktopHeader ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-full ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-300 hover:text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-600 hover:text-slate-900'} backdrop-blur-md border shadow-sm transition-all duration-300 hover:scale-105 shrink-0`}>
+                                    <ChevronLeft className={`${isCompactDesktopHeader ? 'w-3.5 h-3.5' : 'w-4 h-4'} group-hover:-translate-x-1 transition-transform`} />
+                                    <span className={`${isCompactDesktopHeader ? 'text-[11px]' : 'text-xs'} font-bold uppercase tracking-widest`}>Back</span>
                                 </button>
                             )}
                             {/* Creator Preview Disclaimer — shown on full preview routes (not embedded editor preview). */}
                             {!isEmbedded && !project.clientViewedAt && (
-                                <div className={`px-4 py-2 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-700'}`}>
-                                    <Eye className="w-3.5 h-3.5" />
+                                <div className={`${isCompactDesktopHeader ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-full flex items-center gap-2 ${isCompactDesktopHeader ? 'text-[9px]' : 'text-[10px]'} font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-700'} shrink-0`}>
+                                    <Eye className={`${isCompactDesktopHeader ? 'w-3 h-3' : 'w-3.5 h-3.5'}`} />
                                     <span>Creator Preview</span>
                                 </div>
                             )}
@@ -1305,11 +1309,11 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => { playClick(); setIsSplitSidebarCollapsed(true); }}
-                                    className={`p-2.5 rounded-full border shadow-sm transition-all duration-300 hover:scale-105 ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-300 hover:text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-600 hover:text-slate-900'} backdrop-blur-md`}
+                                    className={`${isCompactDesktopHeader ? 'p-2' : 'p-2.5'} rounded-full border shadow-sm transition-all duration-300 hover:scale-105 ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-300 hover:text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-600 hover:text-slate-900'} backdrop-blur-md shrink-0`}
                                     aria-label="Collapse Details"
                                     title="Hide Details"
                                 >
-                                    <PanelRightClose className="w-4 h-4" />
+                                    <PanelRightClose className={`${isCompactDesktopHeader ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
                                 </button>
                             )}
                         </div>
@@ -1318,11 +1322,11 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             <button
                                 type="button"
                                 onClick={() => { playClick(); setIsSplitSidebarCollapsed(true); }}
-                                className={`p-2.5 rounded-full border shadow-sm transition-all duration-300 hover:scale-105 ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-300 hover:text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-600 hover:text-slate-900'} backdrop-blur-md`}
+                                className={`${isCompactDesktopHeader ? 'p-2' : 'p-2.5'} rounded-full border shadow-sm transition-all duration-300 hover:scale-105 ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-slate-300 hover:text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-600 hover:text-slate-900'} backdrop-blur-md shrink-0`}
                                 aria-label="Collapse Details"
                                 title="Hide Details"
                             >
-                                <PanelRightClose className="w-4 h-4" />
+                                <PanelRightClose className={`${isCompactDesktopHeader ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
                             </button>
                         )}
                     </div>
@@ -1634,7 +1638,30 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             </div>
                         </div>
 
-                        {viewMode === 'grid' ? (
+                        {filteredFiles.length === 0 ? (
+                            <div className={`mt-10 rounded-3xl border p-10 text-center ${isDarkMode ? 'bg-white/5 border-white/10 text-white/70' : 'bg-white/80 border-slate-200 text-slate-600'} backdrop-blur-md`}>
+                                <div className="mx-auto w-12 h-12 rounded-2xl flex items-center justify-center mb-4 border border-white/10 bg-black/10">
+                                    <Filter className={`w-6 h-6 ${isDarkMode ? 'text-white/60' : 'text-slate-500'}`} />
+                                </div>
+                                <div className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                                    {activeFilter === 'all'
+                                        ? 'No files in this vault'
+                                        : `No ${activeFilter} files in this vault`}
+                                </div>
+                                <div className="text-xs mt-2 opacity-70">
+                                    Try another file type or view all files.
+                                </div>
+                                <div className="mt-6 flex items-center justify-center gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => { playClick(); setActiveFilter('all'); }}
+                                        className={`px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 border ${isDarkMode ? 'bg-white/10 border-white/10 text-white/80 hover:bg-white/15' : 'bg-slate-900 border-slate-900 text-white hover:bg-slate-800'}`}
+                                    >
+                                        Show All Files
+                                    </button>
+                                </div>
+                            </div>
+                        ) : viewMode === 'grid' ? (
                             <VisualAssetGrid
                                 files={filteredFiles}
                                 isLocked={isLocked}

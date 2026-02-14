@@ -6,11 +6,105 @@ import { DB, supabase } from '../services/supabaseClient'; // Import the Real Ba
 // --- MOCK DATA CONSTANTS (Moved from App.tsx for Fallback) ---
 
 const DEFAULT_THEME_MOCK: ProjectTheme = {
-    name: 'Concrete Vault',
-    wallpaper: 'https://images.unsplash.com/photo-1518112390430-f4ab02e9c2c8?q=80&w=2000&auto=format&fit=crop',
-    brightness: 'dark',
-    showGrain: true,
-    pattern: 'lines'
+  name: 'Concrete Vault',
+  // Abstract, non-human background (avoid people in demo thumbnails)
+  wallpaper: 'https://images.unsplash.com/photo-1487700160041-babef9c3cb55?auto=format&fit=crop&w=2000&q=80',
+  brightness: 'dark',
+  showGrain: true,
+  pattern: 'lines'
+};
+
+const DEMO_SEED_VERSION = 3;
+const DEMO_SEED_VERSION_KEY = 'th_seed_version';
+
+const isDicebearAvatar = (url?: string) => !!url && url.includes('api.dicebear.com/');
+
+const migrateDemoProjects = (projects: Project[]): Project[] => {
+  return projects.map((p) => {
+    // Only touch known demo projects; leave user-created projects alone.
+    if (!['p1', 'p2', 'p4', 'p5'].includes(p.id)) return p;
+
+    const next: Project = { ...p };
+
+    // Ensure demo clients never use real-photo avatars.
+    if (!isDicebearAvatar(next.client?.avatar)) {
+      const seed = encodeURIComponent((next.client?.name || 'Client').replace(/\s+/g, ''));
+      next.client = {
+        ...(next.client as any),
+        avatar: `https://api.dicebear.com/9.x/shapes/svg?seed=${seed}&backgroundColor=18181b&shape1Color=3b82f6&shape2Color=93c5fd&shape3Color=1e3a8a`
+      };
+    }
+
+    // Update the default theme wallpaper if the project is using the old seed wallpaper.
+    if (!next.theme || next.theme.wallpaper === 'https://images.unsplash.com/photo-1518112390430-f4ab02e9c2c8?q=80&w=2000&auto=format&fit=crop') {
+      next.theme = { ...(next.theme || DEFAULT_THEME_MOCK), wallpaper: DEFAULT_THEME_MOCK.wallpaper };
+    }
+
+    // Upgrade Brand Identity Package demo assets to premium, abstract thumbnails (and add playable links).
+    if (next.id === 'p1') {
+      next.files = (next.files || []).map((f) => {
+        if (f.id === 'f1') {
+          return {
+            ...f,
+            previewUrl: 'https://images.unsplash.com/photo-1768928955656-ee026c4baf15?auto=format&fit=crop&w=900&q=70',
+          };
+        }
+        if (f.id === 'f2') {
+          return {
+            ...f,
+            previewUrl: 'https://images.unsplash.com/photo-1533228876829-65c94e7b5025?auto=format&fit=crop&w=900&q=70',
+            externalUrl: f.externalUrl || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          };
+        }
+        if (f.id === 'f3') {
+          return {
+            ...f,
+            previewUrl: 'https://images.unsplash.com/photo-1621619856624-42fd193a0661?auto=format&fit=crop&w=900&q=70',
+          };
+        }
+        return f;
+      });
+    }
+
+    // Upgrade Website Redesign demo assets to abstract thumbnails (no people) and ensure playable links exist.
+    if (next.id === 'p2') {
+      next.files = (next.files || []).map((f) => {
+        if (f.id === 'f4') {
+          return { ...f, previewUrl: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=900&q=70' };
+        }
+        if (f.id === 'f5') {
+          return {
+            ...f,
+            previewUrl: 'https://images.unsplash.com/photo-1536514498073-50e69d39c6cf?auto=format&fit=crop&w=900&q=70',
+            externalUrl: f.externalUrl || 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+          };
+        }
+        return f;
+      });
+    }
+
+    // Generic cleanup: if any demo file still references older "people/object" seed thumbnails, swap them.
+    const archaicThumbs: Record<string, string> = {
+      // book/coffee
+      'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=60':
+        'https://images.unsplash.com/photo-1533228876829-65c94e7b5025?auto=format&fit=crop&w=900&q=70',
+      // social media phone icons
+      'https://images.unsplash.com/photo-1611926653458-09294b3142bf?w=800&auto=format&fit=crop&q=60':
+        'https://images.unsplash.com/photo-1621619856624-42fd193a0661?auto=format&fit=crop&w=900&q=70',
+      // generic workspace photo
+      'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800&h=800&fit=crop':
+        'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=900&q=70',
+      // camera / filming photo
+      'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=800&h=800&fit=crop':
+        'https://images.unsplash.com/photo-1536514498073-50e69d39c6cf?auto=format&fit=crop&w=900&q=70',
+    };
+    next.files = (next.files || []).map((f) => {
+      const replacement = f.previewUrl ? archaicThumbs[f.previewUrl] : undefined;
+      return replacement ? { ...f, previewUrl: replacement } : f;
+    });
+
+    return next;
+  });
 };
 
 const INITIAL_USER: UserProfile = {
@@ -76,7 +170,8 @@ const INITIAL_PROJECTS: Project[] = [
                 version: 1,
                 uploadDate: '2023-10-28',
                 tag: 'FINAL',
-                previewUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=900&q=70',
+                // Premium abstract (avoid common "generic gradient" look)
+                previewUrl: 'https://images.unsplash.com/photo-1768928955656-ee026c4baf15?auto=format&fit=crop&w=900&q=70',
                 metadata: { resolution: '4096x4096', colorProfile: 'CMYK', dpi: 300, hash: '8f434346648f6b96df89dda901c5176b' }
             },
             {
@@ -231,7 +326,16 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [projects, setProjects] = useState<Project[]>(() => {
         try {
             const stored = localStorage.getItem('th_projects');
-            return stored ? JSON.parse(stored) : INITIAL_PROJECTS;
+            const parsed: Project[] = stored ? JSON.parse(stored) : INITIAL_PROJECTS;
+
+            // Non-destructive demo migration: update ONLY known demo records (p1/p2/p4/p5) so UI improvements
+            // (thumbnails/wallpapers/etc) reflect even if the user has old demo data stored locally.
+            const version = Number(localStorage.getItem(DEMO_SEED_VERSION_KEY) || 0);
+            const migrated = migrateDemoProjects(parsed);
+            if (version < DEMO_SEED_VERSION) {
+                try { localStorage.setItem(DEMO_SEED_VERSION_KEY, String(DEMO_SEED_VERSION)); } catch { }
+            }
+            return migrated;
         } catch (e) {
             console.error("Failed to load projects", e);
             return INITIAL_PROJECTS;
