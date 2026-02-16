@@ -46,20 +46,23 @@ const migrateDemoProjects = (projects: Project[]): Project[] => {
         if (f.id === 'f1') {
           return {
             ...f,
-            previewUrl: 'https://images.unsplash.com/photo-1768928955656-ee026c4baf15?auto=format&fit=crop&w=900&q=70',
+            // Unsplash: pink/purple geometric blocks (tFvphR3BZ_c)
+            previewUrl: 'https://images.unsplash.com/photo-1761577680549-21a6bc9d42f6?auto=format&fit=crop&w=900&q=70',
           };
         }
         if (f.id === 'f2') {
           return {
             ...f,
-            previewUrl: 'https://images.unsplash.com/photo-1533228876829-65c94e7b5025?auto=format&fit=crop&w=900&q=70',
+            // Unsplash: interior spiral staircase (WULTe87HJ7Q)
+            previewUrl: 'https://images.unsplash.com/photo-1769501210990-a56025a9385a?auto=format&fit=crop&w=900&q=70',
             externalUrl: f.externalUrl || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
           };
         }
         if (f.id === 'f3') {
           return {
             ...f,
-            previewUrl: 'https://images.unsplash.com/photo-1621619856624-42fd193a0661?auto=format&fit=crop&w=900&q=70',
+            // Unsplash: tennis attire / bags and balls (o618sXD3Jqg)
+            previewUrl: 'https://images.unsplash.com/photo-1768853972795-2739a9685567?auto=format&fit=crop&w=900&q=70',
           };
         }
         return f;
@@ -87,11 +90,11 @@ const migrateDemoProjects = (projects: Project[]): Project[] => {
     const archaicThumbs: Record<string, string> = {
       // book/coffee
       'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=60':
-        'https://images.unsplash.com/photo-1533228876829-65c94e7b5025?auto=format&fit=crop&w=900&q=70',
+        'https://images.unsplash.com/photo-1769501210990-a56025a9385a?auto=format&fit=crop&w=900&q=70',
       // social media phone icons
       'https://images.unsplash.com/photo-1611926653458-09294b3142bf?w=800&auto=format&fit=crop&q=60':
-        'https://images.unsplash.com/photo-1621619856624-42fd193a0661?auto=format&fit=crop&w=900&q=70',
-      // generic workspace photo
+        'https://images.unsplash.com/photo-1768853972795-2739a9685567?auto=format&fit=crop&w=900&q=70',
+    // generic workspace photo
       'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800&h=800&fit=crop':
         'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=900&q=70',
       // camera / filming photo
@@ -171,7 +174,8 @@ const INITIAL_PROJECTS: Project[] = [
                 uploadDate: '2023-10-28',
                 tag: 'FINAL',
                 // Premium abstract (avoid common "generic gradient" look)
-                previewUrl: 'https://images.unsplash.com/photo-1768928955656-ee026c4baf15?auto=format&fit=crop&w=900&q=70',
+                // Unsplash: a pile of pink and purple geometric blocks (tFvphR3BZ_c)
+                previewUrl: 'https://images.unsplash.com/photo-1761577680549-21a6bc9d42f6?auto=format&fit=crop&w=900&q=70',
                 metadata: { resolution: '4096x4096', colorProfile: 'CMYK', dpi: 300, hash: '8f434346648f6b96df89dda901c5176b' }
             },
             {
@@ -185,7 +189,8 @@ const INITIAL_PROJECTS: Project[] = [
                 uploadDate: '2023-10-28',
                 tag: 'DOCS',
                 // Abstract, premium cover (no people)
-                previewUrl: 'https://images.unsplash.com/photo-1533228876829-65c94e7b5025?auto=format&fit=crop&w=900&q=70',
+                // Unsplash: interior view with a spiral staircase (WULTe87HJ7Q)
+                previewUrl: 'https://images.unsplash.com/photo-1769501210990-a56025a9385a?auto=format&fit=crop&w=900&q=70',
                 metadata: { pages: 24, resolution: 'Print Ready', hash: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6' }
             },
             {
@@ -198,7 +203,8 @@ const INITIAL_PROJECTS: Project[] = [
                 uploadDate: '2023-10-28',
                 tag: 'ASSETS',
                 // Abstract, premium cover (no people)
-                previewUrl: 'https://images.unsplash.com/photo-1621619856624-42fd193a0661?auto=format&fit=crop&w=900&q=70',
+                // Unsplash: three women in tennis attire with bags and balls (o618sXD3Jqg)
+                previewUrl: 'https://images.unsplash.com/photo-1768853972795-2739a9685567?auto=format&fit=crop&w=900&q=70',
                 metadata: { hash: 'e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0', software: 'Archive' }
             },
             {

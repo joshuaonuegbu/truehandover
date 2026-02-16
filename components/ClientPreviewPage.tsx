@@ -736,6 +736,13 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
 }) => {
     const navigate = useNavigate();
     const creatorName = user?.name || "Creator";
+    // Prevent tiny "intro" transitions when the preview page first mounts (can feel like a jarring pop).
+    // We still keep transitions for real interactions (theme toggle, collapsing sidebar, etc.).
+    const [motionReady, setMotionReady] = useState(false);
+    useEffect(() => {
+        const t = setTimeout(() => setMotionReady(true), 120);
+        return () => clearTimeout(t);
+    }, []);
     const [isMobileInfoOpen, setIsMobileInfoOpen] = useState(false);
     const [isMobilePaymentOpen, setIsMobilePaymentOpen] = useState(false);
     const [isMobileHeaderHidden, setIsMobileHeaderHidden] = useState(false);
@@ -841,17 +848,18 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
         }
         if (!inIframe) return;
 
+        // In light-mode landscape simulations, keep the status bar transparent so it inherits the column background
+        // (matching the behavior in dark mode). This avoids a "forced white bar" that fights the vault backdrop.
         const wantsTransparentLightStatusBar =
             !isDarkMode &&
             Boolean(deviceType) &&
-            isLandscapeSplit &&
-            isDockedSidebarCollapsed;
+            isLandscapeSplit;
 
         window.parent.postMessage({
             type: 'TRUEHANDOVER_PREVIEW_STATUSBAR',
             mode: wantsTransparentLightStatusBar ? 'transparent' : 'solid',
         }, window.location.origin);
-    }, [isDarkMode, deviceType, isLandscapeSplit, isDockedSidebarCollapsed]);
+    }, [isDarkMode, deviceType, isLandscapeSplit]);
     // Extra top breathing room below the (mock) status bar:
     // - Mobile portrait can afford slightly more
     // - Everything else sits a touch closer for tighter, more premium spacing.
@@ -1135,7 +1143,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     );
 
     return (
-        <div className={`flex ${isLandscapeSplit ? 'flex-row' : 'flex-col'} lg:flex-row ${isEmbedded ? 'h-full w-full' : 'min-h-screen h-[100dvh]'} ${isDarkMode ? 'bg-cosmic text-slate-100' : 'bg-[#FDFDFD] text-slate-900'} font-sans overflow-hidden transition-colors duration-500 relative`}>
+        <div className={`flex ${isLandscapeSplit ? 'flex-row' : 'flex-col'} lg:flex-row ${isEmbedded ? 'h-full w-full' : 'min-h-screen h-[100dvh]'} ${isDarkMode ? 'bg-cosmic text-slate-100' : 'bg-[#FDFDFD] text-slate-900'} font-sans overflow-hidden ${motionReady ? 'transition-colors duration-500' : ''} relative`}>
             {lightboxIndex !== null && filteredFiles[lightboxIndex] && (
                 <VisualLightbox
                     file={filteredFiles[lightboxIndex]}
@@ -1164,7 +1172,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
             )}
 
             <aside className={`
-                flex-shrink-0 z-30 transition-all duration-500 ease-in-out
+                flex-shrink-0 z-30 ${motionReady ? 'transition-all duration-500 ease-in-out' : ''}
                 ${isLandscapeSplit
                     ? (isDockedSidebarCollapsed
                          ? 'w-0 opacity-0 -translate-x-2 pointer-events-none shadow-none border-r-0 h-full'

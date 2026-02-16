@@ -49,8 +49,8 @@ const WALLPAPER_PRESETS: ProjectTheme[] = [
     },
     {
         name: 'Midnight Silk',
-        // Unsplash: a stone head with floral patterns (f5MVCuuriig)
-        wallpaper: 'https://images.unsplash.com/photo-1753301638967-af6527de668e?auto=format&fit=crop&w=2000&q=80',
+        // Unsplash: green leaves and branches on a white background (1C7oRRwUkgU)
+        wallpaper: 'https://images.unsplash.com/photo-1770983438128-f4065cf02752?auto=format&fit=crop&w=2000&q=80',
         brightness: 'dark',
         showGrain: true
     },
@@ -82,7 +82,8 @@ const WALLPAPER_PRESETS: ProjectTheme[] = [
     },
     {
         name: 'Desert Dunes',
-        wallpaper: 'https://images.unsplash.com/photo-1682687220742-aba13b6e50ba?q=80&w=2000&auto=format&fit=crop',
+        // Unsplash: tall palm trees against a clear blue sky (AXE5-f2i0yw)
+        wallpaper: 'https://images.unsplash.com/photo-1770932537107-d5a98aa2a702?auto=format&fit=crop&w=2000&q=80',
         brightness: 'dark',
         showGrain: true
     },
