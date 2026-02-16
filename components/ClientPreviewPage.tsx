@@ -519,13 +519,16 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                 {/* Header Controls */}
                 <div className="absolute top-0 left-0 right-0 p-3 sm:p-4 md:p-6 grid grid-cols-3 items-start gap-3 z-50 pointer-events-none" style={{ paddingTop: headerPaddingTop }}>
                     <div className="pointer-events-auto justify-self-start">
-                        <button
-                            aria-label="Close Lightbox"
-                            onClick={handleClose}
-                            className={`w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all border ${isDarkMode ? 'bg-white/60 hover:bg-white/75 border-white/30 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}
-                        >
-                            <X className="w-4 h-4 sm:w-5 sm:h-5" />
-                        </button>
+                         <button
+                             aria-label="Close Lightbox"
+                             onClick={handleClose}
+                            className={`w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center border ${isDarkMode
+                                ? 'bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-2xl text-white/70 hover:text-white transition-all duration-300'
+                                : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800 shadow-lg hover:scale-105 transition-all'
+                                }`}
+                         >
+                             <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                         </button>
                     </div>
                     <div className="pointer-events-auto justify-self-center">
                         <div className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full font-mono text-[11px] sm:text-xs font-bold shadow-sm flex items-center gap-2 border ${isDarkMode ? 'bg-white/60 text-white border-white/30' : 'bg-white/95 text-slate-700 border-slate-200'}`}>
@@ -533,20 +536,41 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                         </div>
                     </div>
                     <div className="pointer-events-auto justify-self-end">
-                        <button
-                            aria-label="Toggle Sidebar"
-                            onClick={() => { playClick(); setShowSidebar(!showSidebar); }}
-                            className={`w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all border ${isDarkMode ? 'bg-white/60 hover:bg-white/75 border-white/30 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}
-                        >
-                            {showSidebar ? <PanelRightClose className="w-4 h-4 sm:w-5 sm:h-5" /> : <PanelRightOpen className="w-4 h-4 sm:w-5 sm:h-5" />}
-                        </button>
+                         <button
+                             aria-label="Toggle Sidebar"
+                             onClick={() => { playClick(); setShowSidebar(!showSidebar); }}
+                            className={`w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center border ${isDarkMode
+                                ? 'bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-2xl text-white/70 hover:text-white transition-all duration-300'
+                                : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800 shadow-lg hover:scale-105 transition-all'
+                                }`}
+                         >
+                             {showSidebar ? <PanelRightClose className="w-4 h-4 sm:w-5 sm:h-5" /> : <PanelRightOpen className="w-4 h-4 sm:w-5 sm:h-5" />}
+                         </button>
                     </div>
                 </div>
 
-                {/* Viewer Area - Centers and Fits Content. Added pt-24 for Mobile so content isn't hidden by header controls */}
-                <div className="flex-1 flex items-center justify-center p-4 pt-20 sm:pt-24 md:p-12 relative overflow-hidden z-10">
-                    <button aria-label="Previous" onClick={() => { setSlideDirection(-1); onPrev(); }} className={`absolute left-2 sm:left-3 md:left-8 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all z-40 group border ${isDarkMode ? 'bg-white/60 hover:bg-white/75 border-white/30 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}><ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 group-hover:-translate-x-0.5 transition-transform" strokeWidth={1.5} /></button>
-                    <button aria-label="Next" onClick={() => { setSlideDirection(1); onNext(); }} className={`absolute right-2 sm:right-3 md:right-8 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all z-40 group border ${isDarkMode ? 'bg-white/60 hover:bg-white/75 border-white/30 text-white' : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800'}`}><ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.5} /></button>
+                 {/* Viewer Area - Centers and Fits Content. Added pt-24 for Mobile so content isn't hidden by header controls */}
+                 <div className="flex-1 flex items-center justify-center p-4 pt-20 sm:pt-24 md:p-12 relative overflow-hidden z-10">
+                    <button
+                        aria-label="Previous"
+                        onClick={() => { setSlideDirection(-1); onPrev(); }}
+                        className={`absolute left-2 sm:left-3 md:left-8 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center z-40 group border transition-all duration-300 ${isDarkMode
+                            ? 'bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-2xl text-white/70 hover:text-white'
+                            : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800 shadow-lg'
+                            }`}
+                    >
+                        <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 group-hover:-translate-x-0.5 transition-transform" strokeWidth={1.5} />
+                    </button>
+                    <button
+                        aria-label="Next"
+                        onClick={() => { setSlideDirection(1); onNext(); }}
+                        className={`absolute right-2 sm:right-3 md:right-8 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-full flex items-center justify-center z-40 group border transition-all duration-300 ${isDarkMode
+                            ? 'bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-2xl text-white/70 hover:text-white'
+                            : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800 shadow-lg'
+                            }`}
+                    >
+                        <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.5} />
+                    </button>
 
                     <div key={file.id} className={`relative w-full h-full max-w-full max-h-full flex items-center justify-center ${slideDirection === 1 ? 'animate-slide-right' : slideDirection === -1 ? 'animate-slide-left' : 'animate-fade-in'}`}>
                         {file.previewUrl ? (
@@ -651,10 +675,26 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                 {f.previewUrl ? <img src={f.previewUrl} className="w-full h-full object-cover" alt={f.name} /> : <div className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-white/5' : 'bg-slate-100'}`}><FileText className="w-4 h-4 text-slate-400" /></div>}
                             </button>
                         ))}</div></div>
-                        <button onClick={() => setShowThumbnails(false)} className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-5 py-2.5 rounded-full shadow-lg text-[10px] font-bold uppercase tracking-widest transition-all z-30 ${isDarkMode ? 'bg-[#18181b] text-slate-400 hover:text-white border border-white/10' : 'bg-white text-slate-500 hover:text-slate-900 border border-slate-200'}`}><Minimize2 className="w-3.5 h-3.5" /> Hide Dock</button>
+                        <button
+                            onClick={() => setShowThumbnails(false)}
+                            className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest z-30 border transition-all duration-300 ${isDarkMode
+                                ? 'bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-2xl text-white/70 hover:text-white'
+                                : 'bg-white text-slate-500 hover:text-slate-900 border-slate-200 shadow-lg'
+                                }`}
+                        >
+                            <Minimize2 className="w-3.5 h-3.5" /> Hide Dock
+                        </button>
                     </>
                 ) : (
-                    <button onClick={() => setShowThumbnails(true)} className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-5 py-2.5 rounded-full shadow-lg text-[10px] font-bold uppercase tracking-widest transition-all z-50 ${isDarkMode ? 'bg-[#18181b] text-slate-400 hover:text-white border border-white/10' : 'bg-white text-slate-500 hover:text-slate-900 border border-slate-200'}`}><GridIcon className="w-3.5 h-3.5" /> Show Files</button>
+                    <button
+                        onClick={() => setShowThumbnails(true)}
+                        className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest z-50 border transition-all duration-300 ${isDarkMode
+                            ? 'bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-2xl text-white/70 hover:text-white'
+                            : 'bg-white text-slate-500 hover:text-slate-900 border-slate-200 shadow-lg'
+                            }`}
+                    >
+                        <GridIcon className="w-3.5 h-3.5" /> Show Files
+                    </button>
                 )}
             </div>
 
@@ -675,13 +715,36 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                 }
             `}>
                 <div className="w-full h-full flex flex-col pt-16 md:pt-0 overflow-hidden">
-                    <button aria-label="Close Sidebar" onClick={() => setShowSidebar(false)} className="lg:hidden absolute top-4 right-4 p-2 rounded-full bg-slate-100 dark:bg-white/10 hover:bg-slate-200"><X className="w-6 h-6" /></button>
+                    <button
+                        aria-label="Close Sidebar"
+                        onClick={() => setShowSidebar(false)}
+                        className={`lg:hidden absolute top-4 right-4 w-11 h-11 rounded-full flex items-center justify-center border transition-all duration-300 ${isDarkMode
+                            ? 'bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-2xl text-white/70 hover:text-white'
+                            : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-800 shadow-lg'
+                            }`}
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
 
                     <div className="w-full lg:w-[350px] xl:w-[400px] flex flex-col h-full" style={{ paddingTop: paddingTop }}>
                         <div className={`p-6 border-b ${isDarkMode ? 'border-white/5' : 'border-slate-100'}`}>
                             <div className="flex items-center justify-between mb-4">
                                 <div className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest ${revisions.length > 0 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400'}`}>Requests ({revisions.length})</div>
-                                <div className="flex items-center gap-3"><button aria-label="Toggle Theme" onClick={() => { playClick(); onToggleTheme(); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isDarkMode ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}>{(!themeMode || themeMode === 'light') && <Sun className="w-3.5 h-3.5" />}{themeMode === 'dark' && <Moon className="w-3.5 h-3.5" />}{themeMode === 'system' && <Monitor className="w-3.5 h-3.5" />}</button>{file.locked && isLocked ? <Lock className="w-4 h-4 text-amber-500" /> : <Unlock className={`w-4 h-4 ${isDarkMode ? 'text-[#bef264]' : 'text-lime-600'}`} />}</div>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        aria-label="Toggle Theme"
+                                        onClick={() => { playClick(); onToggleTheme(); }}
+                                        className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-300 ${isDarkMode
+                                            ? 'bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-2xl text-white/70 hover:text-white'
+                                            : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+                                            }`}
+                                    >
+                                        {(!themeMode || themeMode === 'light') && <Sun className="w-3.5 h-3.5" />}
+                                        {themeMode === 'dark' && <Moon className="w-3.5 h-3.5" />}
+                                        {themeMode === 'system' && <Monitor className="w-3.5 h-3.5" />}
+                                    </button>
+                                    {file.locked && isLocked ? <Lock className="w-4 h-4 text-amber-500" /> : <Unlock className={`w-4 h-4 ${isDarkMode ? 'text-[#bef264]' : 'text-lime-600'}`} />}
+                                </div>
                             </div>
                             <h3 className={`font-bold text-lg leading-tight ${textPrimary} truncate`}>{file.name}</h3>
                             <p className="text-xs text-slate-500 mt-1 font-mono">{file.size} · {file.type.toUpperCase()}</p>
@@ -1172,7 +1235,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
             )}
 
             <aside className={`
-                flex-shrink-0 z-30 ${motionReady ? 'transition-all duration-500 ease-in-out' : ''}
+                flex-shrink-0 z-30 transition-all duration-500 ease-in-out
                 ${isLandscapeSplit
                     ? (isDockedSidebarCollapsed
                          ? 'w-0 opacity-0 -translate-x-2 pointer-events-none shadow-none border-r-0 h-full'

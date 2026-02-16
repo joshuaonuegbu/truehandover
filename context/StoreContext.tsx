@@ -73,7 +73,8 @@ const migrateDemoProjects = (projects: Project[]): Project[] => {
     if (next.id === 'p2') {
       next.files = (next.files || []).map((f) => {
         if (f.id === 'f4') {
-          return { ...f, previewUrl: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=900&q=70' };
+          // Unsplash: cozy bedroom / misty landscape (Oz7ELLNzb00)
+          return { ...f, previewUrl: 'https://images.unsplash.com/photo-1768077710231-f3a256362553?auto=format&fit=crop&w=900&q=70' };
         }
         if (f.id === 'f5') {
           return {
@@ -96,7 +97,7 @@ const migrateDemoProjects = (projects: Project[]): Project[] => {
         'https://images.unsplash.com/photo-1768853972795-2739a9685567?auto=format&fit=crop&w=900&q=70',
     // generic workspace photo
       'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800&h=800&fit=crop':
-        'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=900&q=70',
+        'https://images.unsplash.com/photo-1768077710231-f3a256362553?auto=format&fit=crop&w=900&q=70',
       // camera / filming photo
       'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=800&h=800&fit=crop':
         'https://images.unsplash.com/photo-1536514498073-50e69d39c6cf?auto=format&fit=crop&w=900&q=70',
@@ -261,7 +262,7 @@ const INITIAL_PROJECTS: Project[] = [
                 uploadDate: '2023-10-28',
                 tag: 'SOURCE',
                 // Abstract, premium cover (no people)
-                previewUrl: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=900&q=70',
+                previewUrl: 'https://images.unsplash.com/photo-1768077710231-f3a256362553?auto=format&fit=crop&w=900&q=70',
                 metadata: { software: 'Figma', hash: 'c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8' }
             },
             {
