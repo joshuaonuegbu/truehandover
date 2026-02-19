@@ -1,10 +1,19 @@
-# OAuth Deployment Guide (Google, Dropbox, OneDrive)
+# OAuth Deployment Guide (Google Drive, Dropbox, OneDrive)
 
-This app uses popup OAuth for BYOS drive connections in Settings → Storage → Cloud Drive.
+TrueHandover supports "Bring Your Own Storage" (BYOS) via cloud-drive connections in:
 
-## 1) Environment variables to set
+`Settings -> Storage -> Cloud Drive`
 
-Set these in your hosting platform (Production + Preview, if applicable):
+## The Non-Negotiable Reality
+
+If you want TrueHandover to show an OAuth consent screen like "TrueHandover wants access to your Drive",
+you (TrueHandover) must register an OAuth app with each provider at least once.
+
+Your customers do **not** create OAuth keys. They simply click **Connect** and grant permissions.
+
+## 1) Environment Variables (Frontend)
+
+Set these in your hosting platform (Production + Preview):
 
 - `VITE_GOOGLE_OAUTH_CLIENT_ID`
 - `VITE_DROPBOX_OAUTH_CLIENT_ID`
@@ -12,89 +21,77 @@ Set these in your hosting platform (Production + Preview, if applicable):
 
 For local development, copy `.env.example` to `.env.local` and fill in values.
 
-## 2) Redirect URI used by TrueHandover
+## 2) Redirect URI
 
-The app callback page is:
+The callback page used by this app:
 
 - `https://YOUR_DOMAIN/oauth-popup.html`
 
-For local dev:
+Local dev (this repo runs Vite on port 3000):
 
-- `http://localhost:5173/oauth-popup.html`
+- `http://localhost:3000/oauth-popup.html`
 
 You must register both URLs in each OAuth provider console (replace `YOUR_DOMAIN`).
 
-## 3) Google setup (Google Cloud Console)
+## 3) Google Setup (Google Cloud Console)
 
-1. Open Google Cloud Console → APIs & Services → Credentials.
-2. Create **OAuth client ID** (Web application).
+1. Google Cloud Console -> APIs & Services -> Credentials
+2. Create **OAuth client ID** (Web application)
 3. Add Authorized redirect URIs:
    - `https://YOUR_DOMAIN/oauth-popup.html`
-   - `http://localhost:5173/oauth-popup.html`
-4. Copy the **Client ID** value.
-5. Set `VITE_GOOGLE_OAUTH_CLIENT_ID` to that value.
-6. Ensure Drive API is enabled in the same project.
+   - `http://localhost:3000/oauth-popup.html`
+4. Copy the **Client ID**
+5. Set `VITE_GOOGLE_OAUTH_CLIENT_ID` to that value
+6. Ensure Drive API is enabled in the same project
 
-Scopes used by app:
+Scopes used by the app:
+
 - `https://www.googleapis.com/auth/drive.readonly`
 - `https://www.googleapis.com/auth/userinfo.email`
 - `https://www.googleapis.com/auth/userinfo.profile`
 
-## 4) Dropbox setup (Dropbox App Console)
+## 4) Dropbox Setup (Dropbox App Console)
 
-1. Open Dropbox App Console → Create app.
-2. Choose **Scoped access** and app type you prefer.
-3. In OAuth settings, add Redirect URIs:
+1. Dropbox App Console -> Create app
+2. Choose **Scoped access** and the app type you prefer
+3. Add Redirect URIs:
    - `https://YOUR_DOMAIN/oauth-popup.html`
-   - `http://localhost:5173/oauth-popup.html`
-4. Copy the **App key** (used as OAuth client ID).
-5. Set `VITE_DROPBOX_OAUTH_CLIENT_ID` to the App key.
-6. Add permissions needed:
+   - `http://localhost:3000/oauth-popup.html`
+4. Copy the **App key** (this is the OAuth client ID)
+5. Set `VITE_DROPBOX_OAUTH_CLIENT_ID` to that value
+6. Add permissions:
    - `account_info.read`
    - `files.metadata.read`
 
-## 5) OneDrive setup (Microsoft Entra / Azure)
+## 5) OneDrive Setup (Microsoft Entra / Azure AD)
 
-1. Open Microsoft Entra admin center → App registrations → New registration.
-2. In Authentication, add platform **Single-page application**.
+1. Microsoft Entra admin center -> App registrations -> New registration
+2. In Authentication, add platform **Single-page application**
 3. Add Redirect URIs:
    - `https://YOUR_DOMAIN/oauth-popup.html`
-   - `http://localhost:5173/oauth-popup.html`
-4. Copy **Application (client) ID**.
-5. Set `VITE_ONEDRIVE_OAUTH_CLIENT_ID` to that ID.
+   - `http://localhost:3000/oauth-popup.html`
+4. Copy **Application (client) ID**
+5. Set `VITE_ONEDRIVE_OAUTH_CLIENT_ID` to that value
 6. API permissions (Microsoft Graph):
    - `Files.Read`
    - `User.Read`
 
-## 6) Host-specific where to set env vars
-
-### Vercel
-- Project → Settings → Environment Variables.
-- Add all 3 keys for Production (and Preview/Development if needed).
-- Redeploy.
-
-### Netlify
-- Site settings → Environment variables.
-- Add keys, trigger a new deploy.
-
-### Render
-- Dashboard → Web Service → Environment.
-- Add keys, save, redeploy.
-
-### Azure Static Web Apps
-- Static Web App → Configuration → Application settings.
-- Add keys, save, redeploy.
-
-## 7) Verification checklist
+## 6) Verification Checklist
 
 1. Deploy with env vars set.
-2. Open app → Settings → Storage → Cloud Drive.
+2. Open app -> Settings -> Storage -> Cloud Drive.
 3. Click Connect for each provider.
-4. After successful auth, confirm label appears (email/name) and status is connected.
-5. Try folder import in Creator to confirm provider tokens are active.
+4. Confirm the UI shows a connected label (email/name).
+5. Try folder import in Creator to confirm provider auth is active.
 
-## 8) Security notes
+## 7) Security Notes (Recommended Production Direction)
 
-- Keep OAuth preview in-app where possible (current behavior).
-- Avoid forcing external "open in new tab" for sensitive assets; that bypasses parts of your in-app control surface.
-- This is still client-side OAuth for a frontend app; for maximum control, move token exchange and provider API calls to a backend service and store tokens server-side.
+This repo currently demonstrates a frontend-only OAuth + import flow.
+
+For maximum security in a real product, you should:
+
+- Use Authorization Code + PKCE (not implicit tokens)
+- Do token exchange and provider API calls on a backend service
+- Store tokens server-side (encrypted), and never expose provider tokens or real storage URLs to clients
+- Only return short-lived signed download URLs after payment clears
+

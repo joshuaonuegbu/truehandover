@@ -6,6 +6,7 @@ import {
     ArrowLeft, Lock, Activity, ShieldCheck
 } from 'lucide-react';
 import { playClick, playSuccess } from '../utils/sound';
+import { InlineErrorBanner } from './Shared';
 
 const EditorialIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 32 32" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -17,6 +18,21 @@ const EditorialIcon = ({ className }: { className?: string }) => (
 
 // --- SECURE HANDOVER CARD (TrueHandover Identity) ---
 const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: string | null, email: string, password: string }) => {
+    const totalInputLength = email.length + password.length;
+    const energyLevel = Math.min(1, totalInputLength / 28);
+    const progressWidth = Math.max(18, Math.round(18 + energyLevel * 76));
+    const pulseScale = 1 + energyLevel * 0.08;
+    const statusLabel = password.length > 0
+        ? 'Cipher warming'
+        : email.length > 0
+            ? 'Identity sync'
+            : 'Awaiting input';
+    const signalBars = [0, 1, 2, 3, 4].map((idx) => {
+        const base = 18 + idx * 5;
+        const lift = Math.min(26, Math.round(totalInputLength * (idx + 1) * 0.45));
+        return Math.min(42, base + lift);
+    });
+
     return (
         <div className="relative w-full h-full flex items-center justify-center perspective-[2000px] overflow-visible">
             {/* Ambient Background Blobs */}
@@ -38,7 +54,7 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
             <div className="relative z-10 w-80 h-[28rem] transform-style-3d animate-elegant-float group">
 
                 {/* Back Plate - Structural Foundation */}
-                <div className={`absolute inset-0 w-full h-full bg-slate-200/50 dark:bg-[#1c1c1f]/80 rounded-[3rem] shadow-2xl transform transition-all duration-1000 ease-out border-[0.5px] border-black/5 dark:border-white/10 overflow-hidden ${focusedField ? 'rotate-3 scale-[1.02] shadow-[0_30px_60px_-15px_rgba(132,204,22,0.3)]' : 'rotate-6 group-hover:rotate-3'}`}>
+                <div className={`absolute inset-0 w-full h-full bg-slate-200/50 dark:bg-[#1c1c1f]/80 rounded-[3rem] shadow-2xl transform transition-all duration-1000 ease-out border-[0.5px] border-black/5 dark:border-white/10 overflow-hidden ${focusedField ? 'rotate-3 scale-[1.02] shadow-[0_30px_60px_-15px_rgba(132,204,22,0.3)]' : 'rotate-6 group-hover:rotate-3'}`} style={{ transform: focusedField ? `rotate(3deg) scale(${pulseScale.toFixed(3)})` : undefined }}>
                     {/* Blurred preview grid */}
                     <div className="absolute inset-0 grid grid-cols-2 gap-1 p-4 opacity-30 dark:opacity-20">
                         <div className="rounded-xl bg-slate-300 dark:bg-white/10" />
@@ -102,7 +118,16 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
                                     <span className="text-[9px] font-bold text-lime-600 dark:text-[#bef264]">2 of 3</span>
                                 </div>
                                 <div className="h-1.5 w-full bg-slate-200/50 dark:bg-white/10 rounded-full overflow-hidden">
-                                    <div className="h-full w-[66%] bg-gradient-to-r from-lime-500 to-[#bef264] rounded-full transition-all duration-1000" />
+                                    <div className="h-full bg-gradient-to-r from-lime-500 to-[#bef264] rounded-full transition-all duration-700" style={{ width: `${progressWidth}%` }} />
+                                </div>
+                                <div className="mt-3 flex items-end gap-1.5 h-11">
+                                    {signalBars.map((height, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`w-2 rounded-full transition-all duration-500 ${focusedField ? 'bg-lime-500/80 dark:bg-[#bef264]/80' : 'bg-slate-300 dark:bg-white/20'}`}
+                                            style={{ height: `${height}%` }}
+                                        />
+                                    ))}
                                 </div>
                             </div>
 
@@ -110,7 +135,7 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
                             <div className="flex justify-between items-end">
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full bg-lime-600 dark:bg-[#bef264] animate-pulse shadow-[0_0_8px_rgba(101,163,13,0.5)] dark:shadow-[0_0_8px_rgba(190,242,100,0.4)]" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Transfer Ready</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{statusLabel}</span>
                                 </div>
                                 <Activity className="w-7 h-7 text-lime-600 dark:text-[#bef264]" />
                             </div>
@@ -141,10 +166,23 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [focusedField, setFocusedField] = useState<string | null>(null);
+    const [formError, setFormError] = useState<string | null>(null);
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
+        const normalizedEmail = email.trim();
+        if (!normalizedEmail || !password.trim()) {
+            setFormError('Enter both email and password to continue.');
+            return;
+        }
+        const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
+        if (!isValidEmail) {
+            setFormError('Enter a valid email address.');
+            return;
+        }
+
         playClick();
+        setFormError(null);
         setIsLoading(true);
 
         setTimeout(() => {
@@ -160,16 +198,16 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
             {/* Crisp film grain — visible in both modes */}
             <div className="absolute inset-0 pointer-events-none z-0 mix-blend-multiply dark:mix-blend-overlay"
                 style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.35' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-                    filter: 'contrast(1200%) brightness(100%)',
-                    opacity: 0.04
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.65' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                    filter: 'contrast(1700%) brightness(102%)',
+                    opacity: 0.05
                 }}
             />
             <div className="absolute inset-0 pointer-events-none z-0 hidden dark:block mix-blend-overlay"
                 style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.35' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-                    filter: 'contrast(1500%) brightness(100%)',
-                    opacity: 0.5
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.65' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                    filter: 'contrast(2100%) brightness(102%)',
+                    opacity: 0.56
                 }}
             />
 
@@ -179,12 +217,12 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                 {/* Back Button */}
                 <button
                     onClick={() => navigate(-1)}
-                    className="absolute top-8 left-4 md:left-8 lg:left-12 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors group z-50 flex items-center justify-center"
+                    className="absolute top-8 left-4 md:left-8 lg:left-12 p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors group z-50 flex items-center justify-center"
                 >
                     <ArrowLeft className="w-5 h-5 text-slate-400 group-hover:text-black dark:group-hover:text-white transition-colors" />
                 </button>
 
-                {/* Brand Logo */}`
+                {/* Brand Logo */}
                 <div
                     onClick={() => navigate('/')}
                     className="absolute top-8 left-8 md:left-16 lg:left-20 cursor-pointer group flex items-center gap-3"
@@ -208,7 +246,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                 <div className="max-w-md w-full mx-auto pt-20 lg:pt-0 animate-slide-up">
                     <header className="mb-12">
                         <h1 className="font-serif text-5xl md:text-6xl font-medium tracking-tight mb-4 text-slate-900 dark:text-white leading-[0.9]">
-                            Welcome <span className="italic text-slate-300 dark:text-slate-600">Back.</span>
+                            Welcome <span className="italic text-lime-600 dark:text-[#bef264]">Back.</span>
                         </h1>
                         <p className="text-slate-500 dark:text-slate-400 text-lg font-medium tracking-tight">
                             Access your secure professional workspace.
@@ -216,6 +254,12 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                     </header>
 
                     <form onSubmit={handleLogin} className="space-y-10">
+                        {formError && (
+                            <InlineErrorBanner
+                                message={formError}
+                                onDismiss={() => setFormError(null)}
+                            />
+                        )}
                         <div className="space-y-8">
                             <div className="group relative">
                                 <label className={`absolute left-0 transition-all duration-300 pointer-events-none ${focusedField === 'email' || email ? '-top-6 text-[9px] font-black uppercase tracking-[0.3em] text-lime-600 dark:text-[#bef264]' : 'top-3 text-lg text-slate-400 font-medium'}`}>
@@ -225,7 +269,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                                     type="email"
                                     required
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => { setEmail(e.target.value); if (formError) setFormError(null); }}
                                     onFocus={() => setFocusedField('email')}
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full py-3 bg-transparent border-b border-slate-200 dark:border-white/10 focus:border-black dark:focus:border-white outline-none transition-all text-xl font-medium text-slate-900 dark:text-white"
@@ -240,7 +284,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                                     type="password"
                                     required
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(e) => { setPassword(e.target.value); if (formError) setFormError(null); }}
                                     onFocus={() => setFocusedField('password')}
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full py-3 bg-transparent border-b border-slate-200 dark:border-white/10 focus:border-black dark:focus:border-white outline-none transition-all text-xl font-medium text-slate-900 dark:text-white"
@@ -288,7 +332,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                 {/* Footer text in illustration area */}
                 <div className="absolute bottom-12 left-0 right-0 text-center z-20 pointer-events-none">
                     <p className="font-serif italic text-slate-400 dark:text-slate-600 text-xl tracking-wide">
-                        "The standard for creative closure."
+                        "Creative delivery, finally done right."
                     </p>
                 </div>
             </div>

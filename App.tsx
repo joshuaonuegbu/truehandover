@@ -723,6 +723,15 @@ const AppLayout = ({ user, isDarkMode, themeMode, cycleTheme, togglePrivacyMode,
 
     useEffect(() => {
         const handleDown = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement | null;
+            const isTypingTarget = !!target && (
+                target.tagName === 'INPUT' ||
+                target.tagName === 'TEXTAREA' ||
+                target.tagName === 'SELECT' ||
+                target.isContentEditable
+            );
+            if (isTypingTarget) return;
+
             if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
                 setIsSearchOpen((open) => !open);
@@ -858,7 +867,7 @@ const AppLayout = ({ user, isDarkMode, themeMode, cycleTheme, togglePrivacyMode,
                         {/* Left: Brand - UPDATED: Island Design + 5% Scale */}
                         <div className="flex items-center gap-3 cursor-pointer group flex-shrink-0 scale-[1.05] origin-left" onClick={() => { playClick(); navigate('/'); }}>
                             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm transition-all hover:shadow-md">
-                                <EditorialIcon className="w-6 h-6 text-black dark:text-white" />
+                                <EditorialIcon className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
                                 <span className={`font-serif font-medium tracking-tight text-lg text-slate-900 dark:text-white hidden sm:block`}>TrueHandover</span>
                             </div>
                         </div>
@@ -975,10 +984,10 @@ const AppLayout = ({ user, isDarkMode, themeMode, cycleTheme, togglePrivacyMode,
 }
 
 // Wrapper to handle project lookup for Editor routes
-const EditorWrapper = ({ projects, onSave }: { projects: Project[], onSave: (p: Project) => void }) => {
+const EditorWrapper = ({ projects, onSave, user }: { projects: Project[], onSave: (p: Project) => void, user: UserProfile }) => {
     const { id } = useParams();
     const project = projects.find(p => p.id === id) || projects[0];
-    return <CreatorPage existingProject={project} onSave={onSave} onBack={() => window.history.back()} />;
+    return <CreatorPage existingProject={project} allProjects={projects} user={user} onSave={onSave} onBack={() => window.history.back()} />;
 };
 
 // Wrapper to handle project lookup for Preview routes
@@ -1010,7 +1019,17 @@ const PreviewWrapper = ({ projects, user, isDarkMode, themeMode, onToggleTheme, 
         navigate('/vault');
     };
 
-    return <ClientPreviewBiz project={project} user={user} onBack={handleBack} isDarkMode={isDarkMode} themeMode={themeMode} onToggleTheme={onToggleTheme} onSetThemeMode={onSetThemeMode} />;
+    const libraryEnabled = project.enableClientLibrary !== false;
+    const clientEmail = (project.client?.email || '').trim().toLowerCase();
+    const libraryProjects = projects.filter(p => {
+        if (p.id === project.id) return false;
+        if (p.enableClientLibrary === false) return false;
+        if ((p.status !== 'paid' && p.status !== 'completed') || !p.files?.some(f => f.includeInLibrary !== false)) return false;
+        const candidateEmail = (p.client?.email || '').trim().toLowerCase();
+        return clientEmail.length > 0 && candidateEmail === clientEmail;
+    });
+
+    return <ClientPreviewBiz project={project} user={user} onBack={handleBack} isDarkMode={isDarkMode} themeMode={themeMode} onToggleTheme={onToggleTheme} onSetThemeMode={onSetThemeMode} libraryProjects={libraryProjects} libraryEnabled={libraryEnabled} />;
 };
 
 const AppContent = () => {
@@ -1030,6 +1049,7 @@ const AppContent = () => {
     };
     const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>(getInitialTheme());
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [firstVisitThemeNotice, setFirstVisitThemeNotice] = useState<string | null>(null);
 
     // -- STATE MANAGEMENT via Store --
     const { projects, user, saveProject, updateUser } = useStore();
@@ -1058,6 +1078,25 @@ const AppContent = () => {
         }
     }, [themeMode]);
 
+    useEffect(() => {
+        try {
+            const isPreviewRoute = window.location.hash.startsWith('#/preview/');
+            if (isPreviewRoute) return;
+
+            const alreadySeen = localStorage.getItem('th_theme_notice_seen') === '1';
+            if (alreadySeen) return;
+
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const appliedMode = prefersDark ? 'Dark mode' : 'Light mode';
+            setFirstVisitThemeNotice(`${appliedMode} has been applied based on your operating system preference.`);
+            localStorage.setItem('th_theme_notice_seen', '1');
+
+            const timer = window.setTimeout(() => setFirstVisitThemeNotice(null), 5500);
+            return () => window.clearTimeout(timer);
+        } catch {
+        }
+    }, []);
+
     const cycleTheme = () => {
         const modes: ('light' | 'dark' | 'system')[] = ['light', 'dark', 'system'];
         const currentIndex = modes.indexOf(themeMode);
@@ -1073,6 +1112,22 @@ const AppContent = () => {
         <PrivacyContext.Provider value={{ privacyMode, togglePrivacyMode }}>
             <HashRouter>
                 <div className={`font-sans min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+                    {firstVisitThemeNotice && (
+                        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[120] px-4">
+                            <div className="flex items-center gap-2 rounded-full border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-[#18181b]/90 backdrop-blur-md shadow-lg px-4 py-2 text-[11px] font-bold tracking-wide text-slate-700 dark:text-slate-200">
+                                <CheckCircle className="w-4 h-4 text-lime-600 dark:text-[#bef264]" />
+                                <span>{firstVisitThemeNotice}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setFirstVisitThemeNotice(null)}
+                                    className="ml-1 p-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+                                    aria-label="Dismiss theme notice"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
                     <Routes>
                         <Route
                             path="/"
@@ -1103,10 +1158,10 @@ const AppContent = () => {
                             <Route path="/trash" element={<TrashPage onBack={() => window.history.back()} />} />
                             <Route path="/help" element={<HelpPage onBack={() => window.history.back()} />} />
                         </Route>
-                        <Route path="/create" element={<CreatorPage onSave={saveProject} onBack={() => window.history.back()} />} />
+                        <Route path="/create" element={<CreatorPage allProjects={projects} user={user} onSave={saveProject} onBack={() => window.history.back()} />} />
 
                         {/* Dynamic Route Handlers */}
-                        <Route path="/editor/:id" element={<EditorWrapper projects={projects} onSave={saveProject} />} />
+                        <Route path="/editor/:id" element={<EditorWrapper projects={projects} onSave={saveProject} user={user} />} />
                         {/* Updated Route: Passing dynamic user prop */}
                         <Route path="/preview/:id" element={<PreviewWrapper projects={projects} user={user} isDarkMode={isDarkMode} themeMode={themeMode} onToggleTheme={cycleTheme} onSetThemeMode={setThemeMode} />} />
                     </Routes>

@@ -52,6 +52,8 @@ const MockStatusBar = ({ width, isDark, heightPx, lightModeStyle }: { width: num
 
 interface ClientPreviewBizProps {
     project: Project;
+    libraryProjects?: Project[];
+    libraryEnabled?: boolean;
     onBack: () => void;
     isDarkMode: boolean;
     themeMode?: 'light' | 'dark' | 'system';
@@ -61,10 +63,14 @@ interface ClientPreviewBizProps {
     isEmbedded?: boolean;
     allowSidebarCollapse?: boolean;
     onDockedSidebarCollapseChange?: (collapsed: boolean) => void; // used by Creator/editor overlays to avoid UI overlap
+    onDeviceModeChange?: (mode: 'desktop' | 'tablet' | 'mobile' | 'foldable') => void;
+    reserveCollapsedHeaderBackSlot?: number;
 }
 
 const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     project: initialProject,
+    libraryProjects = [],
+    libraryEnabled = true,
     onBack,
     isDarkMode,
     onToggleTheme,
@@ -73,7 +79,9 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     user,
     isEmbedded = false,
     allowSidebarCollapse = false,
-    onDockedSidebarCollapseChange
+    onDockedSidebarCollapseChange,
+    onDeviceModeChange,
+    reserveCollapsedHeaderBackSlot = 0
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -123,6 +131,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
 
     // State
     const [accessDenied, setAccessDenied] = useState(false);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
 
     // Lightbox State Management
     const [internalLightboxIndex, setInternalLightboxIndex] = useState<number | null>(null);
@@ -188,6 +197,10 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         setIframeDockedSidebarCollapsed(false);
     }, [deviceMode, themeMode]);
 
+    useEffect(() => {
+        onDeviceModeChange?.(deviceMode);
+    }, [deviceMode, onDeviceModeChange]);
+
     // Access Control Logic (One-Time Links)
     useEffect(() => {
         if (isEmbedded) { setAccessDenied(false); return; }
@@ -233,14 +246,31 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     // --- PAYMENT & UNLOCK LOGIC ---
     const handlePaymentComplete = async (method?: any) => {
         if (isEmbedded) return;
-        if (method === 'manual') { setProject(prev => ({ ...prev, status: 'payment_verification' })); playSuccess(); return; }
-        if (project.status === 'payment_verification') {
-            const result = await PaymentService.verifyManualPayment(project.id);
-            if (result.success) { unlockProject(); }
-        } else { unlockProject(); }
+        setPaymentError(null);
+        try {
+            if (method === 'manual') {
+                setProject(prev => ({ ...prev, status: 'payment_verification' }));
+                playSuccess();
+                return;
+            }
+            if (project.status === 'payment_verification') {
+                const result = await PaymentService.verifyManualPayment(project.id);
+                if (result.success) {
+                    unlockProject();
+                    return;
+                }
+                setPaymentError('Payment verification did not complete. Please try again.');
+                return;
+            }
+            unlockProject();
+        } catch (error) {
+            console.error('Payment flow failed', error);
+            setPaymentError('We could not complete payment processing right now. Please retry.');
+        }
     };
 
     const unlockProject = () => {
+        setPaymentError(null);
         setProject(prev => ({
             ...prev, status: 'paid',
             files: prev.files.map(f => ({ ...f, locked: false, downloadUrl: f.externalUrl ? f.externalUrl : `https://vault-cdn.truehandover.com/secure/${f.id}?sig=${Math.random().toString(36).substring(7)}&exp=${Date.now() + 3600000}` }))
@@ -254,7 +284,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     const filteredFiles = project.files.filter(f => {
         if (activeFilter === 'all') return true;
         if (activeFilter === 'image') return f.type === 'image' || f.type === 'design';
-        if (activeFilter === 'doc') return f.type === 'pdf';
+        if (activeFilter === 'doc') return f.type === 'pdf' || f.type === 'doc';
         if (activeFilter === 'video') return f.type === 'video';
         if (activeFilter === 'audio') return f.type === 'audio';
         if (activeFilter === 'archive') return f.type === 'archive';
@@ -383,8 +413,13 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         activeFilter, setActiveFilter, theme, filteredFiles,
         handleRequestCorrection, accessDenied,
         refreshAccess: () => { localStorage.removeItem(`viewed_${project.id}`); window.location.reload(); },
+        paymentError,
+        onDismissPaymentError: () => setPaymentError(null),
         allowSidebarCollapse,
-        onDockedSidebarCollapseChange
+        onDockedSidebarCollapseChange,
+        reserveCollapsedHeaderBackSlot,
+        libraryProjects,
+        libraryEnabled
     };
 
     // --- RAW MODE: Render component directly (used inside iframes) ---
@@ -425,14 +460,14 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                 )}
                 {/* Floating Device Mode Switcher */}
                 <div className="fixed bottom-6 right-6 z-[60] flex items-center gap-1 bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-                    <span className="px-2 text-[10px] font-bold uppercase tracking-widest text-white/50 select-none">
+                    <span className="px-2 text-[10px] font-bold uppercase tracking-widest text-white/70 select-none">
                         Preview
                     </span>
                     <div className="w-px h-6 bg-white/10 mx-0.5" />
                     {deviceOptions.map(({ mode, icon: Icon, label }) => (
                         <button key={mode} aria-label={label} title={label}
                             onClick={() => switchDevice(mode)}
-                            className={`p-2.5 rounded-xl transition-all ${deviceMode === mode ? 'bg-white/15 text-white shadow-sm' : 'text-white/40 hover:text-white/70 hover:bg-white/5'}`}
+                            className={`p-2.5 rounded-xl transition-all ${deviceMode === mode ? 'bg-white/20 text-white shadow-sm ring-1 ring-white/25' : 'text-white/60 hover:text-white/85 hover:bg-white/10'}`}
                         ><Icon className="w-4 h-4" /></button>
                     ))}
                 </div>
@@ -494,7 +529,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                 {/* Back button */}
                 {!isEmbedded && (
                     <button onClick={() => { playClick(); switchDevice('desktop'); }}
-                        className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 hover:text-white/80 transition-all backdrop-blur-xl shadow-sm"
+                        className="p-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white/75 hover:text-white transition-all backdrop-blur-xl shadow-sm"
                         title="Exit Preview"
                     ><ChevronLeft className="w-4 h-4" /></button>
                 )}
@@ -506,8 +541,8 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                         <button key={mode} aria-label={label} title={label}
                             onClick={() => switchDevice(mode)}
                             className={`p-2.5 rounded-xl transition-all duration-200 ${deviceMode === mode
-                                ? 'bg-white/15 text-white shadow-sm'
-                                : 'text-white/30 hover:text-white/60 hover:bg-white/5'
+                                ? 'bg-white/20 text-white shadow-sm ring-1 ring-white/25'
+                                : 'text-white/55 hover:text-white/85 hover:bg-white/10'
                                 }`}
                         ><Icon className="w-4 h-4" /></button>
                     ))}
@@ -517,7 +552,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                     {/* Orientation Toggle */}
                     <button
                         onClick={() => { playClick(); setOrientation(prev => prev === 'portrait' ? 'landscape' : 'portrait'); }}
-                        className={`p-2.5 rounded-xl transition-all ${orientation === 'landscape' ? 'bg-white/15 text-white' : 'text-white/30 hover:text-white/60 hover:bg-white/5'}`}
+                        className={`p-2.5 rounded-xl transition-all ${orientation === 'landscape' ? 'bg-white/20 text-white ring-1 ring-white/25' : 'text-white/55 hover:text-white/85 hover:bg-white/10'}`}
                         title={isPortrait ? 'Switch to Landscape' : 'Switch to Portrait'}
                     >
                         <RotateCw className={`w-4 h-4 transition-transform duration-300 ${orientation === 'landscape' ? 'rotate-90' : ''}`} />
@@ -530,7 +565,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                     <div className="flex items-center gap-1">
                         <button
                             onClick={() => { playClick(); onSetThemeMode?.('light'); }}
-                            className={`p-2.5 rounded-xl transition-all ${!isDarkMode ? 'bg-white/15 text-white shadow-sm' : 'text-white/30 hover:text-white/60 hover:bg-white/5'}`}
+                            className={`p-2.5 rounded-xl transition-all ${!isDarkMode ? 'bg-white/20 text-white shadow-sm ring-1 ring-white/25' : 'text-white/55 hover:text-white/85 hover:bg-white/10'}`}
                             title="Light Mode"
                             aria-label="Light Mode"
                         >
@@ -538,7 +573,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                         </button>
                         <button
                             onClick={() => { playClick(); onSetThemeMode?.('dark'); }}
-                            className={`p-2.5 rounded-xl transition-all ${isDarkMode ? 'bg-white/15 text-white shadow-sm' : 'text-white/30 hover:text-white/60 hover:bg-white/5'}`}
+                            className={`p-2.5 rounded-xl transition-all ${isDarkMode ? 'bg-white/20 text-white shadow-sm ring-1 ring-white/25' : 'text-white/55 hover:text-white/85 hover:bg-white/10'}`}
                             title="Dark Mode"
                             aria-label="Dark Mode"
                         >
@@ -551,7 +586,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                         <>
                             <div className="w-px h-6 bg-white/10 mx-1" />
                             <button onClick={() => { playClick(); setShowFrameSettings(p => !p); }}
-                                className={`p-2.5 rounded-xl transition-all ${showFrameSettings ? 'bg-white/15 text-white' : 'text-white/30 hover:text-white/60 hover:bg-white/5'}`}
+                                className={`p-2.5 rounded-xl transition-all ${showFrameSettings ? 'bg-white/20 text-white ring-1 ring-white/25' : 'text-white/55 hover:text-white/85 hover:bg-white/10'}`}
                                 title="Frame Options"
                             ><Settings2 className="w-4 h-4" /></button>
                         </>
@@ -559,13 +594,13 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                 </div>
 
                 {/* Device label pill */}
-                <div className="px-4 py-2 bg-white/[0.04] rounded-full text-[10px] font-bold uppercase tracking-widest text-white/30 border border-white/[0.06] font-mono whitespace-nowrap shadow-sm">
+                <div className="px-4 py-2 bg-white/[0.08] rounded-full text-[10px] font-bold uppercase tracking-widest text-white/70 border border-white/[0.14] font-mono whitespace-nowrap shadow-sm">
                     {deviceLabel} · {frameW}×{frameH}
                 </div>
 
                 {/* Refresh button */}
                 <button onClick={() => { playClick(); setIframeRefreshKey(k => k + 1); }}
-                    className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/30 hover:text-white/60 transition-all backdrop-blur-xl shadow-sm"
+                    className="p-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white/65 hover:text-white transition-all backdrop-blur-xl shadow-sm"
                     title="Refresh Preview"
                 ><RefreshCw className="w-4 h-4" /></button>
             </div>
@@ -575,13 +610,13 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                 <div className="relative z-50 flex justify-center -mt-1 mb-1 px-4 animate-fade-in">
                     <div className="flex items-center gap-1 bg-white/[0.06] backdrop-blur-xl border border-white/[0.08] rounded-xl p-1 shadow-lg">
                         <button onClick={() => { playClick(); setFrameOption('dynamicIsland'); }}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${frameOption === 'dynamicIsland' ? 'bg-white/15 text-white' : 'text-white/30 hover:text-white/60'}`}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${frameOption === 'dynamicIsland' ? 'bg-white/20 text-white ring-1 ring-white/25' : 'text-white/55 hover:text-white/85 hover:bg-white/10'}`}
                         >Pill Island</button>
                         <button onClick={() => { playClick(); setFrameOption('cameraDot'); }}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${frameOption === 'cameraDot' ? 'bg-white/15 text-white' : 'text-white/30 hover:text-white/60'}`}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${frameOption === 'cameraDot' ? 'bg-white/20 text-white ring-1 ring-white/25' : 'text-white/55 hover:text-white/85 hover:bg-white/10'}`}
                         >Camera Dot</button>
                         <button onClick={() => { playClick(); setFrameOption('none'); }}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${frameOption === 'none' ? 'bg-white/15 text-white' : 'text-white/30 hover:text-white/60'}`}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${frameOption === 'none' ? 'bg-white/20 text-white ring-1 ring-white/25' : 'text-white/55 hover:text-white/85 hover:bg-white/10'}`}
                         >None</button>
                     </div>
                 </div>

@@ -18,7 +18,7 @@ import { playClick, playSuccess } from '../utils/sound';
 import ClientPreviewBiz from './ClientPreviewBiz';
 import { InlineErrorBanner } from './Shared';
 // Import the Backend Service and R2 Service
-import { StorageService, ProcessingService, ByosLinkService, ByosFolderService } from '../api/mockBackend';
+import { StorageService, ProcessingService, ByosFolderService } from '../api/mockBackend';
 import { R2Service } from '../services/r2';
 
 interface CreatorPageProps {
@@ -246,7 +246,9 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
     const [newLink, setNewLink] = useState({ name: '', url: '', size: '', type: 'archive' });
     const [linkError, setLinkError] = useState<string | null>(null);
     const [isAddingLink, setIsAddingLink] = useState(false);
-    const [linkImportMode, setLinkImportMode] = useState<'file' | 'folder'>('file');
+    // Security posture: BYOS link ingestion is restricted to provider folder imports (requires connected Drive account).
+    // We intentionally do not support arbitrary "file share links" as vault assets, since those can bypass the paywall.
+    const [linkImportMode] = useState<'folder'>('folder');
     const [errors, setErrors] = useState<{ name?: boolean, amount?: boolean, files?: boolean }>({});
 
     // Credential Modal State
@@ -454,7 +456,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
         try {
             setIsAddingLink(true);
             playClick();
-            const shouldImportAsFolder = linkImportMode === 'folder' || ByosFolderService.isLikelyFolderLink(trimmedUrl);
+            const shouldImportAsFolder = ByosFolderService.isLikelyFolderLink(trimmedUrl);
 
             if (shouldImportAsFolder) {
                 const importedAssets = await ByosFolderService.importFolderLink({
@@ -464,17 +466,10 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                 });
                 setFiles([...files, ...importedAssets]);
             } else {
-                const generatedAsset = await ByosLinkService.ingestLink({
-                    url: trimmedUrl,
-                    customName: newLink.name.trim() || undefined,
-                    customSize: newLink.size || undefined,
-                    typeHint: (newLink.type as FileAsset['type']) || undefined
-                });
-                setFiles([...files, generatedAsset]);
+                throw new Error('For security, only folder links are supported. Paste a Google Drive / Dropbox / OneDrive folder link (requires a connected account).');
             }
 
             setNewLink({ name: '', url: '', size: '', type: 'archive' });
-            setLinkImportMode('file');
             setLinkError(null);
             setShowLinkModal(false);
             setErrors(prev => ({ ...prev, files: false }));
@@ -1258,60 +1253,53 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             {showLinkModal && (
                                 <div className="mb-4 p-4 bg-slate-50 dark:bg-black/20 rounded-xl border border-dashed border-slate-300 dark:border-white/10 animate-fade-in">
                                     <div className="space-y-3">
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => setLinkImportMode('file')}
-                                                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-colors ${linkImportMode === 'file' ? 'bg-lime-600 text-white border-lime-600 dark:bg-[#bef264] dark:text-black dark:border-[#bef264]' : 'bg-white dark:bg-black/30 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-300'}`}
-                                            >
-                                                Single File
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setLinkImportMode('folder')}
-                                                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-colors ${linkImportMode === 'folder' ? 'bg-lime-600 text-white border-lime-600 dark:bg-[#bef264] dark:text-black dark:border-[#bef264]' : 'bg-white dark:bg-black/30 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-300'}`}
-                                            >
-                                                Folder Import
-                                            </button>
+                                        <div className="inline-flex items-center gap-2">
+                                            <span className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border bg-lime-600 text-white border-lime-600 dark:bg-[#bef264] dark:text-black dark:border-[#bef264]">
+                                                Secure Folder Import
+                                            </span>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                                (requires connected cloud drive)
+                                            </span>
                                         </div>
+
                                         {linkError && (
                                             <InlineErrorBanner
                                                 message={linkError}
                                                 onDismiss={() => setLinkError(null)}
                                             />
                                         )}
+
                                         <input
-                                            placeholder={linkImportMode === 'folder' ? 'Folder Label (optional)' : 'Name (e.g. Final_Cut.zip)'}
+                                            placeholder="Folder Label (optional)"
                                             className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white"
                                             value={newLink.name}
                                             onChange={(e) => { setNewLink({ ...newLink, name: e.target.value }); if (linkError) setLinkError(null); }}
                                         />
                                         <input
-                                            placeholder={linkImportMode === 'folder' ? 'Folder URL (Google / Dropbox / OneDrive)' : 'File URL'}
+                                            placeholder="Folder URL (Google Drive / Dropbox / OneDrive)"
                                             className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white"
                                             value={newLink.url}
                                             onChange={(e) => { setNewLink({ ...newLink, url: e.target.value }); if (linkError) setLinkError(null); }}
                                         />
-                                        {linkImportMode === 'folder' && (
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                                                Folder import lists assets and adds them as normal vault files. Connect your cloud account first in Settings → Storage → Cloud Drive.
-                                            </p>
-                                        )}
-                                        {linkImportMode === 'folder' && (
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Connected:</span>
-                                                {connectedDriveProviders.length > 0 ? connectedDriveProviders.map((provider) => (
-                                                    <span key={provider} className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-lime-50 text-lime-700 border border-lime-200 dark:bg-[#bef264]/15 dark:text-[#bef264] dark:border-[#bef264]/20">
-                                                        {provider}
-                                                    </span>
-                                                )) : (
-                                                    <span className="text-[10px] text-slate-500 dark:text-slate-400">None connected yet</span>
-                                                )}
-                                            </div>
-                                        )}
+
+                                        <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                                            Folder import lists assets and adds them as normal vault files. Connect your cloud account first in Settings -&gt; Storage -&gt; Cloud Drive.
+                                        </p>
+
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Connected:</span>
+                                            {connectedDriveProviders.length > 0 ? connectedDriveProviders.map((provider) => (
+                                                <span key={provider} className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-lime-50 text-lime-700 border border-lime-200 dark:bg-[#bef264]/15 dark:text-[#bef264] dark:border-[#bef264]/20">
+                                                    {provider}
+                                                </span>
+                                            )) : (
+                                                <span className="text-[10px] text-slate-500 dark:text-slate-400">None connected yet</span>
+                                            )}
+                                        </div>
+
                                         <div className="flex justify-end gap-2">
-                                            <button onClick={() => { setShowLinkModal(false); setLinkError(null); setLinkImportMode('file'); }} className="px-3 py-1.5 text-[10px] font-bold uppercase text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-200 dark:hover:text-white dark:hover:bg-white/10 rounded transition-colors">Cancel</button>
-                                            <button onClick={handleAddLink} disabled={isAddingLink} className="px-3 py-1.5 bg-lime-600 text-white dark:bg-[#bef264] dark:text-black text-[10px] font-bold uppercase rounded shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">{isAddingLink ? (linkImportMode === 'folder' ? 'Importing...' : 'Adding...') : (linkImportMode === 'folder' ? 'Import Folder' : 'Add')}</button>
+                                            <button onClick={() => { setShowLinkModal(false); setLinkError(null); }} className="px-3 py-1.5 text-[10px] font-bold uppercase text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-200 dark:hover:text-white dark:hover:bg-white/10 rounded transition-colors">Cancel</button>
+                                            <button onClick={handleAddLink} disabled={isAddingLink} className="px-3 py-1.5 bg-lime-600 text-white dark:bg-[#bef264] dark:text-black text-[10px] font-bold uppercase rounded shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">{isAddingLink ? 'Importing...' : 'Import Folder'}</button>
                                         </div>
                                     </div>
                                 </div>

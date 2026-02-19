@@ -13,6 +13,7 @@ interface PaymentTerminalProps {
     project: Project;
     isDarkMode: boolean;
     isEmbedded?: boolean; // If true (Creator Preview), disable interactions
+    isLandscapeCompact?: boolean;
     creatorName?: string;
     onPaymentComplete: (method: 'stripe' | 'manual') => void; // Updated to pass method
     onMockVerify?: () => void; // Restored: Callback to simulate freelancer confirmation
@@ -22,6 +23,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
     project, 
     isDarkMode, 
     isEmbedded = false,
+    isLandscapeCompact = false,
     creatorName = "Creator",
     onPaymentComplete,
     onMockVerify
@@ -191,16 +193,16 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
         return (
             <div className={`
                 ${isDarkMode ? 'bg-[#bef264]/10 border-[#bef264]/20' : 'bg-lime-50 border-lime-200'} 
-                border rounded-2xl p-8 flex flex-col items-center justify-center text-center animate-fade-in
+                border rounded-2xl ${isLandscapeCompact ? 'p-3.5' : 'p-5'} flex flex-col items-center justify-center text-center animate-fade-in
             `}>
-                <div className={`w-14 h-14 ${brandGreenBg} rounded-full flex items-center justify-center mb-4 ${brandGreenShadow}`}>
-                    <Check className={`w-7 h-7 ${isDarkMode ? 'text-black' : 'text-white'}`} />
+                <div className={`${isLandscapeCompact ? 'w-10 h-10 mb-2' : 'w-11 h-11 mb-2.5'} ${brandGreenBg} rounded-full flex items-center justify-center ${brandGreenShadow}`}>
+                    <Check className={`${isLandscapeCompact ? 'w-5 h-5' : 'w-5.5 h-5.5'} ${isDarkMode ? 'text-black' : 'text-white'}`} />
                 </div>
-                <h4 className={`font-bold ${brandGreenText} text-xl tracking-tight`}>Payment Complete</h4>
-                <p className={`text-xs font-bold ${isDarkMode ? 'text-[#bef264]/70' : 'text-lime-700/70'} uppercase tracking-widest mt-2`}>Vault Unlocked</p>
-                <div className="mt-6 flex gap-3">
-                    <button className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${isDarkMode ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}>
-                        <Receipt className="w-3.5 h-3.5" /> Receipt
+                <h4 className={`font-bold ${brandGreenText} ${isLandscapeCompact ? 'text-base' : 'text-lg'} tracking-tight`}>Payment Complete</h4>
+                <p className={`${isLandscapeCompact ? 'text-[9px] mt-1' : 'text-[10px] mt-1.5'} font-bold ${isDarkMode ? 'text-[#bef264]/70' : 'text-lime-700/70'} uppercase tracking-widest`}>Vault Unlocked</p>
+                <div className={`${isLandscapeCompact ? 'mt-2.5' : 'mt-3.5'} flex gap-3`}>
+                    <button className={`${isLandscapeCompact ? 'px-2.5 py-1 text-[9px]' : 'px-3 py-1.5 text-[10px]'} rounded-lg font-bold uppercase tracking-wider flex items-center gap-1.5 ${isDarkMode ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}>
+                        <Receipt className={`${isLandscapeCompact ? 'w-2.5 h-2.5' : 'w-3 h-3'}`} /> Receipt
                     </button>
                 </div>
             </div>

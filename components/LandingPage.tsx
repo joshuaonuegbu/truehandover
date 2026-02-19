@@ -29,7 +29,8 @@ import {
     Coins,
     Banknote,
     Menu,
-    LifeBuoy
+    LifeBuoy,
+    Youtube
 } from 'lucide-react';
 import { playClick } from '../utils/sound';
 
@@ -37,13 +38,25 @@ import { playClick } from '../utils/sound';
 
 // OPTIMIZED: Granular Film Grain SVG (Synced with App.tsx Vault Style)
 // baseFrequency=0.98 provides the "Ultra High Res" digital film look.
-const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.35' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
+const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.7' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
 
 const Logo = ({ className = "w-8 h-8" }) => (
     <svg viewBox="0 0 32 32" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M4 15C4 10.6 9.4 7 16 7C22.6 7 28 10.6 28 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         <circle cx="12" cy="22" r="6" stroke="currentColor" strokeWidth="1.5" />
         <circle cx="20" cy="22" r="6" fill="#bef264" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+);
+
+const BrandXIcon = ({ className = "w-4 h-4" }) => (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M18.901 1.153h3.68l-8.04 9.19 9.46 12.504H16.6l-5.795-7.57-6.627 7.57H.499l8.6-9.83L0 1.154h7.59l5.243 6.932L18.901 1.153Zm-1.291 19.492h2.039L6.482 3.24H4.295L17.61 20.645Z" />
+    </svg>
+);
+
+const BrandDiscordIcon = ({ className = "w-4 h-4" }) => (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M20.317 4.369A19.791 19.791 0 0 0 15.885 3c-.191.34-.404.79-.553 1.149a18.27 18.27 0 0 0-6.664 0A11.78 11.78 0 0 0 8.113 3a19.736 19.736 0 0 0-4.432 1.369C.533 9.131-.32 13.775.099 18.359A19.9 19.9 0 0 0 5.993 21c.48-.649.907-1.334 1.27-2.053a12.99 12.99 0 0 1-2.004-.974c.168-.122.332-.249.49-.38 3.869 1.818 8.061 1.818 11.884 0 .16.132.323.259.49.38-.637.38-1.306.709-2.006.975.363.718.79 1.403 1.271 2.052a19.867 19.867 0 0 0 5.896-2.642c.492-5.316-.84-9.918-3.067-13.989ZM8.02 15.331c-1.157 0-2.104-1.06-2.104-2.362 0-1.302.928-2.362 2.104-2.362 1.184 0 2.123 1.07 2.104 2.362 0 1.302-.928 2.362-2.104 2.362Zm7.96 0c-1.157 0-2.104-1.06-2.104-2.362 0-1.302.928-2.362 2.104-2.362 1.184 0 2.123 1.07 2.104 2.362 0 1.302-.919 2.362-2.104 2.362Z" />
     </svg>
 );
 
@@ -223,7 +236,7 @@ const Nav = ({ onStart, currentTheme, toggleTheme, isHidden }: { onStart: () => 
         >
                 <div className="max-w-[1200px] mx-auto bg-white/80 dark:bg-[#0E0E11]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-                        <Logo className="w-6 h-6 text-black dark:text-white group-hover:text-[#bef264] transition-colors" />
+                        <Logo className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
                         <span className="font-serif text-lg sm:text-xl tracking-tight text-black dark:text-white">TrueHandover</span>
                     </div>
 
@@ -234,16 +247,6 @@ const Nav = ({ onStart, currentTheme, toggleTheme, isHidden }: { onStart: () => 
                 </div>
 
                 <div className="hidden md:flex items-center gap-4">
-                    <button
-                        onClick={toggleTheme}
-                        className="p-2 rounded-full text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all"
-                        title={`Current: ${currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)}`}
-                    >
-                        {currentTheme === 'light' && <Sun className="w-5 h-5" />}
-                        {currentTheme === 'dark' && <Moon className="w-5 h-5" />}
-                        {currentTheme === 'system' && <Monitor className="w-5 h-5" />}
-                    </button>
-
                     <button
                         onClick={() => { playClick(); window.location.hash = '#/signin'; }}
                         className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors px-3 py-2"
@@ -258,6 +261,17 @@ const Nav = ({ onStart, currentTheme, toggleTheme, isHidden }: { onStart: () => 
                         Start for Free
                     </button>
                 </div>
+
+                <button
+                    onClick={toggleTheme}
+                    className="hidden md:flex absolute -right-16 lg:-right-20 top-1/2 -translate-y-1/2 w-11 h-11 lg:w-12 lg:h-12 rounded-full items-center justify-center text-slate-500 hover:text-black dark:text-slate-300 dark:hover:text-white bg-white/85 dark:bg-[#0E0E11]/85 border border-slate-200 dark:border-white/15 hover:bg-white dark:hover:bg-white/10 shadow-lg backdrop-blur-md transition-all hover:scale-105"
+                    title={`Current: ${currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)}`}
+                    aria-label="Toggle theme"
+                >
+                    {currentTheme === 'light' && <Sun className="w-5 h-5" />}
+                    {currentTheme === 'dark' && <Moon className="w-5 h-5" />}
+                    {currentTheme === 'system' && <Monitor className="w-5 h-5" />}
+                </button>
 
                 {/* Mobile Menu Toggle */}
                 <div className="flex md:hidden items-center gap-3">
@@ -322,17 +336,17 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
         <section className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 pt-32 pb-20 overflow-hidden bg-[#fafbfc] dark:bg-[#08080B] text-black dark:text-white transition-colors duration-700">
             {/* Film grain — light mode: subtle, dark mode: prominent */}
             <div
-                className="absolute inset-0 opacity-[0.03] dark:opacity-0 mix-blend-multiply pointer-events-none z-0"
+                className="absolute inset-0 opacity-[0.06] dark:opacity-0 mix-blend-multiply pointer-events-none z-0"
                 style={{
                     backgroundImage: NOISE_SVG,
-                    filter: 'contrast(1200%) brightness(100%)'
+                    filter: 'contrast(2200%) brightness(102%)'
                 }}
             ></div>
             <div
-                className="absolute inset-0 opacity-0 dark:opacity-70 mix-blend-overlay pointer-events-none z-0"
+                className="absolute inset-0 opacity-0 dark:opacity-82 mix-blend-overlay pointer-events-none z-0"
                 style={{
                     backgroundImage: NOISE_SVG,
-                    filter: 'contrast(1500%) brightness(100%)'
+                    filter: 'contrast(2700%) brightness(102%)'
                 }}
             ></div>
 
@@ -345,7 +359,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                         className="absolute inset-0 opacity-0 dark:opacity-40 mix-blend-multiply dark:mix-blend-overlay pointer-events-none z-0"
                         style={{
                             backgroundImage: NOISE_SVG,
-                            filter: 'contrast(1000%)'
+                            filter: 'contrast(1500%) brightness(102%)'
                         }}
                     ></div>
 
@@ -405,6 +419,9 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                         onMouseLeave={() => setIsHoveringCTA(false)}
                         className="group relative h-16 px-10 bg-[#bef264] text-black rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(190,242,100,0.6)] shadow-xl"
                     >
+                        <span className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-cta-sheen" />
+                        </span>
                         <span className="relative z-10 flex items-center gap-3">
                             Start for Free <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </span>
@@ -412,17 +429,12 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
 
                     <button
                         onClick={() => { playClick(); onWatchVideo(); }}
-                        className="h-16 px-10 rounded-full border border-slate-300 dark:border-white/20 text-black dark:text-white font-bold text-sm uppercase tracking-widest hover:bg-black/5 dark:hover:bg-white/5 transition-all backdrop-blur-sm flex items-center gap-3"
+                        className="group h-16 px-10 rounded-full border border-slate-300 dark:border-white/20 text-black dark:text-white font-bold text-sm uppercase tracking-widest hover:bg-black/5 dark:hover:bg-white/5 transition-all backdrop-blur-sm flex items-center gap-3 hover:shadow-lg"
                     >
-                        <PlayCircle className="w-4 h-4" /> Watch the Film
+                        <PlayCircle className="w-4 h-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" /> Watch the Film
                     </button>
                 </div>
 
-                <div className="mt-8 flex items-center justify-center gap-6 text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-400 animate-slide-up" style={{ animationDelay: '0.3s' }}>
-                    <span className="flex items-center gap-2"><Check className="w-4 h-4 text-[#bef264]" /> Instant Payouts</span>
-                    <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-white/10" />
-                    <span className="flex items-center gap-2"><Check className="w-4 h-4 text-[#bef264]" /> Verified Transactions</span>
-                </div>
             </div>
 
             <div className="w-full max-w-[1200px] border-t border-slate-200 dark:border-white/5 pt-12 animate-slide-up" style={{ animationDelay: '0.4s' }}>
@@ -446,6 +458,31 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
 const ComparisonSection = () => {
     // ... [Same implementation as before] ...
     const [hoveredCard, setHoveredCard] = useState<null | 'old' | 'new'>(null);
+    const [autoFocusIndex, setAutoFocusIndex] = useState(0);
+
+    const oldWayItems = [
+        { icon: Mail, title: "Chaotic Email Threads", desc: "\"Did you get the file?\" \"Can you resend?\" \"Check spam.\"" },
+        { icon: LinkIcon, title: "Generic Links", desc: "Temporary links dying after 7 days. Creating new links endlessly." },
+        { icon: DollarSign, title: "Chasing Invoices", desc: "Sending the work, then praying they pay the remaining 50%." },
+        { icon: AlertCircle, title: "The \"Ghosting\" Risk", desc: "Sending the files, then silence. They have the work, you have nothing." },
+        { icon: Coins, title: "Platform Taxes", desc: "Losing 10-20% of your revenue to marketplace fees." }
+    ];
+
+    const newWayItems = [
+        { icon: Globe, title: "Professional Portal", desc: "A persistent, branded home for your delivery. No more loose links." },
+        { icon: Eye, title: "Smart Previews", desc: "We watermark and compress automatically. They look, but can't touch." },
+        { icon: Lock, title: "Pay to Unlock", desc: "Payment clears, files unlock. Instant, automated, secure." },
+        { icon: ShieldCheck, title: "Zero-Risk Leverage", desc: "Atomic transactions. Money in, files out. No awkward follow-ups." },
+        { icon: Banknote, title: "Keep 100% of Revenue*", desc: "Zero transaction fees on paid plans. Just a flat monthly subscription." }
+    ];
+
+    useEffect(() => {
+        if (hoveredCard === 'old') return;
+        const timer = window.setInterval(() => {
+            setAutoFocusIndex(prev => (prev + 1) % oldWayItems.length);
+        }, 1700);
+        return () => window.clearInterval(timer);
+    }, [hoveredCard, oldWayItems.length]);
 
     return (
         <section id="comparison" className="py-32 px-6 bg-white dark:bg-[#121215] transition-colors duration-700 relative overflow-hidden">
@@ -472,7 +509,7 @@ const ComparisonSection = () => {
                     <div
                         onMouseEnter={() => setHoveredCard('old')}
                         onMouseLeave={() => setHoveredCard(null)}
-                        className="p-10 rounded-[2.5rem] bg-slate-50 dark:bg-[#18181c] border border-dashed border-slate-300 dark:border-white/10 relative group transition-all duration-500 hover:bg-slate-100 dark:hover:bg-[#1e1e23]"
+                        className={`p-10 rounded-[2.5rem] bg-slate-50 dark:bg-[#18181c] border border-dashed border-slate-300 dark:border-white/10 relative group transition-all duration-500 hover:bg-slate-100 dark:hover:bg-[#1e1e23] ${hoveredCard === null ? 'animate-old-way-breathe' : ''}`}
                     >
                         <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                             <X className="w-32 h-32 text-red-500 rotate-12" />
@@ -485,22 +522,23 @@ const ComparisonSection = () => {
                             <h3 className="text-2xl font-serif text-slate-500 dark:text-slate-300 tracking-wide">The Old Way</h3>
                         </div>
 
-                        <div className="space-y-8 relative z-10">
-                            {[
-                                { icon: Mail, title: "Chaotic Email Threads", desc: "\"Did you get the file?\" \"Can you resend?\" \"Check spam.\"" },
-                                { icon: LinkIcon, title: "Generic Links", desc: "Temporary links dying after 7 days. Creating new links endlessly." },
-                                { icon: DollarSign, title: "Chasing Invoices", desc: "Sending the work, then praying they pay the remaining 50%." },
-                                { icon: AlertCircle, title: "The \"Ghosting\" Risk", desc: "Sending the files, then silence. They have the work, you have nothing." },
-                                { icon: Coins, title: "Platform Taxes", desc: "Losing 10-20% of your revenue to marketplace fees." }
-                            ].map((item, i) => (
-                                <div key={i} className="flex gap-5 opacity-60 group-hover:opacity-100 transition-opacity">
-                                    <item.icon className="w-6 h-6 text-slate-400 dark:text-slate-400 shrink-0 mt-1" />
+                            <div className="space-y-8 relative z-10">
+                            {oldWayItems.map((item, i) => {
+                                const isHighlighted = hoveredCard === 'old' || (hoveredCard === null && autoFocusIndex === i);
+                                return (
+                                <div key={i} className={`flex gap-5 transition-all duration-500 ${isHighlighted ? 'opacity-100 translate-x-1' : 'opacity-60 translate-x-0'}`}>
+                                    <item.icon className={`w-6 h-6 shrink-0 mt-1 transition-all duration-500 ${isHighlighted ? 'text-slate-600 dark:text-slate-100 scale-110' : 'text-slate-400 dark:text-slate-400 scale-100'}`} />
                                     <div>
                                         <h4 className="font-bold text-slate-700 dark:text-slate-200 text-lg">{item.title}</h4>
                                         <p className="text-sm text-slate-500 dark:text-slate-300 mt-1 leading-relaxed">{item.desc}</p>
                                     </div>
                                 </div>
-                            ))}
+                            )})}
+                            {hoveredCard === null && (
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 pt-2 animate-auto-cue-pulse">
+                                    Auto-highlighting common friction points
+                                </p>
+                            )}
                         </div>
                     </div>
 
@@ -522,16 +560,10 @@ const ComparisonSection = () => {
                         </div>
 
                         <div className="space-y-8 relative z-10">
-                            {[
-                                { icon: Globe, title: "Professional Portal", desc: "A persistent, branded home for your delivery. No more loose links." },
-                                { icon: Eye, title: "Smart Previews", desc: "We watermark and compress automatically. They look, but can't touch." },
-                                { icon: Lock, title: "Pay to Unlock", desc: "Payment clears, files unlock. Instant, automated, secure." },
-                                { icon: ShieldCheck, title: "Zero-Risk Leverage", desc: "Atomic transactions. Money in, files out. No awkward follow-ups." },
-                                { icon: Banknote, title: "Keep 100% of Revenue*", desc: "Zero transaction fees on paid plans. Just a flat monthly subscription." }
-                            ].map((item, i) => (
-                                <div key={i} className="flex gap-5">
+                            {newWayItems.map((item, i) => (
+                                <div key={i} className={`flex gap-5 transition-all duration-500 ${hoveredCard === 'new' ? 'translate-x-1' : 'translate-x-0'}`} style={{ transitionDelay: `${i * 35}ms` }}>
                                     <div className="p-1 rounded-full bg-black/5 h-fit">
-                                        <item.icon className="w-5 h-5 text-black shrink-0" />
+                                        <item.icon className={`w-5 h-5 text-black shrink-0 transition-transform duration-500 ${hoveredCard === 'new' ? 'scale-110' : 'scale-100'}`} />
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-black text-lg">{item.title}</h4>
@@ -543,7 +575,7 @@ const ComparisonSection = () => {
 
                         <div className="relative z-10 mt-8 pt-6 border-t border-black/10">
                             <p className="text-[10px] font-bold uppercase tracking-wider text-black/60">
-                                * Starter plan includes a 1.5% transaction fee.
+                                * Starter plan includes a 2.5% transaction fee.
                             </p>
                         </div>
                     </div>
@@ -578,18 +610,19 @@ const BentoGrid = () => {
                 <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6">
                     {/* 1. Smart Previews */}
                     <BentoCard className="md:col-span-3 lg:col-span-4 min-h-[400px]" title="Smart Preview" subtitle="Lossy samples for assessment" icon={Eye}>
-                        <div className="p-8 pt-0 h-full flex flex-col">
-                            <p className="text-slate-600 dark:text-slate-200 text-sm leading-relaxed mb-8">
+                        <div className="p-8 pt-0 h-full flex flex-col relative">
+                            <p className="text-slate-700 dark:text-slate-100 text-sm leading-relaxed mb-8">
                                 Creators upload final files. We automatically generate secure, watermarked previews.
                                 Clients review the work without accessing the master files.
                             </p>
                             <div className="flex-1 relative rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 group-hover:border-[#bef264]/30 transition-colors">
                                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600607686527-6fb886090705?w=500&q=50')] bg-cover bg-center opacity-40 blur-[2px]" />
+                                <div className="absolute inset-0 bg-black/10 dark:bg-black/30" />
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="text-4xl font-black text-black/20 dark:text-white/10 -rotate-45 select-none pointer-events-none">PREVIEW</div>
+                                    <div className="text-5xl font-black text-black/35 dark:text-white/30 -rotate-12 select-none pointer-events-none tracking-widest">PREVIEW</div>
                                 </div>
-                                <div className="absolute bottom-4 left-4 right-4 bg-white/90 dark:bg-black/80 backdrop-blur-md p-3 rounded-lg border border-slate-200 dark:border-white/10 shadow-lg">
-                                    <div className="flex items-center gap-2 text-xs font-mono text-slate-500 dark:text-slate-300">
+                                <div className="absolute bottom-4 left-4 right-4 bg-white/95 dark:bg-black/85 backdrop-blur-md p-3 rounded-lg border border-slate-300/80 dark:border-white/20 shadow-lg">
+                                    <div className="flex items-center gap-2 text-xs font-mono text-slate-700 dark:text-slate-100">
                                         <Lock className="w-3 h-3 text-amber-500" />
                                         <span>Download Locked</span>
                                     </div>
@@ -600,7 +633,7 @@ const BentoGrid = () => {
 
                     {/* 2. Dispute Evidence */}
                     <BentoCard className="md:col-span-3 lg:col-span-4 min-h-[400px]" title="Activity Logs" subtitle="Dispute Shield" icon={ShieldCheck}>
-                        <div className="p-8 pt-0 h-full flex flex-col">
+                        <div className="p-8 pt-0 h-full flex flex-col relative">
                             <p className="text-slate-600 dark:text-slate-200 text-sm leading-relaxed mb-6">
                                 We designed this to stop arguments before they start. Since files only unlock after payment,
                                 you never have to chase a client. But just in case, we keep a tidy history log for you.
@@ -635,7 +668,7 @@ const BentoGrid = () => {
 
                     {/* 3. Direct Payments */}
                     <BentoCard className="md:col-span-6 lg:col-span-4 min-h-[400px]" title="Direct Payouts" subtitle="Seamless Transfers" icon={DollarSign}>
-                        <div className="p-8 pt-0 h-full flex flex-col justify-between">
+                        <div className="p-8 pt-0 h-full flex flex-col justify-between relative">
                             <div className="space-y-4">
                                 <p className="text-slate-600 dark:text-slate-200 text-sm leading-relaxed">
                                     A seamless financial bridge. Connect your Stripe account once, and payments flow directly to you.
@@ -763,7 +796,7 @@ const BentoGrid = () => {
                                         <div className="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
                                             <div className="relative w-10 h-10">
                                                 <div className={`absolute inset-0 transition-all duration-500 ${isCustom ? 'opacity-0 scale-50' : 'opacity-100 scale-100'}`}>
-                                                    <Logo className="w-10 h-10 text-black dark:text-white" />
+                                                    <Logo className="w-10 h-10 text-black dark:text-white hover:rotate-12 transition-transform duration-500" />
                                                 </div>
                                                 <div
                                                     className={`absolute inset-0 transition-all duration-500 ${isCustom ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}
@@ -934,6 +967,33 @@ const BentoGrid = () => {
                     animation: slide-up 0.8s ease-out forwards;
                     opacity: 0;
                 }
+
+                @keyframes old-way-breathe {
+                    0%, 100% { opacity: 0.92; }
+                    50% { opacity: 1; }
+                }
+
+                .animate-old-way-breathe {
+                    animation: old-way-breathe 3.2s ease-in-out infinite;
+                }
+
+                @keyframes auto-cue-pulse {
+                    0%, 100% { opacity: 0.45; }
+                    50% { opacity: 0.9; }
+                }
+
+                .animate-auto-cue-pulse {
+                    animation: auto-cue-pulse 2s ease-in-out infinite;
+                }
+
+                @keyframes cta-sheen {
+                    0% { transform: translateX(0); }
+                    100% { transform: translateX(420%); }
+                }
+
+                .animate-cta-sheen {
+                    animation: cta-sheen 950ms cubic-bezier(0.25, 0.8, 0.25, 1);
+                }
             `}</style>
         </section>
     );
@@ -989,9 +1049,9 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                             <div className="space-y-4">
                                 <p className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 dark:border-white/5 pb-2">Includes</p>
                                 <ul className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
-                                    <li className="flex gap-3 items-center font-bold text-black dark:text-white"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> 1.5% Platform Fee + Processing*</li>
+                                    <li className="flex gap-3 items-center font-bold text-black dark:text-white"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> 2.5% Platform Fee + Processing*</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> 5 Active Projects</li>
-                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> 30GB Total Native Storage</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> 10GB Total Native Storage</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Standard Watermarking</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Stripe Payments Only</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Basic Audit Logs</li>
@@ -1057,8 +1117,9 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                                         <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> <span className="font-bold">0% Platform Fees (Standard Processing Only*)</span></li>
                                         <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> <span className="font-bold">Unlimited</span> Projects</li>
                                         <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> 150GB Total Native Storage</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> <span className="font-bold">5 Active BYOS Storage Links (S3/Drive)</span></li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> <span className="font-bold">10 Active BYOS Storage Links (S3/Drive)</span></li>
                                         <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Custom Branding (Logo/Colors)</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Client Library (Recurring Clients)</li>
                                         <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Remove "Powered By" Badge</li>
                                         <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Manual Payments (Zelle/Wire)</li>
                                         <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Contract Signatures</li>
@@ -1123,6 +1184,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Whitelabel Emails (SMTP)</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Dispute Evidence Packs</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Priority Support</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Advanced Client Library Controls</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Client Portal Analytics</li>
                                 </ul>
                             </div>
@@ -1194,7 +1256,7 @@ const FAQSection = () => (
                 />
                 <FAQItem
                     question="Are there platform fees?"
-                    answer="The Starter plan has a 1.5% platform fee per transaction. The Studio and Business plans have 0% platform fees. Please note that standard payment processing fees (charged by Stripe) apply to all transactions regardless of your plan."
+                    answer="The Starter plan has a 2.5% platform fee per transaction. The Studio and Business plans have 0% platform fees. Please note that standard payment processing fees (charged by Stripe) apply to all transactions regardless of your plan."
                 />
                 <FAQItem
                     question="Do my clients need to create an account?"
@@ -1221,11 +1283,23 @@ const Footer = () => (
     <footer className="bg-white dark:bg-[#0a0a0a] text-black dark:text-white py-20 px-6 border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
         <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex flex-col items-start gap-4">
-                <div className="flex items-center gap-3">
-                    <Logo className="w-6 h-6 text-black dark:text-white" />
+                <div className="flex items-center gap-3 group cursor-pointer">
+                    <Logo className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
                     <span className="font-serif text-xl tracking-tight">TrueHandover</span>
                 </div>
-                <p className="text-slate-500 dark:text-slate-400 font-serif italic text-lg tracking-wide">The standard for creative closure.</p>
+                <p className="text-slate-500 dark:text-slate-400 font-serif italic text-lg tracking-wide">Creative delivery, finally done right.</p>
+
+                <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
+                    <a href="https://youtube.com/@truehandover" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="YouTube">
+                        <Youtube className="w-4 h-4" />
+                    </a>
+                    <a href="https://x.com/truehandover" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="X (Twitter)">
+                        <BrandXIcon className="w-4 h-4" />
+                    </a>
+                    <a href="https://discord.gg/truehandover" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="Discord">
+                        <BrandDiscordIcon className="w-4 h-4" />
+                    </a>
+                </div>
             </div>
 
             <div className="flex gap-8 text-xs font-bold uppercase tracking-widest text-slate-500">
