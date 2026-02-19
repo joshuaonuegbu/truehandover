@@ -16,12 +16,14 @@ import {
 import { Project, FileAsset, ProjectTheme, Milestone, UserProfile, CredentialBlock } from '../types';
 import { playClick, playSuccess } from '../utils/sound';
 import ClientPreviewBiz from './ClientPreviewBiz';
+import { InlineErrorBanner } from './Shared';
 // Import the Backend Service and R2 Service
-import { StorageService, ProcessingService } from '../api/mockBackend';
+import { StorageService, ProcessingService, ByosLinkService, ByosFolderService } from '../api/mockBackend';
 import { R2Service } from '../services/r2';
 
 interface CreatorPageProps {
     existingProject?: Project | null;
+    allProjects?: Project[];
     onSave: (project: Project) => void;
     onBack: () => void;
     user?: UserProfile;
@@ -49,8 +51,8 @@ const WALLPAPER_PRESETS: ProjectTheme[] = [
     },
     {
         name: 'Midnight Silk',
-        // Unsplash: green leaves and branches on a white background (1C7oRRwUkgU)
-        wallpaper: 'https://images.unsplash.com/photo-1770983438128-f4065cf02752?auto=format&fit=crop&w=2000&q=80',
+        // Unsplash: a stone head with floral patterns (f5MVCuuriig)
+        wallpaper: 'https://images.unsplash.com/photo-1753301638967-af6527de668e?auto=format&fit=crop&w=2000&q=80',
         brightness: 'dark',
         showGrain: true
     },
@@ -82,8 +84,7 @@ const WALLPAPER_PRESETS: ProjectTheme[] = [
     },
     {
         name: 'Desert Dunes',
-        // Unsplash: tall palm trees against a clear blue sky (AXE5-f2i0yw)
-        wallpaper: 'https://images.unsplash.com/photo-1770932537107-d5a98aa2a702?auto=format&fit=crop&w=2000&q=80',
+        wallpaper: 'https://images.unsplash.com/photo-1682687220742-aba13b6e50ba?q=80&w=2000&auto=format&fit=crop',
         brightness: 'dark',
         showGrain: true
     },
@@ -199,7 +200,7 @@ const Toggle = ({ checked, onChange }: { checked: boolean, onChange: (v: boolean
     </button>
 );
 
-const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBack, user }) => {
+const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects = [], onSave, onBack, user }) => {
     // Initial State Construction
     const [formData, setFormData] = useState<Partial<Project>>(() => {
         const base = existingProject || {
@@ -212,6 +213,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
             milestones: [],
             credentials: [],
             message: '',
+            enableClientLibrary: true,
             requiresSignature: false,
             enableTips: false,
             useMilestones: false,
@@ -242,6 +244,9 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
     const [files, setFiles] = useState<FileAsset[]>(existingProject?.files || []);
     const [showLinkModal, setShowLinkModal] = useState(false);
     const [newLink, setNewLink] = useState({ name: '', url: '', size: '', type: 'archive' });
+    const [linkError, setLinkError] = useState<string | null>(null);
+    const [isAddingLink, setIsAddingLink] = useState(false);
+    const [linkImportMode, setLinkImportMode] = useState<'file' | 'folder'>('file');
     const [errors, setErrors] = useState<{ name?: boolean, amount?: boolean, files?: boolean }>({});
 
     // Credential Modal State
@@ -251,6 +256,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
     // Upload State
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<{ status: 'uploading' | 'processing' | 'done', percent: number }>({ status: 'done', percent: 0 });
+    const [uploadError, setUploadError] = useState<string | null>(null);
 
     // Theme State
     const [previewTheme, setPreviewTheme] = useState<'light' | 'dark' | 'system'>('system');
@@ -260,6 +266,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
     const [customWallpapers, setCustomWallpapers] = useState<ProjectTheme[]>([]);
     const [isEditorCollapsed, setIsEditorCollapsed] = useState(false);
     const [isPreviewDockedSidebarCollapsed, setIsPreviewDockedSidebarCollapsed] = useState(false);
+    const [previewDeviceMode, setPreviewDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'foldable'>('desktop');
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const assetInputRef = React.useRef<HTMLInputElement>(null); // For asset uploads
 
@@ -271,6 +278,12 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
     }, []);
 
     const isPreviewDark = previewTheme === 'system' ? systemDark : previewTheme === 'dark';
+    const isCanvasPreviewMode = previewDeviceMode !== 'desktop';
+    const connectedDriveProviders = [
+        user?.storageSettings?.byosGoogleToken ? 'Google Drive' : null,
+        user?.storageSettings?.byosDropboxToken ? 'Dropbox' : null,
+        user?.storageSettings?.byosOneDriveToken ? 'OneDrive' : null
+    ].filter(Boolean) as string[];
 
     const cyclePreviewTheme = () => {
         playClick();
@@ -298,6 +311,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
         clientLink: '#',
         type: 'web',
         message: formData.message,
+        enableClientLibrary: formData.enableClientLibrary !== false,
         accessConfig: formData.accessConfig,
         theme: {
             ...(formData.theme || WALLPAPER_PRESETS[1]),
@@ -305,6 +319,15 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
             showGrain: formData.theme?.showGrain !== undefined ? formData.theme.showGrain : true
         }
     };
+
+    const previewClientEmail = (previewProject.client?.email || '').trim().toLowerCase();
+    const libraryProjects = allProjects.filter(p => {
+        if (p.id === previewProject.id) return false;
+        if (p.enableClientLibrary === false) return false;
+        if ((p.status !== 'paid' && p.status !== 'completed') || !p.files?.some(f => f.includeInLibrary !== false)) return false;
+        const candidateEmail = (p.client?.email || '').trim().toLowerCase();
+        return previewClientEmail.length > 0 && candidateEmail === previewClientEmail;
+    });
 
     const handleSave = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -335,8 +358,25 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
         if (!e.target.files || !e.target.files[0]) return;
 
         playClick();
+        setUploadError(null);
         const file = e.target.files[0];
-        const fileType = file.type.startsWith('image') ? 'image' : file.type.startsWith('video') ? 'video' : file.type.includes('pdf') ? 'pdf' : 'archive';
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        const isDocLike = ['txt', 'md', 'rtf', 'doc', 'docx', 'odt', 'pages'].includes(ext)
+            || file.type.startsWith('text/')
+            || file.type.includes('word')
+            || file.type.includes('officedocument')
+            || file.type.includes('opendocument.text');
+        const fileType = file.type.startsWith('image')
+            ? 'image'
+            : file.type.startsWith('video')
+                ? 'video'
+                : file.type.includes('pdf')
+                    ? 'pdf'
+                    : isDocLike
+                        ? 'doc'
+                        : file.type.startsWith('audio')
+                            ? 'audio'
+                            : 'archive';
 
         setIsUploading(true);
         setUploadProgress({ status: 'uploading', percent: 10 });
@@ -387,7 +427,8 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                 // We store the 'key' (or signed URL generator endpoint) as the downloadUrl concept
                 // The actual signed URL is generated on-demand when user pays.
                 // For this prototype, we store the public/semi-private URL returned.
-                downloadUrl: uploadedFileUrl
+                downloadUrl: uploadedFileUrl,
+                includeInLibrary: true
             };
 
             setFiles([...files, newFile]);
@@ -396,32 +437,53 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
 
         } catch (error) {
             console.error("Upload failed", error);
-            alert("Upload failed. Check console for details.");
+            setUploadError('Upload failed. Please check your storage configuration and try again.');
         } finally {
             setIsUploading(false);
             if (assetInputRef.current) assetInputRef.current.value = ''; // Reset input
         }
     };
 
-    const handleAddLink = () => {
-        if (!newLink.name || !newLink.url) return;
-        playClick();
-        const newFile: FileAsset = {
-            id: `f-${Date.now()}`,
-            name: newLink.name,
-            size: newLink.size || 'Unknown',
-            type: newLink.type as any,
-            locked: true,
-            version: 1,
-            uploadDate: new Date().toISOString().split('T')[0],
-            tag: 'LINK',
-            externalUrl: newLink.url,
-            storageProvider: 'drive'
-        };
-        setFiles([...files, newFile]);
-        setNewLink({ name: '', url: '', size: '', type: 'archive' });
-        setShowLinkModal(false);
-        setErrors(prev => ({ ...prev, files: false }));
+    const handleAddLink = async () => {
+        const trimmedUrl = newLink.url.trim();
+        if (!trimmedUrl) {
+            setLinkError('URL is required.');
+            return;
+        }
+
+        try {
+            setIsAddingLink(true);
+            playClick();
+            const shouldImportAsFolder = linkImportMode === 'folder' || ByosFolderService.isLikelyFolderLink(trimmedUrl);
+
+            if (shouldImportAsFolder) {
+                const importedAssets = await ByosFolderService.importFolderLink({
+                    url: trimmedUrl,
+                    folderName: newLink.name.trim() || undefined,
+                    storageConfig: user?.storageSettings
+                });
+                setFiles([...files, ...importedAssets]);
+            } else {
+                const generatedAsset = await ByosLinkService.ingestLink({
+                    url: trimmedUrl,
+                    customName: newLink.name.trim() || undefined,
+                    customSize: newLink.size || undefined,
+                    typeHint: (newLink.type as FileAsset['type']) || undefined
+                });
+                setFiles([...files, generatedAsset]);
+            }
+
+            setNewLink({ name: '', url: '', size: '', type: 'archive' });
+            setLinkImportMode('file');
+            setLinkError(null);
+            setShowLinkModal(false);
+            setErrors(prev => ({ ...prev, files: false }));
+            playSuccess();
+        } catch (error: any) {
+            setLinkError(error?.message || 'Could not process this link.');
+        } finally {
+            setIsAddingLink(false);
+        }
     };
 
     // CREDENTIAL VAULT LOGIC
@@ -561,7 +623,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
             />
 
             {/* LEFT PANEL: EDITOR (25%) */}
-            <div className={`${isEditorCollapsed ? 'w-0 min-w-0 opacity-0 pointer-events-none' : 'w-[25%] min-w-[340px] opacity-100'} flex flex-col border-r border-slate-200 dark:border-white/5 bg-white/80 dark:bg-[#1a1a23]/80 backdrop-blur-xl relative z-20 overflow-hidden transition-all duration-300`}>
+            <div className={`${isEditorCollapsed ? 'w-0 min-w-0 opacity-0 pointer-events-none' : 'w-[25%] min-w-[340px] opacity-100'} flex flex-col border-r border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-[#181821]/90 backdrop-blur-xl relative z-20 overflow-hidden transition-all duration-300`}>
                 {/* Film Grain Overlay - Switched to SVG with stronger opacity & mix-blend-multiply for light mode */}
                 <div
                     className="absolute inset-0 pointer-events-none z-0 mix-blend-multiply dark:mix-blend-overlay opacity-15 dark:opacity-30"
@@ -569,7 +631,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                 ></div>
 
                 {/* Editor Header */}
-                <div className="h-16 px-6 flex items-center justify-between border-b border-slate-200 dark:border-white/5 bg-white/50 dark:bg-[#1a1a23]/50 backdrop-blur-md sticky top-0 z-30 relative">
+                <div className="h-16 px-6 flex items-center justify-between border-b border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-[#181821]/70 backdrop-blur-md sticky top-0 z-30 relative">
                     <button
                         onClick={() => { playClick(); onBack(); }}
                         className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors text-xs font-bold uppercase tracking-wider"
@@ -603,16 +665,16 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                 </div>
 
                 {/* Scrollable Form Area */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth relative z-10">
+                <div className="flex-1 overflow-y-auto p-6 space-y-5 scroll-smooth relative z-10">
                     <div>
-                        <h2 className={`text-2xl font-serif font-medium tracking-tight mb-1 ${GRADIENT_TEXT}`}>
+                        <h2 className={`text-3xl font-serif font-semibold tracking-tight mb-1 ${GRADIENT_TEXT}`}>
                             Project Config
                         </h2>
-                        <p className="text-slate-500 dark:text-slate-400 text-xs">Changes update the preview instantly.</p>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">Changes update the preview instantly.</p>
                     </div>
 
                     {/* Basic Info Card */}
-                    <div className="bg-white/80 dark:bg-[#23232e] border border-slate-200 dark:border-white/5 p-5 rounded-2xl shadow-sm">
+                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
                         <div className="space-y-4">
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold uppercase text-slate-500 tracking-widest flex justify-between">
@@ -656,7 +718,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                     </div>
 
                     {/* Client Card */}
-                    <div className="bg-white/80 dark:bg-[#23232e] border border-slate-200 dark:border-white/5 p-5 rounded-2xl shadow-sm">
+                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
                             <User className="w-3 h-3" /> Client Details
                         </h3>
@@ -738,7 +800,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                     </div>
 
                     {/* NEW LINK SECURITY SECTION */}
-                    <div className="bg-white/80 dark:bg-[#23232e] border border-slate-200 dark:border-white/5 p-5 rounded-2xl shadow-sm">
+                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
                             <ShieldAlert className="w-3 h-3" /> Link Security
                         </h3>
@@ -794,7 +856,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                     </div>
 
                     {/* Project Controls */}
-                    <div className="bg-white/80 dark:bg-[#23232e] border border-slate-200 dark:border-white/5 p-5 rounded-2xl shadow-sm">
+                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
                             <Activity className="w-3 h-3" /> Project Controls
                         </h3>
@@ -813,11 +875,21 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                                 </div>
                                 <Toggle checked={formData.enableTips || false} onChange={v => setFormData({ ...formData, enableTips: v })} />
                             </div>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Radio className="w-4 h-4 text-slate-400" />
+                                    <div>
+                                        <span className="text-sm font-medium dark:text-white">Client Library Mode</span>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">Off = one-off handoff · On = recurring client history</p>
+                                    </div>
+                                </div>
+                                <Toggle checked={formData.enableClientLibrary !== false} onChange={v => setFormData({ ...formData, enableClientLibrary: v })} />
+                            </div>
                         </div>
                     </div>
 
                     {/* Milestones */}
-                    <div className="bg-white/80 dark:bg-[#23232e] border border-slate-200 dark:border-white/5 p-5 rounded-2xl shadow-sm">
+                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
                                 <Flag className="w-3 h-3" /> Project Milestones
@@ -866,7 +938,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                     </div>
 
                     {/* NEW: CREDENTIAL VAULT SECTION */}
-                    <div className="bg-white/80 dark:bg-[#23232e] border border-slate-200 dark:border-white/5 p-5 rounded-2xl shadow-sm">
+                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
                                 <Key className="w-3 h-3" /> Credential Vault
@@ -936,7 +1008,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                     </div>
 
                     {/* Payment Methods */}
-                    <div className="bg-white/80 dark:bg-[#23232e] border border-slate-200 dark:border-white/5 p-5 rounded-2xl shadow-sm">
+                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
                             <Wallet className="w-3 h-3" /> Payment Methods
                         </h3>
@@ -1005,7 +1077,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                     </div>
 
                     {/* Message Editor */}
-                    <div className="bg-white/80 dark:bg-[#23232e] border border-slate-200 dark:border-white/5 p-5 rounded-2xl shadow-sm">
+                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
                             <MessageSquare className="w-3 h-3" /> Personal Message
                         </h3>
@@ -1034,7 +1106,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                     </div>
 
                     {/* Theme Selector */}
-                    <div className="bg-white/80 dark:bg-[#23232e] border border-slate-200 dark:border-white/5 p-5 rounded-2xl shadow-sm">
+                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
                         {/* ... Theme selector content ... */}
                         <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
                             <LayoutTemplate className="w-3 h-3" /> Wallpapers
@@ -1160,16 +1232,23 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                     </div>
 
                     {/* Vault Assets */}
-                    <div className="bg-white/80 dark:bg-[#23232e] border border-slate-200 dark:border-white/5 p-5 rounded-2xl shadow-sm relative overflow-hidden">
+                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none relative overflow-hidden">
                         {/* ... Asset list logic ... */}
                         <div className="relative z-10">
+                            {uploadError && (
+                                <InlineErrorBanner
+                                    message={uploadError}
+                                    onDismiss={() => setUploadError(null)}
+                                    className="mb-4"
+                                />
+                            )}
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
                                     <Cloud className="w-3 h-3" /> Vault Assets
                                     {errors.files && <span className="text-red-500 ml-2 text-[9px]">Required</span>}
                                 </h3>
                                 <button
-                                    onClick={() => setShowLinkModal(true)}
+                                    onClick={() => { setShowLinkModal(true); setLinkError(null); }}
                                     className="text-[10px] font-bold uppercase bg-slate-100 hover:bg-lime-600 hover:text-white dark:bg-white/20 dark:text-white dark:hover:bg-[#bef264] dark:hover:text-black px-3 py-1.5 rounded-lg transition-colors border border-transparent dark:border-white/10"
                                 >
                                     + Add Link
@@ -1179,21 +1258,60 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                             {showLinkModal && (
                                 <div className="mb-4 p-4 bg-slate-50 dark:bg-black/20 rounded-xl border border-dashed border-slate-300 dark:border-white/10 animate-fade-in">
                                     <div className="space-y-3">
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setLinkImportMode('file')}
+                                                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-colors ${linkImportMode === 'file' ? 'bg-lime-600 text-white border-lime-600 dark:bg-[#bef264] dark:text-black dark:border-[#bef264]' : 'bg-white dark:bg-black/30 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-300'}`}
+                                            >
+                                                Single File
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setLinkImportMode('folder')}
+                                                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-colors ${linkImportMode === 'folder' ? 'bg-lime-600 text-white border-lime-600 dark:bg-[#bef264] dark:text-black dark:border-[#bef264]' : 'bg-white dark:bg-black/30 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-300'}`}
+                                            >
+                                                Folder Import
+                                            </button>
+                                        </div>
+                                        {linkError && (
+                                            <InlineErrorBanner
+                                                message={linkError}
+                                                onDismiss={() => setLinkError(null)}
+                                            />
+                                        )}
                                         <input
-                                            placeholder="Name (e.g. Final_Cut.zip)"
+                                            placeholder={linkImportMode === 'folder' ? 'Folder Label (optional)' : 'Name (e.g. Final_Cut.zip)'}
                                             className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white"
                                             value={newLink.name}
-                                            onChange={(e) => setNewLink({ ...newLink, name: e.target.value })}
+                                            onChange={(e) => { setNewLink({ ...newLink, name: e.target.value }); if (linkError) setLinkError(null); }}
                                         />
                                         <input
-                                            placeholder="URL"
+                                            placeholder={linkImportMode === 'folder' ? 'Folder URL (Google / Dropbox / OneDrive)' : 'File URL'}
                                             className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white"
                                             value={newLink.url}
-                                            onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
+                                            onChange={(e) => { setNewLink({ ...newLink, url: e.target.value }); if (linkError) setLinkError(null); }}
                                         />
+                                        {linkImportMode === 'folder' && (
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                                                Folder import lists assets and adds them as normal vault files. Connect your cloud account first in Settings → Storage → Cloud Drive.
+                                            </p>
+                                        )}
+                                        {linkImportMode === 'folder' && (
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Connected:</span>
+                                                {connectedDriveProviders.length > 0 ? connectedDriveProviders.map((provider) => (
+                                                    <span key={provider} className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-lime-50 text-lime-700 border border-lime-200 dark:bg-[#bef264]/15 dark:text-[#bef264] dark:border-[#bef264]/20">
+                                                        {provider}
+                                                    </span>
+                                                )) : (
+                                                    <span className="text-[10px] text-slate-500 dark:text-slate-400">None connected yet</span>
+                                                )}
+                                            </div>
+                                        )}
                                         <div className="flex justify-end gap-2">
-                                            <button onClick={() => setShowLinkModal(false)} className="px-3 py-1.5 text-[10px] font-bold uppercase hover:bg-white/10 rounded">Cancel</button>
-                                            <button onClick={handleAddLink} className="px-3 py-1.5 bg-lime-600 text-white dark:bg-[#bef264] dark:text-black text-[10px] font-bold uppercase rounded shadow-lg">Add</button>
+                                            <button onClick={() => { setShowLinkModal(false); setLinkError(null); setLinkImportMode('file'); }} className="px-3 py-1.5 text-[10px] font-bold uppercase text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-200 dark:hover:text-white dark:hover:bg-white/10 rounded transition-colors">Cancel</button>
+                                            <button onClick={handleAddLink} disabled={isAddingLink} className="px-3 py-1.5 bg-lime-600 text-white dark:bg-[#bef264] dark:text-black text-[10px] font-bold uppercase rounded shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">{isAddingLink ? (linkImportMode === 'folder' ? 'Importing...' : 'Adding...') : (linkImportMode === 'folder' ? 'Import Folder' : 'Add')}</button>
                                         </div>
                                     </div>
                                 </div>
@@ -1209,6 +1327,17 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                                             <div className="font-bold text-xs truncate dark:text-white">{file.name}</div>
                                             <div className="text-[10px] text-slate-500">{file.size}</div>
                                         </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setFiles(files.map((f, idx) => idx === i ? { ...f, includeInLibrary: f.includeInLibrary === false ? true : false } : f));
+                                                playClick();
+                                            }}
+                                            className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border transition-colors ${file.includeInLibrary === false ? 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10' : 'bg-lime-50 text-lime-700 border-lime-200 hover:bg-lime-100 dark:bg-[#bef264]/10 dark:text-[#bef264] dark:border-[#bef264]/20 dark:hover:bg-[#bef264]/20'}`}
+                                            title="Include in client library"
+                                        >
+                                            Library
+                                        </button>
                                         <button onClick={() => setFiles(files.filter((_, idx) => idx !== i))} className="text-slate-400 hover:text-red-500"><X className="w-3 h-3" /></button>
                                     </div>
                                 ))}
@@ -1242,10 +1371,10 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-6 border-t border-slate-200 dark:border-white/5 bg-white/80 dark:bg-[#1a1a23]/80 backdrop-blur-md relative z-10">
+                <div className="p-6 border-t border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-[#181821]/90 backdrop-blur-md relative z-10">
                     <button
                         onClick={handleSave}
-                        className="w-full py-4 rounded-xl bg-lime-600 hover:bg-lime-700 text-white dark:bg-[#bef264] dark:hover:bg-[#a3e635] dark:text-black font-bold text-sm uppercase tracking-widest shadow-lg shadow-lime-500/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                        className="w-full py-4 rounded-2xl bg-lime-600 hover:bg-lime-700 text-white dark:bg-[#bef264] dark:hover:bg-[#a3e635] dark:text-black font-bold text-sm uppercase tracking-widest shadow-[0_16px_40px_rgba(132,204,22,0.30)] hover:shadow-[0_20px_48px_rgba(132,204,22,0.35)] hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
                     >
                         <Save className="w-4 h-4" />
                         {existingProject ? 'Update & Publish' : 'Create & Publish'}
@@ -1258,25 +1387,59 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                 {/* Collapsed editor restore control */}
                 {isEditorCollapsed && (
                     <div
-                        className={`absolute z-[60] pointer-events-auto ${isPreviewDockedSidebarCollapsed ? 'top-8 left-3 flex items-center gap-3' : 'top-6 left-6 flex flex-col items-start gap-2'}`}
-                        // When the embedded preview is in desktop + collapsed-docked-sidebar mode, the preview's "Details"
-                        // pill sits at the top-left. Nudge this restore control to the right so it can share that row
-                        // without overlapping it (and without covering Vault Contents).
-                        style={isPreviewDockedSidebarCollapsed ? { transform: 'translateX(140px)' } : undefined}
+                        className={`absolute z-[60] pointer-events-auto ${!isCanvasPreviewMode && isPreviewDockedSidebarCollapsed ? 'top-8 left-8 flex items-center gap-2' : 'top-6 left-6 flex flex-col items-start gap-2'}`}
                     >
-                        <button
-                            type="button"
-                            onClick={() => { playClick(); setIsEditorCollapsed(false); }}
-                            className="px-4 py-2 rounded-full bg-[#bef264] hover:bg-[#a3e635] text-black text-[10px] font-bold uppercase tracking-widest shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-[#bef264]/40 flex items-center gap-2 transition-all hover:scale-[1.02]"
-                            aria-label="Show Editor"
-                            title="Show Editor"
-                        >
-                            <PanelLeftOpen className="w-4 h-4" />
-                            Show Editor
-                        </button>
-                        <div className="px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/70 whitespace-nowrap">
-                            Editor collapsed (preview-only)
-                        </div>
+                        {!isCanvasPreviewMode && isPreviewDockedSidebarCollapsed ? (
+                            /* Both sidebars collapsed (non-canvas): compact row with back + show-editor + details */
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => { playClick(); onBack(); }}
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${isPreviewDark ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm'}`}
+                                    aria-label="Back to Vault"
+                                    title="Back to Vault"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => { playClick(); setIsEditorCollapsed(false); }}
+                                    className="w-10 h-10 rounded-full bg-[#bef264] hover:bg-[#a3e635] text-black flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-[#bef264]/40 transition-all hover:scale-105 active:scale-90"
+                                    aria-label="Show Editor"
+                                    title="Show Editor"
+                                >
+                                    <PanelLeftOpen className="w-5 h-5" />
+                                </button>
+                            </div>
+                        ) : (
+                            /* Editor collapsed only (or canvas mode): full pill + back + badge */
+                            <>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => { playClick(); onBack(); }}
+                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${isPreviewDark ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm'}`}
+                                        aria-label="Back to Vault"
+                                        title="Back to Vault"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { playClick(); setIsEditorCollapsed(false); }}
+                                        className="px-4 py-2 rounded-full bg-[#bef264] hover:bg-[#a3e635] text-black text-[10px] font-bold uppercase tracking-widest shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-[#bef264]/40 flex items-center gap-2 transition-all hover:scale-[1.02]"
+                                        aria-label="Show Editor"
+                                        title="Show Editor"
+                                    >
+                                        <PanelLeftOpen className="w-4 h-4" />
+                                        Show Editor
+                                    </button>
+                                </div>
+                                <div className="px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/70 whitespace-nowrap">
+                                    Editor collapsed (preview-only)
+                                </div>
+                            </>
+                        )}
                     </div>
                 )}
                 {/* Overlay Badge */}
@@ -1291,6 +1454,8 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                 <div className={`w-full h-full ${isPreviewDark ? 'dark' : ''}`}>
                     <ClientPreviewBiz
                         project={previewProject}
+                        libraryProjects={libraryProjects}
+                        libraryEnabled={previewProject.enableClientLibrary !== false}
                         onBack={() => { }} // Disabled in preview
                         isDarkMode={isPreviewDark}
                         themeMode={previewTheme}
@@ -1300,6 +1465,8 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, onSave, onBa
                         isEmbedded={true}
                         allowSidebarCollapse={true}
                         onDockedSidebarCollapseChange={setIsPreviewDockedSidebarCollapsed}
+                        onDeviceModeChange={setPreviewDeviceMode}
+                        reserveCollapsedHeaderBackSlot={isEditorCollapsed ? 2 : 0}
                     />
                 </div>
             </div>

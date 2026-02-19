@@ -1,5 +1,5 @@
 
-import { Project, FileAsset } from '../types';
+import { Project, FileAsset, StorageSettings } from '../types';
 import { R2Service } from '../services/r2';
 
 /**
@@ -366,6 +366,370 @@ export const WatermarkService = {
             };
             reader.readAsDataURL(file);
         });
+    }
+};
+
+// --- 7. BYOS LINK INGESTION SERVICE ---
+
+type ByosProvider = 'drive' | 'dropbox' | 'onedrive' | 'generic';
+
+const detectByosProvider = (url: URL): ByosProvider => {
+    const host = url.hostname.toLowerCase();
+    if (host.includes('drive.google.com')) return 'drive';
+    if (host.includes('dropbox.com')) return 'dropbox';
+    if (host.includes('1drv.ms') || host.includes('onedrive.live.com')) return 'onedrive';
+    return 'generic';
+};
+
+const extensionToType = (name: string): FileAsset['type'] => {
+    const ext = (name.split('.').pop() || '').toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'avif', 'heic'].includes(ext)) return 'image';
+    if (['mp4', 'mov', 'm4v', 'webm', 'avi', 'mkv'].includes(ext)) return 'video';
+    if (['mp3', 'wav', 'aac', 'ogg', 'm4a', 'flac'].includes(ext)) return 'audio';
+    if (['pdf'].includes(ext)) return 'pdf';
+    if (['txt', 'md', 'rtf', 'doc', 'docx', 'odt', 'pages'].includes(ext)) return 'doc';
+    if (['fig', 'sketch', 'xd', 'psd', 'ai'].includes(ext)) return 'design';
+    if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return 'archive';
+    return 'archive';
+};
+
+const decodeName = (input: string) => {
+    try {
+        return decodeURIComponent(input.replace(/\+/g, ' '));
+    } catch {
+        return input;
+    }
+};
+
+const inferFileNameFromUrl = (url: URL): string | null => {
+    const pathnameParts = url.pathname.split('/').filter(Boolean);
+    const last = pathnameParts[pathnameParts.length - 1] || '';
+
+    const queryCandidates = [
+        url.searchParams.get('filename'),
+        url.searchParams.get('file'),
+        url.searchParams.get('name'),
+        url.searchParams.get('title')
+    ].filter(Boolean) as string[];
+
+    const picked = queryCandidates[0] || last;
+    const decoded = decodeName(picked || '').trim();
+    if (!decoded) return null;
+
+    // Ignore obvious non-filename path segments
+    if (['view', 'edit', 'u', 's', 'd', 'f', 'file'].includes(decoded.toLowerCase())) return null;
+    return decoded;
+};
+
+const inferStorageProvider = (provider: ByosProvider): FileAsset['storageProvider'] => {
+    if (provider === 'drive') return 'drive';
+    if (provider === 'dropbox') return 'dropbox';
+    if (provider === 'onedrive') return 'onedrive';
+    return 's3';
+};
+
+const createProviderPreviewUrl = (provider: ByosProvider, name: string) => {
+    const seed = encodeURIComponent(`${provider}-${name}`);
+    if (provider === 'drive') {
+        return `https://api.dicebear.com/9.x/shapes/svg?seed=${seed}&backgroundColor=0f172a&shape1Color=22c55e&shape2Color=86efac&shape3Color=14532d`;
+    }
+    if (provider === 'dropbox') {
+        return `https://api.dicebear.com/9.x/shapes/svg?seed=${seed}&backgroundColor=0f172a&shape1Color=3b82f6&shape2Color=93c5fd&shape3Color=1e3a8a`;
+    }
+    if (provider === 'onedrive') {
+        return `https://api.dicebear.com/9.x/shapes/svg?seed=${seed}&backgroundColor=111827&shape1Color=0ea5e9&shape2Color=7dd3fc&shape3Color=0c4a6e`;
+    }
+    return `https://api.dicebear.com/9.x/shapes/svg?seed=${seed}&backgroundColor=171717&shape1Color=a3a3a3&shape2Color=e5e5e5&shape3Color=525252`;
+};
+
+const normalizeProviderLink = (url: URL, provider: ByosProvider) => {
+    const original = url.toString();
+    if (provider === 'dropbox') {
+        const next = new URL(original);
+        next.searchParams.delete('dl');
+        next.searchParams.delete('raw');
+        next.searchParams.set('raw', '1');
+        return next.toString();
+    }
+    return original;
+};
+
+const inferGoogleDriveDownloadUrl = (url: URL) => {
+    const fileIdFromPath = url.pathname.match(/\/file\/d\/([^/]+)/)?.[1];
+    const fileIdFromQuery = url.searchParams.get('id');
+    const fileId = fileIdFromPath || fileIdFromQuery;
+    if (!fileId) return null;
+    return `https://drive.google.com/uc?export=download&id=${fileId}`;
+};
+
+export const ByosLinkService = {
+    ingestLink: async ({
+        url,
+        customName,
+        customSize,
+        typeHint
+    }: {
+        url: string;
+        customName?: string;
+        customSize?: string;
+        typeHint?: FileAsset['type'];
+    }): Promise<FileAsset> => {
+        const trimmed = (url || '').trim();
+        if (!trimmed) throw new Error('A URL is required.');
+
+        let parsed: URL;
+        try {
+            parsed = new URL(trimmed);
+        } catch {
+            throw new Error('Enter a valid URL (including https://).');
+        }
+
+        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+            throw new Error('Only HTTP(S) links are supported.');
+        }
+
+        const provider = detectByosProvider(parsed);
+        const inferredName = inferFileNameFromUrl(parsed);
+        const normalizedName = (customName || inferredName || `${provider === 'generic' ? 'BYOS' : provider.toUpperCase()} Asset`).trim();
+        const normalizedUrl = normalizeProviderLink(parsed, provider);
+        const normalizedType = typeHint || extensionToType(normalizedName);
+
+        const possibleDownloadUrl = provider === 'drive'
+            ? inferGoogleDriveDownloadUrl(parsed)
+            : normalizedUrl;
+
+        await new Promise(resolve => setTimeout(resolve, 250));
+
+        return {
+            id: `f-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            name: normalizedName,
+            size: customSize?.trim() || 'BYOS Link',
+            type: normalizedType,
+            locked: true,
+            version: 1,
+            uploadDate: new Date().toISOString().split('T')[0],
+            tag: provider === 'generic' ? 'LINK' : provider.toUpperCase(),
+            externalUrl: normalizedUrl,
+            downloadUrl: possibleDownloadUrl || undefined,
+            storageProvider: inferStorageProvider(provider),
+            previewUrl: createProviderPreviewUrl(provider, normalizedName),
+            includeInLibrary: true
+        };
+    }
+};
+
+const mimeTypeToType = (mimeType?: string, fallbackName?: string): FileAsset['type'] => {
+    if (!mimeType) return extensionToType(fallbackName || 'file');
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType.startsWith('video/')) return 'video';
+    if (mimeType.startsWith('audio/')) return 'audio';
+    if (mimeType === 'application/pdf') return 'pdf';
+    if (mimeType.startsWith('text/')) return 'doc';
+    if (mimeType.includes('word') || mimeType.includes('officedocument.wordprocessingml') || mimeType.includes('opendocument.text')) return 'doc';
+    if (mimeType.includes('figma') || mimeType.includes('photoshop') || mimeType.includes('illustrator')) return 'design';
+    if (mimeType.includes('zip') || mimeType.includes('compressed') || mimeType.includes('archive')) return 'archive';
+    return extensionToType(fallbackName || 'file');
+};
+
+const extractGoogleFolderId = (url: URL): string | null => {
+    const pathMatch = url.pathname.match(/\/folders\/([^/?]+)/);
+    if (pathMatch?.[1]) return pathMatch[1];
+    const idQuery = url.searchParams.get('id');
+    return idQuery || null;
+};
+
+const createAssetFromProviderFile = ({
+    provider,
+    name,
+    size,
+    type,
+    externalUrl,
+    downloadUrl,
+    folderLabel
+}: {
+    provider: ByosProvider;
+    name: string;
+    size?: string;
+    type?: FileAsset['type'];
+    externalUrl: string;
+    downloadUrl?: string;
+    folderLabel?: string;
+}): FileAsset => {
+    const normalizedName = name?.trim() || 'BYOS Asset';
+    return {
+        id: `f-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        name: normalizedName,
+        size: size || 'BYOS Link',
+        type: type || extensionToType(normalizedName),
+        locked: true,
+        version: 1,
+        uploadDate: new Date().toISOString().split('T')[0],
+        tag: folderLabel ? `${provider.toUpperCase()} FOLDER` : (provider === 'generic' ? 'LINK' : provider.toUpperCase()),
+        externalUrl,
+        downloadUrl,
+        storageProvider: inferStorageProvider(provider),
+        previewUrl: createProviderPreviewUrl(provider, normalizedName),
+        includeInLibrary: true
+    };
+};
+
+export const ByosFolderService = {
+    isLikelyFolderLink: (rawUrl: string) => {
+        try {
+            const url = new URL(rawUrl.trim());
+            const host = url.hostname.toLowerCase();
+            if (host.includes('drive.google.com') && url.pathname.includes('/folders/')) return true;
+            if (host.includes('dropbox.com') && (url.pathname.startsWith('/sh/') || url.pathname.includes('/home/'))) return true;
+            if ((host.includes('1drv.ms') || host.includes('onedrive.live.com')) && (url.pathname.includes('/:f:/') || url.searchParams.get('id')?.includes('!'))) return true;
+            return false;
+        } catch {
+            return false;
+        }
+    },
+
+    importFolderLink: async ({
+        url,
+        folderName,
+        storageConfig
+    }: {
+        url: string;
+        folderName?: string;
+        storageConfig?: StorageSettings;
+    }): Promise<FileAsset[]> => {
+        const trimmed = (url || '').trim();
+        if (!trimmed) throw new Error('Folder URL is required.');
+
+        let parsed: URL;
+        try {
+            parsed = new URL(trimmed);
+        } catch {
+            throw new Error('Enter a valid folder URL (including https://).');
+        }
+
+        const provider = detectByosProvider(parsed);
+
+        if (provider === 'drive') {
+            const folderId = extractGoogleFolderId(parsed);
+            if (!folderId) throw new Error('Could not detect Google Drive folder ID.');
+            const token = storageConfig?.byosGoogleToken?.trim() || (import.meta as any).env?.VITE_GOOGLE_ACCESS_TOKEN as string | undefined;
+            if (!token) {
+                throw new Error('Google folder listing requires Google account authorization. Connect Google in Settings → Storage → Cloud Drive.');
+            }
+
+            const endpoint = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`'${folderId}' in parents and trashed=false`)}&fields=files(id,name,mimeType,size)&pageSize=1000&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+            const response = await fetch(endpoint, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            if (!response.ok) {
+                throw new Error('Google Drive folder read failed. Ensure this account can access that folder and the authorization is still valid.');
+            }
+
+            const payload = await response.json();
+            const files = (payload?.files || []) as Array<{ id: string; name: string; mimeType?: string; size?: string }>;
+            const mapped = files.map(file => {
+                const externalUrl = `https://drive.google.com/file/d/${file.id}/view`;
+                const isGoogleNativeDoc = (file.mimeType || '').startsWith('application/vnd.google-apps.');
+                const downloadUrl = isGoogleNativeDoc ? undefined : `https://drive.google.com/uc?export=download&id=${file.id}`;
+                return createAssetFromProviderFile({
+                    provider,
+                    name: file.name,
+                    size: file.size ? `${(Number(file.size) / (1024 * 1024)).toFixed(2)} MB` : 'BYOS Link',
+                    type: mimeTypeToType(file.mimeType, file.name),
+                    externalUrl,
+                    downloadUrl,
+                    folderLabel: folderName
+                });
+            });
+
+            if (!mapped.length) throw new Error('No files found in this Google Drive folder.');
+            return mapped;
+        }
+
+        if (provider === 'dropbox') {
+            const token = storageConfig?.byosDropboxToken?.trim() || (import.meta as any).env?.VITE_DROPBOX_ACCESS_TOKEN as string | undefined;
+            if (!token) {
+                throw new Error('Dropbox folder listing requires an access token. Add it in Settings → Storage → Cloud Drive or set VITE_DROPBOX_ACCESS_TOKEN.');
+            }
+
+            const response = await fetch('https://api.dropboxapi.com/2/sharing/list_shared_link_files', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url: trimmed, recursive: false, limit: 2000 })
+            });
+
+            if (!response.ok) {
+                throw new Error('Dropbox folder read failed. Ensure link permissions and access token scope include files.metadata.read.');
+            }
+
+            const payload = await response.json();
+            const entries = (payload?.entries || []) as Array<{ '.tag': string; name: string; path_lower?: string; size?: number }>;
+            const files = entries.filter(entry => entry['.tag'] === 'file');
+
+            const mapped = files.map(file => {
+                const viewUrl = new URL(trimmed);
+                viewUrl.searchParams.delete('dl');
+                viewUrl.searchParams.delete('raw');
+                if (file.path_lower) viewUrl.searchParams.set('subpath', file.path_lower);
+                const downloadUrl = new URL(viewUrl.toString());
+                downloadUrl.searchParams.set('raw', '1');
+                return createAssetFromProviderFile({
+                    provider,
+                    name: file.name,
+                    size: typeof file.size === 'number' ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : 'BYOS Link',
+                    type: extensionToType(file.name),
+                    externalUrl: viewUrl.toString(),
+                    downloadUrl: downloadUrl.toString(),
+                    folderLabel: folderName
+                });
+            });
+
+            if (!mapped.length) throw new Error('No files found in this Dropbox folder.');
+            return mapped;
+        }
+
+        if (provider === 'onedrive') {
+            const token = storageConfig?.byosOneDriveToken?.trim() || (import.meta as any).env?.VITE_ONEDRIVE_ACCESS_TOKEN as string | undefined;
+            if (!token) {
+                throw new Error('OneDrive folder listing requires an access token. Add it in Settings → Storage → Cloud Drive or set VITE_ONEDRIVE_ACCESS_TOKEN.');
+            }
+
+            const shareToken = btoa(trimmed)
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/g, '');
+
+            const response = await fetch(`https://graph.microsoft.com/v1.0/shares/u!${shareToken}/driveItem/children?$select=id,name,size,file,folder,webUrl,@microsoft.graph.downloadUrl`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('OneDrive folder read failed. Ensure link permissions and token scope include Files.Read.');
+            }
+
+            const payload = await response.json();
+            const files = (payload?.value || []).filter((entry: any) => !!entry.file);
+            const mapped = files.map((file: any) => createAssetFromProviderFile({
+                provider,
+                name: file.name,
+                size: typeof file.size === 'number' ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : 'BYOS Link',
+                type: mimeTypeToType(file.file?.mimeType, file.name),
+                externalUrl: file.webUrl || trimmed,
+                downloadUrl: file['@microsoft.graph.downloadUrl'] || file.webUrl || undefined,
+                folderLabel: folderName
+            }));
+
+            if (!mapped.length) throw new Error('No files found in this OneDrive folder.');
+            return mapped;
+        }
+
+        throw new Error('Unsupported folder provider. Use Google Drive, Dropbox, or OneDrive folder links.');
     }
 };
 

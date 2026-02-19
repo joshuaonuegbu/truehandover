@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { AlertTriangle, X } from 'lucide-react';
 
 export const GRADIENT_TEXT = "text-transparent bg-clip-text bg-gradient-to-br from-slate-900 via-slate-600 to-slate-400 dark:from-white dark:via-slate-200 dark:to-slate-500";
 
@@ -46,5 +47,30 @@ export const Badge: React.FC<BadgeProps> = ({ children, color = 'lime' }) => {
         <span className={`${colors[color === 'emerald' ? 'lime' : color]} px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-md`}>
             {children}
         </span>
+    );
+};
+
+interface InlineErrorBannerProps {
+    message: string;
+    onDismiss?: () => void;
+    className?: string;
+}
+
+export const InlineErrorBanner: React.FC<InlineErrorBannerProps> = ({ message, onDismiss, className = '' }) => {
+    return (
+        <div className={`w-full rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 px-4 py-3 flex items-start gap-3 ${className}`} role="alert" aria-live="polite">
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+            <p className="text-xs font-medium leading-relaxed flex-1">{message}</p>
+            {onDismiss && (
+                <button
+                    type="button"
+                    onClick={onDismiss}
+                    className="shrink-0 p-1 rounded-full hover:bg-red-500/15 transition-colors"
+                    aria-label="Dismiss error"
+                >
+                    <X className="w-3.5 h-3.5" />
+                </button>
+            )}
+        </div>
     );
 };

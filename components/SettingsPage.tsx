@@ -10,8 +10,9 @@ import {
 } from 'lucide-react';
 import { UserProfile, StorageSettings } from '../types';
 import { playClick, playSuccess } from '../utils/sound';
-import { Card, Badge, GRADIENT_TEXT } from './Shared';
+import { Card, Badge, GRADIENT_TEXT, InlineErrorBanner } from './Shared';
 import { R2Service } from '../services/r2';
+import { connectByosProvider, type ByosOAuthProvider } from '../services/byosOAuth';
 
 // --- VISUAL CONSTANTS ---
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`;
@@ -20,6 +21,22 @@ interface SettingsPageProps {
     user: UserProfile;
     onUpdateUser: (updates: Partial<UserProfile>) => void;
 }
+
+const InputField = ({ label, value, onChange, placeholder, type = "text", icon: Icon, className = "" }: any) => (
+    <div className={`group space-y-1.5 ${className}`}>
+        {label && <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">{label}</label>}
+        <div className="relative flex items-center">
+            {Icon && <Icon className="absolute left-4 w-4 h-4 text-slate-400 group-focus-within:text-lime-600 dark:group-focus-within:text-[#bef264] transition-colors" />}
+            <input
+                type={type}
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                className={`w-full h-12 ${Icon ? 'pl-11 pr-4' : 'px-4'} bg-white dark:bg-[#18181b] border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 hover:border-slate-300 dark:hover:border-white/20`}
+            />
+        </div>
+    </div>
+);
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
     // State
@@ -64,9 +81,15 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
 
     // UX State for Storage
     const [storageMode, setStorageMode] = useState<'drive' | 's3' | null>(user.storageSettings ? 's3' : null);
+    const [isDriveConnectingByProvider, setIsDriveConnectingByProvider] = useState<Record<ByosOAuthProvider, boolean>>({
+        google: false,
+        dropbox: false,
+        onedrive: false
+    });
 
     // Connection Status State
     const [connectionStatus, setConnectionStatus] = useState<'idle' | 'checking' | 'connected' | 'error'>('idle');
+    const [connectionError, setConnectionError] = useState<string | null>(null);
 
     // Stripe Connect State
     const [stripeConnected, setStripeConnected] = useState(user.stripeConnect?.connected || false);
@@ -88,6 +111,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
         setStorageConfig(prev => ({ ...prev, [field]: value }));
         // Reset status on edit
         if (connectionStatus !== 'idle') setConnectionStatus('idle');
+        if (connectionError) setConnectionError(null);
     };
 
     const applyStoragePreset = (provider: string) => {
@@ -102,6 +126,15 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
 
     const handleTestConnection = async () => {
         playClick();
+        const requiredFields: Array<keyof StorageSettings> = ['endpoint', 'bucket', 'accessKey', 'secretKey'];
+        const hasMissingRequired = requiredFields.some((field) => !(storageConfig[field] || '').toString().trim());
+        if (hasMissingRequired) {
+            setConnectionStatus('error');
+            setConnectionError('Please fill endpoint, bucket, access key, and secret key before testing connection.');
+            return;
+        }
+
+        setConnectionError(null);
         setConnectionStatus('checking');
         try {
             // Use real R2 Service
@@ -111,7 +144,86 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
         } catch (e) {
             console.error(e);
             setConnectionStatus('error');
+            setConnectionError(e instanceof Error ? e.message : 'Connection test failed. Please verify your credentials and endpoint.');
         }
+    };
+
+    const getDriveToken = (provider: ByosOAuthProvider) => {
+        if (provider === 'google') return storageConfig.byosGoogleToken;
+        if (provider === 'dropbox') return storageConfig.byosDropboxToken;
+        return storageConfig.byosOneDriveToken;
+    };
+
+    const getDriveLabel = (provider: ByosOAuthProvider) => {
+        if (provider === 'google') return storageConfig.byosGoogleAccountLabel;
+        if (provider === 'dropbox') return storageConfig.byosDropboxAccountLabel;
+        return storageConfig.byosOneDriveAccountLabel;
+    };
+
+    const handleTestDriveConnection = (provider: ByosOAuthProvider) => {
+        playClick();
+        const credential = getDriveToken(provider);
+
+        if (!credential || !credential.trim()) {
+            setConnectionStatus('error');
+            setConnectionError(`Please connect your ${provider === 'google' ? 'Google Drive' : provider === 'dropbox' ? 'Dropbox' : 'OneDrive'} account first.`);
+            return;
+        }
+
+        setConnectionError(null);
+        setConnectionStatus('connected');
+        playSuccess();
+    };
+
+    const handleConnectDrive = async (provider: ByosOAuthProvider) => {
+        try {
+            setIsDriveConnectingByProvider(prev => ({ ...prev, [provider]: true }));
+            setConnectionError(null);
+            setConnectionStatus('checking');
+            playClick();
+
+            const result = await connectByosProvider(provider);
+            const updates: Partial<StorageSettings> = {
+                byosDriveProvider: provider
+            };
+
+            if (provider === 'google') {
+                updates.byosGoogleToken = result.accessToken;
+                updates.byosGoogleAccountLabel = result.accountLabel;
+            }
+            if (provider === 'dropbox') {
+                updates.byosDropboxToken = result.accessToken;
+                updates.byosDropboxAccountLabel = result.accountLabel;
+            }
+            if (provider === 'onedrive') {
+                updates.byosOneDriveToken = result.accessToken;
+                updates.byosOneDriveAccountLabel = result.accountLabel;
+            }
+
+            setStorageConfig(prev => ({ ...prev, ...updates }));
+            setConnectionStatus('connected');
+            playSuccess();
+        } catch (error) {
+            setConnectionStatus('error');
+            setConnectionError(error instanceof Error ? error.message : 'Drive authorization failed.');
+        } finally {
+            setIsDriveConnectingByProvider(prev => ({ ...prev, [provider]: false }));
+        }
+    };
+
+    const handleDisconnectDrive = (provider: ByosOAuthProvider) => {
+        playClick();
+        if (provider === 'google') {
+            setStorageConfig(prev => ({ ...prev, byosGoogleToken: '', byosGoogleAccountLabel: '' }));
+        }
+        if (provider === 'dropbox') {
+            setStorageConfig(prev => ({ ...prev, byosDropboxToken: '', byosDropboxAccountLabel: '' }));
+        }
+        if (provider === 'onedrive') {
+            setStorageConfig(prev => ({ ...prev, byosOneDriveToken: '', byosOneDriveAccountLabel: '' }));
+        }
+        setConnectionStatus('idle');
+        setConnectionError(null);
     };
 
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,22 +282,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
         >
             <div className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow-sm transition-all duration-300 bg-white dark:bg-black ${checked ? 'translate-x-4' : ''}`} />
         </button>
-    );
-
-    const InputField = ({ label, value, onChange, placeholder, type = "text", icon: Icon, className = "" }: any) => (
-        <div className={`group space-y-1.5 ${className}`}>
-            {label && <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">{label}</label>}
-            <div className="relative flex items-center">
-                {Icon && <Icon className="absolute left-4 w-4 h-4 text-slate-400 group-focus-within:text-lime-600 dark:group-focus-within:text-[#bef264] transition-colors" />}
-                <input
-                    type={type}
-                    value={value}
-                    onChange={onChange}
-                    placeholder={placeholder}
-                    className={`w-full h-12 ${Icon ? 'pl-11 pr-4' : 'px-4'} bg-white dark:bg-[#18181b] border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 hover:border-slate-300 dark:hover:border-white/20`}
-                />
-            </div>
-        </div>
     );
 
     const NavButton = ({ id, label, icon: Icon, desc }: any) => (
@@ -805,24 +901,94 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
 
                                             {storageMode === 'drive' && (
                                                 <div className="animate-slide-up">
-                                                    <div className="grid grid-cols-3 gap-4 mb-6">
-                                                        <button className="p-4 bg-white dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 hover:border-blue-500 transition-colors flex flex-col items-center gap-2 group">
-                                                            <HardDrive className="w-6 h-6 text-slate-400 group-hover:text-blue-500" />
-                                                            <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Google Drive</span>
-                                                        </button>
-                                                        <button className="p-4 bg-white dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 hover:border-indigo-500 transition-colors flex flex-col items-center gap-2 group">
-                                                            <Box className="w-6 h-6 text-slate-400 group-hover:text-indigo-500" />
-                                                            <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Dropbox</span>
-                                                        </button>
-                                                        <button className="p-4 bg-white dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 hover:border-sky-500 transition-colors flex flex-col items-center gap-2 group">
-                                                            <Cloud className="w-6 h-6 text-slate-400 group-hover:text-sky-500" />
-                                                            <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">OneDrive</span>
-                                                        </button>
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <button className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg hover:bg-blue-700 transition-colors">
-                                                            Authenticate
-                                                        </button>
+                                                    {connectionError && (
+                                                        <InlineErrorBanner
+                                                            message={connectionError}
+                                                            onDismiss={() => setConnectionError(null)}
+                                                            className="mb-4"
+                                                        />
+                                                    )}
+                                                    <div className="space-y-4">
+                                                        {([
+                                                            {
+                                                                provider: 'google' as const,
+                                                                name: 'Google Drive',
+                                                                icon: HardDrive,
+                                                                connectedClasses: 'bg-blue-50 dark:bg-blue-500/10 border-blue-500',
+                                                                iconWrapConnectedClasses: 'bg-blue-500/15',
+                                                                iconConnectedClasses: 'text-blue-500',
+                                                                connected: !!storageConfig.byosGoogleToken
+                                                            },
+                                                            {
+                                                                provider: 'dropbox' as const,
+                                                                name: 'Dropbox',
+                                                                icon: Box,
+                                                                connectedClasses: 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-500',
+                                                                iconWrapConnectedClasses: 'bg-indigo-500/15',
+                                                                iconConnectedClasses: 'text-indigo-500',
+                                                                connected: !!storageConfig.byosDropboxToken
+                                                            },
+                                                            {
+                                                                provider: 'onedrive' as const,
+                                                                name: 'OneDrive',
+                                                                icon: Cloud,
+                                                                connectedClasses: 'bg-sky-50 dark:bg-sky-500/10 border-sky-500',
+                                                                iconWrapConnectedClasses: 'bg-sky-500/15',
+                                                                iconConnectedClasses: 'text-sky-500',
+                                                                connected: !!storageConfig.byosOneDriveToken
+                                                            }
+                                                        ] as const).map((item) => {
+                                                            const Icon = item.icon;
+                                                            const isConnecting = isDriveConnectingByProvider[item.provider];
+                                                            const accountLabel = getDriveLabel(item.provider);
+
+                                                            return (
+                                                                <div
+                                                                    key={item.provider}
+                                                                    className={`rounded-xl border p-4 flex items-center justify-between gap-3 ${item.connected ? item.connectedClasses : 'border-slate-200 dark:border-white/10 bg-white dark:bg-[#111116]'}`}
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${item.connected ? item.iconWrapConnectedClasses : 'bg-slate-100 dark:bg-white/10'}`}>
+                                                                            <Icon className={`w-4 h-4 ${item.connected ? item.iconConnectedClasses : 'text-slate-400'}`} />
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-widest">{item.name}</p>
+                                                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                                                                                {item.connected
+                                                                                    ? accountLabel ? `Connected: ${accountLabel}` : 'Connected'
+                                                                                    : `Connect your ${item.name} account for folder import.`}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <button
+                                                                            onClick={() => handleConnectDrive(item.provider)}
+                                                                            disabled={isConnecting}
+                                                                            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold uppercase tracking-widest disabled:opacity-60 disabled:cursor-wait"
+                                                                        >
+                                                                            {isConnecting ? 'Connecting...' : item.connected ? 'Reconnect' : 'Connect'}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleDisconnectDrive(item.provider)}
+                                                                            disabled={!item.connected}
+                                                                            className="px-3 py-2 rounded-lg bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                        >
+                                                                            Disconnect
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleTestDriveConnection(item.provider)}
+                                                                            disabled={!item.connected}
+                                                                            className="px-3 py-2 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                        >
+                                                                            Validate
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                                                            Connect any combination of providers. TrueHandover will use the right connected account based on each pasted folder link.
+                                                        </p>
                                                     </div>
                                                 </div>
                                             )}
@@ -854,6 +1020,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                                 </p>
                                                             </div>
                                                         </div>
+                                                    )}
+
+                                                    {connectionError && (
+                                                        <InlineErrorBanner
+                                                            message={connectionError}
+                                                            onDismiss={() => setConnectionError(null)}
+                                                            className="mb-2"
+                                                        />
                                                     )}
 
                                                     <div className="grid md:grid-cols-2 gap-6">

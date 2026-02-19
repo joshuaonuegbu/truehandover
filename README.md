@@ -46,3 +46,8 @@ The UI uses a **"Cyber-Vault" aesthetic**:
 -   **Obsidian & Emerald:** Dark, rich colors representing security and money.
 -   **Glassmorphism:** Translucent panels to create depth.
 -   **Micro-Interactions:** Haptic-style animations and sound effects on buttons to make finance feel tangible.
+
+## 🔐 OAuth Setup (BYOS Cloud Drive)
+
+- Full step-by-step setup lives in [OAUTH_DEPLOYMENT.md](OAUTH_DEPLOYMENT.md).
+- Use [.env.example](.env.example) as the template for local variables.

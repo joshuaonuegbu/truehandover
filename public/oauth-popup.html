@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrueHandover OAuth</title>
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; display: grid; place-items: center; min-height: 100vh; }
+    .card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(148,163,184,0.2); border-radius: 14px; padding: 18px 20px; text-align: center; max-width: 360px; }
+    .muted { font-size: 12px; opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h3 style="margin:0 0 8px">Connecting storage...</h3>
+    <p class="muted" id="status">Finalizing authorization.</p>
+  </div>
+  <script>
+    (function () {
+      const hash = new URLSearchParams(window.location.hash.slice(1));
+      const query = new URLSearchParams(window.location.search);
+      const payload = {
+        type: 'TH_BYOS_OAUTH_RESULT',
+        access_token: hash.get('access_token') || query.get('access_token'),
+        expires_in: hash.get('expires_in') || query.get('expires_in'),
+        state: hash.get('state') || query.get('state'),
+        error: hash.get('error') || query.get('error'),
+        error_description: hash.get('error_description') || query.get('error_description')
+      };
+
+      const statusEl = document.getElementById('status');
+      if (payload.error) {
+        statusEl.textContent = 'Authorization failed. You can close this window.';
+      } else {
+        statusEl.textContent = 'Authorization complete. Returning to TrueHandover...';
+      }
+
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage(payload, window.location.origin);
+      }
+
+      setTimeout(() => window.close(), 400);
+    })();
+  </script>
+</body>
+</html>
