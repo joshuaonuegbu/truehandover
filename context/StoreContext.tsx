@@ -95,7 +95,7 @@ const migrateDemoProjects = (projects: Project[]): Project[] => {
       // social media phone icons
       'https://images.unsplash.com/photo-1611926653458-09294b3142bf?w=800&auto=format&fit=crop&q=60':
         'https://images.unsplash.com/photo-1768853972795-2739a9685567?auto=format&fit=crop&w=900&q=70',
-    // generic workspace photo
+      // generic workspace photo
       'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800&h=800&fit=crop':
         'https://images.unsplash.com/photo-1768077710231-f3a256362553?auto=format&fit=crop&w=900&q=70',
       // camera / filming photo
@@ -112,326 +112,446 @@ const migrateDemoProjects = (projects: Project[]): Project[] => {
 };
 
 const INITIAL_USER: UserProfile = {
-    id: 'u1',
-    name: 'Bogdan Nikitin',
-    email: 'bogdan@nixtio.com',
-    avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=Bogdan&backgroundColor=0a0a0a&shape1Color=bef264&shape2Color=ffffff&shape3Color=52525b',
-    role: '@Nixtio',
-    subdomain: 'nashua',
-    stripeConnect: {
-        accountId: '',
-        connected: false,
-        displayName: '',
-        chargesEnabled: false,
-        payoutsEnabled: false,
-    },
-    paymentMethods: {
-        venmo: 'bogdan-design',
-        cashapp: '$bogdan_ui',
-        zelle: 'bogdan@nixtio.com',
-        bankInfo: 'Routing: 123456789\nAccount: 987654321'
-    },
-    agencySettings: {
-        cname: '',
-        cnameVerified: false,
-        customSmtp: false,
-        removeBranding: false,
-        dataRetentionDays: 30,
-        supportEmail: 'help@nixtio.com'
-    },
-    storageSettings: {
-        provider: 'r2',
-        endpoint: 'https://<ACCOUNT_ID>.r2.cloudflarestorage.com',
-        bucket: 'truehandover-assets',
-        accessKey: '', // Cleared for security
-        secretKey: '', // Cleared for security
-        accountId: ''
-    }
+  id: 'u1',
+  name: 'Bogdan Nikitin',
+  email: 'bogdan@nixtio.com',
+  avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=Bogdan&backgroundColor=0a0a0a&shape1Color=bef264&shape2Color=ffffff&shape3Color=52525b',
+  role: '@Nixtio',
+  subdomain: 'nashua',
+  stripeConnect: {
+    accountId: '',
+    connected: false,
+    displayName: '',
+    chargesEnabled: false,
+    payoutsEnabled: false,
+  },
+  paymentMethods: {
+    venmo: 'bogdan-design',
+    cashapp: '$bogdan_ui',
+    zelle: 'bogdan@nixtio.com',
+    bankInfo: 'Routing: 123456789\nAccount: 987654321'
+  },
+  agencySettings: {
+    cname: '',
+    cnameVerified: false,
+    customSmtp: false,
+    removeBranding: false,
+    dataRetentionDays: 30,
+    supportEmail: 'help@nixtio.com'
+  },
+  storageSettings: {
+    mode: 'platform',
+  }
 };
 
 const INITIAL_PROJECTS: Project[] = [
-    {
-        id: 'p1',
-        name: 'Brand Identity Package',
-        description: 'Identity',
-        client: { name: 'John Smith', email: 'alex@vertex.io', company: 'Vertex', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=JohnSmith&backgroundColor=18181b&shape1Color=3b82f6&shape2Color=93c5fd&shape3Color=1e3a8a' },
-        amount: 2500,
-        status: 'awaiting_payment',
-        createdAt: '2023-09-30',
-        dueDate: '2023-11-01',
-        requiresSignature: true,
-        clientLink: '#',
-        type: 'brand',
-        theme: DEFAULT_THEME_MOCK,
-        milestones: [],
-        files: [
-            {
-                id: 'f1',
-                name: 'logo_final.png',
-                size: '2.1 MB',
-                type: 'image',
-                locked: true,
-                version: 1,
-                uploadDate: '2023-10-28',
-                tag: 'FINAL',
-                // Premium abstract (avoid common "generic gradient" look)
-                // Unsplash: a pile of pink and purple geometric blocks (tFvphR3BZ_c)
-                previewUrl: 'https://images.unsplash.com/photo-1761577680549-21a6bc9d42f6?auto=format&fit=crop&w=900&q=70',
-                metadata: { resolution: '4096x4096', colorProfile: 'CMYK', dpi: 300, hash: '8f434346648f6b96df89dda901c5176b' }
-            },
-            {
-                id: 'f2',
-                name: 'brand_guide.pdf',
-                size: '4.2 MB',
-                type: 'pdf',
-                locked: true,
-                externalUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-                version: 1,
-                uploadDate: '2023-10-28',
-                tag: 'DOCS',
-                // Abstract, premium cover (no people)
-                // Unsplash: interior view with a spiral staircase (WULTe87HJ7Q)
-                previewUrl: 'https://images.unsplash.com/photo-1769501210990-a56025a9385a?auto=format&fit=crop&w=900&q=70',
-                metadata: { pages: 24, resolution: 'Print Ready', hash: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6' }
-            },
-            {
-                id: 'f3',
-                name: 'social_media.zip',
-                size: '12 MB',
-                type: 'archive',
-                locked: true,
-                version: 1,
-                uploadDate: '2023-10-28',
-                tag: 'ASSETS',
-                // Abstract, premium cover (no people)
-                // Unsplash: three women in tennis attire with bags and balls (o618sXD3Jqg)
-                previewUrl: 'https://images.unsplash.com/photo-1768853972795-2739a9685567?auto=format&fit=crop&w=900&q=70',
-                metadata: { hash: 'e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0', software: 'Archive' }
-            },
-            {
-                id: 'f6',
-                name: 'logo_reveal.mp4',
-                size: '18.4 MB',
-                type: 'video',
-                locked: true,
-                externalUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-                version: 1,
-                uploadDate: '2023-10-28',
-                tag: 'VIDEO',
-                previewUrl: 'https://images.unsplash.com/photo-1536514498073-50e69d39c6cf?auto=format&fit=crop&w=900&q=70',
-                metadata: { duration: '00:30', resolution: '1080p', hash: 'vid_8f434346648f6b96df89dda901c5176b' }
-            },
-            {
-                id: 'f7',
-                name: 'brand_theme.mp3',
-                size: '3.1 MB',
-                type: 'audio',
-                locked: true,
-                externalUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3',
-                version: 1,
-                uploadDate: '2023-10-28',
-                tag: 'AUDIO',
-                previewUrl: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=900&q=70',
-                metadata: { duration: '00:07', hash: 'aud_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6' }
-            }
-        ]
-    },
-    {
-        id: 'p2',
-        name: 'Website Redesign',
-        description: 'UI Assets',
-        client: { name: 'Sarah Chen', email: 'm@mono.io', company: 'Mono', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=SarahChen&backgroundColor=0f172a&shape1Color=f472b6&shape2Color=fbcfe8&shape3Color=831843' },
-        amount: 5000,
-        status: 'paid',
-        createdAt: '2023-09-28',
-        dueDate: '2023-10-15',
-        requiresSignature: false,
-        clientLink: '#',
-        type: 'web',
-        theme: DEFAULT_THEME_MOCK,
-        clientViewedAt: '2023-10-01T14:30:00Z',
-        milestones: [],
-        files: [
-            {
-                id: 'f4',
-                name: 'homepage.fig',
-                size: '8.5 MB',
-                type: 'design',
-                locked: false,
-                version: 1,
-                uploadDate: '2023-10-28',
-                tag: 'SOURCE',
-                // Abstract, premium cover (no people)
-                previewUrl: 'https://images.unsplash.com/photo-1768077710231-f3a256362553?auto=format&fit=crop&w=900&q=70',
-                metadata: { software: 'Figma', hash: 'c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8' }
-            },
-            {
-                id: 'f5',
-                name: 'website_demo.mp4',
-                size: '45 MB',
-                type: 'video',
-                locked: false,
-                externalUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-                version: 1,
-                uploadDate: '2023-10-28',
-                tag: 'DEMO',
-                // Abstract, premium cover (no people)
-                previewUrl: 'https://images.unsplash.com/photo-1536514498073-50e69d39c6cf?auto=format&fit=crop&w=900&q=70',
-                metadata: { duration: '00:45', resolution: '1080p', hash: '5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u' }
-            },
-        ]
-    },
-    {
-        id: 'p4',
-        name: 'Q4 Financial Report',
-        description: 'Financials',
-        client: { name: 'Jin', email: 'j@corp.com', company: 'Corp', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=Jin&backgroundColor=171717&shape1Color=2dd4bf&shape2Color=ccfbf1&shape3Color=115e59' },
-        amount: 1200,
-        status: 'completed',
-        createdAt: '2023-09-28',
-        dueDate: '2023-10-01',
-        requiresSignature: false,
-        clientLink: '#',
-        type: 'web',
-        theme: DEFAULT_THEME_MOCK,
-        milestones: [],
-        files: []
-    },
-    {
-        id: 'p5',
-        name: 'Mobile App Prototype',
-        description: 'UX Design',
-        client: { name: 'Mike Ross', email: 'mike@pearson.com', company: 'Pearson', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=MikeRoss&backgroundColor=27272a&shape1Color=a78bfa&shape2Color=ddd6fe&shape3Color=5b21b6' },
-        amount: 3500,
-        status: 'draft',
-        createdAt: '2023-10-05',
-        dueDate: '2023-11-15',
-        requiresSignature: true,
-        clientLink: '#',
-        type: 'web',
-        theme: DEFAULT_THEME_MOCK,
-        milestones: [],
-        files: []
-    }
+  {
+    id: 'p1',
+    name: 'Brand Identity Package',
+    description: 'Identity',
+    client: { name: 'John Smith', email: 'alex@vertex.io', company: 'Vertex', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=JohnSmith&backgroundColor=18181b&shape1Color=3b82f6&shape2Color=93c5fd&shape3Color=1e3a8a' },
+    amount: 2500,
+    status: 'awaiting_payment',
+    createdAt: '2023-09-30',
+    dueDate: '2023-11-01',
+    requiresSignature: true,
+    clientLink: '#',
+    type: 'brand',
+    theme: DEFAULT_THEME_MOCK,
+    milestones: [],
+    files: [
+      {
+        id: 'f1',
+        name: 'logo_final.png',
+        size: '2.1 MB',
+        type: 'image',
+        locked: true,
+        version: 1,
+        uploadDate: '2023-10-28',
+        tag: 'FINAL',
+        // Premium abstract (avoid common "generic gradient" look)
+        // Unsplash: a pile of pink and purple geometric blocks (tFvphR3BZ_c)
+        previewUrl: 'https://images.unsplash.com/photo-1761577680549-21a6bc9d42f6?auto=format&fit=crop&w=900&q=70',
+        metadata: { resolution: '4096x4096', colorProfile: 'CMYK', dpi: 300, hash: '8f434346648f6b96df89dda901c5176b' }
+      },
+      {
+        id: 'f2',
+        name: 'brand_guide.pdf',
+        size: '4.2 MB',
+        type: 'pdf',
+        locked: true,
+        externalUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        version: 1,
+        uploadDate: '2023-10-28',
+        tag: 'DOCS',
+        // Abstract, premium cover (no people)
+        // Unsplash: interior view with a spiral staircase (WULTe87HJ7Q)
+        previewUrl: 'https://images.unsplash.com/photo-1769501210990-a56025a9385a?auto=format&fit=crop&w=900&q=70',
+        metadata: { pages: 24, resolution: 'Print Ready', hash: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6' }
+      },
+      {
+        id: 'f3',
+        name: 'social_media.zip',
+        size: '12 MB',
+        type: 'archive',
+        locked: true,
+        version: 1,
+        uploadDate: '2023-10-28',
+        tag: 'ASSETS',
+        // Abstract, premium cover (no people)
+        // Unsplash: three women in tennis attire with bags and balls (o618sXD3Jqg)
+        previewUrl: 'https://images.unsplash.com/photo-1768853972795-2739a9685567?auto=format&fit=crop&w=900&q=70',
+        metadata: { hash: 'e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0', software: 'Archive' }
+      },
+      {
+        id: 'f6',
+        name: 'logo_reveal.mp4',
+        size: '18.4 MB',
+        type: 'video',
+        locked: true,
+        externalUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+        version: 1,
+        uploadDate: '2023-10-28',
+        tag: 'VIDEO',
+        previewUrl: 'https://images.unsplash.com/photo-1536514498073-50e69d39c6cf?auto=format&fit=crop&w=900&q=70',
+        metadata: { duration: '00:30', resolution: '1080p', hash: 'vid_8f434346648f6b96df89dda901c5176b' }
+      },
+      {
+        id: 'f7',
+        name: 'brand_theme.mp3',
+        size: '3.1 MB',
+        type: 'audio',
+        locked: true,
+        externalUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3',
+        version: 1,
+        uploadDate: '2023-10-28',
+        tag: 'AUDIO',
+        previewUrl: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=900&q=70',
+        metadata: { duration: '00:07', hash: 'aud_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6' }
+      }
+    ]
+  },
+  {
+    id: 'p2',
+    name: 'Website Redesign',
+    description: 'UI Assets',
+    client: { name: 'Sarah Chen', email: 'm@mono.io', company: 'Mono', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=SarahChen&backgroundColor=0f172a&shape1Color=f472b6&shape2Color=fbcfe8&shape3Color=831843' },
+    amount: 5000,
+    status: 'paid',
+    createdAt: '2023-09-28',
+    dueDate: '2023-10-15',
+    requiresSignature: false,
+    clientLink: '#',
+    type: 'web',
+    theme: DEFAULT_THEME_MOCK,
+    clientViewedAt: '2023-10-01T14:30:00Z',
+    milestones: [],
+    files: [
+      {
+        id: 'f4',
+        name: 'homepage.fig',
+        size: '8.5 MB',
+        type: 'design',
+        locked: false,
+        version: 1,
+        uploadDate: '2023-10-28',
+        tag: 'SOURCE',
+        // Abstract, premium cover (no people)
+        previewUrl: 'https://images.unsplash.com/photo-1768077710231-f3a256362553?auto=format&fit=crop&w=900&q=70',
+        metadata: { software: 'Figma', hash: 'c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8' }
+      },
+      {
+        id: 'f5',
+        name: 'website_demo.mp4',
+        size: '45 MB',
+        type: 'video',
+        locked: false,
+        externalUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+        version: 1,
+        uploadDate: '2023-10-28',
+        tag: 'DEMO',
+        // Abstract, premium cover (no people)
+        previewUrl: 'https://images.unsplash.com/photo-1536514498073-50e69d39c6cf?auto=format&fit=crop&w=900&q=70',
+        metadata: { duration: '00:45', resolution: '1080p', hash: '5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u' }
+      },
+    ]
+  },
+  {
+    id: 'p4',
+    name: 'Q4 Financial Report',
+    description: 'Financials',
+    client: { name: 'Jin', email: 'j@corp.com', company: 'Corp', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=Jin&backgroundColor=171717&shape1Color=2dd4bf&shape2Color=ccfbf1&shape3Color=115e59' },
+    amount: 1200,
+    status: 'completed',
+    createdAt: '2023-09-28',
+    dueDate: '2023-10-01',
+    requiresSignature: false,
+    clientLink: '#',
+    type: 'web',
+    theme: DEFAULT_THEME_MOCK,
+    milestones: [],
+    files: []
+  },
+  {
+    id: 'p5',
+    name: 'Mobile App Prototype',
+    description: 'UX Design',
+    client: { name: 'Mike Ross', email: 'mike@pearson.com', company: 'Pearson', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=MikeRoss&backgroundColor=27272a&shape1Color=a78bfa&shape2Color=ddd6fe&shape3Color=5b21b6' },
+    amount: 3500,
+    status: 'draft',
+    createdAt: '2023-10-05',
+    dueDate: '2023-11-15',
+    requiresSignature: true,
+    clientLink: '#',
+    type: 'web',
+    theme: DEFAULT_THEME_MOCK,
+    milestones: [],
+    files: []
+  }
 ];
 
 // --- STORE CONTEXT ---
 
 interface StoreContextType {
-    projects: Project[];
-    user: UserProfile;
-    saveProject: (project: Project) => void;
-    updateUser: (updates: Partial<UserProfile>) => void;
-    deleteProject: (id: string) => void;
-    resetStore: () => void;
+  projects: Project[];
+  user: UserProfile;
+  saveProject: (project: Project) => void;
+  updateUser: (updates: Partial<UserProfile>) => void;
+  deleteProject: (id: string) => void;
+  resetStore: () => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    // Lazy initialization from LocalStorage
-    const [projects, setProjects] = useState<Project[]>(() => {
-        try {
-            const stored = localStorage.getItem('th_projects');
-            const parsed: Project[] = stored ? JSON.parse(stored) : INITIAL_PROJECTS;
+  // Lazy initialization from LocalStorage
+  const [projects, setProjects] = useState<Project[]>(() => {
+    try {
+      const stored = localStorage.getItem('th_projects');
+      const parsed: Project[] = stored ? JSON.parse(stored) : INITIAL_PROJECTS;
 
-            // Non-destructive demo migration: update ONLY known demo records (p1/p2/p4/p5) so UI improvements
-            // (thumbnails/wallpapers/etc) reflect even if the user has old demo data stored locally.
-            const version = Number(localStorage.getItem(DEMO_SEED_VERSION_KEY) || 0);
-            const migrated = migrateDemoProjects(parsed);
-            if (version < DEMO_SEED_VERSION) {
-                try { localStorage.setItem(DEMO_SEED_VERSION_KEY, String(DEMO_SEED_VERSION)); } catch { }
-            }
-            return migrated;
-        } catch (e) {
-            console.error("Failed to load projects", e);
-            return INITIAL_PROJECTS;
-        }
-    });
+      // Non-destructive demo migration: update ONLY known demo records (p1/p2/p4/p5) so UI improvements
+      // (thumbnails/wallpapers/etc) reflect even if the user has old demo data stored locally.
+      const version = Number(localStorage.getItem(DEMO_SEED_VERSION_KEY) || 0);
+      const migrated = migrateDemoProjects(parsed);
+      if (version < DEMO_SEED_VERSION) {
+        try { localStorage.setItem(DEMO_SEED_VERSION_KEY, String(DEMO_SEED_VERSION)); } catch { }
+      }
+      return migrated;
+    } catch (e) {
+      console.error("Failed to load projects", e);
+      return INITIAL_PROJECTS;
+    }
+  });
 
-    const [user, setUser] = useState<UserProfile>(() => {
-        try {
-            const stored = localStorage.getItem('th_user');
-            return stored ? JSON.parse(stored) : INITIAL_USER;
-        } catch (e) {
-            console.error("Failed to load user", e);
-            return INITIAL_USER;
-        }
-    });
+  const [user, setUser] = useState<UserProfile>(() => {
+    try {
+      const stored = localStorage.getItem('th_user');
+      return stored ? JSON.parse(stored) : INITIAL_USER;
+    } catch (e) {
+      console.error("Failed to load user", e);
+      return INITIAL_USER;
+    }
+  });
 
-    // --- SUPABASE SYNC LOGIC ---
-    useEffect(() => {
-        // If Supabase is connected, try to fetch real data
-        const loadFromSupabase = async () => {
-            if (supabase) {
-                console.log("Supabase connected. Attempting to fetch user data...");
-                const { data: dbUser } = await DB.getProfile(user.id);
-                if (dbUser) {
-                    console.log("Synced user from Supabase");
-                    // In a real app, we would map DB columns to frontend types here
-                }
+  // --- SUPABASE SYNC LOGIC ---
+  useEffect(() => {
+    if (!supabase) return;
 
-                const { data: dbProjects } = await DB.getProjects();
-                if (dbProjects && dbProjects.length > 0) {
-                    console.log("Synced projects from Supabase");
-                    // Map logic would go here
-                }
-            }
+    const syncWithSupabase = async (userId: string) => {
+      const { data: dbUser } = await DB.getProfile(userId);
+      if (dbUser) {
+        const stripe = (dbUser as any).stripe_connect || {};
+        const stripeConnect = {
+          accountId: stripe.account_id || stripe.accountId || '',
+          connected: Boolean(stripe.connected),
+          displayName: stripe.display_name || stripe.displayName || '',
+          chargesEnabled: Boolean(stripe.charges_enabled ?? stripe.chargesEnabled),
+          payoutsEnabled: Boolean(stripe.payouts_enabled ?? stripe.payoutsEnabled),
         };
-        loadFromSupabase();
-    }, []);
 
-    // Persistence Effects
-    useEffect(() => {
-        localStorage.setItem('th_projects', JSON.stringify(projects));
-    }, [projects]);
-
-    useEffect(() => {
-        localStorage.setItem('th_user', JSON.stringify(user));
-    }, [user]);
-
-    // Actions
-    const saveProject = (updatedProject: Project) => {
-        setProjects(prev => {
-            const idx = prev.findIndex(pr => pr.id === updatedProject.id);
-            if (idx >= 0) {
-                const newArr = [...prev];
-                newArr[idx] = updatedProject;
-                return newArr;
-            }
-            return [updatedProject, ...prev]; // Add new projects to top
-        });
-    };
-
-    const deleteProject = (id: string) => {
-        setProjects(prev => prev.filter(p => p.id !== id));
-    };
-
-    const updateUser = (updates: Partial<UserProfile>) => {
         setUser(prev => ({
-            ...prev,
-            ...updates
+          ...prev,
+          id: dbUser.id,
+          email: dbUser.email,
+          name: (dbUser as any).name || prev.name,
+          avatar: (dbUser as any).avatar || prev.avatar,
+          role: (dbUser as any).role || prev.role,
+          subdomain: (dbUser as any).subdomain || prev.subdomain,
+          stripeConnect,
+          paymentMethods: (dbUser as any).payment_methods || prev.paymentMethods,
+          agencySettings: (dbUser as any).agency_settings || prev.agencySettings,
+          storageSettings: (dbUser as any).storage_settings || prev.storageSettings,
         }));
+      }
+
+      const { data: creatorProjects } = await DB.getCreatorProjects();
+      if (creatorProjects && creatorProjects.length > 0) {
+        setProjects(creatorProjects as any[]);
+      }
     };
 
-    const resetStore = () => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        syncWithSupabase(session.user.id);
+      } else {
+        // Not authenticated; clear state back to defaults
         setProjects(INITIAL_PROJECTS);
         setUser(INITIAL_USER);
-        localStorage.removeItem('th_projects');
-        localStorage.removeItem('th_user');
-    };
+      }
+    });
 
-    return (
-        <StoreContext.Provider value={{ projects, user, saveProject, updateUser, deleteProject, resetStore }}>
-            {children}
-        </StoreContext.Provider>
-    );
+    // Fetch on initial mount if session already exists
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) syncWithSupabase(session.user.id);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Actions
+  const saveProject = async (updatedProject: Project) => {
+    setProjects(prev => {
+      const idx = prev.findIndex(pr => pr.id === updatedProject.id);
+      if (idx >= 0) return [...prev.slice(0, idx), updatedProject, ...prev.slice(idx + 1)];
+      return [updatedProject, ...prev];
+    });
+
+    if (supabase && user.id !== INITIAL_USER.id) {
+      const ensureClientLink = (link?: string) => {
+        const trimmed = (link || '').trim();
+        if (trimmed && trimmed !== '#') return trimmed;
+        // 22+ chars of entropy plus timestamp; safe for URL use.
+        const rand = crypto.getRandomValues(new Uint8Array(16));
+        const hex = Array.from(rand).map(b => b.toString(16).padStart(2, '0')).join('');
+        return `cl_${hex}_${Date.now().toString(36)}`;
+      };
+
+      const projectId = updatedProject.id && updatedProject.id.includes('-')
+        ? updatedProject.id
+        : crypto.randomUUID();
+
+      const clientLink = ensureClientLink(updatedProject.clientLink);
+
+      // Note: In an actual production schema, we extract the columns properly.
+      // Simplified here to match the TypeScript shape against the `upsert` mechanism:
+      await DB.saveProject({
+        id: projectId,
+        user_id: user.id,
+        name: updatedProject.name,
+        description: updatedProject.description,
+        client: updatedProject.client,
+        amount: updatedProject.amount,
+        status: updatedProject.status,
+        client_link: clientLink,
+        due_date: updatedProject.dueDate,
+        type: updatedProject.type,
+        theme: updatedProject.theme,
+        requires_signature: updatedProject.requiresSignature,
+        enable_tips: updatedProject.enableTips,
+        payment_methods: updatedProject.paymentMethods,
+        use_milestones: updatedProject.useMilestones,
+        message: updatedProject.message,
+        enable_client_library: updatedProject.enableClientLibrary,
+        access_config: updatedProject.accessConfig,
+        client_viewed_at: updatedProject.clientViewedAt,
+        show_watermark: updatedProject.showWatermark,
+        show_protected_label: updatedProject.showProtectedLabel,
+      });
+
+      // Upsert associated file rows (best-effort; creator-projects is the source of truth after refresh)
+      for (const f of (updatedProject.files || [])) {
+        const fileId = f.id && f.id.includes('-') ? f.id : crypto.randomUUID();
+        const previewKey = (f.metadata as any)?.previewKey;
+        const originalKey = (f.metadata as any)?.originalKey;
+        const storageProvider = f.storageProvider || 'native';
+        const previewUrlForDb =
+          storageProvider === 'native'
+            ? (previewKey || null)
+            : (typeof f.previewUrl === 'string' ? f.previewUrl : null);
+        const externalUrlForDb =
+          storageProvider === 'native'
+            ? (originalKey || null)
+            : (f.externalUrl || null);
+        await DB.upsertFile({
+          id: fileId,
+          project_id: projectId,
+          user_id: user.id,
+          name: f.name,
+          size: f.size,
+          type: f.type,
+          locked: f.locked !== false,
+          // For platform storage, these are object keys (not signed URLs).
+          // For BYOS links, these may be direct URLs.
+          preview_url: previewUrlForDb,
+          external_url: externalUrlForDb,
+          storage_provider: storageProvider,
+          version: f.version || 1,
+          upload_date: f.uploadDate || null,
+          tag: f.tag || null,
+          metadata: f.metadata || {},
+          milestone_id: f.milestoneId || null,
+          include_in_library: f.includeInLibrary !== false,
+          import_source_url: f.importSourceUrl || null,
+          folder_name: f.folderName || null,
+        });
+      }
+
+      // Refresh local state from server-mapped projects (includes signed preview URLs).
+      const { data: refreshed } = await DB.getCreatorProjects();
+      if (refreshed && refreshed.length > 0) setProjects(refreshed as any[]);
+    }
+  };
+
+  const deleteProject = async (id: string) => {
+    setProjects(prev => prev.filter(p => p.id !== id));
+    if (supabase && user.id !== INITIAL_USER.id) {
+      await DB.deleteProject(id);
+    }
+  };
+
+  const updateUser = async (updates: Partial<UserProfile>) => {
+    setUser(prev => ({ ...prev, ...updates }));
+    if (supabase && user.id !== INITIAL_USER.id) {
+      // Map the frontend nesting over to the JSONB columns if needed
+      await DB.updateProfile(user.id, {
+        name: updates.name,
+        avatar: updates.avatar,
+        role: updates.role,
+        subdomain: updates.subdomain,
+        stripe_connect: updates.stripeConnect ? {
+          account_id: updates.stripeConnect.accountId,
+          connected: updates.stripeConnect.connected,
+          display_name: updates.stripeConnect.displayName,
+          charges_enabled: updates.stripeConnect.chargesEnabled,
+          payouts_enabled: updates.stripeConnect.payoutsEnabled,
+        } : undefined,
+        payment_methods: updates.paymentMethods,
+        agency_settings: updates.agencySettings,
+        storage_settings: updates.storageSettings
+      });
+    }
+  };
+
+  const resetStore = async () => {
+    if (supabase) await supabase.auth.signOut();
+    setProjects(INITIAL_PROJECTS);
+    setUser(INITIAL_USER);
+    localStorage.removeItem('th_projects');
+    localStorage.removeItem('th_user');
+  };
+
+  return (
+    <StoreContext.Provider value={{ projects, user, saveProject, updateUser, deleteProject, resetStore }}>
+      {children}
+    </StoreContext.Provider>
+  );
 };
 
 export const useStore = () => {
-    const context = useContext(StoreContext);
-    if (context === undefined) {
-        throw new Error('useStore must be used within a StoreProvider');
-    }
-    return context;
+  const context = useContext(StoreContext);
+  if (context === undefined) {
+    throw new Error('useStore must be used within a StoreProvider');
+  }
+  return context;
 };

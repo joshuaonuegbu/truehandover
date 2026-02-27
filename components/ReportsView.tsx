@@ -220,7 +220,7 @@ const ReportsView = () => {
                                     {entry.name === 'liquid' ? 'Cash Flow' : entry.name === 'frozen' ? 'Vault Locked' : entry.name}
                                 </span>
                             </div>
-                            <span className="font-mono text-xs font-bold text-slate-900 dark:text-white">
+                            <span className="font-mono text-xs font-bold text-obsidian dark:text-white">
                                 ${entry.value.toLocaleString()}
                             </span>
                         </div>
@@ -239,25 +239,25 @@ const ReportsView = () => {
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                     <div>
                         <h2 className={`text-4xl font-serif font-medium tracking-tight ${GRADIENT_TEXT}`}>
-                            Financial <span className="text-lime-600 dark:text-[#bef264]">Reports</span>
+                            Financial <span className="text-lime-600 dark:text-brand">Reports</span>
                         </h2>
                         <p className="text-slate-500 dark:text-slate-400 text-base mt-1">
                             Fiscal performance, pipeline analysis, and compliance records.
                         </p>
                     </div>
                     <div className="flex gap-4 items-center">
-                        <div className="flex gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/5">
+                        <div className="flex gap-1 bg-slate-200 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/5">
                             {['6M', 'YTD', 'ALL'].map(range => (
                                 <button
                                     key={range}
                                     onClick={() => { playClick(); setTimeRange(range); }}
-                                    className={`px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all ${timeRange === range ? 'bg-white dark:bg-white/10 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                                    className={`px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all ${timeRange === range ? 'bg-white dark:bg-white/10 shadow-sm text-obsidian dark:text-white' : 'text-slate-500 hover:text-obsidian dark:hover:text-white'}`}
                                 >
                                     {range}
                                 </button>
                             ))}
                         </div>
-                        <button className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg flex items-center gap-2">
+                        <button className="px-5 py-2.5 rounded-xl bg-obsidian dark:bg-white text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg flex items-center gap-2">
                             <Download className="w-3.5 h-3.5" /> Export
                         </button>
                     </div>
@@ -269,19 +269,19 @@ const ReportsView = () => {
                 {/* Subtle grain texture */}
                 <div className="absolute inset-0 pointer-events-none rounded-2xl opacity-[0.02] dark:opacity-[0.04]" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
                 {/* Ambient glow */}
-                <div className="absolute -top-20 -right-20 w-64 h-64 bg-lime-300/10 dark:bg-[#bef264]/5 rounded-full blur-[80px] pointer-events-none" />
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-lime-300/10 dark:bg-brand/5 rounded-full blur-[80px] pointer-events-none" />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 relative z-10">
                     <div className="flex flex-col justify-end">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3 block border-l-2 border-lime-500 dark:border-[#bef264] pl-3">Net Revenue (Secured)</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3 block border-l-2 border-lime-500 dark:border-brand pl-3">Net Revenue (Secured)</span>
                         <div className="flex items-baseline gap-1 mt-2">
                             <span className="text-2xl lg:text-4xl font-serif text-slate-400 dark:text-slate-500 self-start mt-2">$</span>
-                            <PrivacyBlur strength="strong" className="text-7xl lg:text-9xl font-serif font-medium text-slate-900 dark:text-white tracking-tighter leading-[0.85]">
+                            <PrivacyBlur strength="strong" className="text-7xl lg:text-9xl font-serif font-medium text-obsidian dark:text-white tracking-tighter leading-[0.85]">
                                 {securedVolume.toLocaleString()}
                             </PrivacyBlur>
                         </div>
                         <div className="mt-6 flex items-center gap-4">
-                            <span className="inline-flex items-center gap-1 text-lime-700 dark:text-[#bef264] bg-lime-100 dark:bg-[#bef264]/10 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
+                            <span className="inline-flex items-center gap-1 text-lime-600 dark:text-brand bg-lime-100 dark:bg-brand/10 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
                                 <ArrowUpRight className="w-3 h-3" /> +12.5%
                             </span>
                             <span className="text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">vs Previous Period</span>
@@ -290,7 +290,7 @@ const ReportsView = () => {
 
                     {/* Mini Stats - Action Center Widget Style */}
                     <div className="grid grid-cols-2 gap-3 self-end">
-                        <div className="bg-slate-50 dark:bg-white/[0.04] border border-slate-100 dark:border-white/[0.06] p-6 lg:p-8 rounded-2xl flex flex-col justify-between h-40 group hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer">
+                        <div className="bg-editorial dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] p-6 lg:p-8 rounded-2xl flex flex-col justify-between h-40 group hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer">
                             <div className="flex justify-between items-start">
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Pending</span>
                                 <div className="p-2 rounded-xl bg-amber-500/10">
@@ -298,19 +298,19 @@ const ReportsView = () => {
                                 </div>
                             </div>
                             <div>
-                                <div className="text-3xl font-serif text-slate-900 dark:text-white mb-1"><PrivacyBlur>${lockedVolume.toLocaleString()}</PrivacyBlur></div>
+                                <div className="text-3xl font-serif text-obsidian dark:text-white mb-1"><PrivacyBlur>${lockedVolume.toLocaleString()}</PrivacyBlur></div>
                                 <div className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400">Locked in Vault</div>
                             </div>
                         </div>
-                        <div className="bg-slate-50 dark:bg-white/[0.04] border border-slate-100 dark:border-white/[0.06] p-6 lg:p-8 rounded-2xl flex flex-col justify-between h-40 group hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer">
+                        <div className="bg-editorial dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] p-6 lg:p-8 rounded-2xl flex flex-col justify-between h-40 group hover:border-slate-200 dark:hover:border-white/10 transition-all cursor-pointer">
                             <div className="flex justify-between items-start">
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Liquidity</span>
-                                <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/5">
+                                <div className="p-2 rounded-xl bg-slate-200 dark:bg-white/5">
                                     <ActivityIcon className="w-4 h-4 text-slate-400" />
                                 </div>
                             </div>
                             <div>
-                                <div className="text-3xl font-serif text-slate-900 dark:text-white mb-1">{unlockRate}%</div>
+                                <div className="text-3xl font-serif text-obsidian dark:text-white mb-1">{unlockRate}%</div>
                                 <div className="text-[10px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">Conversion Rate</div>
                             </div>
                         </div>
@@ -325,7 +325,7 @@ const ReportsView = () => {
                 <div className="flex items-end justify-between mb-8">
                     <h3 className={`font-serif text-3xl tracking-tight ${GRADIENT_TEXT}`}>Analysis & Projections</h3>
                     <div className="hidden md:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                        <div className="flex items-center gap-2"><div className="w-2 h-2 bg-[#bef264] rounded-full" /> Liquid (Paid)</div>
+                        <div className="flex items-center gap-2"><div className="w-2 h-2 bg-lime-600 dark:bg-brand rounded-full" /> Liquid (Paid)</div>
                         <div className="flex items-center gap-2"><div className="w-2 h-2 bg-amber-500 rounded-full" /> Frozen (Locked)</div>
                     </div>
                 </div>
@@ -334,7 +334,7 @@ const ReportsView = () => {
 
                     {/* Capital Flow Engine (Area Chart) */}
                     <div className="lg:col-span-2">
-                        <div className="h-[400px] w-full bg-slate-50 dark:bg-[#1a1a20] border border-slate-200 dark:border-white/5 rounded-none lg:rounded-3xl p-6 relative overflow-hidden group mb-8 shadow-sm">
+                        <div className="h-[400px] w-full bg-editorial dark:bg-[#1a1a20] border border-slate-200 dark:border-white/5 rounded-none lg:rounded-3xl p-6 relative overflow-hidden group mb-8 shadow-sm">
                             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: NOISE_SVG }}></div>
 
                             {/* Header within Graph for Context */}
@@ -390,7 +390,7 @@ const ReportsView = () => {
                         </div>
 
                         {/* Forecast / Pipeline Card */}
-                        <div className="flex flex-col md:flex-row md:items-center gap-6 p-6 bg-slate-50 dark:bg-white/[0.03] rounded-xl border border-dashed border-slate-200 dark:border-white/10 relative overflow-hidden">
+                        <div className="flex flex-col md:flex-row md:items-center gap-6 p-6 bg-editorial dark:bg-white/[0.03] rounded-xl border border-dashed border-slate-200 dark:border-white/10 relative overflow-hidden">
                             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: NOISE_SVG }}></div>
 
                             <div className="p-4 bg-white dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 flex-shrink-0">
@@ -400,7 +400,7 @@ const ReportsView = () => {
                             <div className="flex-1">
                                 <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">Projected Pipeline</h4>
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-2xl font-serif font-bold text-slate-900 dark:text-white">
+                                    <span className="text-2xl font-serif font-bold text-obsidian dark:text-white">
                                         <PrivacyBlur>${potentialValue.toLocaleString()}</PrivacyBlur>
                                     </span>
                                     <span className="text-xs text-slate-400 font-medium">in negotiation (Drafts)</span>
@@ -422,7 +422,7 @@ const ReportsView = () => {
                                 </div>
                                 <button
                                     onClick={() => setExcludeOneOffs(!excludeOneOffs)}
-                                    className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded transition-colors ${excludeOneOffs ? 'bg-lime-600 text-white dark:bg-[#bef264] dark:text-black' : 'bg-slate-100 text-slate-500 dark:bg-white/10'}`}
+                                    className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded transition-colors ${excludeOneOffs ? 'bg-lime-600 text-white dark:bg-brand dark:text-black' : 'bg-slate-200 text-slate-500 dark:bg-white/10'}`}
                                     title="Toggle to exclude projects under $500"
                                 >
                                     {excludeOneOffs ? 'Recurring Only' : 'All Sources'}
@@ -433,7 +433,7 @@ const ReportsView = () => {
                             <div className="mb-8">
                                 <div className="flex justify-between items-end mb-2">
                                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Portfolio Diversity</span>
-                                    <span className={`text-lg font-bold ${diversityScore > 70 ? 'text-lime-600 dark:text-[#bef264]' : diversityScore > 40 ? 'text-amber-500' : 'text-red-500'}`}>
+                                    <span className={`text-lg font-bold ${diversityScore > 70 ? 'text-lime-600 dark:text-brand' : diversityScore > 40 ? 'text-amber-500' : 'text-red-500'}`}>
                                         {diversityScore}/100
                                     </span>
                                 </div>
@@ -463,11 +463,11 @@ const ReportsView = () => {
                                         <div className="flex items-center gap-3">
                                             <div className="text-[10px] font-mono text-slate-300 w-3">{i + 1}</div>
                                             <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS[i] }} />
-                                            <span className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-lime-600 dark:group-hover:text-[#bef264] transition-colors">{item.name}</span>
+                                            <span className="text-sm font-bold text-obsidian dark:text-white group-hover:text-lime-600 dark:group-hover:text-brand transition-colors">{item.name}</span>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <span className="text-xs font-mono font-medium text-slate-500">${item.value.toLocaleString()}</span>
-                                            <span className="text-[10px] font-bold bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded min-w-[36px] text-center">
+                                            <span className="text-[10px] font-bold bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded min-w-[36px] text-center">
                                                 {Math.round((item.value / totalRevenue) * 100)}%
                                             </span>
                                         </div>
@@ -496,7 +496,7 @@ const ReportsView = () => {
                         <h3 className={`font-serif text-3xl tracking-tight ${GRADIENT_TEXT}`}>Audit Log</h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400">Immutable transaction records for dispute resolution and evidence.</p>
                     </div>
-                    <button className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-2 group">
+                    <button className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-obsidian dark:hover:text-white transition-colors flex items-center gap-2 group">
                         View Full Ledger <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                     </button>
                 </div>
@@ -504,39 +504,39 @@ const ReportsView = () => {
                 <div className="rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden bg-white dark:bg-[#1a1a20]">
                     <div className="overflow-y-auto max-h-[400px]">
                         <table className="w-full text-left border-collapse">
-                            <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-[#1a1a20] shadow-sm">
-                                <tr className="border-b border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-widest text-slate-900 dark:text-white">
-                                    <th className="py-4 pl-6 pr-4 w-32 bg-slate-50 dark:bg-[#1a1a20]">Date</th>
-                                    <th className="py-4 px-4 w-1/4 bg-slate-50 dark:bg-[#1a1a20]">Project</th>
-                                    <th className="py-4 px-4 bg-slate-50 dark:bg-[#1a1a20]">Client</th>
-                                    <th className="py-4 px-4 bg-slate-50 dark:bg-[#1a1a20]">Status</th>
-                                    <th className="py-4 px-4 hidden md:table-cell bg-slate-50 dark:bg-[#1a1a20]">Cryptographic Hash</th>
-                                    <th className="py-4 px-4 text-right bg-slate-50 dark:bg-[#1a1a20]">Amount</th>
-                                    <th className="py-4 pl-4 pr-6 text-right w-40 bg-slate-50 dark:bg-[#1a1a20]">Action</th>
+                            <thead className="sticky top-0 z-10 bg-editorial dark:bg-[#1a1a20] shadow-sm">
+                                <tr className="border-b border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-widest text-obsidian dark:text-white">
+                                    <th className="py-4 pl-6 pr-4 w-32 bg-editorial dark:bg-[#1a1a20]">Date</th>
+                                    <th className="py-4 px-4 w-1/4 bg-editorial dark:bg-[#1a1a20]">Project</th>
+                                    <th className="py-4 px-4 bg-editorial dark:bg-[#1a1a20]">Client</th>
+                                    <th className="py-4 px-4 bg-editorial dark:bg-[#1a1a20]">Status</th>
+                                    <th className="py-4 px-4 hidden md:table-cell bg-editorial dark:bg-[#1a1a20]">Cryptographic Hash</th>
+                                    <th className="py-4 px-4 text-right bg-editorial dark:bg-[#1a1a20]">Amount</th>
+                                    <th className="py-4 pl-4 pr-6 text-right w-40 bg-editorial dark:bg-[#1a1a20]">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-sm font-medium">
                                 {evidenceProjects.map((item, i) => (
-                                    <tr key={item.id} className="group hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                                    <tr key={item.id} className="group hover:bg-editorial dark:hover:bg-white/5 transition-colors">
                                         <td className="py-5 pl-6 pr-4 font-mono text-xs text-slate-500">{item.date}</td>
-                                        <td className="py-5 px-4 font-bold text-slate-900 dark:text-white">{item.name}</td>
+                                        <td className="py-5 px-4 font-bold text-obsidian dark:text-white">{item.name}</td>
                                         <td className="py-5 px-4 text-slate-600 dark:text-slate-300">{item.client}</td>
                                         <td className="py-5 px-4">
-                                            <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Secured' ? 'bg-lime-100 text-lime-700 dark:bg-[#bef264]/10 dark:text-[#bef264]' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
+                                            <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Secured' ? 'bg-lime-100 text-lime-600 dark:bg-brand/10 dark:text-brand' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
                                                 {item.status === 'Secured' ? <CheckCircle className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
                                                 {item.status}
                                             </div>
                                         </td>
                                         <td className="py-5 px-4 hidden md:table-cell font-mono text-[10px] text-slate-400">{item.hash}</td>
-                                        <td className="py-5 px-4 text-right font-serif text-base text-slate-900 dark:text-white">
+                                        <td className="py-5 px-4 text-right font-serif text-base text-obsidian dark:text-white">
                                             <PrivacyBlur>${item.amount.toLocaleString()}</PrivacyBlur>
                                         </td>
                                         <td className="py-5 pl-4 text-right pr-6">
                                             <button
                                                 title="Download Chain of Custody PDF"
-                                                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-colors shadow-sm group/btn w-full justify-center"
+                                                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 hover:bg-editorial dark:hover:bg-white/10 hover:text-obsidian dark:hover:text-white transition-colors shadow-sm group/btn w-full justify-center"
                                             >
-                                                <FileText className="w-3.5 h-3.5 text-slate-400 group-hover/btn:text-slate-900 dark:group-hover/btn:text-white" />
+                                                <FileText className="w-3.5 h-3.5 text-slate-400 group-hover/btn:text-obsidian dark:group-hover/btn:text-white" />
                                                 Download Evidence
                                             </button>
                                         </td>
@@ -548,7 +548,7 @@ const ReportsView = () => {
                 </div>
 
                 {/* Chain of Custody Note */}
-                <div className="mt-4 p-4 bg-slate-50 dark:bg-white/5 rounded-xl border border-dashed border-slate-200 dark:border-white/10 flex items-start gap-3">
+                <div className="mt-4 p-4 bg-editorial dark:bg-white/5 rounded-xl border border-dashed border-slate-200 dark:border-white/10 flex items-start gap-3">
                     <Scale className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
                     <div>
                         <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Chain of Custody</h4>
@@ -570,18 +570,18 @@ const ReportsView = () => {
                     <div className="p-8 border border-slate-200 dark:border-white/10 rounded-2xl flex flex-col justify-between bg-white dark:bg-[#1a1a20] relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-6 opacity-50"><FileDigit className="w-12 h-12 text-slate-100 dark:text-white/5 -rotate-12" /></div>
                         <div className="relative z-10">
-                            <h4 className="font-serif text-xl font-bold text-slate-900 dark:text-white mb-2">Monthly Statement</h4>
+                            <h4 className="font-serif text-xl font-bold text-obsidian dark:text-white mb-2">Monthly Statement</h4>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 max-w-sm">Consolidated earnings report for accounting and reconciliation purposes.</p>
                             <div className="flex gap-3">
                                 <div className="relative flex-1">
-                                    <select className="w-full appearance-none bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold px-4 py-3 outline-none text-slate-900 dark:text-white cursor-pointer hover:border-slate-300 transition-colors">
-                                        <option className="bg-white dark:bg-[#1a1a20] text-slate-900 dark:text-white">October 2023</option>
-                                        <option className="bg-white dark:bg-[#1a1a20] text-slate-900 dark:text-white">September 2023</option>
-                                        <option className="bg-white dark:bg-[#1a1a20] text-slate-900 dark:text-white">August 2023</option>
+                                    <select className="w-full appearance-none bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold px-4 py-3 outline-none text-obsidian dark:text-white cursor-pointer hover:border-slate-200 transition-colors">
+                                        <option className="bg-white dark:bg-[#1a1a20] text-obsidian dark:text-white">October 2023</option>
+                                        <option className="bg-white dark:bg-[#1a1a20] text-obsidian dark:text-white">September 2023</option>
+                                        <option className="bg-white dark:bg-[#1a1a20] text-obsidian dark:text-white">August 2023</option>
                                     </select>
                                     <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
                                 </div>
-                                <button className="flex items-center gap-2 px-5 py-3 bg-slate-900 dark:bg-white text-white dark:text-black rounded-xl text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg">
+                                <button className="flex items-center gap-2 px-5 py-3 bg-obsidian dark:bg-white text-white dark:text-black rounded-xl text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg">
                                     Download <Download className="w-3.5 h-3.5" />
                                 </button>
                             </div>
@@ -594,12 +594,12 @@ const ReportsView = () => {
                         <div className="relative z-10">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h4 className="font-serif text-xl font-bold text-slate-900 dark:text-white mb-2">Tax Ledger (FY 2023)</h4>
+                                    <h4 className="font-serif text-xl font-bold text-obsidian dark:text-white mb-2">Tax Ledger (FY 2023)</h4>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 max-w-sm">Fiscal year transaction export formatted for tax filing software.</p>
                                 </div>
-                                <span className="text-[10px] font-bold uppercase bg-slate-100 dark:bg-white/10 text-slate-500 px-2 py-1 rounded">CSV</span>
+                                <span className="text-[10px] font-bold uppercase bg-slate-200 dark:bg-white/10 text-slate-500 px-2 py-1 rounded">CSV</span>
                             </div>
-                            <button className="w-full flex items-center justify-center gap-2 px-5 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group/btn">
+                            <button className="w-full flex items-center justify-center gap-2 px-5 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-editorial dark:hover:bg-white/5 transition-colors group/btn">
                                 Export Annual Ledger <Download className="w-3.5 h-3.5 group-hover/btn:translate-y-0.5 transition-transform" />
                             </button>
                         </div>

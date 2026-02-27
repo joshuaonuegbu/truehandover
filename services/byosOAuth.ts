@@ -6,22 +6,37 @@ interface OAuthResult {
     accountLabel?: string;
 }
 
-const getClientId = (provider: ByosOAuthProvider) => {
-    const env = (import.meta as any).env || {};
-    if (provider === 'google') return env.VITE_GOOGLE_OAUTH_CLIENT_ID as string | undefined;
-    if (provider === 'dropbox') return env.VITE_DROPBOX_OAUTH_CLIENT_ID as string | undefined;
-    return env.VITE_ONEDRIVE_OAUTH_CLIENT_ID as string | undefined;
+interface OAuthValidationResult {
+    accountLabel?: string;
+}
+
+const getEnvValue = (env: Record<string, unknown>, keys: string[]): string | undefined => {
+    for (const key of keys) {
+        const raw = env[key];
+        if (typeof raw !== 'string') continue;
+        const value = raw.trim();
+        if (value) return value;
+    }
+    return undefined;
 };
 
-const getRedirectUri = () => {
-    const url = new URL(window.location.href);
-    url.hash = '';
-    url.search = '';
-    return new URL('oauth-popup.html', url.toString()).toString();
+const getClientId = (provider: ByosOAuthProvider) => {
+    const env = ((import.meta as any).env || {}) as Record<string, unknown>;
+    if (provider === 'google') {
+        return getEnvValue(env, ['VITE_GOOGLE_OAUTH_CLIENT_ID', 'VITE_GOOGLE_CLIENT_ID']);
+    }
+    if (provider === 'dropbox') {
+        return getEnvValue(env, ['VITE_DROPBOX_OAUTH_CLIENT_ID', 'VITE_DROPBOX_APP_KEY', 'VITE_DROPBOX_CLIENT_ID']);
+    }
+    return getEnvValue(env, ['VITE_ONEDRIVE_OAUTH_CLIENT_ID', 'VITE_ONEDRIVE_CLIENT_ID']);
+};
+
+export const getByosOAuthRedirectUri = () => {
+    return new URL('/oauth-popup.html', window.location.origin).toString();
 };
 
 const buildOAuthUrl = (provider: ByosOAuthProvider, state: string) => {
-    const redirectUri = getRedirectUri();
+    const redirectUri = getByosOAuthRedirectUri();
     const clientId = getClientId(provider);
     if (!clientId) {
         throw new Error(`Missing OAuth client ID for ${provider}. Set ${provider === 'google' ? 'VITE_GOOGLE_OAUTH_CLIENT_ID' : provider === 'dropbox' ? 'VITE_DROPBOX_OAUTH_CLIENT_ID' : 'VITE_ONEDRIVE_OAUTH_CLIENT_ID'} in your deployment environment and add this redirect URI in the provider console: ${redirectUri}`);
@@ -94,6 +109,20 @@ const fetchAccountLabel = async (provider: ByosOAuthProvider, accessToken: strin
     } catch {
         return undefined;
     }
+};
+
+export const validateByosProviderConnection = async (provider: ByosOAuthProvider, accessToken: string): Promise<OAuthValidationResult> => {
+    const token = (accessToken || '').trim();
+    if (!token) {
+        throw new Error('Missing access token for provider validation.');
+    }
+
+    const accountLabel = await fetchAccountLabel(provider, token);
+    if (!accountLabel) {
+        throw new Error(`Unable to validate ${provider === 'google' ? 'Google Drive' : provider === 'dropbox' ? 'Dropbox' : 'OneDrive'} connection. Reconnect and try again.`);
+    }
+
+    return { accountLabel };
 };
 
 export const connectByosProvider = (provider: ByosOAuthProvider): Promise<OAuthResult> => {

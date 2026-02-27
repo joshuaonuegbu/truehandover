@@ -15,22 +15,26 @@ if (!isConfigured) {
 }
 
 // Create the real client
-export const supabase = isConfigured 
-    ? createClient(supabaseUrl, supabaseAnonKey) 
+export const supabase = isConfigured
+    ? createClient(supabaseUrl, supabaseAnonKey)
     : null;
 
 /**
  * DATABASE TYPES HELPERS
- * This maps to the SQL schema defined in the backend requirements.
+ * This maps to `supabase/schema.sql`.
  */
 
 export interface DatabaseProfile {
     id: string;
     email: string;
-    full_name: string | null;
-    avatar_url: string | null;
-    role: string;
-    stripe_account_id: string | null;
+    name: string;
+    avatar: string | null;
+    role: string | null;
+    subdomain: string | null;
+    stripe_connect: any;
+    payment_methods: any;
+    agency_settings: any;
+    storage_settings: any;
 }
 
 export interface DatabaseProject {
@@ -38,11 +42,15 @@ export interface DatabaseProject {
     user_id: string;
     name: string;
     description: string | null;
-    client_name: string | null;
     amount: number;
-    status: 'draft' | 'awaiting_payment' | 'paid' | 'completed';
-    access_token: string;
+    status: string;
+    client: any;
+    client_link: string;
     created_at: string;
+    due_date: string | null;
+    theme: any;
+    payment_methods: any;
+    message: string | null;
 }
 
 /**
@@ -59,12 +67,11 @@ export const DB = {
             .single();
     },
 
-    async getProjects() {
+    async getCreatorProjects() {
         if (!supabase) return { data: [], error: 'No connection' };
-        return await supabase
-            .from('projects')
-            .select('*')
-            .order('created_at', { ascending: false });
+        const { data, error } = await supabase.functions.invoke('creator-projects');
+        if (error) return { data: [], error: error.message };
+        return { data: (data?.projects || []) as any[], error: null };
     },
 
     async updateProjectStatus(projectId: string, status: string) {
@@ -72,6 +79,36 @@ export const DB = {
         return await supabase
             .from('projects')
             .update({ status })
+            .eq('id', projectId);
+    },
+
+    async updateProfile(userId: string, updates: any) {
+        if (!supabase) return { error: 'No connection' };
+        return await supabase
+            .from('profiles')
+            .update(updates)
+            .eq('id', userId);
+    },
+
+    async saveProject(project: any) {
+        if (!supabase) return { error: 'No connection' };
+        return await supabase
+            .from('projects')
+            .upsert(project);
+    },
+
+    async upsertFile(file: any) {
+        if (!supabase) return { error: 'No connection' };
+        return await supabase
+            .from('files')
+            .upsert(file);
+    },
+
+    async deleteProject(projectId: string) {
+        if (!supabase) return { error: 'No connection' };
+        return await supabase
+            .from('projects')
+            .delete()
             .eq('id', projectId);
     }
 };

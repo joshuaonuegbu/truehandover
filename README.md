@@ -47,7 +47,17 @@ The UI uses a **"Cyber-Vault" aesthetic**:
 -   **Glassmorphism:** Translucent panels to create depth.
 -   **Micro-Interactions:** Haptic-style animations and sound effects on buttons to make finance feel tangible.
 
-## 🔐 OAuth Setup (BYOS Cloud Drive)
+## BYOS (Bring Your Own Storage)
 
-- Full step-by-step setup lives in [OAUTH_DEPLOYMENT.md](OAUTH_DEPLOYMENT.md).
-- Use [.env.example](.env.example) as the template for local variables.
+- Current production posture: no OAuth connectors (no provider tokens stored client-side).
+- You can still add **external links** to your own storage, but native uploads are the only fully protected workflow.
+- Roadmap: implement server-side OAuth (PKCE) + encrypted token storage before enabling connectors. See [OAUTH_DEPLOYMENT.md](OAUTH_DEPLOYMENT.md).
+
+## Production Checklist
+
+- **Supabase DB:** Apply `supabase/schema.sql` and `supabase/migrations/20260224_production_hardening.sql`.
+- **Edge Functions:** Deploy `stripe-checkout`, `stripe-onboarding`, `stripe-webhook`, `client-preview`, `creator-projects`, `r2-presign`, `r2-download`.
+- **Server env vars (Edge Functions):** `ALLOWED_ORIGINS`, `APP_BASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`.
+- **Frontend env vars:** `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, optional `VITE_STRIPE_PUBLISHABLE_KEY`.
+- **R2 bucket CORS:** Allow browser `PUT`/`GET` to your presigned URLs (otherwise uploads/downloads will fail).
+- Runbook: `DEPLOYMENT.md`.

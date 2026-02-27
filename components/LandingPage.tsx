@@ -12,11 +12,8 @@ import {
     FileCheck,
     PlayCircle,
     X,
-    Moon,
-    Sun,
     Mail,
     Link as LinkIcon,
-    Monitor,
     AlertCircle,
     Cloud,
     Disc,
@@ -33,6 +30,7 @@ import {
     Youtube
 } from 'lucide-react';
 import { playClick } from '../utils/sound';
+import ThemeModeDropdown from './ThemeModeDropdown';
 
 // --- VISUAL PRIMITIVES ---
 
@@ -104,7 +102,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
             {/* Cinematic Backdrop with Original Blur Style */}
             <div
                 className={`
-                    absolute inset-0 bg-slate-900/30 backdrop-blur-xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]
+                    absolute inset-0 bg-obsidian/30 backdrop-blur-xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]
                     ${visible ? 'opacity-100' : 'opacity-0'}
                 `}
                 onClick={handleClose}
@@ -122,7 +120,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
                 <div className="relative w-full aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/10 group">
                     <button
                         onClick={handleClose}
-                        className="absolute top-6 right-6 z-20 p-3 rounded-full transition-all backdrop-blur-md border group bg-slate-200/50 hover:bg-slate-300/50 border-slate-300 text-slate-900 dark:bg-black/50 dark:hover:bg-white/20 dark:border-white/10 dark:text-white"
+                        className="absolute top-6 right-6 z-20 p-3 rounded-full transition-all backdrop-blur-md border group bg-slate-200/50 hover:bg-slate-200/50 border-slate-200 text-obsidian dark:bg-black/50 dark:hover:bg-white/20 dark:border-white/10 dark:text-white"
                     >
                         <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
                     </button>
@@ -148,7 +146,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
                 >
                     <button
                         onClick={() => { playClick(); handleClose(); setTimeout(onStart, 300); }}
-                        className="px-8 py-4 bg-[#bef264] text-black rounded-full font-bold text-sm uppercase tracking-widest hover:scale-105 hover:shadow-[0_0_30px_rgba(190,242,100,0.4)] transition-all shadow-lg flex items-center gap-3"
+                        className="px-8 py-4 bg-brand text-black rounded-full font-bold text-sm uppercase tracking-widest hover:scale-105 hover:shadow-[0_0_30px_rgba(190,242,100,0.4)] transition-all shadow-lg flex items-center gap-3"
                     >
                         Start for Free <ArrowRight className="w-4 h-4" />
                     </button>
@@ -158,7 +156,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
                     {/* Sign In Button - Black in Light Mode, White in Dark Mode */}
                     <button
                         onClick={() => { playClick(); handleClose(); window.location.hash = '#/signin'; }}
-                        className="px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest transition-all shadow-lg hover:scale-105 bg-black text-white hover:bg-slate-900 dark:bg-white dark:text-black dark:hover:bg-slate-200"
+                        className="px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest transition-all shadow-lg hover:scale-105 bg-black text-white hover:bg-obsidian dark:bg-white dark:text-black dark:hover:bg-slate-200"
                     >
                         Sign In
                     </button>
@@ -171,7 +169,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
 const SectionHeading = ({ badge, title, subtitle, className = "" }: any) => (
     <div className={`mb-20 ${className}`}>
         {badge && (
-            <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-[#bef264] uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
+            <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-brand uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
                 {badge}
             </span>
         )}
@@ -187,7 +185,7 @@ const SectionHeading = ({ badge, title, subtitle, className = "" }: any) => (
 const BentoCard = ({ children, className = "", title, subtitle, icon: Icon }: { children?: React.ReactNode, className?: string, title?: string, subtitle?: string, icon?: any }) => (
     <div className={`
         relative bg-white dark:bg-[#151519] border border-slate-200 dark:border-white/10 rounded-[2rem] overflow-hidden group flex flex-col
-        hover:border-slate-300 dark:hover:border-white/20 transition-all duration-500 shadow-xl dark:shadow-2xl dark:shadow-black/20
+        hover:border-slate-200 dark:hover:border-white/20 transition-all duration-500 shadow-xl dark:shadow-2xl dark:shadow-black/20
         ${className}
     `}>
         {/* Header if Title Provided */}
@@ -195,7 +193,7 @@ const BentoCard = ({ children, className = "", title, subtitle, icon: Icon }: { 
             <div className="p-8 pb-4 relative z-10">
                 <div className="flex items-center gap-3 mb-3">
                     {Icon && (
-                        <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center justify-center text-black dark:text-[#bef264]">
+                        <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center justify-center text-black dark:text-brand">
                             <Icon className="w-5 h-5" />
                         </div>
                     )}
@@ -218,7 +216,7 @@ const BentoCard = ({ children, className = "", title, subtitle, icon: Icon }: { 
 // Assuming Nav, Hero, Comparison, BentoGrid are identical to previous version unless requested.
 // I will include them to ensure the file is complete and works.
 
-const Nav = ({ onStart, currentTheme, toggleTheme, isHidden }: { onStart: () => void, currentTheme: 'light' | 'dark' | 'system', toggleTheme: () => void, isHidden: boolean }) => {
+const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () => void, currentTheme: 'light' | 'dark' | 'system', onSetThemeMode: (mode: 'light' | 'dark' | 'system') => void, isHidden: boolean }) => {
     // ... [Same implementation as before] ...
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -234,11 +232,11 @@ const Nav = ({ onStart, currentTheme, toggleTheme, isHidden }: { onStart: () => 
             // Nudge the nav pill down slightly so it never feels cramped against the status bar.
             style={{ paddingTop: 'max(32px, calc(env(safe-area-inset-top, 0px) + 18px))' }}
         >
-                <div className="max-w-[1200px] mx-auto bg-white/80 dark:bg-[#0E0E11]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
-                    <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-                        <Logo className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
-                        <span className="font-serif text-lg sm:text-xl tracking-tight text-black dark:text-white">TrueHandover</span>
-                    </div>
+            <div className="max-w-[1200px] mx-auto bg-white/80 dark:bg-[#0E0E11]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
+                <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                    <Logo className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
+                    <span className="font-serif text-lg sm:text-xl tracking-tight text-black dark:text-white">TrueHandover</span>
+                </div>
 
                 <div className="hidden md:flex items-center gap-8">
                     <button onClick={() => scrollTo('comparison')} className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors">Why Us</button>
@@ -246,7 +244,15 @@ const Nav = ({ onStart, currentTheme, toggleTheme, isHidden }: { onStart: () => 
                     <button onClick={() => scrollTo('pricing')} className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors">Pricing</button>
                 </div>
 
-                <div className="hidden md:flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-3">
+                    <ThemeModeDropdown
+                        themeMode={currentTheme}
+                        onChange={(mode) => { playClick(); onSetThemeMode(mode); }}
+                        isDarkMode={currentTheme === 'dark'}
+                        compact
+                        buttonClassName="w-11 h-11 lg:w-12 lg:h-12 rounded-full flex items-center justify-center text-slate-500 hover:text-black dark:text-slate-300 dark:hover:text-white bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 shadow-lg transition-all hover:scale-105"
+                    />
+
                     <button
                         onClick={() => { playClick(); window.location.hash = '#/signin'; }}
                         className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors px-3 py-2"
@@ -256,36 +262,24 @@ const Nav = ({ onStart, currentTheme, toggleTheme, isHidden }: { onStart: () => 
 
                     <button
                         onClick={onStart}
-                        className="px-6 py-2.5 bg-black dark:bg-[#bef264] text-white dark:text-black rounded-full font-bold text-xs uppercase tracking-[0.15em] hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_20px_rgba(190,242,100,0.5)] transition-all shadow-lg border border-transparent dark:border-[#bef264]"
+                        className="px-6 py-2.5 bg-black dark:bg-brand text-white dark:text-black rounded-full font-bold text-xs uppercase tracking-[0.15em] hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_20px_rgba(190,242,100,0.5)] transition-all shadow-lg border border-transparent dark:border-brand"
                     >
                         Start for Free
                     </button>
                 </div>
 
-                <button
-                    onClick={toggleTheme}
-                    className="hidden md:flex absolute -right-16 lg:-right-20 top-1/2 -translate-y-1/2 w-11 h-11 lg:w-12 lg:h-12 rounded-full items-center justify-center text-slate-500 hover:text-black dark:text-slate-300 dark:hover:text-white bg-white/85 dark:bg-[#0E0E11]/85 border border-slate-200 dark:border-white/15 hover:bg-white dark:hover:bg-white/10 shadow-lg backdrop-blur-md transition-all hover:scale-105"
-                    title={`Current: ${currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)}`}
-                    aria-label="Toggle theme"
-                >
-                    {currentTheme === 'light' && <Sun className="w-5 h-5" />}
-                    {currentTheme === 'dark' && <Moon className="w-5 h-5" />}
-                    {currentTheme === 'system' && <Monitor className="w-5 h-5" />}
-                </button>
-
                 {/* Mobile Menu Toggle */}
                 <div className="flex md:hidden items-center gap-3">
-                    <button
-                        onClick={toggleTheme}
-                        className="p-2 rounded-full text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all"
-                    >
-                        {currentTheme === 'light' && <Sun className="w-5 h-5" />}
-                        {currentTheme === 'dark' && <Moon className="w-5 h-5" />}
-                        {currentTheme === 'system' && <Monitor className="w-5 h-5" />}
-                    </button>
+                    <ThemeModeDropdown
+                        themeMode={currentTheme}
+                        onChange={(mode) => { playClick(); onSetThemeMode(mode); }}
+                        isDarkMode={currentTheme === 'dark'}
+                        compact
+                        buttonClassName="p-2 rounded-full text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all flex items-center"
+                    />
                     <button
                         onClick={() => { playClick(); setIsMenuOpen(!isMenuOpen); }}
-                        className="p-2 rounded-full text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300"
+                        className="p-2 rounded-full text-obsidian dark:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all duration-300"
                         aria-label="Toggle menu"
                     >
                         <div className={`transition-transform duration-300 ${isMenuOpen ? 'rotate-90' : 'rotate-0'}`}>
@@ -303,21 +297,21 @@ const Nav = ({ onStart, currentTheme, toggleTheme, isHidden }: { onStart: () => 
             `}>
                 <div className="bg-white/95 dark:bg-[#1a1a20]/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-[2rem] p-6 shadow-2xl flex flex-col gap-6">
                     <div className="flex flex-col gap-4">
-                        <button onClick={() => scrollTo('comparison')} className="text-lg font-serif text-slate-900 dark:text-white text-left px-2">Why Us</button>
-                        <button onClick={() => scrollTo('how-it-works')} className="text-lg font-serif text-slate-900 dark:text-white text-left px-2">Process</button>
-                        <button onClick={() => scrollTo('pricing')} className="text-lg font-serif text-slate-900 dark:text-white text-left px-2">Pricing</button>
+                        <button onClick={() => scrollTo('comparison')} className="text-lg font-serif text-obsidian dark:text-white text-left px-2">Why Us</button>
+                        <button onClick={() => scrollTo('how-it-works')} className="text-lg font-serif text-obsidian dark:text-white text-left px-2">Process</button>
+                        <button onClick={() => scrollTo('pricing')} className="text-lg font-serif text-obsidian dark:text-white text-left px-2">Pricing</button>
                     </div>
-                    <div className="h-px bg-slate-100 dark:bg-white/10 w-full" />
+                    <div className="h-px bg-slate-200 dark:bg-white/10 w-full" />
                     <div className="flex flex-col gap-4">
                         <button
                             onClick={() => { setIsMenuOpen(false); window.location.hash = '#/signin'; }}
-                            className="w-full py-4 rounded-xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold text-xs uppercase tracking-widest"
+                            className="w-full py-4 rounded-xl border border-slate-200 dark:border-white/10 text-obsidian dark:text-white font-bold text-xs uppercase tracking-widest"
                         >
                             Sign In
                         </button>
                         <button
                             onClick={() => { setIsMenuOpen(false); onStart(); }}
-                            className="w-full py-4 rounded-xl bg-black dark:bg-[#bef264] text-white dark:text-black font-bold text-xs uppercase tracking-widest shadow-lg"
+                            className="w-full py-4 rounded-xl bg-black dark:bg-brand text-white dark:text-black font-bold text-xs uppercase tracking-widest shadow-lg"
                         >
                             Start for Free
                         </button>
@@ -333,12 +327,13 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
     const [isHoveringCTA, setIsHoveringCTA] = useState(false);
 
     return (
-        <section className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 pt-32 pb-20 overflow-hidden bg-[#fafbfc] dark:bg-[#08080B] text-black dark:text-white transition-colors duration-700">
+        <section className="relative min-h-[100vh] flex flex-col items-center px-6 pt-32 pb-12 overflow-hidden bg-[#fafbfc] dark:bg-[#08080B] text-black dark:text-white transition-colors duration-700">
             {/* Film grain — light mode: subtle, dark mode: prominent */}
             <div
                 className="absolute inset-0 opacity-[0.06] dark:opacity-0 mix-blend-multiply pointer-events-none z-0"
                 style={{
                     backgroundImage: NOISE_SVG,
+                    backgroundSize: '250px 250px',
                     filter: 'contrast(2200%) brightness(102%)'
                 }}
             ></div>
@@ -346,98 +341,103 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                 className="absolute inset-0 opacity-0 dark:opacity-82 mix-blend-overlay pointer-events-none z-0"
                 style={{
                     backgroundImage: NOISE_SVG,
+                    backgroundSize: '250px 250px',
                     filter: 'contrast(2700%) brightness(102%)'
                 }}
             ></div>
 
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1200px] h-full pointer-events-none overflow-hidden z-0">
-                <div className={`
+            <div className="flex-1 w-full flex flex-col items-center justify-center relative z-10 w-full">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1200px] h-full pointer-events-none overflow-hidden z-0">
+                    <div className={`
                     absolute top-[20%] right-[5%] md:right-[15%] w-48 h-64 bg-white dark:bg-[#1a1a1a] rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl rotate-12 transition-all duration-700 ease-out overflow-hidden
                     ${isHoveringCTA ? 'translate-y-[-20px] scale-110 shadow-[0_20px_50px_rgba(190,242,100,0.2)]' : 'translate-y-0 opacity-40'}
                 `}>
-                    <div
-                        className="absolute inset-0 opacity-0 dark:opacity-40 mix-blend-multiply dark:mix-blend-overlay pointer-events-none z-0"
-                        style={{
-                            backgroundImage: NOISE_SVG,
-                            filter: 'contrast(1500%) brightness(102%)'
-                        }}
-                    ></div>
+                        <div
+                            className="absolute inset-0 opacity-0 dark:opacity-40 mix-blend-multiply dark:mix-blend-overlay pointer-events-none z-0"
+                            style={{
+                                backgroundImage: NOISE_SVG,
+                                backgroundSize: '150px 150px',
+                                filter: 'contrast(1500%) brightness(102%)'
+                            }}
+                        ></div>
 
-                    <div className="p-4 h-full flex flex-col items-center justify-center relative z-10">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-all duration-500 ${isHoveringCTA ? 'bg-[#bef264] text-black' : 'bg-slate-100 dark:bg-white/10 text-slate-400'}`}>
-                            {isHoveringCTA ? <Unlock className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
+                        <div className="p-4 h-full flex flex-col items-center justify-center relative z-10">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-all duration-500 ${isHoveringCTA ? 'bg-brand text-black' : 'bg-slate-200 dark:bg-white/10 text-slate-400'}`}>
+                                {isHoveringCTA ? <Unlock className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
+                            </div>
+                            <div className="w-20 h-2 bg-slate-200 dark:bg-white/10 rounded-full mb-2" />
+                            <div className="w-12 h-2 bg-slate-200 dark:bg-white/10 rounded-full" />
                         </div>
-                        <div className="w-20 h-2 bg-slate-100 dark:bg-white/10 rounded-full mb-2" />
-                        <div className="w-12 h-2 bg-slate-100 dark:bg-white/10 rounded-full" />
                     </div>
                 </div>
-            </div>
 
-            <div className="mb-10 animate-fade-in relative z-10 flex flex-col md:flex-row items-center gap-4">
-                <a
-                    href="https://www.producthunt.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-lg hover:scale-105 transition-all cursor-pointer group"
-                >
-                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[#FF6154] text-white">
-                        <span className="font-bold text-[10px] pb-0.5">P</span>
+                <div className="mb-10 animate-fade-in relative z-10 flex flex-col md:flex-row items-center gap-4">
+                    <a
+                        href="https://www.producthunt.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-lg hover:scale-105 transition-all cursor-pointer group"
+                    >
+                        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[#FF6154] text-white">
+                            <span className="font-bold text-[10px] pb-0.5">P</span>
+                        </div>
+                        <span className="text-xs font-bold text-obsidian dark:text-white uppercase tracking-wider group-hover:text-[#FF6154] transition-colors">
+                            Featured on Product Hunt
+                        </span>
+                    </a>
+
+                    <div className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-sm shadow-sm transition-all hover:bg-white dark:hover:bg-white/10 cursor-default">
+                        <div className="w-2 h-2 bg-brand rounded-full animate-pulse shadow-[0_0_8px_#bef264]"></div>
+                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-none uppercase tracking-wider">
+                            Now available in public beta
+                        </span>
                     </div>
-                    <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider group-hover:text-[#FF6154] transition-colors">
-                        Featured on Product Hunt
-                    </span>
-                </a>
-
-                <div className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-sm shadow-sm transition-all hover:bg-white dark:hover:bg-white/10 cursor-default">
-                    <div className="w-2 h-2 bg-[#bef264] rounded-full animate-pulse shadow-[0_0_8px_#bef264]"></div>
-                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-none uppercase tracking-wider">
-                        Now available in public beta
-                    </span>
-                </div>
-            </div>
-
-            <div className="relative z-10 max-w-5xl mx-auto text-center mb-16">
-                <h1 className="font-serif text-5xl md:text-8xl lg:text-9xl font-medium tracking-tight leading-[0.95] mb-10 animate-slide-up">
-                    <span className="text-red-600 dark:text-red-500 drop-shadow-sm">Stop Chasing.</span> <br />
-                    <span className="text-black dark:text-white">Start <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[#bef264] to-lime-600">Delivering.</span></span>
-                </h1>
-
-                <div className="max-w-4xl mx-auto leading-relaxed mb-12 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                    <p className="font-serif italic text-xl md:text-3xl text-slate-900 dark:text-white mb-6 tracking-wide">
-                        The end of the "You send first" standoff.
-                    </p>
-                    <p className="text-lg md:text-2xl text-slate-600 dark:text-slate-200 font-light leading-relaxed">
-                        TrueHandover ensures your assets are <span className="border-b-2 border-[#bef264] text-black dark:text-white font-medium">securely handed over</span> only when payment clears.
-                        We generate watermarked previews automatically, so your client reviews the excellence while you retain the master files.
-                    </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                    <button
-                        onClick={() => { playClick(); onStart(); }}
-                        onMouseEnter={() => setIsHoveringCTA(true)}
-                        onMouseLeave={() => setIsHoveringCTA(false)}
-                        className="group relative h-16 px-10 bg-[#bef264] text-black rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(190,242,100,0.6)] shadow-xl"
-                    >
-                        <span className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-cta-sheen" />
-                        </span>
-                        <span className="relative z-10 flex items-center gap-3">
-                            Start for Free <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                        </span>
-                    </button>
+                <div className="relative z-10 max-w-5xl mx-auto text-center mb-16">
+                    <h1 className="font-serif text-5xl md:text-8xl lg:text-9xl font-medium tracking-tight leading-[0.95] mb-10 animate-slide-up">
+                        <span className="text-red-600 dark:text-red-500 drop-shadow-sm">Stop Chasing.</span> <br />
+                        <span className="text-black dark:text-white">Start <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[#bef264] to-lime-600">Delivering.</span></span>
+                    </h1>
 
-                    <button
-                        onClick={() => { playClick(); onWatchVideo(); }}
-                        className="group h-16 px-10 rounded-full border border-slate-300 dark:border-white/20 text-black dark:text-white font-bold text-sm uppercase tracking-widest hover:bg-black/5 dark:hover:bg-white/5 transition-all backdrop-blur-sm flex items-center gap-3 hover:shadow-lg"
-                    >
-                        <PlayCircle className="w-4 h-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" /> Watch the Film
-                    </button>
+                    <div className="max-w-4xl mx-auto leading-relaxed mb-12 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                        <p className="font-serif italic text-xl md:text-3xl text-obsidian dark:text-white mb-6 tracking-wide">
+                            The end of the "You send first" standoff.
+                        </p>
+                        <p className="text-lg md:text-2xl text-slate-600 dark:text-slate-200 font-light leading-relaxed">
+                            TrueHandover ensures your assets are <span className="border-b-2 border-brand text-black dark:text-white font-medium">securely handed over</span> only when payment clears.
+                            We generate watermarked previews automatically, so your client reviews the excellence while you retain the master files.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                        <button
+                            onClick={() => { playClick(); onStart(); }}
+                            onMouseEnter={() => setIsHoveringCTA(true)}
+                            onMouseLeave={() => setIsHoveringCTA(false)}
+                            className="group relative h-16 px-10 bg-brand text-black rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(190,242,100,0.6)] shadow-xl"
+                        >
+                            <span className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-cta-sheen" />
+                            </span>
+                            <span className="relative z-10 flex items-center gap-3">
+                                Start for Free <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                            </span>
+                        </button>
+
+                        <button
+                            onClick={() => { playClick(); onWatchVideo(); }}
+                            className="group h-16 px-10 rounded-full border border-slate-200 dark:border-white/20 text-black dark:text-white font-bold text-sm uppercase tracking-widest hover:bg-black/5 dark:hover:bg-white/5 transition-all backdrop-blur-sm flex items-center gap-3 hover:shadow-lg"
+                        >
+                            <PlayCircle className="w-4 h-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" /> Watch the Film
+                        </button>
+                    </div>
+
                 </div>
 
             </div>
 
-            <div className="w-full max-w-[1200px] border-t border-slate-200 dark:border-white/5 pt-12 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+            <div className="w-full max-w-[1200px] border-t border-slate-200 dark:border-white/5 pt-8 mt-auto animate-slide-up relative z-20" style={{ animationDelay: '0.4s' }}>
                 <p className="text-center text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-400 mb-8">
                     Built to integrate seamlessly with your stack
                 </p>
@@ -491,7 +491,7 @@ const ComparisonSection = () => {
                 ${hoveredCard === 'old' ? 'opacity-25 scale-110' : 'opacity-10 scale-100'}
                 `}
             />
-            <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-[#bef264]/5 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+            <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-brand/5 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2 pointer-events-none" />
 
             <div className="max-w-[1200px] mx-auto relative z-10">
                 <SectionHeading
@@ -509,7 +509,7 @@ const ComparisonSection = () => {
                     <div
                         onMouseEnter={() => setHoveredCard('old')}
                         onMouseLeave={() => setHoveredCard(null)}
-                        className={`p-10 rounded-[2.5rem] bg-slate-50 dark:bg-[#18181c] border border-dashed border-slate-300 dark:border-white/10 relative group transition-all duration-500 hover:bg-slate-100 dark:hover:bg-[#1e1e23] ${hoveredCard === null ? 'animate-old-way-breathe' : ''}`}
+                        className={`p-10 rounded-[2.5rem] bg-editorial dark:bg-[#18181c] border border-dashed border-slate-200 dark:border-white/10 relative group transition-all duration-500 hover:bg-slate-200 dark:hover:bg-[#1e1e23] ${hoveredCard !== 'old' ? 'animate-old-way-breathe' : ''}`}
                     >
                         <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                             <X className="w-32 h-32 text-red-500 rotate-12" />
@@ -522,19 +522,20 @@ const ComparisonSection = () => {
                             <h3 className="text-2xl font-serif text-slate-500 dark:text-slate-300 tracking-wide">The Old Way</h3>
                         </div>
 
-                            <div className="space-y-8 relative z-10">
+                        <div className="space-y-8 relative z-10">
                             {oldWayItems.map((item, i) => {
-                                const isHighlighted = hoveredCard === 'old' || (hoveredCard === null && autoFocusIndex === i);
+                                const isHighlighted = hoveredCard === 'old' || autoFocusIndex === i;
                                 return (
-                                <div key={i} className={`flex gap-5 transition-all duration-500 ${isHighlighted ? 'opacity-100 translate-x-1' : 'opacity-60 translate-x-0'}`}>
-                                    <item.icon className={`w-6 h-6 shrink-0 mt-1 transition-all duration-500 ${isHighlighted ? 'text-slate-600 dark:text-slate-100 scale-110' : 'text-slate-400 dark:text-slate-400 scale-100'}`} />
-                                    <div>
-                                        <h4 className="font-bold text-slate-700 dark:text-slate-200 text-lg">{item.title}</h4>
-                                        <p className="text-sm text-slate-500 dark:text-slate-300 mt-1 leading-relaxed">{item.desc}</p>
+                                    <div key={i} className={`flex gap-5 transition-all duration-500 ${isHighlighted ? 'opacity-100 translate-x-1' : 'opacity-60 translate-x-0'}`}>
+                                        <item.icon className={`w-6 h-6 shrink-0 mt-1 transition-all duration-500 ${isHighlighted ? 'text-slate-600 dark:text-slate-100 scale-110' : 'text-slate-400 dark:text-slate-400 scale-100'}`} />
+                                        <div>
+                                            <h4 className="font-bold text-slate-700 dark:text-slate-200 text-lg">{item.title}</h4>
+                                            <p className="text-sm text-slate-500 dark:text-slate-300 mt-1 leading-relaxed">{item.desc}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            )})}
-                            {hoveredCard === null && (
+                                )
+                            })}
+                            {hoveredCard !== 'old' && (
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 pt-2 animate-auto-cue-pulse">
                                     Auto-highlighting common friction points
                                 </p>
@@ -546,14 +547,14 @@ const ComparisonSection = () => {
                     <div
                         onMouseEnter={() => setHoveredCard('new')}
                         onMouseLeave={() => setHoveredCard(null)}
-                        className="relative p-10 rounded-[2.5rem] bg-[#bef264] text-black shadow-2xl shadow-lime-500/20 transform md:-translate-y-4 transition-transform hover:-translate-y-6 duration-500 overflow-hidden"
+                        className="relative p-10 rounded-[2.5rem] bg-brand text-black shadow-2xl shadow-lime-500/20 transform md:-translate-y-4 transition-transform hover:-translate-y-6 duration-500 overflow-hidden"
                     >
                         <div className="absolute top-0 right-0 p-6 opacity-10">
                             <Check className="w-32 h-32 text-black -rotate-12" />
                         </div>
 
                         <div className="flex items-center gap-4 mb-8 relative z-10">
-                            <div className="w-12 h-12 rounded-2xl bg-black text-[#bef264] flex items-center justify-center font-bold shadow-xl">
+                            <div className="w-12 h-12 rounded-2xl bg-black text-brand flex items-center justify-center font-bold shadow-xl">
                                 <Check className="w-6 h-6" />
                             </div>
                             <h3 className="text-2xl font-serif font-medium text-black tracking-wide">The New Standard</h3>
@@ -599,7 +600,7 @@ const BentoGrid = () => {
     const currentBrand = brandConfigs.find(b => b.color === accentColor) || brandConfigs[0];
 
     return (
-        <section id="how-it-works" className="py-32 px-6 bg-slate-50 dark:bg-[#0E0E11] text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
+        <section id="how-it-works" className="py-32 px-6 bg-editorial dark:bg-[#0E0E11] text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
             <div className="max-w-[1200px] mx-auto">
                 <SectionHeading
                     badge="The Mechanism"
@@ -615,13 +616,13 @@ const BentoGrid = () => {
                                 Creators upload final files. We automatically generate secure, watermarked previews.
                                 Clients review the work without accessing the master files.
                             </p>
-                            <div className="flex-1 relative rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 group-hover:border-[#bef264]/30 transition-colors">
+                            <div className="flex-1 relative rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 group-hover:border-brand/30 transition-colors">
                                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600607686527-6fb886090705?w=500&q=50')] bg-cover bg-center opacity-40 blur-[2px]" />
                                 <div className="absolute inset-0 bg-black/10 dark:bg-black/30" />
                                 <div className="absolute inset-0 flex items-center justify-center">
                                     <div className="text-5xl font-black text-black/35 dark:text-white/30 -rotate-12 select-none pointer-events-none tracking-widest">PREVIEW</div>
                                 </div>
-                                <div className="absolute bottom-4 left-4 right-4 bg-white/95 dark:bg-black/85 backdrop-blur-md p-3 rounded-lg border border-slate-300/80 dark:border-white/20 shadow-lg">
+                                <div className="absolute bottom-4 left-4 right-4 bg-white/95 dark:bg-black/85 backdrop-blur-md p-3 rounded-lg border border-slate-200/80 dark:border-white/20 shadow-lg">
                                     <div className="flex items-center gap-2 text-xs font-mono text-slate-700 dark:text-slate-100">
                                         <Lock className="w-3 h-3 text-amber-500" />
                                         <span>Download Locked</span>
@@ -638,11 +639,11 @@ const BentoGrid = () => {
                                 We designed this to stop arguments before they start. Since files only unlock after payment,
                                 you never have to chase a client. But just in case, we keep a tidy history log for you.
                             </p>
-                            <div className="flex-1 bg-slate-900 dark:bg-[#050505] rounded-xl border border-slate-200 dark:border-white/10 p-4 font-mono text-[10px] text-slate-400 dark:text-slate-500 overflow-hidden relative shadow-inner">
+                            <div className="flex-1 bg-obsidian dark:bg-[#050505] rounded-xl border border-slate-200 dark:border-white/10 p-4 font-mono text-[10px] text-slate-400 dark:text-slate-500 overflow-hidden relative shadow-inner">
                                 <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-slate-900 dark:from-[#050505] to-transparent z-10" />
                                 <div className="space-y-3 opacity-80">
                                     <div className="flex gap-2">
-                                        <span className="text-[#bef264]">GET</span>
+                                        <span className="text-brand">GET</span>
                                         <span className="text-slate-500 dark:text-slate-600">/v/preview</span>
                                         <span className="ml-auto text-slate-500 dark:text-slate-700">200 OK</span>
                                     </div>
@@ -658,7 +659,7 @@ const BentoGrid = () => {
                                     </div>
                                 </div>
                                 <div className="absolute bottom-4 right-4">
-                                    <div className="px-3 py-1 bg-[#bef264]/10 border border-[#bef264]/20 rounded text-[#bef264] text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                    <div className="px-3 py-1 bg-brand/10 border border-brand/20 rounded text-brand text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
                                         <FileCheck className="w-3 h-3" /> Tracking Active
                                     </div>
                                 </div>
@@ -676,14 +677,14 @@ const BentoGrid = () => {
                                 </p>
                                 <ul className="space-y-2">
                                     <li className="flex items-center gap-2 text-xs font-bold text-black dark:text-white">
-                                        <Check className="w-3 h-3 text-[#bef264]" /> Instant Availability
+                                        <Check className="w-3 h-3 text-brand" /> Instant Availability
                                     </li>
                                     <li className="flex items-center gap-2 text-xs font-bold text-black dark:text-white">
-                                        <Check className="w-3 h-3 text-[#bef264]" /> Automated Receipts
+                                        <Check className="w-3 h-3 text-brand" /> Automated Receipts
                                     </li>
                                 </ul>
                             </div>
-                            <div className="mt-8 bg-white rounded-xl p-4 flex items-center justify-between shadow-lg border border-slate-100">
+                            <div className="mt-8 bg-white rounded-xl p-4 flex items-center justify-between shadow-lg border border-slate-200">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 bg-[#635BFF] rounded-lg flex items-center justify-center text-white">
                                         <CreditCard className="w-4 h-4" />
@@ -702,7 +703,7 @@ const BentoGrid = () => {
                     <BentoCard className="md:col-span-6 lg:col-span-8 !p-0 min-h-[540px]">
                         <div className="flex flex-col md:flex-row h-full w-full">
                             {/* LEFT: Control Panel */}
-                            <div className="w-full md:w-[340px] p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/10 flex flex-col bg-slate-50 dark:bg-[#0b0c15]">
+                            <div className="w-full md:w-[340px] p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/10 flex flex-col bg-editorial dark:bg-[#0b0c15]">
                                 <div>
                                     <div className="mb-8">
                                         <div className="flex items-start justify-between mb-4">
@@ -710,7 +711,7 @@ const BentoGrid = () => {
                                                 <h3 className="font-serif text-2xl text-black dark:text-white tracking-wide">Your Brand</h3>
                                                 <p className="text-sm text-slate-500">Custom Portal</p>
                                             </div>
-                                            <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-black dark:text-[#bef264]">
+                                            <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-black dark:text-brand">
                                                 <Palette className="w-5 h-5" />
                                             </div>
                                         </div>
@@ -735,7 +736,7 @@ const BentoGrid = () => {
                                                 className={`
                                                     w-full p-4 rounded-xl border flex items-center gap-4 transition-all group
                                                     ${accentColor === brand.color
-                                                        ? 'bg-white dark:bg-white/10 border-slate-300 dark:border-white/20 shadow-md'
+                                                        ? 'bg-white dark:bg-white/10 border-slate-200 dark:border-white/20 shadow-md'
                                                         : 'bg-transparent border-slate-200 dark:border-white/5 hover:bg-white/50 dark:hover:bg-white/5'
                                                     }
                                                 `}
@@ -744,7 +745,7 @@ const BentoGrid = () => {
                                                     w-4 h-4 rounded-full border flex items-center justify-center
                                                     ${accentColor === brand.color ? 'border-black dark:border-white' : 'border-slate-400 dark:border-slate-600'}
                                                 `}>
-                                                    {accentColor === brand.color && <div className="w-2 h-2 rounded-full bg-[#bef264]" />}
+                                                    {accentColor === brand.color && <div className="w-2 h-2 rounded-full bg-brand" />}
                                                 </div>
 
                                                 <div className="flex-1 text-left">
@@ -755,7 +756,7 @@ const BentoGrid = () => {
                                                 </div>
 
                                                 {accentColor === brand.color && (
-                                                    <Check className="w-4 h-4 text-[#bef264]" />
+                                                    <Check className="w-4 h-4 text-brand" />
                                                 )}
                                             </button>
                                         ))}
@@ -771,7 +772,7 @@ const BentoGrid = () => {
                             </div>
 
                             {/* RIGHT: Live Preview */}
-                            <div className="flex-1 relative bg-slate-100 dark:bg-[#0E0E11] p-8 flex items-center justify-center overflow-hidden">
+                            <div className="flex-1 relative bg-slate-200 dark:bg-[#0E0E11] p-8 flex items-center justify-center overflow-hidden">
                                 <div
                                     className="absolute inset-0 opacity-[0.08] transition-all duration-1000"
                                     style={{ backgroundColor: accentColor }}
@@ -793,7 +794,7 @@ const BentoGrid = () => {
                                 <div className="relative w-full max-w-[340px] transition-all duration-700 z-10">
                                     <div className="bg-white dark:bg-[#1a1a20] rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden shadow-2xl">
                                         {/* Header */}
-                                        <div className="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+                                        <div className="p-6 border-b border-slate-200 dark:border-white/5 flex items-center justify-between">
                                             <div className="relative w-10 h-10">
                                                 <div className={`absolute inset-0 transition-all duration-500 ${isCustom ? 'opacity-0 scale-50' : 'opacity-100 scale-100'}`}>
                                                     <Logo className="w-10 h-10 text-black dark:text-white hover:rotate-12 transition-transform duration-500" />
@@ -813,11 +814,11 @@ const BentoGrid = () => {
 
                                         {/* Content Area */}
                                         <div className="p-6 space-y-4">
-                                            <div className="aspect-video bg-slate-100 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/5" />
+                                            <div className="aspect-video bg-slate-200 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/5" />
                                             <div className="space-y-2">
-                                                <div className="h-2 bg-slate-100 dark:bg-white/5 rounded-full w-3/4" />
-                                                <div className="h-2 bg-slate-100 dark:bg-white/5 rounded-full w-full" />
-                                                <div className="h-2 bg-slate-100 dark:bg-white/5 rounded-full w-5/6" />
+                                                <div className="h-2 bg-slate-200 dark:bg-white/5 rounded-full w-3/4" />
+                                                <div className="h-2 bg-slate-200 dark:bg-white/5 rounded-full w-full" />
+                                                <div className="h-2 bg-slate-200 dark:bg-white/5 rounded-full w-5/6" />
                                             </div>
                                         </div>
 
@@ -846,7 +847,7 @@ const BentoGrid = () => {
                         <BentoCard className="h-[258px]" title="Storage Freedom" subtitle="BYOS (Bring Your Own Storage)" icon={HardDrive}>
                             <div className="p-6 pt-0 h-full flex flex-col justify-between">
                                 <p className="text-slate-600 dark:text-slate-200 text-xs leading-relaxed mb-4">
-                                    All paid plans support BYOS (Bring Your Own Storage). Connect AWS S3, Google Drive, or Dropbox to keep full custody of your files.
+                                    All paid plans support BYOS links (Bring Your Own Storage). Paste your own S3/Drive/Dropbox share links so you keep full custody of the originals. (Connectors coming soon.)
                                 </p>
                                 <div className="space-y-4">
                                     {/* Progress Bar */}
@@ -857,18 +858,18 @@ const BentoGrid = () => {
                                         </div>
                                         <div className="w-full bg-slate-200 dark:bg-white/5 rounded-full h-1.5 overflow-hidden">
                                             <div
-                                                className="bg-[#bef264] h-full shadow-[0_0_10px_#bef264]"
+                                                className="bg-brand h-full shadow-[0_0_10px_#bef264]"
                                                 style={{ width: '34%' }}
                                             />
                                         </div>
                                     </div>
                                     {/* Options - Smaller */}
                                     <div className="flex gap-3">
-                                        <div className="flex-1 p-2 rounded bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center gap-2">
-                                            <Server className="w-3 h-3 text-[#bef264]" />
+                                        <div className="flex-1 p-2 rounded bg-slate-200 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center gap-2">
+                                            <Server className="w-3 h-3 text-brand" />
                                             <span className="text-[10px] font-bold text-black dark:text-white">Native</span>
                                         </div>
-                                        <div className="flex-1 p-2 rounded bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center gap-2">
+                                        <div className="flex-1 p-2 rounded bg-slate-200 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center gap-2">
                                             <Box className="w-3 h-3 text-slate-500" />
                                             <span className="text-[10px] font-bold text-slate-500">S3</span>
                                         </div>
@@ -883,18 +884,18 @@ const BentoGrid = () => {
                                 <p className="text-slate-600 dark:text-slate-200 text-xs leading-relaxed mb-4">
                                     Require a digital signature approval before assets are unlocked.
                                 </p>
-                                <div className="flex-1 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 p-3 relative overflow-hidden flex flex-col justify-center items-center">
+                                <div className="flex-1 bg-editorial dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 p-3 relative overflow-hidden flex flex-col justify-center items-center">
                                     {/* Signature visual */}
                                     <div className="absolute inset-0 opacity-10" style={{ backgroundImage: NOISE_SVG }}></div>
                                     <div className="w-full max-w-[140px] space-y-2 relative z-10">
                                         <div className="h-1 w-full bg-slate-200 dark:bg-white/10 rounded-full" />
                                         <div className="h-1 w-2/3 bg-slate-200 dark:bg-white/10 rounded-full" />
-                                        <div className="h-8 border-b border-slate-300 dark:border-white/20 mt-2 flex items-end">
+                                        <div className="h-8 border-b border-slate-200 dark:border-white/20 mt-2 flex items-end">
                                             <span className="font-serif italic text-lg text-black dark:text-white opacity-80">Alex Smith</span>
                                         </div>
                                         <div className="flex justify-between items-center mt-1">
                                             <span className="text-[8px] text-slate-400 uppercase">Signed</span>
-                                            <div className="w-3 h-3 bg-[#bef264] rounded-full flex items-center justify-center">
+                                            <div className="w-3 h-3 bg-brand rounded-full flex items-center justify-center">
                                                 <Check className="w-2 h-2 text-black" />
                                             </div>
                                         </div>
@@ -1003,14 +1004,14 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
     return (
-        <section id="pricing" className="py-32 px-6 bg-slate-100 dark:bg-[#0E0E11] text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
+        <section id="pricing" className="py-32 px-6 bg-white dark:bg-[#0E0E11] text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
             <div className="max-w-[1200px] mx-auto">
                 <div className="text-center mb-12">
-                    <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-[#bef264] uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
+                    <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-brand uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
                         Plans
                     </span>
                     <h2 className="font-serif text-5xl md:text-6xl mb-6">
-                        Start free. <span className="italic text-lime-600 dark:text-[#bef264]">Scale as you succeed.</span>
+                        Start free. <span className="italic text-brand dark:text-brand">Scale as you succeed.</span>
                     </h2>
                     <p className="text-slate-500 dark:text-slate-300 text-lg max-w-2xl mx-auto">
                         Simple pricing. Professional features.
@@ -1023,9 +1024,9 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                             onClick={() => { playClick(); setBillingCycle(prev => prev === 'monthly' ? 'yearly' : 'monthly'); }}
                             className="w-14 h-8 bg-slate-200 dark:bg-white/10 rounded-full relative transition-colors p-1"
                         >
-                            <div className={`w-6 h-6 bg-white dark:bg-[#bef264] rounded-full shadow-md transition-transform duration-300 ${billingCycle === 'yearly' ? 'translate-x-6' : ''}`} />
+                            <div className={`w-6 h-6 bg-white dark:bg-brand rounded-full shadow-md transition-transform duration-300 ${billingCycle === 'yearly' ? 'translate-x-6' : ''}`} />
                         </button>
-                        <span className={`text-sm font-bold ${billingCycle === 'yearly' ? 'text-black dark:text-white' : 'text-slate-500'}`}>Yearly <span className="text-[#bef264] text-[10px] ml-1 uppercase tracking-wider">Save 18%</span></span>
+                        <span className={`text-sm font-bold ${billingCycle === 'yearly' ? 'text-black dark:text-white' : 'text-slate-500'}`}>Yearly <span className="text-brand text-[10px] ml-1 uppercase tracking-wider">Save 18%</span></span>
                     </div>
                 </div>
 
@@ -1034,7 +1035,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
 
                     {/* Starter - Only visible in Monthly - ENHANCED BORDER */}
                     {billingCycle === 'monthly' && (
-                        <div className="p-8 rounded-[2rem] border-2 border-slate-200 hover:border-slate-900/30 dark:border-white/10 dark:hover:border-white/20 bg-white dark:bg-[#151519] transition-all flex flex-col shadow-lg dark:shadow-none h-full animate-fade-in">
+                        <div className="p-8 rounded-[2rem] border-2 border-slate-200 hover:border-obsidian/30 dark:border-white/10 dark:hover:border-white/20 bg-white dark:bg-[#151519] transition-all flex flex-col shadow-lg dark:shadow-none h-full animate-fade-in">
                             <div className="font-mono text-xs uppercase tracking-widest text-slate-500 mb-6">Starter</div>
                             <div className="flex items-baseline gap-1 mb-2">
                                 <span className="text-4xl font-serif font-bold">$0</span>
@@ -1047,16 +1048,16 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                             </button>
 
                             <div className="space-y-4">
-                                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 dark:border-white/5 pb-2">Includes</p>
+                                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-200 dark:border-white/5 pb-2">Includes</p>
                                 <ul className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
-                                    <li className="flex gap-3 items-center font-bold text-black dark:text-white"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> 2.5% Platform Fee + Processing*</li>
+                                    <li className="flex gap-3 items-center font-bold text-black dark:text-white"><Check className="w-4 h-4 text-brand shrink-0" /> 2.5% Platform Fee + Processing*</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> 5 Active Projects</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> 10GB Total Native Storage</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Standard Watermarking</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Stripe Payments Only</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Basic Audit Logs</li>
                                 </ul>
-                                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 dark:border-white/5 pb-2 pt-4">Limits</p>
+                                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-200 dark:border-white/5 pb-2 pt-4">Limits</p>
                                 <ul className="space-y-4 text-sm text-slate-400">
                                     <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-slate-300 shrink-0" /> No BYOS Storage Links</li>
                                     <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-slate-300 shrink-0" /> 7-Day Link Expiry</li>
@@ -1072,7 +1073,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                         {/* The Card Container - Handling the solid border and positioning */}
                         <div className="
                         relative h-full rounded-[2rem] p-[2px]
-                        bg-[#bef264] /* Default Solid Border */
+                        bg-brand /* Default Solid Border */
                         transform transition-all duration-300 ease-out
                         lg:-translate-y-4 /* Default 'Sweet Spot' Lift only on desktop */
                         group-hover:-translate-y-2 lg:group-hover:-translate-y-6 group-hover:shadow-[0_20px_40px_-10px_rgba(190,242,100,0.4)] /* Hover Lift + Glow */
@@ -1090,11 +1091,11 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                             {/* The Inner Content */}
                             <div className="relative h-full bg-white dark:bg-[#1a1a1f] rounded-[1.9rem] p-8 flex flex-col overflow-hidden">
                                 <div className="absolute top-0 right-0 p-6">
-                                    <div className="px-3 py-1 bg-[#bef264] text-black text-[10px] font-bold uppercase tracking-widest rounded-full">Sweet Spot</div>
+                                    <div className="px-3 py-1 bg-brand text-black text-[10px] font-bold uppercase tracking-widest rounded-full">Sweet Spot</div>
                                 </div>
 
                                 <div className="mb-6">
-                                    <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-[#bef264] uppercase tracking-widest border border-black/10 dark:border-white/10 shadow-lg">
+                                    <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-brand uppercase tracking-widest border border-black/10 dark:border-white/10 shadow-lg">
                                         Studio
                                     </span>
                                 </div>
@@ -1107,23 +1108,23 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                                 </div>
                                 <div className="text-sm text-slate-500 dark:text-slate-300 mb-8 min-h-[40px]">For consistent delivery & branding.</div>
 
-                                <button onClick={onStart} className="w-full py-4 rounded-xl bg-[#bef264] text-black hover:bg-black hover:text-[#bef264] dark:hover:bg-white dark:hover:text-black font-bold text-xs uppercase tracking-widest transition-all shadow-lg mb-8">
+                                <button onClick={onStart} className="w-full py-4 rounded-xl bg-brand text-black hover:bg-black hover:text-brand dark:hover:bg-white dark:hover:text-black font-bold text-xs uppercase tracking-widest transition-all shadow-lg mb-8">
                                     Get Studio
                                 </button>
 
                                 <div className="space-y-4">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-white/10 pb-2">Everything in Starter, plus</p>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 border-b border-slate-200 dark:border-white/10 pb-2">Everything in Starter, plus</p>
                                     <ul className="space-y-4 text-sm font-medium text-black dark:text-white">
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> <span className="font-bold">0% Platform Fees (Standard Processing Only*)</span></li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> <span className="font-bold">Unlimited</span> Projects</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> 150GB Total Native Storage</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> <span className="font-bold">10 Active BYOS Storage Links (S3/Drive)</span></li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Custom Branding (Logo/Colors)</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Client Library (Recurring Clients)</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Remove "Powered By" Badge</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Manual Payments (Zelle/Wire)</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Contract Signatures</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-[#bef264] shrink-0" /> Permanent Links (No Expiry)</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> <span className="font-bold">0% Platform Fees (Standard Processing Only*)</span></li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> <span className="font-bold">Unlimited</span> Projects</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> 150GB Total Native Storage</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> <span className="font-bold">10 Active BYOS Storage Links (S3/Drive)</span></li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> Custom Branding (Logo/Colors)</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> Client Library (Recurring Clients)</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> Remove "Powered By" Badge</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> Manual Payments (Zelle/Wire)</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> Contract Signatures</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> Permanent Links (No Expiry)</li>
                                     </ul>
                                 </div>
                             </div>
@@ -1209,10 +1210,10 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full py-6 flex items-center justify-between text-left group"
             >
-                <span className="text-lg font-serif text-slate-900 dark:text-white group-hover:text-lime-600 dark:group-hover:text-[#bef264] transition-colors pr-8 tracking-wide">
+                <span className="text-lg font-serif text-obsidian dark:text-white group-hover:text-brand dark:group-hover:text-brand transition-colors pr-8 tracking-wide">
                     {question}
                 </span>
-                <div className={`shrink-0 w-8 h-8 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center transition-all ${isOpen ? 'bg-slate-900 text-white dark:bg-white dark:text-black rotate-45' : 'bg-transparent text-slate-400'}`}>
+                <div className={`shrink-0 w-8 h-8 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center transition-all ${isOpen ? 'bg-obsidian text-white dark:bg-white dark:text-black rotate-45' : 'bg-transparent text-slate-400'}`}>
                     <Plus className="w-4 h-4" />
                 </div>
             </button>
@@ -1228,13 +1229,13 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
 };
 
 const FAQSection = () => (
-    <section className="py-32 px-6 bg-slate-50 dark:bg-[#0E0E11] transition-colors duration-700">
+    <section className="py-32 px-6 bg-editorial dark:bg-[#0E0E11] transition-colors duration-700">
         <div className="max-w-[800px] mx-auto">
             <div className="text-center mb-16">
-                <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-[#bef264] uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
+                <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-brand uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
                     Support
                 </span>
-                <h2 className="font-serif text-4xl md:text-5xl text-slate-900 dark:text-white mb-6 tracking-wide">Common Questions</h2>
+                <h2 className="font-serif text-4xl md:text-5xl text-obsidian dark:text-white mb-6 tracking-wide">Common Questions</h2>
             </div>
 
             <div className="bg-white dark:bg-[#151519] rounded-[2.5rem] p-8 md:p-12 border border-slate-200 dark:border-white/5 shadow-sm">
@@ -1279,6 +1280,37 @@ const FAQSection = () => (
     </section>
 );
 
+type CookieConsentChoice = 'unknown' | 'essential' | 'all';
+
+const CookieConsentBanner = ({ onChoose }: { onChoose: (choice: Exclude<CookieConsentChoice, 'unknown'>) => void }) => (
+    <div className="fixed bottom-4 left-4 right-4 z-[70] md:left-6 md:right-6">
+        <div className="max-w-[1200px] mx-auto rounded-2xl border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#111116]/95 backdrop-blur-xl shadow-2xl p-4 md:p-5">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="pr-2">
+                    <p className="text-sm font-bold text-obsidian dark:text-white">Cookie settings</p>
+                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        We use essential cookies to keep TrueHandover secure and working. Optional cookies help us improve performance and product analytics.
+                    </p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => onChoose('essential')}
+                        className="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors"
+                    >
+                        Essential Only
+                    </button>
+                    <button
+                        onClick={() => onChoose('all')}
+                        className="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest bg-black dark:bg-brand text-white dark:text-black hover:opacity-90 transition-opacity"
+                    >
+                        Accept All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
 const Footer = () => (
     <footer className="bg-white dark:bg-[#0a0a0a] text-black dark:text-white py-20 px-6 border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
         <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
@@ -1315,15 +1347,29 @@ const Footer = () => (
     </footer>
 );
 
-export default function LandingPage({ onGetStarted, currentTheme, toggleTheme }: { onGetStarted: () => void, currentTheme: 'light' | 'dark' | 'system', toggleTheme: () => void }) {
+export default function LandingPage({ onGetStarted, currentTheme, onSetThemeMode, toggleTheme }: { onGetStarted: () => void, currentTheme: 'light' | 'dark' | 'system', onSetThemeMode: (mode: 'light' | 'dark' | 'system') => void, toggleTheme?: () => void }) {
 
     // Removed internal state management for theme to rely on parent App state
     const [isVideoOpen, setIsVideoOpen] = useState(false);
+    const [cookieConsent, setCookieConsent] = useState<CookieConsentChoice>(() => {
+        if (typeof window === 'undefined') return 'unknown';
+        const saved = window.localStorage.getItem('th_cookie_consent');
+        if (saved === 'essential' || saved === 'all') return saved;
+        return 'unknown';
+    });
+
+    const handleCookieChoice = (choice: Exclude<CookieConsentChoice, 'unknown'>) => {
+        setCookieConsent(choice);
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem('th_cookie_consent', choice);
+            window.localStorage.setItem('th_cookie_consent_at', new Date().toISOString());
+        }
+    };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-[#0E0E11] text-black dark:text-white font-sans selection:bg-[#bef264] selection:text-black transition-colors duration-700">
+        <div className="min-h-screen bg-editorial dark:bg-[#0E0E11] text-black dark:text-white font-sans selection:bg-brand selection:text-black transition-colors duration-700">
             {/* Nav receives isHidden prop to create cinema mode */}
-            <Nav onStart={onGetStarted} currentTheme={currentTheme} toggleTheme={toggleTheme} isHidden={isVideoOpen} />
+            <Nav onStart={onGetStarted} currentTheme={currentTheme} onSetThemeMode={onSetThemeMode || (() => toggleTheme?.())} isHidden={isVideoOpen} />
             <main>
                 <Hero onStart={onGetStarted} onWatchVideo={() => setIsVideoOpen(true)} />
                 <ComparisonSection />
@@ -1333,6 +1379,7 @@ export default function LandingPage({ onGetStarted, currentTheme, toggleTheme }:
             </main>
             <VideoModal isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} onStart={onGetStarted} />
             <Footer />
+            {cookieConsent === 'unknown' && <CookieConsentBanner onChoose={handleCookieChoice} />}
         </div>
     );
 }

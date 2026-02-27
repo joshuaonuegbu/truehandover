@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Monitor, Smartphone, Tablet, RotateCw, RefreshCw, Sun, Moon, Maximize2, ChevronLeft, Circle, RectangleHorizontal, Eye, EyeOff, Settings2, Signal, BatteryFull, Wifi } from 'lucide-react';
+import { Monitor, Smartphone, Tablet, RotateCw, RefreshCw, Maximize2, ChevronLeft, Circle, RectangleHorizontal, Eye, EyeOff, Settings2, Signal, BatteryFull, Wifi } from 'lucide-react';
 import { Project, FileAsset, UserProfile } from '../types';
 import { playClick, playSuccess } from '../utils/sound';
 import { ClientPreviewPage } from './ClientPreviewPage';
-import { PaymentService } from '../api/mockBackend';
+import ThemeModeDropdown from './ThemeModeDropdown';
+import { PaymentService } from '../services/stripeService';
 
 // --- DEVICE DEFINITIONS ---
 const DEVICES = {
@@ -65,6 +66,10 @@ interface ClientPreviewBizProps {
     onDockedSidebarCollapseChange?: (collapsed: boolean) => void; // used by Creator/editor overlays to avoid UI overlap
     onDeviceModeChange?: (mode: 'desktop' | 'tablet' | 'mobile' | 'foldable') => void;
     reserveCollapsedHeaderBackSlot?: number;
+    // Inline asset editing (desktop preview mode only, passed from the editor)
+    onRenameAsset?: (fileId: string, newName: string) => void;
+    onResizeAsset?: (fileId: string, newSize: string) => void;
+    onRemoveAsset?: (fileId: string) => void;
 }
 
 const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
@@ -81,7 +86,10 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     allowSidebarCollapse = false,
     onDockedSidebarCollapseChange,
     onDeviceModeChange,
-    reserveCollapsedHeaderBackSlot = 0
+    reserveCollapsedHeaderBackSlot = 0,
+    onRenameAsset,
+    onResizeAsset,
+    onRemoveAsset,
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -262,7 +270,13 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                 setPaymentError('Payment verification did not complete. Please try again.');
                 return;
             }
-            unlockProject();
+            const checkout = await PaymentService.createCheckoutSession(project.id);
+            if (!checkout.success) {
+                const errorMessage = 'error' in checkout ? checkout.error : 'Could not start Stripe Checkout.';
+                setPaymentError(errorMessage || 'Could not start Stripe Checkout.');
+                return;
+            }
+            window.location.href = checkout.data.url;
         } catch (error) {
             console.error('Payment flow failed', error);
             setPaymentError('We could not complete payment processing right now. Please retry.');
@@ -406,7 +420,9 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     const previewProps = {
         project, user, isDarkMode,
         themeMode: themeMode || 'system' as const,
-        onToggleTheme, onBack: handlePreviewBack, isEmbedded, isLocked, lightboxIndex,
+        onToggleTheme,
+        onSetThemeMode,
+        onBack: handlePreviewBack, isEmbedded, isLocked, lightboxIndex,
         setLightboxIndex: handleSetLightboxIndex, revisions,
         onPaymentComplete: handlePaymentComplete,
         handleSubmitRevision, handleDeleteRevision,
@@ -419,7 +435,10 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         onDockedSidebarCollapseChange,
         reserveCollapsedHeaderBackSlot,
         libraryProjects,
-        libraryEnabled
+        libraryEnabled,
+        onRenameAsset,
+        onResizeAsset,
+        onRemoveAsset,
     };
 
     // --- RAW MODE: Render component directly (used inside iframes) ---
@@ -525,7 +544,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
             <div className={`relative z-10 flex flex-col w-full h-full transition-all duration-300 ease-out ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
 
             {/* === FLOATING TOOLBAR === */}
-            <div className="relative z-50 flex items-center justify-center pt-4 pb-2 gap-2 px-4 shrink-0 flex-wrap">
+            <div className="relative z-50 flex items-center justify-center pt-4 pb-2 gap-2 px-4 shrink-0 flex-nowrap overflow-x-auto no-scrollbar">
                 {/* Back button */}
                 {!isEmbedded && (
                     <button onClick={() => { playClick(); switchDevice('desktop'); }}
@@ -560,26 +579,17 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
 
                     <div className="w-px h-6 bg-white/10 mx-1" />
 
-                    {/* Theme Toggle */}
-                    {/* Theme toggles (canvas: Light/Dark only — no System mode) */}
-                    <div className="flex items-center gap-1">
-                        <button
-                            onClick={() => { playClick(); onSetThemeMode?.('light'); }}
-                            className={`p-2.5 rounded-xl transition-all ${!isDarkMode ? 'bg-white/20 text-white shadow-sm ring-1 ring-white/25' : 'text-white/55 hover:text-white/85 hover:bg-white/10'}`}
-                            title="Light Mode"
-                            aria-label="Light Mode"
-                        >
-                            <Sun className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => { playClick(); onSetThemeMode?.('dark'); }}
-                            className={`p-2.5 rounded-xl transition-all ${isDarkMode ? 'bg-white/20 text-white shadow-sm ring-1 ring-white/25' : 'text-white/55 hover:text-white/85 hover:bg-white/10'}`}
-                            title="Dark Mode"
-                            aria-label="Dark Mode"
-                        >
-                            <Moon className="w-4 h-4" />
-                        </button>
-                    </div>
+                    <ThemeModeDropdown
+                        themeMode={themeMode || 'system'}
+                        onChange={(mode) => {
+                            playClick();
+                            if (onSetThemeMode) onSetThemeMode(mode);
+                            else onToggleTheme();
+                        }}
+                        isDarkMode={true}
+                        compact
+                        buttonClassName="p-2.5 rounded-xl transition-all text-white/75 hover:text-white hover:bg-white/10 flex items-center"
+                    />
 
                     {/* Frame Options Toggle (mobile only) */}
                     {isMobile && (

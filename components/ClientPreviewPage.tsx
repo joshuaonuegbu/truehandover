@@ -1,22 +1,23 @@
-﻿
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Lock, Unlock, Download, ShieldCheck,
     Play, Image as ImageIcon, FileText,
     ChevronLeft, MessageSquare,
     Clock, Search, Filter,
-    Sun, Moon, LayoutGrid, Eye,
-    Check, Monitor,
+    LayoutGrid, Eye,
+    Check,
     DollarSign, Banknote, Loader2, MessageSquarePlus, X, Send, CreditCard, RefreshCw,
     Maximize2, Grid as GridIcon, Minimize2, ArrowLeft, ArrowRight, ArrowUp, Flame,
     PenTool, Coins, AlertTriangle, Trash2, PanelRightClose, PanelRightOpen,
-    FileCode, CheckCircle, Info, ExternalLink, Menu, Key, Copy, EyeOff, List, ZoomIn, ZoomOut
+    FileCode, CheckCircle, Info, ExternalLink, Menu, Key, Copy, EyeOff, List, ZoomIn, ZoomOut, ShieldOff
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Project, FileAsset, UserProfile } from '../types';
 import { playClick, playSuccess } from '../utils/sound';
 import { PaymentTerminal } from './PaymentTerminal';
 import { InlineErrorBanner } from './Shared';
+import ThemeModeDropdown from './ThemeModeDropdown';
 
 // --- PROPS INTERFACE ---
 interface ClientPreviewPageProps {
@@ -27,6 +28,7 @@ interface ClientPreviewPageProps {
     isDarkMode: boolean;
     themeMode: 'light' | 'dark' | 'system';
     onToggleTheme: () => void;
+    onSetThemeMode?: (mode: 'light' | 'dark' | 'system') => void;
     onBack: () => void;
     isEmbedded?: boolean;
     allowSidebarCollapse?: boolean; // allow collapse controls even when embedded (Creator/editor preview)
@@ -48,6 +50,10 @@ interface ClientPreviewPageProps {
     refreshAccess: () => void;
     paymentError?: string | null;
     onDismissPaymentError?: () => void;
+    // Inline asset editing (desktop preview mode only)
+    onRenameAsset?: (fileId: string, newName: string) => void;
+    onResizeAsset?: (fileId: string, newSize: string) => void;
+    onRemoveAsset?: (fileId: string) => void;
 }
 
 interface ClientLibraryViewProps {
@@ -373,12 +379,17 @@ const CredentialVaultWidget = ({ credentials, isLocked, isDarkMode }: any) => {
 };
 
 // --- SUB-COMPONENT: VISUAL ASSET GRID ---
-const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, onAssetClick, onRequestCorrection, isPhoneLike }: any) => {
+const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, onAssetClick, onRequestCorrection, isPhoneLike, onRename, onResize, onRemove }: any) => {
     const textPrimary = isDarkMode ? 'text-white' : 'text-slate-900';
     const brandGreenBg = isDarkMode ? 'bg-[#bef264]' : 'bg-lime-600';
     const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#bef264]' : 'shadow-[0_0_10px_rgba(101,163,13,0.5)]';
     const borderColor = isDarkMode ? 'border-white/5' : 'border-slate-200';
     const [expandedSpecs, setExpandedSpecs] = useState<Set<string>>(new Set());
+    const [copiedHashId, setCopiedHashId] = useState<string | null>(null);
+    const [editingNameId, setEditingNameId] = useState<string | null>(null);
+    const [editingNameVal, setEditingNameVal] = useState('');
+    const [editingSizeId, setEditingSizeId] = useState<string | null>(null);
+    const [editingSizeVal, setEditingSizeVal] = useState('');
     const gridRef = useRef<HTMLDivElement | null>(null);
     const [gridCols, setGridCols] = useState(1);
     const getUnlockedPreviewUrl = (file: FileAsset) => {
@@ -422,6 +433,18 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                         className={`group relative ${isDarkMode ? 'bg-[#23232e] border-white/5 hover:shadow-white/5 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)]' : 'bg-white border-slate-100 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]'} rounded-[1.5rem] border overflow-hidden transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-[1.01]`}
                         style={{ animationDelay: `${index * 100}ms` }}
                     >
+                        {/* Inline remove button (editor desktop preview only) */}
+                        {onRemove && (
+                            <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); onRemove(file.id); }}
+                                className="absolute top-2.5 right-2.5 z-[50] opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 rounded-full bg-red-500/90 hover:bg-red-500 text-white flex items-center justify-center shadow-lg"
+                                title="Remove asset"
+                                aria-label="Remove asset"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        )}
                         <button
                             type="button"
                             onClick={() => onAssetClick(index)}
@@ -461,16 +484,78 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                         <div className="p-4 md:p-6">
                             <div className="flex justify-between items-start mb-6">
                                 <div className="flex-1 min-w-0 pr-4">
-                                    <h3 className={`font-bold text-sm md:text-lg ${textPrimary} mb-1 transition-colors truncate`}>{file.name}</h3>
+                                    {onRename && editingNameId === file.id ? (
+                                        <input
+                                            autoFocus
+                                            value={editingNameVal}
+                                            onChange={(e) => setEditingNameVal(e.target.value)}
+                                            onBlur={() => { if (editingNameVal.trim()) onRename(file.id, editingNameVal.trim()); setEditingNameId(null); }}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') { if (editingNameVal.trim()) onRename(file.id, editingNameVal.trim()); setEditingNameId(null); } if (e.key === 'Escape') setEditingNameId(null); }}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className={`w-full font-bold text-sm md:text-lg mb-1 bg-transparent border-b-2 outline-none truncate ${isDarkMode ? 'text-white border-[#bef264]' : 'text-slate-900 border-lime-500'}`}
+                                        />
+                                    ) : (
+                                        <h3
+                                            className={`font-bold text-sm md:text-lg ${textPrimary} mb-1 transition-colors truncate ${onRename ? 'cursor-text hover:opacity-70' : ''}`}
+                                            onClick={onRename ? (e) => { e.stopPropagation(); setEditingNameId(file.id); setEditingNameVal(file.name); } : undefined}
+                                            title={onRename ? 'Click to rename' : undefined}
+                                        >{file.name}</h3>
+                                    )}
                                     <div className="flex items-center gap-2 text-[10px] md:text-xs font-medium text-slate-400">
-                                        <span>{file.size}</span><span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" /><span className="uppercase tracking-wider">Version {file.version}.0</span>
+                                        {onResize && editingSizeId === file.id ? (
+                                            <input
+                                                autoFocus
+                                                value={editingSizeVal}
+                                                onChange={(e) => setEditingSizeVal(e.target.value)}
+                                                onBlur={() => { if (editingSizeVal.trim()) onResize(file.id, editingSizeVal.trim()); setEditingSizeId(null); }}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') { if (editingSizeVal.trim()) onResize(file.id, editingSizeVal.trim()); setEditingSizeId(null); } if (e.key === 'Escape') setEditingSizeId(null); }}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className={`w-20 font-mono bg-transparent border-b outline-none text-[10px] ${isDarkMode ? 'text-slate-300 border-[#bef264]/50' : 'text-slate-600 border-lime-400'}`}
+                                            />
+                                        ) : (
+                                            <span
+                                                className={onResize ? 'cursor-text hover:opacity-70' : ''}
+                                                onClick={onResize ? (e) => { e.stopPropagation(); setEditingSizeId(file.id); setEditingSizeVal(file.size); } : undefined}
+                                                title={onResize ? 'Click to edit size' : undefined}
+                                            >{file.size}</span>
+                                        )}
+                                        <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" /><span className="uppercase tracking-wider">Version {file.version}.0</span>
                                     </div>
                                 </div>
                                 <div className={`w-2.5 h-2.5 shrink-0 rounded-full mt-1.5 ${file.locked && isLocked ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : `${brandGreenBg} ${brandGreenShadow}`}`} />
                             </div>
                             <div className={`${expandedSpecs.has(file.id) ? 'block' : (isPhoneLike ? 'hidden' : 'hidden md:block')} mb-4 md:mb-6 p-3 rounded-xl border transition-all ${isDarkMode ? 'bg-black/20 border-white/5' : 'bg-slate-50 border-slate-100'}`}>
                                 <div className="flex justify-between items-center mb-2"><span className="text-[10px] font-bold uppercase text-slate-500">Technical Specs</span><ShieldCheck className="w-3 h-3 text-slate-400" /></div>
-                                <div className="grid grid-cols-2 gap-2 text-[10px] md:text-xs text-slate-500 dark:text-slate-400 font-mono"><div>Res: {file.metadata?.resolution || 'N/A'}</div><div>Fmt: {file.metadata?.colorProfile || 'STD'}</div><div className="col-span-2 truncate opacity-70">SHA: {file.metadata?.hash || 'e3b0c44298fc...'}</div></div>
+                                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px] md:text-xs text-slate-500 dark:text-slate-400 font-mono">
+                                    <div><span className="opacity-60">Type</span> <span className="uppercase">{file.type}</span></div>
+                                    <div><span className="opacity-60">Size</span> {file.size}</div>
+                                    <div className="truncate"><span className="opacity-60">Source</span> {file.tag || (file.storageProvider && file.storageProvider !== 'native' ? `${file.storageProvider.charAt(0).toUpperCase()}${file.storageProvider.slice(1)}` : 'Native')}</div>
+                                    <div><span className="opacity-60">Date</span> {file.uploadDate}</div>
+                                    {file.folderName && <div className="col-span-2 truncate"><span className="opacity-60">Folder</span> {file.folderName}</div>}
+                                    {file.metadata?.resolution && <div><span className="opacity-60">Res</span> {file.metadata.resolution}</div>}
+                                    {file.metadata?.colorProfile && <div><span className="opacity-60">Fmt</span> {file.metadata.colorProfile}</div>}
+                                    {file.metadata?.hash && (
+                                        <div className="col-span-2 flex items-center gap-1.5 pt-0.5 border-t border-current/10">
+                                            <span className="opacity-60 truncate flex-1">SHA {file.metadata.hash}</span>
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(file.metadata!.hash!);
+                                                    setCopiedHashId(file.id);
+                                                    setTimeout(() => setCopiedHashId(null), 2000);
+                                                }}
+                                                title="Copy SHA-256 hash"
+                                                className={`shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border transition-all ${
+                                                    copiedHashId === file.id
+                                                        ? 'bg-lime-100 border-lime-300 text-lime-700 dark:bg-lime-900/30 dark:border-lime-700 dark:text-lime-400'
+                                                        : 'border-slate-200 dark:border-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10'
+                                                }`}
+                                            >
+                                                <Copy className="w-2.5 h-2.5" />
+                                                {copiedHashId === file.id ? 'Copied' : 'Copy'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <div className={`pt-4 md:pt-6 border-t ${borderColor} flex flex-col sm:flex-row gap-3`}>
                                 {file.locked && isLocked ? (
@@ -502,9 +587,13 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
     );
 };
 // --- SUB-COMPONENT: VISUAL ASSET LIST (PREMIUM) ---
-const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick, onRequestCorrection, revisions }: any) => {
+const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick, onRequestCorrection, revisions, onRename, onResize, onRemove }: any) => {
     const borderColor = isDarkMode ? 'border-white/5' : 'border-slate-200';
     const brandGreenBg = isDarkMode ? 'bg-[#bef264]' : 'bg-lime-600';
+    const [editingNameId, setEditingNameId] = useState<string | null>(null);
+    const [editingNameVal, setEditingNameVal] = useState('');
+    const [editingSizeId, setEditingSizeId] = useState<string | null>(null);
+    const [editingSizeVal, setEditingSizeVal] = useState('');
 
     return (
         <div className="flex flex-col gap-4 pb-20">
@@ -525,6 +614,18 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                             hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-28px_rgba(0,0,0,0.35)]
                         `}
                     >
+                        {/* Inline remove button (editor desktop preview only) */}
+                        {onRemove && (
+                            <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); onRemove(file.id); }}
+                                className="absolute top-2.5 right-2.5 z-[50] opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 rounded-full bg-red-500/90 hover:bg-red-500 text-white flex items-center justify-center shadow-lg"
+                                title="Remove asset"
+                                aria-label="Remove asset"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        )}
                         {/* Hover glow */}
                         <div className={`absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${isDarkMode
                             ? 'bg-[radial-gradient(circle_at_top_left,_rgba(190,242,100,0.10)_0%,_transparent_55%)]'
@@ -567,7 +668,23 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                                 ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.35)]'
                                                 : `${brandGreenBg} ${isDarkMode ? 'shadow-[0_0_12px_rgba(190,242,100,0.35)]' : 'shadow-[0_0_10px_rgba(101,163,13,0.25)]'}`
                                                 }`} />
-                                            <h3 className={`font-bold text-sm sm:text-base truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{file.name}</h3>
+                                            {onRename && editingNameId === file.id ? (
+                                                <input
+                                                    autoFocus
+                                                    value={editingNameVal}
+                                                    onChange={(e) => setEditingNameVal(e.target.value)}
+                                                    onBlur={() => { if (editingNameVal.trim()) onRename(file.id, editingNameVal.trim()); setEditingNameId(null); }}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') { if (editingNameVal.trim()) onRename(file.id, editingNameVal.trim()); setEditingNameId(null); } if (e.key === 'Escape') setEditingNameId(null); }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className={`min-w-0 font-bold text-sm sm:text-base bg-transparent border-b-2 outline-none ${isDarkMode ? 'text-white border-[#bef264]' : 'text-slate-900 border-lime-500'}`}
+                                                />
+                                            ) : (
+                                                <h3
+                                                    className={`font-bold text-sm sm:text-base truncate ${isDarkMode ? 'text-white' : 'text-slate-900'} ${onRename ? 'cursor-text hover:opacity-70' : ''}`}
+                                                    onClick={onRename ? (e) => { e.stopPropagation(); setEditingNameId(file.id); setEditingNameVal(file.name); } : undefined}
+                                                    title={onRename ? 'Click to rename' : undefined}
+                                                >{file.name}</h3>
+                                            )}
                                             {isFileLocked ? (
                                                 <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Locked</span>
                                             ) : (
@@ -578,7 +695,23 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                         <div className="mt-2 flex items-center gap-3 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-mono">
                                             <span className="uppercase tracking-wider">{file.type}</span>
                                             <span className={`w-px h-3 ${isDarkMode ? 'bg-white/10' : 'bg-slate-200'}`} />
-                                            <span>{file.size}</span>
+                                            {onResize && editingSizeId === file.id ? (
+                                                <input
+                                                    autoFocus
+                                                    value={editingSizeVal}
+                                                    onChange={(e) => setEditingSizeVal(e.target.value)}
+                                                    onBlur={() => { if (editingSizeVal.trim()) onResize(file.id, editingSizeVal.trim()); setEditingSizeId(null); }}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') { if (editingSizeVal.trim()) onResize(file.id, editingSizeVal.trim()); setEditingSizeId(null); } if (e.key === 'Escape') setEditingSizeId(null); }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className={`w-20 font-mono bg-transparent border-b outline-none text-[10px] ${isDarkMode ? 'text-slate-300 border-[#bef264]/50' : 'text-slate-600 border-lime-400'}`}
+                                                />
+                                            ) : (
+                                                <span
+                                                    className={onResize ? 'cursor-text hover:opacity-70' : ''}
+                                                    onClick={onResize ? (e) => { e.stopPropagation(); setEditingSizeId(file.id); setEditingSizeVal(file.size); } : undefined}
+                                                    title={onResize ? 'Click to edit size' : undefined}
+                                                >{file.size}</span>
+                                            )}
                                             {file.metadata?.resolution && (
                                                 <>
                                                     <span className={`w-px h-3 ${isDarkMode ? 'bg-white/10' : 'bg-slate-200'} hidden sm:block`} />
@@ -632,7 +765,12 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
 
 
 // --- SUB-COMPONENT: VISUAL LIGHTBOX (OPTIMIZED) ---
-const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, themeMode, revisions, onClose, onNext, onPrev, onSelect, onToggleTheme, onSubmitRevision, onDeleteRevision }: any) => {
+const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, themeMode, revisions, onClose, onNext, onPrev, onSelect, onToggleTheme, onSetThemeMode, onSubmitRevision, onDeleteRevision, showWatermark = true, showProtectedLabel = true }: any) => {
+    const [localShowWatermark, setLocalShowWatermark] = useState(showWatermark);
+    const [localShowProtectedLabel, setLocalShowProtectedLabel] = useState(showProtectedLabel);
+    // Sync when project-level props change
+    useEffect(() => { setLocalShowWatermark(showWatermark); }, [showWatermark]);
+    useEffect(() => { setLocalShowProtectedLabel(showProtectedLabel); }, [showProtectedLabel]);
     // START CLOSED to allow for animation sequence
     const [showSidebar, setShowSidebar] = useState(false);
     const [showThumbnails, setShowThumbnails] = useState(false);
@@ -641,6 +779,8 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
     const [slideDirection, setSlideDirection] = useState<0 | 1 | -1>(0);
     const [currentRevisionText, setCurrentRevisionText] = useState('');
     const [isImageLoaded, setIsImageLoaded] = useState(false);
+    const [imagePreviewError, setImagePreviewError] = useState<string | null>(null);
+    const [imageRetrySeed, setImageRetrySeed] = useState(0);
     const [textPreview, setTextPreview] = useState('');
     const [textPreviewError, setTextPreviewError] = useState<string | null>(null);
     const [isTextPreviewLoading, setIsTextPreviewLoading] = useState(false);
@@ -670,13 +810,36 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
 
     const [isClosing, setIsClosing] = useState(false);
     const isProtectedPreview = Boolean(file?.locked && isLocked);
+    const inferredFileTypeFromUrl: FileAsset['type'] | null = (() => {
+        const source = file?.downloadUrl || file?.externalUrl || '';
+        if (!source) return null;
+        try {
+            const parsed = new URL(source);
+            const pathName = parsed.pathname.split('/').filter(Boolean).pop() || '';
+            const queryName = parsed.searchParams.get('filename') || parsed.searchParams.get('name') || parsed.searchParams.get('file') || '';
+            const candidate = (queryName || pathName).toLowerCase();
+            const ext = candidate.split('.').pop() || '';
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'avif', 'heic', 'tif', 'tiff'].includes(ext)) return 'image';
+            if (['mp4', 'mov', 'm4v', 'webm', 'avi', 'mkv'].includes(ext)) return 'video';
+            if (['mp3', 'wav', 'aac', 'ogg', 'm4a', 'flac'].includes(ext)) return 'audio';
+            if (ext === 'pdf') return 'pdf';
+            if (['txt', 'md', 'rtf', 'doc', 'docx', 'odt', 'pages', 'csv', 'json', 'xml', 'log'].includes(ext)) return 'doc';
+            if (['fig', 'sketch', 'xd', 'psd', 'ai'].includes(ext)) return 'design';
+            return null;
+        } catch {
+            return null;
+        }
+    })();
+    const effectiveFileType: FileAsset['type'] = file?.type === 'archive' && inferredFileTypeFromUrl
+        ? inferredFileTypeFromUrl
+        : (file?.type || 'archive');
     const viewerType: 'image' | 'video' | 'audio' | 'pdf' | 'doc' | 'archive' | 'other' =
-        (file?.type === 'image' || file?.type === 'design') ? 'image'
-            : (file?.type === 'video') ? 'video'
-                : (file?.type === 'audio') ? 'audio'
-                    : (file?.type === 'pdf') ? 'pdf'
-                        : (file?.type === 'doc') ? 'doc'
-                            : (file?.type === 'archive') ? 'archive'
+        (effectiveFileType === 'image' || effectiveFileType === 'design') ? 'image'
+            : (effectiveFileType === 'video') ? 'video'
+                : (effectiveFileType === 'audio') ? 'audio'
+                    : (effectiveFileType === 'pdf') ? 'pdf'
+                        : (effectiveFileType === 'doc') ? 'doc'
+                            : (effectiveFileType === 'archive') ? 'archive'
                             : 'other';
     const playableUrl: string | undefined = file?.downloadUrl || file?.externalUrl;
     const fileExtension = (file?.name?.split('.').pop() || '').toLowerCase();
@@ -689,11 +852,12 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
         ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(playableUrl)}`
         : undefined;
     const lightboxImageSrc: string | undefined = (() => {
-        if (!file?.previewUrl) return undefined;
+        if (!file) return undefined;
         if (isProtectedPreview) return file.previewUrl;
-        if ((file?.type === 'image' || file?.type === 'design') && (file?.downloadUrl || file?.externalUrl)) {
+        if ((file.type === 'image' || file.type === 'design') && (file.downloadUrl || file.externalUrl || file.previewUrl)) {
             return file.downloadUrl || file.externalUrl || file.previewUrl;
         }
+        if (!file.previewUrl) return undefined;
         let upgraded = file.previewUrl;
         upgraded = upgraded.replace(/([?&])w=\d+/i, '$1w=3000');
         upgraded = upgraded.replace(/([?&])width=\d+/i, '$1width=3000');
@@ -701,12 +865,17 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
         upgraded = upgraded.replace(/([?&])quality=\d+/i, '$1quality=100');
         return upgraded;
     })();
+    const lightboxImageSrcWithRetry = lightboxImageSrc
+        ? `${lightboxImageSrc}${lightboxImageSrc.includes('?') ? '&' : '?'}th_preview_retry=${imageRetrySeed}`
+        : undefined;
     const hasRenderableContent = Boolean(
         lightboxImageSrc || (!isProtectedPreview && (viewerType === 'video' || viewerType === 'audio' || viewerType === 'pdf' || viewerType === 'doc' || viewerType === 'archive'))
     );
 
     useEffect(() => {
         setIsImageLoaded(false);
+        setImagePreviewError(null);
+        setImageRetrySeed(0);
         setImgRect({ width: 0, height: 0 });
         setZoomLevel(1);
         setTextPreview('');
@@ -856,7 +1025,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                     <button
                                         aria-label="Zoom Out"
                                         onClick={() => setZoomLevel((z) => Math.max(1, +(z - 0.2).toFixed(2)))}
-                                        className={`w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center border ${isDarkMode
+                                        className={`hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full items-center justify-center border ${isDarkMode
                                             ? 'bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-2xl text-white transition-all duration-300'
                                             : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800 shadow-lg hover:scale-105 transition-all'
                                             }`}
@@ -867,7 +1036,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                     <button
                                         aria-label="Reset Zoom"
                                         onClick={() => setZoomLevel(1)}
-                                        className={`px-2.5 h-9 sm:h-10 md:h-12 rounded-full flex items-center justify-center border text-[11px] sm:text-xs font-mono font-bold ${isDarkMode
+                                        className={`hidden sm:flex px-2.5 h-9 sm:h-10 md:h-12 rounded-full items-center justify-center border text-[11px] sm:text-xs font-mono font-bold ${isDarkMode
                                             ? 'bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-2xl text-white transition-all duration-300'
                                             : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800 shadow-lg transition-all'
                                             }`}
@@ -878,13 +1047,41 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                     <button
                                         aria-label="Zoom In"
                                         onClick={() => setZoomLevel((z) => Math.min(4, +(z + 0.2).toFixed(2)))}
-                                        className={`w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center border ${isDarkMode
+                                        className={`hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full items-center justify-center border ${isDarkMode
                                             ? 'bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-2xl text-white transition-all duration-300'
                                             : 'bg-white/95 hover:bg-white border-slate-200 text-slate-800 shadow-lg hover:scale-105 transition-all'
                                             }`}
                                         title="Zoom In"
                                     >
                                         <ZoomIn className="w-4 h-4 sm:w-5 sm:h-5" />
+                                    </button>
+                                </>
+                            )}
+                            {isProtectedPreview && (
+                                <>
+                                    <button
+                                        aria-label="Toggle Watermark"
+                                        onClick={() => { playClick(); setLocalShowWatermark((v: boolean) => !v); }}
+                                        title={localShowWatermark ? 'Hide Watermark' : 'Show Watermark'}
+                                        className={`hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full items-center justify-center border transition-all duration-300 ${
+                                            isDarkMode
+                                                ? `backdrop-blur-md border-white/10 shadow-2xl ${localShowWatermark ? 'bg-white/20 text-white' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`
+                                                : `shadow-lg ${localShowWatermark ? 'bg-slate-200 border-slate-300 text-slate-900' : 'bg-white/95 border-slate-200 text-slate-400 hover:bg-white hover:text-slate-700'}`
+                                        }`}
+                                    >
+                                        {localShowWatermark ? <Eye className="w-4 h-4 sm:w-5 sm:h-5" /> : <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />}
+                                    </button>
+                                    <button
+                                        aria-label="Toggle Protected Label"
+                                        onClick={() => { playClick(); setLocalShowProtectedLabel((v: boolean) => !v); }}
+                                        title={localShowProtectedLabel ? 'Hide Protected Label' : 'Show Protected Label'}
+                                        className={`hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full items-center justify-center border transition-all duration-300 ${
+                                            isDarkMode
+                                                ? `backdrop-blur-md border-white/10 shadow-2xl ${localShowProtectedLabel ? 'bg-white/20 text-white' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`
+                                                : `shadow-lg ${localShowProtectedLabel ? 'bg-slate-200 border-slate-300 text-slate-900' : 'bg-white/95 border-slate-200 text-slate-400 hover:bg-white hover:text-slate-700'}`
+                                        }`}
+                                    >
+                                        {localShowProtectedLabel ? <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" /> : <ShieldOff className="w-4 h-4 sm:w-5 sm:h-5" />}
                                     </button>
                                 </>
                             )}
@@ -938,16 +1135,24 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                             >
                                 {(viewerType === 'image' || isProtectedPreview) && (
                                     <>
-                                        {!isImageLoaded && (
+                                        {!isImageLoaded && !imagePreviewError && (
                                             <div className="absolute inset-0 flex items-center justify-center bg-slate-100 dark:bg-white/5 z-10">
                                                 <Loader2 className="w-10 h-10 animate-spin text-slate-400" />
                                             </div>
                                         )}
                                         <img
                                             ref={imgRef}
-                                            src={lightboxImageSrc}
+                                            src={lightboxImageSrcWithRetry}
                                             alt={file.name}
-                                            onLoad={() => { setIsImageLoaded(true); requestAnimationFrame(computeImgRect); }}
+                                            onLoad={() => {
+                                                setImagePreviewError(null);
+                                                setIsImageLoaded(true);
+                                                requestAnimationFrame(computeImgRect);
+                                            }}
+                                            onError={() => {
+                                                setIsImageLoaded(false);
+                                                setImagePreviewError('Could not load this preview from the provider link.');
+                                            }}
                                             onWheel={(e) => {
                                                 e.preventDefault();
                                                 const delta = e.deltaY > 0 ? -0.15 : 0.15;
@@ -957,13 +1162,48 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                             className={`block w-full h-full object-contain object-center transition-opacity duration-300 ${isImageLoaded ? 'opacity-100' : 'opacity-0'} ${zoomLevel > 1 ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
                                             style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center', transition: 'transform 220ms ease, opacity 300ms ease', willChange: 'transform' }}
                                         />
+                                        {imagePreviewError && !isProtectedPreview && (
+                                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 text-center px-6 bg-slate-100/90 dark:bg-black/65 backdrop-blur-sm">
+                                                <AlertTriangle className="w-8 h-8 text-amber-500" />
+                                                <p className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Preview unavailable</p>
+                                                <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-md">The provider blocked inline rendering or the link expired. Retry to re-request the preview.</p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        playClick();
+                                                        setImagePreviewError(null);
+                                                        setImageRetrySeed((seed) => seed + 1);
+                                                    }}
+                                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-lime-600 hover:bg-lime-700 dark:bg-[#bef264] dark:hover:bg-[#a3e635] text-white dark:text-black text-[10px] font-bold uppercase tracking-wider transition-colors"
+                                                >
+                                                    <RefreshCw className="w-3 h-3" />
+                                                    Retry Preview
+                                                </button>
+                                            </div>
+                                        )}
                                         {isProtectedPreview && imgRect.width > 0 && (
                                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-20">
-                                                <div className="relative overflow-hidden" style={{ width: imgRect.width, height: imgRect.height }}>
-                                                    <div className="absolute inset-0" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='300' height='300' viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-weight='900' font-size='24' fill='${isDarkMode ? 'white' : 'black'}' fill-opacity='0.03' transform='rotate(-45 150 150)' text-anchor='middle' dominant-baseline='middle' letter-spacing='4'%3ETRUEHANDOVER PREVIEW%3C/text%3E%3C/svg%3E")`, backgroundRepeat: 'repeat' }} />
-                                                    <div className="absolute inset-0 flex items-center justify-center z-30">
-                                                        <div className={`p-6 md:p-8 rounded-3xl border backdrop-blur-md flex flex-col items-center shadow-2xl ${isDarkMode ? 'bg-black/40 border-white/10 text-white' : 'bg-white/60 border-slate-200 text-slate-900'}`}><EditorialIcon className={`w-10 h-10 md:w-14 md:h-14 mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`} /><span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em]">Protected Preview</span></div>
-                                                    </div>
+                                                <div className="relative overflow-hidden" style={{
+                                                    width: imgRect.width,
+                                                    height: imgRect.height,
+                                                    transform: `scale(${zoomLevel})`,
+                                                    transformOrigin: 'center center'
+                                                }}>
+                                                    {localShowWatermark && (
+                                                        <div className="absolute inset-0" style={{
+                                                            backgroundImage: `url("data:image/svg+xml,%3Csvg width='300' height='300' viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-weight='900' font-size='24' fill='${isDarkMode ? 'white' : 'black'}' fill-opacity='0.07' transform='rotate(-45 150 150)' text-anchor='middle' dominant-baseline='middle' letter-spacing='4'%3ETRUEHANDOVER PREVIEW%3C/text%3E%3C/svg%3E")`,
+                                                            backgroundRepeat: 'repeat',
+                                                            backgroundSize: `${Math.round(300 / zoomLevel)}px ${Math.round(300 / zoomLevel)}px`
+                                                        }} />
+                                                    )}
+                                                    {localShowProtectedLabel && (
+                                                        <div className="absolute inset-0 flex items-center justify-center z-30">
+                                                            <div className={`p-3 sm:p-5 rounded-2xl sm:rounded-3xl border backdrop-blur-md flex flex-col items-center shadow-2xl w-max max-w-[90%] ${isDarkMode ? 'bg-black/40 border-white/10 text-white' : 'bg-white/60 border-slate-200 text-slate-900'}`}>
+                                                                <EditorialIcon className={`w-7 h-7 sm:w-10 sm:h-10 mb-1.5 sm:mb-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`} />
+                                                                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] whitespace-nowrap">Protected Preview</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -1139,18 +1379,20 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                             <div className="flex items-center justify-between mb-4">
                                 <div className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest ${revisions.length > 0 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400'}`}>Requests ({revisions.length})</div>
                                 <div className="flex items-center gap-3">
-                                    <button
-                                        aria-label="Toggle Theme"
-                                        onClick={() => { playClick(); onToggleTheme(); }}
-                                        className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-300 ${isDarkMode
-                                            ? 'bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-2xl text-white/70 hover:text-white'
+                                    <ThemeModeDropdown
+                                        themeMode={themeMode || 'system'}
+                                        onChange={(mode) => {
+                                            playClick();
+                                            if (onSetThemeMode) onSetThemeMode(mode);
+                                            else onToggleTheme();
+                                        }}
+                                        isDarkMode={isDarkMode}
+                                        compact
+                                        buttonClassName={`w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-300 ${isDarkMode
+                                            ? 'bg-white/5 hover:bg-white/10 border-white/10 text-white/70 hover:text-white'
                                             : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
                                             }`}
-                                    >
-                                        {(!themeMode || themeMode === 'light') && <Sun className="w-3.5 h-3.5" />}
-                                        {themeMode === 'dark' && <Moon className="w-3.5 h-3.5" />}
-                                        {themeMode === 'system' && <Monitor className="w-3.5 h-3.5" />}
-                                    </button>
+                                    />
                                     {file.locked && isLocked ? <Lock className="w-4 h-4 text-amber-500" /> : <Unlock className={`w-4 h-4 ${isDarkMode ? 'text-[#bef264]' : 'text-lime-600'}`} />}
                                 </div>
                             </div>
@@ -1198,7 +1440,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
 };
 
 export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
-    project, libraryProjects = [], libraryEnabled = true, user, isDarkMode, themeMode, onToggleTheme, onBack, isEmbedded = false,
+    project, libraryProjects = [], libraryEnabled = true, user, isDarkMode, themeMode, onToggleTheme, onSetThemeMode, onBack, isEmbedded = false,
     allowSidebarCollapse = false,
     onDockedSidebarCollapseChange,
     reserveCollapsedHeaderBackSlot = 0,
@@ -1206,6 +1448,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     handleSubmitRevision, handleDeleteRevision, activeFilter, setActiveFilter, theme,
     filteredFiles, handleRequestCorrection, accessDenied, refreshAccess
     , paymentError, onDismissPaymentError
+    , onRenameAsset, onResizeAsset, onRemoveAsset
 }) => {
     const navigate = useNavigate();
     const creatorName = user?.name || "Creator";
@@ -1645,8 +1888,11 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                     onPrev={() => { if (lightboxIndex > 0) setLightboxIndex(lightboxIndex - 1); else setLightboxIndex(filteredFiles.length - 1); }}
                     onSelect={setLightboxIndex}
                     onToggleTheme={onToggleTheme}
+                    onSetThemeMode={onSetThemeMode}
                     onSubmitRevision={handleSubmitRevision}
                     onDeleteRevision={handleDeleteRevision}
+                    showWatermark={project.showWatermark !== false}
+                    showProtectedLabel={project.showProtectedLabel !== false}
                 />
             )}
 
@@ -2142,7 +2388,19 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                     </button>
                                 </div>}
                                 {contentView === 'delivery' && <div className={`h-8 w-px ${isDarkMode ? 'bg-white/10' : 'bg-slate-200'} shrink-0`} />}
-                                <div className={`flex p-1 ${isDarkMode ? 'bg-white/5 border-white/5' : 'bg-slate-100 border-slate-200'} rounded-lg border shrink-0`}><button aria-label="Toggle Theme" onClick={onToggleTheme} className={`p-2 rounded-md transition-all shadow-sm hover:shadow-md ${isDarkMode ? 'hover:bg-white/10 text-slate-400' : 'hover:bg-white text-slate-500'}`} title={`Theme: ${themeMode ? themeMode.charAt(0).toUpperCase() + themeMode.slice(1) : 'Toggle'}`}>{(!themeMode || themeMode === 'light') && <Sun className="w-4 h-4" />}{themeMode === 'dark' && <Moon className="w-4 h-4" />}{themeMode === 'system' && <Monitor className="w-4 h-4" />}</button></div>
+                                <div className={`flex p-1 ${isDarkMode ? 'bg-white/5 border-white/5' : 'bg-slate-100 border-slate-200'} rounded-lg border shrink-0`}>
+                                    <ThemeModeDropdown
+                                        themeMode={themeMode || 'system'}
+                                        onChange={(mode) => {
+                                            playClick();
+                                            if (onSetThemeMode) onSetThemeMode(mode);
+                                            else onToggleTheme();
+                                        }}
+                                        isDarkMode={isDarkMode}
+                                        compact
+                                        buttonClassName={`p-2 rounded-md transition-all shadow-sm hover:shadow-md flex items-center ${isDarkMode ? 'hover:bg-white/10 text-slate-400' : 'hover:bg-white text-slate-500'}`}
+                                    />
+                                </div>
                                 {contentView === 'delivery' && <div className={`h-8 w-px ${isDarkMode ? 'bg-white/10' : 'bg-slate-200'} shrink-0`} />}
                                 {contentView === 'delivery' && <div className="flex gap-2 shrink-0">
                                     {[
@@ -2205,6 +2463,9 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 isPhoneLike={isPhoneLike}
                                 onAssetClick={(index: number) => { playClick(); setLightboxIndex(index); }}
                                 onRequestCorrection={handleRequestCorrection}
+                                onRename={isEmbedded && !isCanvasSim ? onRenameAsset : undefined}
+                                onResize={isEmbedded && !isCanvasSim ? onResizeAsset : undefined}
+                                onRemove={isEmbedded && !isCanvasSim ? onRemoveAsset : undefined}
                             />
                         ) : (
                             <VisualAssetList
@@ -2215,6 +2476,9 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 revisions={revisions}
                                 onAssetClick={(index: number) => { playClick(); setLightboxIndex(index); }}
                                 onRequestCorrection={handleRequestCorrection}
+                                onRename={isEmbedded && !isCanvasSim ? onRenameAsset : undefined}
+                                onResize={isEmbedded && !isCanvasSim ? onResizeAsset : undefined}
+                                onRemove={isEmbedded && !isCanvasSim ? onRemoveAsset : undefined}
                             />
                         )}
 

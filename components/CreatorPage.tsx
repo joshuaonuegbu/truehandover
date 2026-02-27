@@ -1,5 +1,32 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+
+// Lightweight client-side URL → human-friendly type label (for the import-link modal preview badge).
+const detectTypeFromUrl = (raw: string): string | null => {
+    try {
+        const parsed = new URL(raw.trim());
+        // Try path first, then check for filename in query (dl.dropboxusercontent etc.)
+        const fromPath = parsed.pathname.split('/').filter(Boolean).pop() || '';
+        const fromQuery = parsed.searchParams.get('fname') || parsed.searchParams.get('name') || '';
+        const candidate = fromPath.includes('.') ? fromPath : (fromQuery || fromPath);
+        const ext = candidate.split('.').pop()?.toLowerCase().replace(/[?#&].*/, '') || '';
+        const map: Record<string, string> = {
+            jpg: 'Image', jpeg: 'Image', png: 'Image', gif: 'Image',
+            webp: 'Image', bmp: 'Image', svg: 'Image', avif: 'Image', tiff: 'Image',
+            mp4: 'Video', mov: 'Video', avi: 'Video', webm: 'Video', mkv: 'Video', m4v: 'Video',
+            mp3: 'Audio', wav: 'Audio', ogg: 'Audio', flac: 'Audio', m4a: 'Audio',
+            pdf: 'PDF',
+            doc: 'Document', docx: 'Document', txt: 'Document', md: 'Document', rtf: 'Document',
+            xls: 'Spreadsheet', xlsx: 'Spreadsheet', csv: 'Spreadsheet', numbers: 'Spreadsheet',
+            ppt: 'Presentation', pptx: 'Presentation', key: 'Presentation',
+            fig: 'Design', psd: 'Design', ai: 'Design', sketch: 'Design', xd: 'Design',
+            zip: 'Archive', rar: 'Archive', '7z': 'Archive', tar: 'Archive', gz: 'Archive',
+        };
+        return map[ext] ?? null;
+    } catch {
+        return null;
+    }
+};
 import {
     ChevronLeft, Save, Upload, Calendar, DollarSign,
     User, FileText, Plus, X, Image as ImageIcon,
@@ -11,14 +38,15 @@ import {
     Wallet, Smartphone, Mail, Coins, ShieldAlert,
     Infinity, Hourglass, Flame, Camera, Type,
     Target, Radio, Crosshair, Box, Play, Hash,
-    Monitor, AlertCircle, Loader2, Key, PanelLeftClose, PanelLeftOpen
+    Monitor, AlertCircle, Loader2, Key, PanelLeftClose, PanelLeftOpen, EyeOff, Pencil
 } from 'lucide-react';
 import { Project, FileAsset, ProjectTheme, Milestone, UserProfile, CredentialBlock } from '../types';
 import { playClick, playSuccess } from '../utils/sound';
 import ClientPreviewBiz from './ClientPreviewBiz';
 import { InlineErrorBanner } from './Shared';
+import { DB } from '../services/supabaseClient';
 // Import the Backend Service and R2 Service
-import { StorageService, ProcessingService, ByosFolderService } from '../api/mockBackend';
+import { ProcessingService, ByosFolderService, ByosLinkService } from '../api/mockBackend';
 import { R2Service } from '../services/r2';
 
 interface CreatorPageProps {
@@ -28,6 +56,12 @@ interface CreatorPageProps {
     onBack: () => void;
     user?: UserProfile;
 }
+
+const createClientLinkToken = () => {
+    const rand = crypto.getRandomValues(new Uint8Array(16));
+    const hex = Array.from(rand).map(b => b.toString(16).padStart(2, '0')).join('');
+    return `cl_${hex}_${Date.now().toString(36)}`;
+};
 
 const GRADIENT_TEXT = "text-transparent bg-clip-text bg-gradient-to-br from-slate-900 via-slate-600 to-slate-400 dark:from-white dark:via-slate-200 dark:to-slate-500";
 
@@ -194,15 +228,79 @@ const Toggle = ({ checked, onChange }: { checked: boolean, onChange: (v: boolean
         role="switch"
         aria-checked={checked}
         onClick={() => { playClick(); onChange(!checked); }}
-        className={`w-11 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-lime-500 ${checked ? 'bg-lime-600 dark:bg-[#bef264]' : 'bg-slate-200 dark:bg-white/10'}`}
+        className={`w-11 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-lime-500 ${checked ? 'bg-brand dark:bg-brand' : 'bg-slate-200 dark:bg-white/10'}`}
     >
         <div className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow-sm transition-all duration-300 ${checked ? 'translate-x-5 bg-white dark:bg-black' : 'bg-white'}`} />
     </button>
 );
 
 const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects = [], onSave, onBack, user }) => {
+
+    /** Returns `name` uniquified against `existingNames`, e.g. "photo (2).jpg" */
+    const deduplicateFileName = (name: string, existingNames: string[]): string => {
+        if (!existingNames.includes(name)) return name;
+        const dotIdx = name.lastIndexOf('.');
+        const base = dotIdx > 0 ? name.slice(0, dotIdx) : name;
+        const ext = dotIdx > 0 ? name.slice(dotIdx) : '';
+        let n = 1;
+        let candidate = `${base} (${n})${ext}`;
+        while (existingNames.includes(candidate)) { n++; candidate = `${base} (${n})${ext}`; }
+        return candidate;
+    };
+
+    const estimateSizeFromAssetShape = (asset: Pick<FileAsset, 'name' | 'type'>): string => {
+        const ext = (asset.name.split('.').pop() || '').toLowerCase();
+        const defaultsByExt: Record<string, number> = {
+            jpg: 3, jpeg: 3, png: 5, webp: 2, gif: 4, svg: 0.1,
+            mp4: 45, mov: 120, webm: 25, avi: 80, mkv: 100,
+            mp3: 5, wav: 35, m4a: 6, flac: 30,
+            pdf: 2, doc: 1, docx: 1, txt: 0.05, md: 0.03,
+            zip: 20, rar: 25, '7z': 20,
+            fig: 12, psd: 80, ai: 35
+        };
+        const defaultsByType: Record<FileAsset['type'], number> = {
+            image: 3,
+            video: 45,
+            audio: 5,
+            pdf: 2,
+            doc: 1,
+            archive: 20,
+            design: 15
+        };
+        const mb = defaultsByExt[ext] ?? defaultsByType[asset.type] ?? 5;
+        if (mb < 1) return `${Math.max(1, Math.round(mb * 1024))} KB`;
+        return `${mb.toFixed(2)} MB`;
+    };
+
+    const normalizeUnknownSize = (asset: FileAsset): FileAsset => {
+        const current = (asset.size || '').trim();
+        if (!current || /^unknown size/i.test(current)) {
+            return { ...asset, size: estimateSizeFromAssetShape(asset) };
+        }
+        return asset;
+    };
+
+    // --- Draft key & one-time synchronous draft read (avoids useEffect race) ---
+    const DRAFT_KEY = `th_creator_draft_${existingProject?.id || 'new'}`;
+    const initialDraftRef = React.useRef<{ formData?: Partial<Project>; files?: FileAsset[] } | null | undefined>(undefined);
+    if (initialDraftRef.current === undefined) {
+        try {
+            const raw = localStorage.getItem(DRAFT_KEY);
+            initialDraftRef.current = raw ? JSON.parse(raw) : null;
+        } catch { initialDraftRef.current = null; }
+    }
+    const _initialDraft = initialDraftRef.current;
+
     // Initial State Construction
     const [formData, setFormData] = useState<Partial<Project>>(() => {
+        // Prefer draft over persisted project so in-progress edits survive navigation
+        if (_initialDraft?.formData) {
+            const draft = _initialDraft.formData as any;
+            const safePaymentMethods = { ...(draft.paymentMethods || {}) };
+            if (safePaymentMethods.bankInfo) safePaymentMethods.bankInfo = '';
+            return { ...draft, credentials: [], paymentMethods: safePaymentMethods };
+        }
+
         const base = existingProject || {
             name: '',
             client: { name: '', email: '', phone: '', company: '', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=Client&backgroundColor=0a0a0a' },
@@ -213,10 +311,12 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
             milestones: [],
             credentials: [],
             message: '',
-            enableClientLibrary: true,
+            enableClientLibrary: false,
             requiresSignature: false,
             enableTips: false,
             useMilestones: false,
+            showWatermark: true,
+            showProtectedLabel: true,
             accessConfig: { mode: 'permanent' },
             paymentMethods: {
                 stripeEnabled: true,
@@ -241,14 +341,28 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
         return { ...base, theme: finalTheme };
     });
 
-    const [files, setFiles] = useState<FileAsset[]>(existingProject?.files || []);
+    const [files, setFiles] = useState<FileAsset[]>(() => {
+        if (_initialDraft?.files?.length) return _initialDraft.files.map(normalizeUnknownSize);
+        return (existingProject?.files || []).map(normalizeUnknownSize);
+    });
+    // Derived live set of URLs currently in the vault — updates automatically when files are removed.
+    // Using useMemo instead of a static useState<Set> so that deleting a file immediately unblocks its URL.
+    const usedImportUrls = useMemo<Set<string>>(
+        () => new Set(files.map(f => f.importSourceUrl || '').filter(Boolean)),
+        [files]
+    );
+    const [editingFile, setEditingFile] = useState<{ idx: number; value: string } | null>(null);
+    const [editingSize, setEditingSize] = useState<{ idx: number; value: string } | null>(null);
+    const [draftRestoredNotice, setDraftRestoredNotice] = useState(!!_initialDraft?.formData || !!((_initialDraft?.files?.length || 0) > 0));
     const [showLinkModal, setShowLinkModal] = useState(false);
-    const [newLink, setNewLink] = useState({ name: '', url: '', size: '', type: 'archive' });
+    const [newLink, setNewLink] = useState({ name: '', url: '', size: '' });
     const [linkError, setLinkError] = useState<string | null>(null);
+    const [linkNameWarning, setLinkNameWarning] = useState<string | null>(null);
+    const [linkImportSuccess, setLinkImportSuccess] = useState<string | null>(null);
     const [isAddingLink, setIsAddingLink] = useState(false);
-    // Security posture: BYOS link ingestion is restricted to provider folder imports (requires connected Drive account).
-    // We intentionally do not support arbitrary "file share links" as vault assets, since those can bypass the paywall.
-    const [linkImportMode] = useState<'folder'>('folder');
+    const [detectedLinkType, setDetectedLinkType] = useState<string | null>(null);
+    // External link imports are supported, but they're not as secure as native uploads.
+    // For protected delivery (watermarked previews + gated downloads), upload files to platform storage.
     const [errors, setErrors] = useState<{ name?: boolean, amount?: boolean, files?: boolean }>({});
 
     // Credential Modal State
@@ -271,6 +385,10 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
     const [previewDeviceMode, setPreviewDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'foldable'>('desktop');
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const assetInputRef = React.useRef<HTMLInputElement>(null); // For asset uploads
+    const draftProjectIdRef = React.useRef<string>(existingProject?.id || crypto.randomUUID());
+    const draftClientLinkRef = React.useRef<string>(existingProject?.clientLink && existingProject.clientLink !== '#'
+        ? existingProject.clientLink
+        : createClientLinkToken());
 
     useEffect(() => {
         const media = window.matchMedia('(prefers-color-scheme: dark)');
@@ -279,13 +397,25 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
         return () => media.removeEventListener('change', listener);
     }, []);
 
+    // Continuous auto-save — persists every editor change to localStorage so
+    // navigating away never loses work.  Draft is cleared only on Publish.
+    const hasMountedRef = React.useRef(false);
+    useEffect(() => {
+        // Skip the very first render (state is already from localStorage via _initialDraft)
+        if (!hasMountedRef.current) { hasMountedRef.current = true; return; }
+        if (files.length === 0 && !(formData.name || '').trim()) {
+            localStorage.removeItem(DRAFT_KEY);
+            return;
+        }
+        const safePaymentMethods = { ...(formData.paymentMethods || {}) };
+        if ((safePaymentMethods as any).bankInfo) (safePaymentMethods as any).bankInfo = '';
+        const safeFormData = { ...formData, credentials: [], paymentMethods: safePaymentMethods };
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ formData: safeFormData, files }));
+    }, [formData, files]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const isPreviewDark = previewTheme === 'system' ? systemDark : previewTheme === 'dark';
     const isCanvasPreviewMode = previewDeviceMode !== 'desktop';
-    const connectedDriveProviders = [
-        user?.storageSettings?.byosGoogleToken ? 'Google Drive' : null,
-        user?.storageSettings?.byosDropboxToken ? 'Dropbox' : null,
-        user?.storageSettings?.byosOneDriveToken ? 'OneDrive' : null
-    ].filter(Boolean) as string[];
+    const connectedDriveProviders: string[] = [];
 
     const cyclePreviewTheme = () => {
         playClick();
@@ -295,7 +425,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
     };
 
     const previewProject: Project = {
-        id: existingProject?.id || 'preview-id',
+        id: existingProject?.id || draftProjectIdRef.current,
         name: formData.name || 'Untitled Project',
         description: formData.description || '',
         client: formData.client as any,
@@ -310,11 +440,15 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
         enableTips: formData.enableTips || false,
         useMilestones: formData.useMilestones || false,
         paymentMethods: formData.paymentMethods,
-        clientLink: '#',
+        clientLink: existingProject?.clientLink && existingProject.clientLink !== '#'
+            ? existingProject.clientLink
+            : draftClientLinkRef.current,
         type: 'web',
         message: formData.message,
         enableClientLibrary: formData.enableClientLibrary !== false,
         accessConfig: formData.accessConfig,
+        showWatermark: formData.showWatermark !== false,
+        showProtectedLabel: formData.showProtectedLabel !== false,
         theme: {
             ...(formData.theme || WALLPAPER_PRESETS[1]),
             pattern: formData.theme?.pattern || 'lines',
@@ -347,9 +481,10 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
         }
 
         playSuccess();
+        localStorage.removeItem(DRAFT_KEY);
         const project: Project = {
             ...previewProject,
-            id: existingProject?.id || `p-${Date.now()}`
+            id: previewProject.id
         };
         onSave(project);
         onBack();
@@ -384,53 +519,103 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
         setUploadProgress({ status: 'uploading', percent: 10 });
 
         try {
-            let uploadedFileUrl = '';
             let uploadedFileSize = '0 MB';
-            let uploadedKey = '';
+            let originalKey = '';
+            let previewKey: string | undefined;
 
-            // Check if user has their own R2 configured (BYOS)
-            const hasBYOS = user?.storageSettings?.accessKey && user.storageSettings.secretKey && user.storageSettings.endpoint;
-
-            if (hasBYOS && user?.storageSettings) {
-                // USER'S OWN STORAGE (BYOS)
-                const result = await R2Service.uploadFile(file, user.storageSettings, (p) => setUploadProgress({ status: 'uploading', percent: p }));
-                uploadedFileUrl = result.url;
-                uploadedFileSize = result.size;
-                uploadedKey = result.key;
-            } else {
-                // PLATFORM NATIVE STORAGE
-                // We use the backend service wrapper which automatically handles the Native Keys securely
-                // (or falls back to mock if .env is missing)
-                setUploadProgress({ status: 'uploading', percent: 30 });
-                const result = await StorageService.uploadFileToNativeStorage(file);
-                uploadedFileUrl = result.url;
-                uploadedFileSize = result.size;
-                uploadedKey = result.key;
+            const isDemoUser = !user?.id || user.id === 'u1';
+            if (!isDemoUser) {
+                if (!formData.name?.trim() || !formData.amount || formData.amount <= 0) {
+                    throw new Error('Set a project name and amount before uploading files.');
+                }
+                // Ensure the project exists in Supabase before requesting presigned URLs.
+                // (Presign validates ownership via projects table + RLS.)
+                await DB.saveProject({
+                    id: previewProject.id,
+                    user_id: user.id,
+                    name: formData.name,
+                    description: formData.description || null,
+                    client: formData.client || {},
+                    amount: formData.amount || 0,
+                    status: (formData.status as any) || 'draft',
+                    client_link: previewProject.clientLink,
+                    due_date: formData.dueDate || null,
+                    type: previewProject.type,
+                    theme: previewProject.theme || {},
+                    requires_signature: Boolean(formData.requiresSignature),
+                    enable_tips: Boolean(formData.enableTips),
+                    payment_methods: formData.paymentMethods || {},
+                    use_milestones: Boolean(formData.useMilestones),
+                    message: formData.message || null,
+                    enable_client_library: formData.enableClientLibrary !== false,
+                    access_config: formData.accessConfig || {},
+                    show_watermark: formData.showWatermark !== false,
+                    show_protected_label: formData.showProtectedLabel !== false,
+                });
             }
 
-            // 2. Server-Side Processing (Watermarking/Transcoding)
+            // 1) Generate a PREVIEW (watermarked) and upload separately when applicable.
             setUploadProgress({ status: 'processing', percent: 70 });
-            // For real implementation, this would be a backend call
             const previewUrl = await ProcessingService.generateWatermarkedPreview(file);
+
+            if (isDemoUser) {
+                // Demo mode: keep everything local (no server-side storage).
+                uploadedFileSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+            } else {
+                // 2) Upload ORIGINAL via presigned URL (server-side R2 credentials).
+                const original = await R2Service.uploadFileWithPresignedUrl(
+                    file,
+                    previewProject.id,
+                    'original',
+                    (p) => setUploadProgress({ status: 'uploading', percent: p })
+                );
+                originalKey = original.key;
+                uploadedFileSize = original.size;
+
+                // Only upload preview objects we can safely render (images for now).
+                if (file.type.startsWith('image/')) {
+                    const previewBlob = await fetch(previewUrl).then(r => r.blob());
+                    const previewFile = new window.File(
+                        [previewBlob],
+                        `preview-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/\.+/g, '.')}.png`,
+                        { type: previewBlob.type || 'image/png' }
+                    );
+                    const previewUpload = await R2Service.uploadFileWithPresignedUrl(
+                        previewFile,
+                        previewProject.id,
+                        'preview'
+                    );
+                    previewKey = previewUpload.key;
+                }
+            }
 
             setUploadProgress({ status: 'done', percent: 100 });
 
+            // Generate SHA-256 from file contents for audit-log fingerprinting
+            let fileHash = '';
+            try {
+                const buffer = await file.arrayBuffer();
+                const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+                fileHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
+            } catch { /* non-fatal */ }
+
             const newFile: FileAsset = {
-                id: `f-${Date.now()}`,
-                name: file.name,
+                id: crypto.randomUUID(),
+                name: deduplicateFileName(file.name, files.map(f => f.name)),
                 size: uploadedFileSize,
                 type: fileType as any,
                 locked: true, // Locked by default
                 version: 1,
                 uploadDate: new Date().toISOString().split('T')[0],
                 tag: 'DRAFT',
-                storageProvider: hasBYOS ? 's3' : 'native',
+                storageProvider: 'native',
                 previewUrl: previewUrl,
-                // We store the 'key' (or signed URL generator endpoint) as the downloadUrl concept
-                // The actual signed URL is generated on-demand when user pays.
-                // For this prototype, we store the public/semi-private URL returned.
-                downloadUrl: uploadedFileUrl,
-                includeInLibrary: true
+                includeInLibrary: true,
+                metadata: {
+                    ...(fileHash ? { hash: fileHash } : {}),
+                    originalKey,
+                    ...(previewKey ? { previewKey } : {}),
+                } as any,
             };
 
             setFiles([...files, newFile]);
@@ -453,25 +638,61 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
             return;
         }
 
+        // Duplicate URL — hard block (checks original input AND any previously-normalised importSourceUrl)
+        if (usedImportUrls.has(trimmedUrl)) {
+            setLinkError('This exact link is already in your vault.');
+            return;
+        }
+        const alsoExistsNormalised = files.some(
+            f => (f.externalUrl || '').trim() === trimmedUrl || (f.importSourceUrl || '').trim() === trimmedUrl
+        );
+        if (alsoExistsNormalised) {
+            setLinkError('This exact link is already in your vault.');
+            return;
+        }
+
         try {
             setIsAddingLink(true);
             playClick();
-            const shouldImportAsFolder = ByosFolderService.isLikelyFolderLink(trimmedUrl);
-
-            if (shouldImportAsFolder) {
-                const importedAssets = await ByosFolderService.importFolderLink({
-                    url: trimmedUrl,
-                    folderName: newLink.name.trim() || undefined,
-                    storageConfig: user?.storageSettings
-                });
-                setFiles([...files, ...importedAssets]);
-            } else {
-                throw new Error('For security, only folder links are supported. Paste a Google Drive / Dropbox / OneDrive folder link (requires a connected account).');
+            let parsed: URL;
+            try {
+                parsed = new URL(trimmedUrl);
+            } catch {
+                throw new Error('Enter a valid URL (including https://).');
             }
 
-            setNewLink({ name: '', url: '', size: '', type: 'archive' });
+            const host = parsed.hostname.toLowerCase();
+            const provider: 'google' | 'dropbox' | 'onedrive' | 'unknown' =
+                host.includes('drive.google.com') || host.includes('docs.google.com')
+                    ? 'google'
+                    : host.includes('dropbox.com') || host.includes('dropboxusercontent.com')
+                        ? 'dropbox'
+                        : host.includes('1drv.ms') || host.includes('onedrive.live.com') || host.includes('sharepoint.com')
+                            ? 'onedrive'
+                            : 'unknown';
+
+            if (ByosFolderService.isLikelyFolderLink(trimmedUrl)) {
+                throw new Error('Folder links are not supported yet. Paste a direct file link instead.');
+            }
+
+            if (provider === 'unknown') {
+                setLinkNameWarning('Tip: For best results, use direct file links from Drive/Dropbox/OneDrive.');
+            }
+
+            const importedAsset = await ByosLinkService.ingestLink({
+                url: trimmedUrl,
+                customName: newLink.name.trim() || undefined,
+                customSize: newLink.size.trim() || undefined,
+                storageConfig: user?.storageSettings
+            });
+            const renamedAsset = normalizeUnknownSize({ ...importedAsset, name: deduplicateFileName(importedAsset.name, files.map(f => f.name)) });
+            setFiles(prev => [...prev, renamedAsset]);
+            setLinkImportSuccess(`"${renamedAsset.name}" imported.`);
+            setNewLink({ name: '', url: '', size: '' });
             setLinkError(null);
-            setShowLinkModal(false);
+            setLinkNameWarning(null);
+            setDetectedLinkType(null);
+            // Modal stays open so the creator can add more links without re-opening
             setErrors(prev => ({ ...prev, files: false }));
             playSuccess();
         } catch (error: any) {
@@ -629,14 +850,14 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                 <div className="h-16 px-6 flex items-center justify-between border-b border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-[#181821]/70 backdrop-blur-md sticky top-0 z-30 relative">
                     <button
                         onClick={() => { playClick(); onBack(); }}
-                        className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors text-xs font-bold uppercase tracking-wider"
+                        className="flex items-center gap-2 text-slate-500 hover:text-obsidian dark:hover:text-white transition-colors text-xs font-bold uppercase tracking-wider"
                     >
                         <ChevronLeft className="w-4 h-4" /> Back to Vault
                     </button>
                     <div className="flex items-center gap-4">
                         <button
                             onClick={cyclePreviewTheme}
-                            className="p-2 rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-lime-600 dark:hover:text-[#bef264] transition-colors"
+                            className="p-2 rounded-full bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-brand dark:hover:text-brand transition-colors"
                             title={`Preview Theme: ${previewTheme.charAt(0).toUpperCase() + previewTheme.slice(1)}`}
                         >
                             {previewTheme === 'light' && <Sun className="w-4 h-4" />}
@@ -644,13 +865,13 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             {previewTheme === 'system' && <Monitor className="w-4 h-4" />}
                         </button>
                         <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-lime-600 dark:bg-[#bef264] animate-pulse"></span>
+                            <span className="w-2 h-2 rounded-full bg-brand dark:bg-brand animate-pulse"></span>
                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Live Editor</span>
                         </div>
                         <button
                             type="button"
                             onClick={() => { playClick(); setIsEditorCollapsed(true); }}
-                            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10 transition-all"
+                            className="p-2 rounded-xl bg-slate-200 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10 transition-all"
                             title="Collapse Editor"
                             aria-label="Collapse Editor"
                         >
@@ -668,6 +889,14 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                         <p className="text-slate-500 dark:text-slate-400 text-sm">Changes update the preview instantly.</p>
                     </div>
 
+                    {draftRestoredNotice && (
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 text-amber-700 dark:text-amber-400 text-[10px] font-bold">
+                            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                            <span className="flex-1">Draft restored from your last session. This is only saved locally — publish when ready to go live.</span>
+                            <button onClick={() => setDraftRestoredNotice(false)}><X className="w-3 h-3" /></button>
+                        </div>
+                    )}
+
                     {/* Basic Info Card */}
                     <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
                         <div className="space-y-4">
@@ -680,7 +909,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     value={formData.name}
                                     onChange={e => { setFormData({ ...formData, name: e.target.value }); setErrors({ ...errors, name: false }); }}
                                     placeholder="e.g. Q4 Marketing Campaign"
-                                    className={`w-full p-3 bg-slate-50 dark:bg-black/20 border rounded-xl outline-none transition-colors text-sm font-bold text-slate-900 dark:text-white ${errors.name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-lime-600 dark:focus:border-[#bef264]'}`}
+                                    className={`w-full p-3 bg-editorial dark:bg-black/20 border rounded-xl outline-none transition-colors text-sm font-bold text-obsidian dark:text-white ${errors.name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-brand dark:focus:border-brand'}`}
                                 />
                             </div>
 
@@ -694,7 +923,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         type="number"
                                         value={formData.amount}
                                         onChange={e => { setFormData({ ...formData, amount: Number(e.target.value) }); setErrors({ ...errors, amount: false }); }}
-                                        className={`w-full p-3 bg-slate-50 dark:bg-black/20 border rounded-xl outline-none transition-colors font-mono text-sm text-slate-900 dark:text-white ${errors.amount ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-lime-600 dark:focus:border-[#bef264]'}`}
+                                        className={`w-full p-3 bg-editorial dark:bg-black/20 border rounded-xl outline-none transition-colors font-mono text-sm text-obsidian dark:text-white ${errors.amount ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-brand dark:focus:border-brand'}`}
                                     />
                                 </div>
                                 <div className="space-y-1.5">
@@ -705,7 +934,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         type="date"
                                         value={formData.dueDate}
                                         onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                                        className="th-date-input w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-colors text-sm text-slate-900 dark:text-white"
+                                        className="th-date-input w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
                                     />
                                 </div>
                             </div>
@@ -730,16 +959,16 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 <div className="flex justify-between items-center mb-1">
                                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Persona</p>
                                     <div className="flex gap-2">
-                                        <button onClick={handleAutoGenerateAvatar} className="text-[10px] text-slate-500 hover:text-lime-600 dark:hover:text-[#bef264] font-bold hover:underline flex items-center gap-1" title="Generate from Name">
+                                        <button onClick={handleAutoGenerateAvatar} className="text-[10px] text-slate-500 hover:text-brand dark:hover:text-brand font-bold hover:underline flex items-center gap-1" title="Generate from Name">
                                             <Type className="w-3 h-3" /> Auto
                                         </button>
-                                        <button onClick={() => { playClick(); setShowAvatarSelector(!showAvatarSelector); }} className="text-[10px] text-lime-600 dark:text-[#bef264] font-bold hover:underline">
+                                        <button onClick={() => { playClick(); setShowAvatarSelector(!showAvatarSelector); }} className="text-[10px] text-brand dark:text-brand font-bold hover:underline">
                                             {showAvatarSelector ? 'Close' : 'Browse'}
                                         </button>
                                     </div>
                                 </div>
                                 {showAvatarSelector && (
-                                    <div className="grid grid-cols-5 gap-2 p-2 bg-slate-50 dark:bg-black/20 rounded-xl border border-slate-100 dark:border-white/5 animate-fade-in mt-2">
+                                    <div className="grid grid-cols-5 gap-2 p-2 bg-editorial dark:bg-black/20 rounded-xl border border-slate-200 dark:border-white/5 animate-fade-in mt-2">
                                         {AVATAR_PRESETS.map((url, i) => (
                                             <button
                                                 type="button"
@@ -748,7 +977,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                     playClick();
                                                     setFormData({ ...formData, client: { ...formData.client!, avatar: url } });
                                                 }}
-                                                className={`w-8 h-8 rounded-full p-0 border-2 overflow-hidden transition-transform hover:scale-110 ${formData.client?.avatar === url ? 'border-lime-600 dark:border-[#bef264]' : 'border-transparent'}`}
+                                                className={`w-8 h-8 rounded-full p-0 border-2 overflow-hidden transition-transform hover:scale-110 ${formData.client?.avatar === url ? 'border-brand dark:border-brand' : 'border-transparent'}`}
                                             >
                                                 <img src={url} className="w-full h-full object-cover" alt={`Avatar preset ${i + 1}`} />
                                             </button>
@@ -763,13 +992,13 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 value={formData.client?.name}
                                 onChange={e => setFormData({ ...formData, client: { ...formData.client!, name: e.target.value } })}
                                 placeholder="Client Name"
-                                className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-colors text-sm text-slate-900 dark:text-white"
+                                className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
                             />
                             <input
                                 value={formData.client?.company}
                                 onChange={e => setFormData({ ...formData, client: { ...formData.client!, company: e.target.value } })}
                                 placeholder="Company"
-                                className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-colors text-sm text-slate-900 dark:text-white"
+                                className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
                             />
                             <div className="grid grid-cols-1 gap-3">
                                 <div className="relative">
@@ -778,7 +1007,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         value={formData.client?.email}
                                         onChange={e => setFormData({ ...formData, client: { ...formData.client!, email: e.target.value } })}
                                         placeholder="Email Address"
-                                        className="w-full p-3 pl-10 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-colors text-sm text-slate-900 dark:text-white"
+                                        className="w-full p-3 pl-10 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
                                     />
                                 </div>
                                 <div className="relative">
@@ -787,7 +1016,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         value={formData.client?.phone}
                                         onChange={e => setFormData({ ...formData, client: { ...formData.client!, phone: e.target.value } })}
                                         placeholder="Phone (Optional)"
-                                        className="w-full p-3 pl-10 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-colors text-sm text-slate-900 dark:text-white"
+                                        className="w-full p-3 pl-10 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
                                     />
                                 </div>
                             </div>
@@ -805,7 +1034,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     playClick();
                                     setFormData({ ...formData, accessConfig: { mode: 'permanent' } });
                                 }}
-                                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === 'permanent' || !formData.accessConfig ? 'bg-lime-600/10 border-lime-600 text-lime-600 dark:bg-[#bef264]/10 dark:border-[#bef264] dark:text-[#bef264]' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}
+                                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === 'permanent' || !formData.accessConfig ? 'bg-brand/10 border-brand text-brand dark:bg-brand/10 dark:border-brand dark:text-brand' : 'bg-editorial dark:bg-white/5 border-transparent text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
                             >
                                 <Infinity className="w-5 h-5" />
                                 <span className="text-[9px] font-bold uppercase tracking-wider">Permanent</span>
@@ -816,7 +1045,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     playClick();
                                     setFormData({ ...formData, accessConfig: { mode: '7_day' } });
                                 }}
-                                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === '7_day' ? 'bg-amber-500/10 border-amber-500 text-amber-500' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}
+                                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === '7_day' ? 'bg-amber-500/10 border-amber-500 text-amber-500' : 'bg-editorial dark:bg-white/5 border-transparent text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
                             >
                                 <Hourglass className="w-5 h-5" />
                                 <span className="text-[9px] font-bold uppercase tracking-wider">7 Days</span>
@@ -827,7 +1056,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     playClick();
                                     setFormData({ ...formData, accessConfig: { mode: 'one_time' } });
                                 }}
-                                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === 'one_time' ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-slate-50 dark:bg-white/5 border-transparent text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'}`}
+                                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === 'one_time' ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-editorial dark:bg-white/5 border-transparent text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
                             >
                                 <Flame className="w-5 h-5" />
                                 <span className="text-[9px] font-bold uppercase tracking-wider">Burn 1x</span>
@@ -880,6 +1109,26 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 </div>
                                 <Toggle checked={formData.enableClientLibrary !== false} onChange={v => setFormData({ ...formData, enableClientLibrary: v })} />
                             </div>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <EyeOff className="w-4 h-4 text-slate-400" />
+                                    <div>
+                                        <span className="text-sm font-medium dark:text-white">Tiled Watermark</span>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">Show faint TRUEHANDOVER text behind locked previews</p>
+                                    </div>
+                                </div>
+                                <Toggle checked={formData.showWatermark !== false} onChange={v => setFormData({ ...formData, showWatermark: v })} />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <ShieldAlert className="w-4 h-4 text-slate-400" />
+                                    <div>
+                                        <span className="text-sm font-medium dark:text-white">Protected Preview Label</span>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">Show the lock badge overlay on locked image previews</p>
+                                    </div>
+                                </div>
+                                <Toggle checked={formData.showProtectedLabel !== false} onChange={v => setFormData({ ...formData, showProtectedLabel: v })} />
+                            </div>
                         </div>
                     </div>
 
@@ -895,13 +1144,13 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                         {formData.useMilestones && (
                             <div className="space-y-3 animate-fade-in">
                                 {formData.milestones?.map((milestone, index) => (
-                                    <div key={milestone.id} className="p-3 bg-slate-50 dark:bg-black/20 rounded-xl border border-slate-100 dark:border-white/5 space-y-2">
+                                    <div key={milestone.id} className="p-3 bg-editorial dark:bg-black/20 rounded-xl border border-slate-200 dark:border-white/5 space-y-2">
                                         <div className="flex gap-2">
                                             <input
                                                 value={milestone.title}
                                                 onChange={e => updateMilestone(index, 'title', e.target.value)}
                                                 placeholder="Milestone Name"
-                                                className="flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white"
+                                                className="flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white"
                                             />
                                             <button onClick={() => removeMilestone(index)} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
                                         </div>
@@ -911,20 +1160,20 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                 value={milestone.amount}
                                                 onChange={e => updateMilestone(index, 'amount', Number(e.target.value))}
                                                 placeholder="$ Amount"
-                                                className="flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white"
+                                                className="flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white"
                                             />
                                             <input
                                                 type="date"
                                                 value={milestone.dueDate}
                                                 onChange={e => updateMilestone(index, 'dueDate', e.target.value)}
-                                                className="th-date-input flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white"
+                                                className="th-date-input flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white"
                                             />
                                         </div>
                                     </div>
                                 ))}
                                 <button
                                     onClick={addMilestone}
-                                    className="w-full py-2 border border-dashed border-slate-300 dark:border-white/20 rounded-lg text-xs font-bold uppercase text-slate-500 hover:text-lime-600 dark:hover:text-[#bef264] hover:border-lime-600 dark:hover:border-[#bef264] transition-colors"
+                                    className="w-full py-2 border border-dashed border-slate-200 dark:border-white/20 rounded-lg text-xs font-bold uppercase text-slate-500 hover:text-brand dark:hover:text-brand hover:border-brand dark:hover:border-brand transition-colors"
                                 >
                                     + Add Milestone
                                 </button>
@@ -940,42 +1189,47 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             </h3>
                             <button
                                 onClick={() => setShowCredentialModal(true)}
-                                className="text-[10px] font-bold uppercase bg-slate-100 hover:bg-lime-600 hover:text-white dark:bg-white/20 dark:text-white dark:hover:bg-[#bef264] dark:hover:text-black px-3 py-1.5 rounded-lg transition-colors border border-transparent dark:border-white/10"
+                                className="text-[10px] font-bold uppercase bg-slate-200 hover:bg-brand hover:text-white dark:bg-white/20 dark:text-white dark:hover:bg-brand dark:hover:text-black px-3 py-1.5 rounded-lg transition-colors border border-transparent dark:border-white/10"
                             >
                                 + Add Keys
                             </button>
                         </div>
 
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-4">
+                            Experimental: stored only in-memory for this session (not synced, not encrypted). Don’t store real passwords.
+                        </p>
+
                         {showCredentialModal && (
-                            <div className="mb-4 p-4 bg-slate-50 dark:bg-black/20 rounded-xl border border-dashed border-slate-300 dark:border-white/10 animate-fade-in">
+                            <div className="mb-4 p-4 bg-editorial dark:bg-black/20 rounded-xl border border-dashed border-slate-200 dark:border-white/10 animate-fade-in">
                                 <div className="space-y-3">
                                     <input
                                         placeholder="Service Name (e.g. WP Admin)"
-                                        className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white font-bold"
+                                        className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white font-bold"
                                         value={newCredential.serviceName || ''}
                                         onChange={(e) => setNewCredential({ ...newCredential, serviceName: e.target.value })}
                                     />
                                     <input
                                         placeholder="Username"
-                                        className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white font-mono"
+                                        className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white font-mono"
                                         value={newCredential.username || ''}
                                         onChange={(e) => setNewCredential({ ...newCredential, username: e.target.value })}
                                     />
                                     <input
                                         placeholder="Password"
-                                        className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white font-mono"
+                                        type="password"
+                                        className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white font-mono"
                                         value={newCredential.password || ''}
                                         onChange={(e) => setNewCredential({ ...newCredential, password: e.target.value })}
                                     />
                                     <textarea
                                         placeholder="Notes (Optional)"
-                                        className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white resize-none h-16"
+                                        className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white resize-none h-16"
                                         value={newCredential.notes || ''}
                                         onChange={(e) => setNewCredential({ ...newCredential, notes: e.target.value })}
                                     />
                                     <div className="flex justify-end gap-2">
                                         <button onClick={() => setShowCredentialModal(false)} className="px-3 py-1.5 text-[10px] font-bold uppercase hover:bg-white/10 rounded">Cancel</button>
-                                        <button onClick={handleAddCredential} className="px-3 py-1.5 bg-lime-600 text-white dark:bg-[#bef264] dark:text-black text-[10px] font-bold uppercase rounded shadow-lg">Save Securely</button>
+                                        <button onClick={handleAddCredential} className="px-3 py-1.5 bg-brand text-white dark:bg-brand dark:text-black text-[10px] font-bold uppercase rounded shadow-lg">Add (Local)</button>
                                     </div>
                                 </div>
                             </div>
@@ -983,7 +1237,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
 
                         <div className="space-y-2">
                             {formData.credentials?.map((cred) => (
-                                <div key={cred.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-black/20 rounded-xl border border-slate-100 dark:border-white/5 group">
+                                <div key={cred.id} className="flex items-center justify-between p-3 bg-editorial dark:bg-black/20 rounded-xl border border-slate-200 dark:border-white/5 group">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
                                             <Key className="w-4 h-4" />
@@ -1008,7 +1262,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             <Wallet className="w-3 h-3" /> Payment Methods
                         </h3>
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between p-2 bg-slate-50 dark:bg-black/20 rounded-lg">
+                            <div className="flex items-center justify-between p-2 bg-editorial dark:bg-black/20 rounded-lg">
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full bg-[#635BFF]"></div>
                                     <span className="text-sm font-bold dark:text-white">Stripe Checkout</span>
@@ -1024,7 +1278,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             value={formData.paymentMethods?.venmo}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, venmo: e.target.value } })}
                                             placeholder="@username"
-                                            className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs text-slate-900 dark:text-white"
+                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -1033,7 +1287,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             value={formData.paymentMethods?.cashapp}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, cashapp: e.target.value } })}
                                             placeholder="$tag"
-                                            className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs text-slate-900 dark:text-white"
+                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -1042,7 +1296,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             value={formData.paymentMethods?.paypal}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, paypal: e.target.value } })}
                                             placeholder="paypal.me/you"
-                                            className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs text-slate-900 dark:text-white"
+                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -1051,7 +1305,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             value={formData.paymentMethods?.zelle}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, zelle: e.target.value } })}
                                             placeholder="Email or phone"
-                                            className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs text-slate-900 dark:text-white"
+                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-1.5">
@@ -1060,7 +1314,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             value={formData.paymentMethods?.bankInfo}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, bankInfo: e.target.value } })}
                                             placeholder="Routing / account / instructions"
-                                            className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-xs h-24 resize-none text-slate-900 dark:text-white"
+                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs h-24 resize-none text-obsidian dark:text-white"
                                         />
                                     </div>
                                 </div>
@@ -1080,7 +1334,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             value={formData.message}
                             onChange={e => setFormData({ ...formData, message: e.target.value })}
                             placeholder="Enter a personal message for the client..."
-                            className="w-full p-3 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-colors text-sm min-h-[100px] resize-y mb-3 text-slate-900 dark:text-white"
+                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm min-h-[100px] resize-y mb-3 text-obsidian dark:text-white"
                         />
                         <div className="flex flex-wrap gap-2">
                             {MESSAGE_PRESETS.map((preset) => (
@@ -1092,7 +1346,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         setFormData({ ...formData, message: text });
                                         playClick();
                                     }}
-                                    className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-colors"
+                                    className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5 hover:text-obsidian dark:hover:text-white transition-colors"
                                 >
                                     {preset.label}
                                 </button>
@@ -1112,12 +1366,12 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 type="button"
                                 onClick={() => { playClick(); fileInputRef.current?.click(); }}
                                 className={`
-                                    relative aspect-video rounded-lg overflow-hidden cursor-pointer group border-2 transition-all bg-slate-100 dark:bg-white/5 border-dashed border-slate-300 dark:border-white/20 hover:border-lime-600 hover:bg-lime-50 dark:hover:border-[#bef264] dark:hover:bg-[#bef264]/5 flex flex-col items-center justify-center gap-2 w-full p-0
-                                    ${formData.theme?.name === 'Custom' ? 'border-lime-600 ring-2 ring-lime-600/20 dark:border-[#bef264] dark:ring-[#bef264]/20' : ''}
+                                    relative aspect-video rounded-lg overflow-hidden cursor-pointer group border-2 transition-all bg-slate-200 dark:bg-white/5 border-dashed border-slate-200 dark:border-white/20 hover:border-brand hover:bg-lime-50 dark:hover:border-brand dark:hover:bg-brand/5 flex flex-col items-center justify-center gap-2 w-full p-0
+                                    ${formData.theme?.name === 'Custom' ? 'border-brand ring-2 ring-brand/20 dark:border-brand dark:ring-brand/20' : ''}
                                 `}
                             >
-                                <Upload className="w-5 h-5 text-slate-400 group-hover:text-lime-600 dark:group-hover:text-[#bef264]" />
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-lime-600 dark:group-hover:text-[#bef264]">Upload</span>
+                                <Upload className="w-5 h-5 text-slate-400 group-hover:text-brand dark:group-hover:text-brand" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-brand dark:group-hover:text-brand">Upload</span>
                             </button>
 
                             {/* Custom Wallpapers List */}
@@ -1127,15 +1381,15 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     key={`custom-${i}`}
                                     onClick={() => { playClick(); setFormData({ ...formData, theme: { ...custom, pattern: formData.theme?.pattern || 'lines', showGrain: formData.theme?.showGrain ?? true } }); }}
                                     className={`
-                                        relative aspect-video rounded-lg overflow-hidden cursor-pointer group border-2 transition-all bg-slate-100 dark:bg-white/5 w-full p-0
-                                        ${formData.theme?.wallpaper === custom.wallpaper ? 'border-lime-600 ring-2 ring-lime-600/20 dark:border-[#bef264] dark:ring-[#bef264]/20' : 'border-transparent hover:border-slate-300 dark:hover:border-white/20'}
+                                        relative aspect-video rounded-lg overflow-hidden cursor-pointer group border-2 transition-all bg-slate-200 dark:bg-white/5 w-full p-0
+                                        ${formData.theme?.wallpaper === custom.wallpaper ? 'border-brand ring-2 ring-brand/20 dark:border-brand dark:ring-brand/20' : 'border-transparent hover:border-slate-200 dark:hover:border-white/20'}
                                     `}
                                 >
                                     <img src={custom.wallpaper} className="w-full h-full object-cover" />
 
                                     {formData.theme?.wallpaper === custom.wallpaper && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
-                                            <CheckCircle className="w-5 h-5 text-lime-600 dark:text-[#bef264] drop-shadow-md" />
+                                            <CheckCircle className="w-5 h-5 text-brand dark:text-brand drop-shadow-md" />
                                         </div>
                                     )}
 
@@ -1157,8 +1411,8 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     key={i}
                                     onClick={() => { playClick(); setFormData({ ...formData, theme: { ...preset, pattern: formData.theme?.pattern || 'lines', showGrain: formData.theme?.showGrain ?? true } }); }}
                                     className={`
-                                        relative aspect-video rounded-lg overflow-hidden cursor-pointer group border-2 transition-all bg-slate-100 dark:bg-white/5 w-full p-0
-                                        ${formData.theme?.name === preset.name && !customWallpapers.find(c => c.wallpaper === formData.theme?.wallpaper) ? 'border-lime-600 ring-2 ring-lime-600/20 dark:border-[#bef264] dark:ring-[#bef264]/20' : 'border-transparent hover:border-slate-300 dark:hover:border-white/20'}
+                                        relative aspect-video rounded-lg overflow-hidden cursor-pointer group border-2 transition-all bg-slate-200 dark:bg-white/5 w-full p-0
+                                        ${formData.theme?.name === preset.name && !customWallpapers.find(c => c.wallpaper === formData.theme?.wallpaper) ? 'border-brand ring-2 ring-brand/20 dark:border-brand dark:ring-brand/20' : 'border-transparent hover:border-slate-200 dark:hover:border-white/20'}
                                     `}
                                 >
                                     {preset.wallpaper ? (
@@ -1170,7 +1424,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     )}
                                     {formData.theme?.name === preset.name && !customWallpapers.find(c => c.wallpaper === formData.theme?.wallpaper) && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                            <CheckCircle className="w-5 h-5 text-lime-600 dark:text-[#bef264] drop-shadow-md" />
+                                            <CheckCircle className="w-5 h-5 text-brand dark:text-brand drop-shadow-md" />
                                         </div>
                                     )}
                                     <div className="absolute bottom-0 inset-x-0 bg-black/50 p-1 text-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1188,7 +1442,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 </h3>
                                 <button
                                     onClick={toggleGrain}
-                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors ${formData.theme?.showGrain ? 'bg-lime-600/20 text-lime-600 border-lime-600/50 dark:bg-[#bef264]/20 dark:text-[#bef264] dark:border-[#bef264]/50 border' : 'bg-slate-100 dark:bg-white/10 text-slate-500'}`}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors ${formData.theme?.showGrain ? 'bg-brand/20 text-brand border-brand/50 dark:bg-brand/20 dark:text-brand dark:border-brand/50 border' : 'bg-slate-200 dark:bg-white/10 text-slate-500'}`}
                                 >
                                     {formData.theme?.showGrain ? 'Film Grain ON' : 'Film Grain OFF'}
                                 </button>
@@ -1210,9 +1464,9 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             });
                                         }}
                                         className={`
-                                            aspect-square rounded-lg flex flex-col items-center justify-center gap-1 border transition-all hover:bg-slate-50 dark:hover:bg-white/5
+                                            aspect-square rounded-lg flex flex-col items-center justify-center gap-1 border transition-all hover:bg-editorial dark:hover:bg-white/5
                                             ${formData.theme?.pattern === p.id
-                                                ? 'border-lime-600 bg-lime-600/10 text-lime-600 dark:border-[#bef264] dark:bg-[#bef264]/10 dark:text-[#bef264]'
+                                                ? 'border-brand bg-brand/10 text-brand dark:border-brand dark:bg-brand/10 dark:text-brand'
                                                 : 'border-slate-200 dark:border-white/10 text-slate-400'
                                             }
                                         `}
@@ -1243,24 +1497,31 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     {errors.files && <span className="text-red-500 ml-2 text-[9px]">Required</span>}
                                 </h3>
                                 <button
-                                    onClick={() => { setShowLinkModal(true); setLinkError(null); }}
-                                    className="text-[10px] font-bold uppercase bg-slate-100 hover:bg-lime-600 hover:text-white dark:bg-white/20 dark:text-white dark:hover:bg-[#bef264] dark:hover:text-black px-3 py-1.5 rounded-lg transition-colors border border-transparent dark:border-white/10"
+                                    onClick={() => { setShowLinkModal(true); setLinkError(null); setLinkNameWarning(null); setLinkImportSuccess(null); }}
+                                    className="text-[10px] font-bold uppercase bg-slate-200 hover:bg-brand hover:text-white dark:bg-white/20 dark:text-white dark:hover:bg-brand dark:hover:text-black px-3 py-1.5 rounded-lg transition-colors border border-transparent dark:border-white/10"
                                 >
                                     + Add Link
                                 </button>
                             </div>
 
                             {showLinkModal && (
-                                <div className="mb-4 p-4 bg-slate-50 dark:bg-black/20 rounded-xl border border-dashed border-slate-300 dark:border-white/10 animate-fade-in">
+                                <div className="mb-4 p-4 bg-editorial dark:bg-black/20 rounded-xl border border-dashed border-slate-200 dark:border-white/10 animate-fade-in">
                                     <div className="space-y-3">
                                         <div className="inline-flex items-center gap-2">
-                                            <span className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border bg-lime-600 text-white border-lime-600 dark:bg-[#bef264] dark:text-black dark:border-[#bef264]">
-                                                Secure Folder Import
+                                            <span className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border bg-brand text-white border-brand dark:bg-brand dark:text-black dark:border-brand">
+                                                Secure Link Import
                                             </span>
                                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                                 (requires connected cloud drive)
                                             </span>
                                         </div>
+
+                                        {linkImportSuccess && (
+                                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-lime-50 dark:bg-lime-900/20 border border-lime-200 dark:border-lime-700/40 text-brand-hover dark:text-lime-400 text-[10px] font-bold">
+                                                <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+                                                {linkImportSuccess}
+                                            </div>
+                                        )}
 
                                         {linkError && (
                                             <InlineErrorBanner
@@ -1269,27 +1530,68 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             />
                                         )}
 
+                                        <div>
+                                            <input
+                                                placeholder="Label (optional)"
+                                                className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white"
+                                                value={newLink.name}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setNewLink({ ...newLink, name: val });
+                                                    if (linkError) setLinkError(null);
+                                                    const nameExists = val.trim() && files.some(f => f.name === val.trim());
+                                                    setLinkNameWarning(nameExists ? `"${val.trim()}" already exists — will be renamed automatically.` : null);
+                                                }}
+                                            />
+                                            {linkNameWarning && (
+                                                <p className="mt-1 text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                                    <span>⚠</span> {linkNameWarning}
+                                                </p>
+                                            )}
+                                        </div>
                                         <input
-                                            placeholder="Folder Label (optional)"
-                                            className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white"
-                                            value={newLink.name}
-                                            onChange={(e) => { setNewLink({ ...newLink, name: e.target.value }); if (linkError) setLinkError(null); }}
-                                        />
-                                        <input
-                                            placeholder="Folder URL (Google Drive / Dropbox / OneDrive)"
-                                            className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-lime-600 dark:focus:border-[#bef264] outline-none text-slate-900 dark:text-white"
+                                            placeholder="File or Folder URL (Google Drive / Dropbox / OneDrive)"
+                                            className={`w-full p-2 bg-white dark:bg-black/40 rounded text-xs border focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white transition-colors ${newLink.url.trim() && files.some(f => (f.externalUrl || '') === newLink.url.trim())
+                                                ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/10'
+                                                : 'border-transparent'
+                                                }`}
                                             value={newLink.url}
-                                            onChange={(e) => { setNewLink({ ...newLink, url: e.target.value }); if (linkError) setLinkError(null); }}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setNewLink({ ...newLink, url: val });
+                                                setDetectedLinkType(detectTypeFromUrl(val));
+                                                if (val.trim() && (usedImportUrls.has(val.trim()) || files.some(f => (f.externalUrl || '') === val.trim() || (f.importSourceUrl || '') === val.trim()))) {
+                                                    setLinkError('This exact link is already in your vault.');
+                                                } else if (linkError === 'This exact link is already in your vault.') {
+                                                    setLinkError(null);
+                                                }
+                                            }}
+                                        />
+                                        {detectedLinkType && (
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Detected:</span>
+                                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-lime-50 text-brand-hover border border-lime-200 dark:bg-brand/15 dark:text-brand dark:border-brand/25">{detectedLinkType}</span>
+                                            </div>
+                                        )}
+
+                                        <input
+                                            placeholder="File size (optional, e.g. 24.5 MB)"
+                                            className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white"
+                                            value={newLink.size}
+                                            onChange={(e) => {
+                                                setNewLink({ ...newLink, size: e.target.value });
+                                                if (linkError) setLinkError(null);
+                                            }}
                                         />
 
                                         <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                                            Folder import lists assets and adds them as normal vault files. Connect your cloud account first in Settings -&gt; Storage -&gt; Cloud Drive.
+                                            Folder links import all files inside. Single-file links import just that file. Connect your cloud account first in Settings -&gt; Storage -&gt; Cloud Drive.
                                         </p>
 
                                         <div className="flex flex-wrap items-center gap-2">
                                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Connected:</span>
                                             {connectedDriveProviders.length > 0 ? connectedDriveProviders.map((provider) => (
-                                                <span key={provider} className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-lime-50 text-lime-700 border border-lime-200 dark:bg-[#bef264]/15 dark:text-[#bef264] dark:border-[#bef264]/20">
+                                                <span key={provider} className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-lime-50 text-brand-hover border border-lime-200 dark:bg-brand/15 dark:text-brand dark:border-brand/20">
                                                     {provider}
                                                 </span>
                                             )) : (
@@ -1298,8 +1600,8 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         </div>
 
                                         <div className="flex justify-end gap-2">
-                                            <button onClick={() => { setShowLinkModal(false); setLinkError(null); }} className="px-3 py-1.5 text-[10px] font-bold uppercase text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-200 dark:hover:text-white dark:hover:bg-white/10 rounded transition-colors">Cancel</button>
-                                            <button onClick={handleAddLink} disabled={isAddingLink} className="px-3 py-1.5 bg-lime-600 text-white dark:bg-[#bef264] dark:text-black text-[10px] font-bold uppercase rounded shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">{isAddingLink ? 'Importing...' : 'Import Folder'}</button>
+                                            <button onClick={() => { setShowLinkModal(false); setLinkError(null); setLinkNameWarning(null); setLinkImportSuccess(null); }} className="px-3 py-1.5 text-[10px] font-bold uppercase text-slate-600 hover:text-obsidian hover:bg-slate-200 dark:text-slate-200 dark:hover:text-white dark:hover:bg-white/10 rounded transition-colors">Done</button>
+                                            <button onClick={handleAddLink} disabled={isAddingLink} className="px-3 py-1.5 bg-brand text-white dark:bg-brand dark:text-black text-[10px] font-bold uppercase rounded shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">{isAddingLink ? 'Importing...' : 'Import Link'}</button>
                                         </div>
                                     </div>
                                 </div>
@@ -1307,13 +1609,55 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
 
                             <div className={`space-y-2 ${errors.files ? 'p-2 border border-red-500/50 rounded-xl bg-red-500/5' : ''}`}>
                                 {files.map((file, i) => (
-                                    <div key={i} className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-black/20 rounded-lg border border-slate-100 dark:border-white/5">
+                                    <div key={i} className="flex items-center gap-3 p-2 bg-editorial dark:bg-black/20 rounded-lg border border-slate-200 dark:border-white/5">
                                         <div className="w-8 h-8 rounded bg-slate-200 dark:bg-white/10 flex items-center justify-center text-slate-500">
                                             {file.type === 'image' ? <ImageIcon className="w-4 h-4" /> : <File className="w-4 h-4" />}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="font-bold text-xs truncate dark:text-white">{file.name}</div>
-                                            <div className="text-[10px] text-slate-500">{file.size}</div>
+                                            {editingFile?.idx === i ? (
+                                                <input
+                                                    autoFocus
+                                                    className="font-bold text-xs w-full bg-transparent border-b border-brand dark:border-brand outline-none dark:text-white"
+                                                    value={editingFile.value}
+                                                    onChange={(e) => setEditingFile({ idx: i, value: e.target.value })}
+                                                    onBlur={() => {
+                                                        if (editingFile.value.trim())
+                                                            setFiles(files.map((f, idx) => idx === i ? { ...f, name: deduplicateFileName(editingFile.value.trim(), files.filter((_, ii) => ii !== i).map(f => f.name)) } : f));
+                                                        setEditingFile(null);
+                                                    }}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setEditingFile(null); }}
+                                                />
+                                            ) : (
+                                                <div
+                                                    className="font-bold text-xs truncate dark:text-white cursor-pointer hover:text-brand dark:hover:text-brand flex items-center gap-1 group/name"
+                                                    onClick={() => setEditingFile({ idx: i, value: file.name })}
+                                                    title="Click to rename"
+                                                >
+                                                    <span className="truncate">{file.name}</span>
+                                                    <Pencil className="w-2.5 h-2.5 opacity-0 group-hover/name:opacity-60 shrink-0 transition-opacity" />
+                                                </div>
+                                            )}
+                                            {editingSize?.idx === i ? (
+                                                <input
+                                                    autoFocus
+                                                    className="text-[10px] w-full bg-transparent border-b border-brand dark:border-brand outline-none text-slate-500 dark:text-slate-400"
+                                                    value={editingSize.value}
+                                                    placeholder="e.g. 24.5 MB"
+                                                    onChange={(e) => setEditingSize({ idx: i, value: e.target.value })}
+                                                    onBlur={() => {
+                                                        if (editingSize.value.trim())
+                                                            setFiles(files.map((f, idx) => idx === i ? { ...f, size: editingSize.value.trim() } : f));
+                                                        setEditingSize(null);
+                                                    }}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setEditingSize(null); }}
+                                                />
+                                            ) : (
+                                                <div
+                                                    className={`text-[10px] text-slate-500 ${file.externalUrl ? 'cursor-pointer hover:text-brand dark:hover:text-brand transition-colors' : ''}`}
+                                                    onClick={() => { if (file.externalUrl) setEditingSize({ idx: i, value: file.size }); }}
+                                                    title={file.externalUrl ? 'Click to edit size' : undefined}
+                                                >{file.size}</div>
+                                            )}
                                         </div>
                                         <button
                                             type="button"
@@ -1321,26 +1665,36 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                 setFiles(files.map((f, idx) => idx === i ? { ...f, includeInLibrary: f.includeInLibrary === false ? true : false } : f));
                                                 playClick();
                                             }}
-                                            className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border transition-colors ${file.includeInLibrary === false ? 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10' : 'bg-lime-50 text-lime-700 border-lime-200 hover:bg-lime-100 dark:bg-[#bef264]/10 dark:text-[#bef264] dark:border-[#bef264]/20 dark:hover:bg-[#bef264]/20'}`}
+                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border transition-colors ${file.includeInLibrary === false ? 'bg-slate-200 text-slate-500 border-slate-200 hover:bg-slate-200 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10' : 'bg-lime-50 text-brand-hover border-lime-200 hover:bg-lime-100 dark:bg-brand/10 dark:text-brand dark:border-brand/20 dark:hover:bg-brand/20'}`}
                                             title="Include in client library"
                                         >
-                                            Library
+                                            {file.includeInLibrary === false ? (
+                                                <>
+                                                    <Plus className="w-3 h-3" />
+                                                    Add to Library
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <CheckCircle className="w-3 h-3" />
+                                                    In Library
+                                                </>
+                                            )}
                                         </button>
                                         <button onClick={() => setFiles(files.filter((_, idx) => idx !== i))} className="text-slate-400 hover:text-red-500"><X className="w-3 h-3" /></button>
                                     </div>
                                 ))}
 
                                 {isUploading ? (
-                                    <div className="w-full py-4 bg-slate-50 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/10 flex flex-col items-center justify-center gap-2">
+                                    <div className="w-full py-4 bg-editorial dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/10 flex flex-col items-center justify-center gap-2">
                                         <div className="flex items-center gap-2">
-                                            <Loader2 className="w-4 h-4 animate-spin text-lime-600 dark:text-[#bef264]" />
+                                            <Loader2 className="w-4 h-4 animate-spin text-brand dark:text-brand" />
                                             <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
                                                 {uploadProgress.status === 'uploading' ? 'Uploading to R2...' : 'Processing & Watermarking...'}
                                             </span>
                                         </div>
                                         <div className="w-48 h-1 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
                                             <div
-                                                className="h-full bg-lime-600 dark:bg-[#bef264] transition-all duration-300"
+                                                className="h-full bg-brand dark:bg-brand transition-all duration-300"
                                                 style={{ width: `${uploadProgress.percent}%` }}
                                             />
                                         </div>
@@ -1348,7 +1702,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 ) : (
                                     <button
                                         onClick={() => assetInputRef.current?.click()}
-                                        className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-lg text-xs font-bold text-slate-400 hover:text-lime-600 hover:border-lime-600 dark:hover:text-[#bef264] dark:hover:border-[#bef264] transition-colors flex items-center justify-center gap-2"
+                                        className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-lg text-xs font-bold text-slate-400 hover:text-brand hover:border-brand dark:hover:text-brand dark:hover:border-brand transition-colors flex items-center justify-center gap-2"
                                     >
                                         <Upload className="w-3 h-3" /> Upload Local File
                                     </button>
@@ -1362,10 +1716,10 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                 <div className="p-6 border-t border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-[#181821]/90 backdrop-blur-md relative z-10">
                     <button
                         onClick={handleSave}
-                        className="w-full py-4 rounded-2xl bg-lime-600 hover:bg-lime-700 text-white dark:bg-[#bef264] dark:hover:bg-[#a3e635] dark:text-black font-bold text-sm uppercase tracking-widest shadow-[0_16px_40px_rgba(132,204,22,0.30)] hover:shadow-[0_20px_48px_rgba(132,204,22,0.35)] hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
+                        className="w-full py-4 rounded-2xl bg-brand hover:bg-brand-hover text-white dark:bg-brand dark:hover:bg-brand-hover dark:text-black font-bold text-sm uppercase tracking-widest shadow-[0_16px_40px_rgba(132,204,22,0.30)] hover:shadow-[0_20px_48px_rgba(132,204,22,0.35)] hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
                     >
                         <Save className="w-4 h-4" />
-                        {existingProject ? 'Update & Publish' : 'Create & Publish'}
+                        {existingProject ? 'Publish Changes' : 'Create & Publish'}
                     </button>
                 </div>
             </div>
@@ -1383,7 +1737,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 <button
                                     type="button"
                                     onClick={() => { playClick(); onBack(); }}
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${isPreviewDark ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm'}`}
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${isPreviewDark ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-editorial text-slate-700 border border-slate-200 shadow-sm'}`}
                                     aria-label="Back to Vault"
                                     title="Back to Vault"
                                 >
@@ -1392,7 +1746,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 <button
                                     type="button"
                                     onClick={() => { playClick(); setIsEditorCollapsed(false); }}
-                                    className="w-10 h-10 rounded-full bg-[#bef264] hover:bg-[#a3e635] text-black flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-[#bef264]/40 transition-all hover:scale-105 active:scale-90"
+                                    className="w-10 h-10 rounded-full bg-brand hover:bg-brand-hover text-black flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-brand/40 transition-all hover:scale-105 active:scale-90"
                                     aria-label="Show Editor"
                                     title="Show Editor"
                                 >
@@ -1406,7 +1760,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     <button
                                         type="button"
                                         onClick={() => { playClick(); onBack(); }}
-                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${isPreviewDark ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm'}`}
+                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${isPreviewDark ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-editorial text-slate-700 border border-slate-200 shadow-sm'}`}
                                         aria-label="Back to Vault"
                                         title="Back to Vault"
                                     >
@@ -1415,7 +1769,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     <button
                                         type="button"
                                         onClick={() => { playClick(); setIsEditorCollapsed(false); }}
-                                        className="px-4 py-2 rounded-full bg-[#bef264] hover:bg-[#a3e635] text-black text-[10px] font-bold uppercase tracking-widest shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-[#bef264]/40 flex items-center gap-2 transition-all hover:scale-[1.02]"
+                                        className="px-4 py-2 rounded-full bg-brand hover:bg-brand-hover text-black text-[10px] font-bold uppercase tracking-widest shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-brand/40 flex items-center gap-2 transition-all hover:scale-[1.02]"
                                         aria-label="Show Editor"
                                         title="Show Editor"
                                     >
@@ -1455,6 +1809,9 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                         onDockedSidebarCollapseChange={setIsPreviewDockedSidebarCollapsed}
                         onDeviceModeChange={setPreviewDeviceMode}
                         reserveCollapsedHeaderBackSlot={isEditorCollapsed ? 2 : 0}
+                        onRenameAsset={(fileId, newName) => setFiles(prev => prev.map(f => f.id === fileId ? { ...f, name: newName } : f))}
+                        onResizeAsset={(fileId, newSize) => setFiles(prev => prev.map(f => f.id === fileId ? { ...f, size: newSize } : f))}
+                        onRemoveAsset={(fileId) => setFiles(prev => prev.filter(f => f.id !== fileId))}
                     />
                 </div>
             </div>

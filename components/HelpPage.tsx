@@ -68,8 +68,8 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
             className={`
                 flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all border
                 ${activeCategory === id
-                    ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-black dark:border-white shadow-lg'
-                    : 'bg-white dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+                    ? 'bg-obsidian text-white border-obsidian dark:bg-white dark:text-black dark:border-white shadow-lg'
+                    : 'bg-white dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-200 dark:hover:border-white/20'
                 }
             `}
         >
@@ -85,17 +85,17 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
             <div className="flex flex-col items-center text-center py-16 space-y-6">
                 <button
                     onClick={() => { playClick(); onBack(); }}
-                    className="absolute top-0 left-0 p-3 rounded-full bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors border border-slate-200 dark:border-white/5 group"
+                    className="absolute top-0 left-0 p-3 rounded-full bg-white dark:bg-white/5 hover:bg-editorial dark:hover:bg-white/10 transition-colors border border-slate-200 dark:border-white/5 group"
                 >
                     <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:-translate-x-1 transition-transform" />
                 </button>
 
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-lime-100 dark:bg-[#bef264]/10 text-lime-700 dark:text-[#bef264] text-[10px] font-bold uppercase tracking-widest mb-4">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-lime-100 dark:bg-brand/10 text-brand-hover dark:text-brand text-[10px] font-bold uppercase tracking-widest mb-4">
                     <LifeBuoy className="w-3 h-3" /> TrueHandover Support
                 </div>
 
-                <h1 className="font-serif text-5xl md:text-6xl font-medium text-slate-900 dark:text-white tracking-tight leading-[1.1]">
-                    How can we <span className="italic text-lime-600 dark:text-[#bef264]">help</span>?
+                <h1 className="font-serif text-5xl md:text-6xl font-medium text-obsidian dark:text-white tracking-tight leading-[1.1]">
+                    How can we <span className="italic text-brand dark:text-brand">help</span>?
                 </h1>
 
                 <p className="text-slate-500 dark:text-slate-400 text-lg max-w-lg mx-auto leading-relaxed">
@@ -105,11 +105,11 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
                 {/* Elegant Search Bar */}
                 <div className="w-full max-w-xl relative group mt-8">
                     <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                        <Search className="h-5 w-5 text-slate-400 group-focus-within:text-slate-900 dark:group-focus-within:text-white transition-colors" />
+                        <Search className="h-5 w-5 text-slate-400 group-focus-within:text-obsidian dark:group-focus-within:text-white transition-colors" />
                     </div>
                     <input
                         type="text"
-                        className="block w-full pl-12 pr-4 py-5 bg-white dark:bg-[#1a1a23] border border-slate-200 dark:border-white/10 rounded-2xl leading-5 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/20 focus:border-lime-500 transition-all shadow-xl shadow-slate-200/40 dark:shadow-none text-slate-900 dark:text-white font-medium"
+                        className="block w-full pl-12 pr-4 py-5 bg-white dark:bg-[#1a1a23] border border-slate-200 dark:border-white/10 rounded-2xl leading-5 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/20 focus:border-lime-500 transition-all shadow-xl shadow-slate-200/40 dark:shadow-none text-obsidian dark:text-white font-medium"
                         placeholder="Search for answers..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -137,14 +137,14 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
                                 className={`
                                     group rounded-2xl border transition-all duration-300 overflow-hidden cursor-pointer
                                     ${openIndex === index
-                                        ? 'bg-white dark:bg-[#23232e] border-slate-200 dark:border-white/10 shadow-lg'
+                                        ? 'bg-white dark:bg-charcoal border-slate-200 dark:border-white/10 shadow-lg'
                                         : 'bg-white/50 dark:bg-white/5 border-transparent hover:bg-white dark:hover:bg-white/10 hover:border-slate-200 dark:hover:border-white/10'
                                     }
                                 `}
                                 onClick={() => toggleFaq(index)}
                             >
                                 <div className="p-6 flex justify-between items-start gap-4">
-                                    <h3 className={`font-serif text-lg font-medium leading-tight ${openIndex === index ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
+                                    <h3 className={`font-serif text-lg font-medium leading-tight ${openIndex === index ? 'text-obsidian dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
                                         {faq.q}
                                     </h3>
                                     <div className={`mt-1 transition-transform duration-300 ${openIndex === index ? 'rotate-180' : ''}`}>
@@ -173,13 +173,13 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
                 {/* Sidebar Column */}
                 <div className="lg:col-span-4 space-y-6">
                     {/* Contact Card */}
-                    <Card className="!p-8 bg-slate-900 dark:bg-white text-white dark:text-slate-900">
-                        <MessageCircle className="w-10 h-10 mb-6 text-lime-400 dark:text-lime-600" />
+                    <Card className="!p-8 bg-obsidian dark:bg-white text-white dark:text-obsidian">
+                        <MessageCircle className="w-10 h-10 mb-6 text-lime-400 dark:text-brand" />
                         <h3 className="font-serif text-2xl mb-2">Need assistance?</h3>
                         <p className="text-sm opacity-80 mb-8 leading-relaxed">
                             Our support team is available Mon-Fri to help with transactions and disputes.
                         </p>
-                        <button className="w-full py-4 bg-white/10 dark:bg-slate-100 dark:text-slate-900 border border-white/20 dark:border-slate-200 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-white/20 dark:hover:bg-slate-200 transition-all">
+                        <button className="w-full py-4 bg-white/10 dark:bg-slate-200 dark:text-obsidian border border-white/20 dark:border-slate-200 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-white/20 dark:hover:bg-slate-200 transition-all">
                             Contact Support
                         </button>
                     </Card>
@@ -194,7 +194,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
                                 { label: 'API Documentation', icon: FileText },
                             ].map((item, i) => (
                                 <li key={i} className="flex items-center justify-between group cursor-pointer">
-                                    <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300 group-hover:text-lime-600 dark:group-hover:text-[#bef264] transition-colors">
+                                    <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300 group-hover:text-brand dark:group-hover:text-brand transition-colors">
                                         <item.icon className="w-4 h-4" />
                                         <span className="font-medium text-sm">{item.label}</span>
                                     </div>

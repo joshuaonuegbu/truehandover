@@ -12,7 +12,8 @@ import { UserProfile, StorageSettings } from '../types';
 import { playClick, playSuccess } from '../utils/sound';
 import { Card, Badge, GRADIENT_TEXT, InlineErrorBanner } from './Shared';
 import { R2Service } from '../services/r2';
-import { connectByosProvider, type ByosOAuthProvider } from '../services/byosOAuth';
+import { StripeConnectService } from '../services/stripeService';
+import { connectByosProvider, getByosOAuthRedirectUri, validateByosProviderConnection, type ByosOAuthProvider } from '../services/byosOAuth';
 
 // --- VISUAL CONSTANTS ---
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`;
@@ -39,6 +40,8 @@ const InputField = ({ label, value, onChange, placeholder, type = "text", icon: 
 );
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
+    const oauthRedirectUri = getByosOAuthRedirectUri();
+    const isDev = Boolean((import.meta as any)?.env?.DEV);
     // State
     const [formData, setFormData] = useState({
         name: user.name,
@@ -80,8 +83,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
     });
 
     // UX State for Storage
-    const [storageMode, setStorageMode] = useState<'drive' | 's3' | null>(user.storageSettings ? 's3' : null);
+    const [storageMode, setStorageMode] = useState<'drive' | 's3' | null>(user.storageSettings ? 'drive' : null);
     const [isDriveConnectingByProvider, setIsDriveConnectingByProvider] = useState<Record<ByosOAuthProvider, boolean>>({
+        google: false,
+        dropbox: false,
+        onedrive: false
+    });
+    const [isDriveValidatingByProvider, setIsDriveValidatingByProvider] = useState<Record<ByosOAuthProvider, boolean>>({
         google: false,
         dropbox: false,
         onedrive: false
@@ -90,10 +98,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
     // Connection Status State
     const [connectionStatus, setConnectionStatus] = useState<'idle' | 'checking' | 'connected' | 'error'>('idle');
     const [connectionError, setConnectionError] = useState<string | null>(null);
+    // Connect success toast
+    const [driveConnectSuccessMsg, setDriveConnectSuccessMsg] = useState<string | null>(null);
 
     // Stripe Connect State
     const [stripeConnected, setStripeConnected] = useState(user.stripeConnect?.connected || false);
     const [stripeConnecting, setStripeConnecting] = useState(false);
+    const [stripeAccountId, setStripeAccountId] = useState(user.stripeConnect?.accountId || '');
 
     const [activeTab, setActiveTab] = useState<'profile' | 'payments' | 'agency' | 'storage'>('profile');
     const [isSaving, setIsSaving] = useState(false);
@@ -160,7 +171,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
         return storageConfig.byosOneDriveAccountLabel;
     };
 
-    const handleTestDriveConnection = (provider: ByosOAuthProvider) => {
+    const handleTestDriveConnection = async (provider: ByosOAuthProvider) => {
         playClick();
         const credential = getDriveToken(provider);
 
@@ -171,8 +182,28 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
         }
 
         setConnectionError(null);
-        setConnectionStatus('connected');
-        playSuccess();
+        setConnectionStatus('checking');
+        setIsDriveValidatingByProvider(prev => ({ ...prev, [provider]: true }));
+        try {
+            const result = await validateByosProviderConnection(provider, credential);
+
+            setStorageConfig(prev => {
+                const next = { ...prev };
+                if (provider === 'google') next.byosGoogleAccountLabel = result.accountLabel || prev.byosGoogleAccountLabel;
+                if (provider === 'dropbox') next.byosDropboxAccountLabel = result.accountLabel || prev.byosDropboxAccountLabel;
+                if (provider === 'onedrive') next.byosOneDriveAccountLabel = result.accountLabel || prev.byosOneDriveAccountLabel;
+                onUpdateUser({ storageSettings: next });
+                return next;
+            });
+
+            setConnectionStatus('connected');
+            playSuccess();
+        } catch (error) {
+            setConnectionStatus('error');
+            setConnectionError(error instanceof Error ? error.message : 'Could not validate this cloud connection.');
+        } finally {
+            setIsDriveValidatingByProvider(prev => ({ ...prev, [provider]: false }));
+        }
     };
 
     const handleConnectDrive = async (provider: ByosOAuthProvider) => {
@@ -200,9 +231,16 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                 updates.byosOneDriveAccountLabel = result.accountLabel;
             }
 
-            setStorageConfig(prev => ({ ...prev, ...updates }));
+            setStorageConfig(prev => {
+                const next = { ...prev, ...updates };
+                onUpdateUser({ storageSettings: next });
+                return next;
+            });
             setConnectionStatus('connected');
             playSuccess();
+            const label = provider === 'google' ? 'Google Drive' : provider === 'dropbox' ? 'Dropbox' : 'OneDrive';
+            setDriveConnectSuccessMsg(`${label} connected — providers refreshed in editor.`);
+            setTimeout(() => setDriveConnectSuccessMsg(null), 4000);
         } catch (error) {
             setConnectionStatus('error');
             setConnectionError(error instanceof Error ? error.message : 'Drive authorization failed.');
@@ -213,15 +251,26 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
 
     const handleDisconnectDrive = (provider: ByosOAuthProvider) => {
         playClick();
-        if (provider === 'google') {
-            setStorageConfig(prev => ({ ...prev, byosGoogleToken: '', byosGoogleAccountLabel: '' }));
-        }
-        if (provider === 'dropbox') {
-            setStorageConfig(prev => ({ ...prev, byosDropboxToken: '', byosDropboxAccountLabel: '' }));
-        }
-        if (provider === 'onedrive') {
-            setStorageConfig(prev => ({ ...prev, byosOneDriveToken: '', byosOneDriveAccountLabel: '' }));
-        }
+        setStorageConfig(prev => {
+            const next = { ...prev };
+            if (provider === 'google') {
+                next.byosGoogleToken = '';
+                next.byosGoogleAccountLabel = '';
+            }
+            if (provider === 'dropbox') {
+                next.byosDropboxToken = '';
+                next.byosDropboxAccountLabel = '';
+            }
+            if (provider === 'onedrive') {
+                next.byosOneDriveToken = '';
+                next.byosOneDriveAccountLabel = '';
+            }
+            if (next.byosDriveProvider === provider) {
+                next.byosDriveProvider = undefined;
+            }
+            onUpdateUser({ storageSettings: next });
+            return next;
+        });
         setConnectionStatus('idle');
         setConnectionError(null);
     };
@@ -320,6 +369,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
 
     return (
         <div className="space-y-8 animate-slide-up relative z-10 pb-12 w-full">
+
+            {/* Drive connect success toast */}
+            {driveConnectSuccessMsg && (
+                <div className="fixed bottom-6 right-6 z-[200] flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-lime-600 dark:bg-[#bef264] text-white dark:text-black text-xs font-bold shadow-[0_16px_40px_rgba(132,204,22,0.40)] animate-fade-in pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    {driveConnectSuccessMsg}
+                </div>
+            )}
 
             {/* Page Header - Matches App.tsx style (Full Width, Big Type) */}
             <div className="flex flex-col gap-6 border-b border-slate-200 dark:border-white/5 pb-8">
@@ -616,23 +673,41 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                     </div>
                                                     <div className="shrink-0">
                                                         <button
-                                                            onClick={() => {
+                                                            onClick={async () => {
                                                                 playClick();
+                                                                setConnectionError(null);
                                                                 setStripeConnecting(true);
-                                                                setTimeout(() => {
+                                                                try {
+                                                                    const onboarding = await StripeConnectService.getOnboardingUrl({
+                                                                        returnUrl: window.location.href,
+                                                                        refreshUrl: window.location.href,
+                                                                    });
+
+                                                                    if (!onboarding.success) {
+                                                                        const errorMessage = 'error' in onboarding ? onboarding.error : 'Could not start Stripe onboarding.';
+                                                                        setConnectionError(errorMessage || 'Could not start Stripe onboarding.');
+                                                                        setStripeConnecting(false);
+                                                                        return;
+                                                                    }
+
+                                                                    const nextAccountId = onboarding.data.accountId || stripeAccountId;
                                                                     setStripeConnected(true);
-                                                                    setStripeConnecting(false);
-                                                                    playSuccess();
+                                                                    setStripeAccountId(nextAccountId || '');
                                                                     onUpdateUser({
                                                                         stripeConnect: {
-                                                                            accountId: 'acct_1NqH7XQf3ab2cDE',
+                                                                            accountId: nextAccountId || '',
                                                                             connected: true,
                                                                             displayName: formData.name,
                                                                             chargesEnabled: true,
-                                                                            payoutsEnabled: true
-                                                                        }
+                                                                            payoutsEnabled: true,
+                                                                        },
                                                                     });
-                                                                }, 2000);
+                                                                    playSuccess();
+                                                                    window.location.href = onboarding.data.url;
+                                                                } catch (error) {
+                                                                    setConnectionError(error instanceof Error ? error.message : 'Could not connect Stripe account.');
+                                                                    setStripeConnecting(false);
+                                                                }
                                                             }}
                                                             disabled={stripeConnecting}
                                                             className={`px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest transition-all ${stripeConnecting
@@ -681,7 +756,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                             </div>
                                                             <div>
                                                                 <h4 className="font-bold text-sm text-white">{formData.name || 'Your Business'}</h4>
-                                                                <p className="text-[11px] text-white/50 font-mono mt-0.5">acct_1NqH7XQf3ab2cDE</p>
+                                                                <p className="text-[11px] text-white/50 font-mono mt-0.5">{stripeAccountId || 'Connected account'}</p>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-2">
@@ -696,6 +771,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                                 onClick={() => {
                                                                     playClick();
                                                                     setStripeConnected(false);
+                                                                    setStripeAccountId('');
                                                                     onUpdateUser({
                                                                         stripeConnect: {
                                                                             accountId: '',
@@ -886,8 +962,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">
-                                                <button onClick={() => setStorageMode('s3')} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${storageMode === 's3' ? 'bg-orange-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>S3 / R2 Bucket</button>
                                                 <button onClick={() => setStorageMode('drive')} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${storageMode === 'drive' ? 'bg-blue-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>Cloud Drive</button>
+                                                <button onClick={() => setStorageMode('s3')} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${storageMode === 's3' ? 'bg-orange-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>S3 / R2 Bucket</button>
                                             </div>
                                         </div>
 
@@ -907,6 +983,17 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                             onDismiss={() => setConnectionError(null)}
                                                             className="mb-4"
                                                         />
+                                                    )}
+                                                    <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl flex items-start gap-3">
+                                                        <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5" />
+                                                        <p className="text-[11px] text-amber-800 dark:text-amber-200 leading-relaxed">
+                                                            When connecting cloud accounts from a local development environment, your OAuth provider may display an unverified app warning. This is expected behaviour during testing. Proceed only when authorising your own cloud storage account, and ensure the redirect URI in your provider's developer console matches the one configured for TrueHandover exactly.
+                                                        </p>
+                                                    </div>
+                                                    {isDev && (
+                                                        <p className="mb-4 text-[10px] font-mono text-slate-500 dark:text-slate-400 break-all">
+                                                            OAuth redirect URI (debug): {oauthRedirectUri}
+                                                        </p>
                                                     )}
                                                     <div className="space-y-4">
                                                         {([
@@ -940,6 +1027,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                         ] as const).map((item) => {
                                                             const Icon = item.icon;
                                                             const isConnecting = isDriveConnectingByProvider[item.provider];
+                                                            const isValidating = isDriveValidatingByProvider[item.provider];
                                                             const accountLabel = getDriveLabel(item.provider);
 
                                                             return (
@@ -977,10 +1065,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                                         </button>
                                                                         <button
                                                                             onClick={() => handleTestDriveConnection(item.provider)}
-                                                                            disabled={!item.connected}
+                                                                            disabled={!item.connected || isValidating}
                                                                             className="px-3 py-2 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
                                                                         >
-                                                                            Validate
+                                                                            {isValidating ? 'Validating...' : 'Validate'}
                                                                         </button>
                                                                     </div>
                                                                 </div>

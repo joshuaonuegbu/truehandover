@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { playClick, playSuccess } from '../utils/sound';
 import { InlineErrorBanner } from './Shared';
+import { supabase } from '../services/supabaseClient';
 
 const EditorialIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 32 32" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -39,14 +40,14 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-lime-400/20 dark:bg-lime-500/10 rounded-full blur-[120px] animate-pulse" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-400/10 dark:bg-blue-500/10 rounded-full blur-[120px] animate-pulse delay-700" />
 
-            {/* FOCAL GRAIN VIGNETTE */}
-            <div className="absolute inset-0 pointer-events-none z-50 hidden dark:block"
+            {/* FOCAL TEXTURE VIGNETTE - SUBTLE TECH GRID */}
+            <div className="absolute inset-[-50%] pointer-events-none z-50 hidden dark:block"
                 style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-                    filter: 'contrast(800%)',
-                    maskImage: 'radial-gradient(circle at center, black 10%, transparent 55%)',
-                    WebkitMaskImage: 'radial-gradient(circle at center, black 10%, transparent 55%)',
-                    opacity: 0.15
+                    backgroundImage: `radial-gradient(circle, #ffffff 1px, transparent 1px)`,
+                    backgroundSize: '24px 24px',
+                    maskImage: 'radial-gradient(closest-side at center, black 0%, transparent 100%)',
+                    WebkitMaskImage: 'radial-gradient(closest-side at center, black 0%, transparent 100%)',
+                    opacity: 0.03
                 }}
             />
 
@@ -99,7 +100,7 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
                                 <EditorialIcon className="w-7 h-7 text-black" />
                             </div>
                             <div className="px-4 py-1.5 rounded-full bg-black/5 dark:bg-white/10 border border-black/5 dark:border-white/10 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
-                                Encrypted
+                                Protected Access
                             </div>
                         </div>
 
@@ -167,17 +168,17 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
     const [password, setPassword] = useState('');
     const [focusedField, setFocusedField] = useState<string | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
+    const [isSignUp, setIsSignUp] = useState(false);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         const normalizedEmail = email.trim();
         if (!normalizedEmail || !password.trim()) {
             setFormError('Enter both email and password to continue.');
             return;
         }
-        const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
-        if (!isValidEmail) {
-            setFormError('Enter a valid email address.');
+        if (!supabase) {
+            setFormError("Supabase connection missing. Check .env configuration.");
             return;
         }
 
@@ -185,11 +186,31 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
         setFormError(null);
         setIsLoading(true);
 
-        setTimeout(() => {
+        try {
+            if (isSignUp) {
+                const { error } = await supabase.auth.signUp({
+                    email: normalizedEmail,
+                    password: password,
+                    options: { data: { name: normalizedEmail.split('@')[0] } }
+                });
+                if (error) throw error;
+                // Wait for session sync or assume signed in:
+                playSuccess();
+                navigate('/dashboard');
+            } else {
+                const { error } = await supabase.auth.signInWithPassword({
+                    email: normalizedEmail,
+                    password: password,
+                });
+                if (error) throw error;
+                playSuccess();
+                navigate('/dashboard');
+            }
+        } catch (err: any) {
+            setFormError(err.message || "Failed to authenticate.");
+        } finally {
             setIsLoading(false);
-            playSuccess();
-            navigate('/dashboard');
-        }, 1200);
+        }
     };
 
     return (
@@ -198,21 +219,23 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
             {/* Crisp film grain — visible in both modes */}
             <div className="absolute inset-0 pointer-events-none z-0 mix-blend-multiply dark:mix-blend-overlay"
                 style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.65' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                    backgroundSize: '250px 250px',
                     filter: 'contrast(1700%) brightness(102%)',
                     opacity: 0.05
                 }}
             />
             <div className="absolute inset-0 pointer-events-none z-0 hidden dark:block mix-blend-overlay"
                 style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.65' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                    backgroundSize: '250px 250px',
                     filter: 'contrast(2100%) brightness(102%)',
                     opacity: 0.56
                 }}
             />
 
             {/* Left Column: Sign In Interface */}
-            <div className="w-full lg:w-[45%] xl:w-[40%] flex flex-col justify-center px-8 md:px-16 lg:px-20 xl:px-24 relative z-10 bg-white dark:bg-[#121214] border-r border-slate-100 dark:border-white/5">
+            <div className="w-full lg:w-[45%] xl:w-[40%] flex flex-col justify-center px-8 md:px-16 lg:px-20 xl:px-24 relative z-10 bg-white/50 dark:bg-transparent">
 
                 {/* Back Button */}
                 <button
@@ -246,7 +269,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                 <div className="max-w-md w-full mx-auto pt-20 lg:pt-0 animate-slide-up">
                     <header className="mb-12">
                         <h1 className="font-serif text-5xl md:text-6xl font-medium tracking-tight mb-4 text-slate-900 dark:text-white leading-[0.9]">
-                            Welcome <span className="italic text-lime-600 dark:text-[#bef264]">Back.</span>
+                            {isSignUp ? "Create" : "Welcome"} <span className="italic text-lime-600 dark:text-[#bef264]">{isSignUp ? "Account." : "Back."}</span>
                         </h1>
                         <p className="text-slate-500 dark:text-slate-400 text-lg font-medium tracking-tight">
                             Access your secure professional workspace.
@@ -305,7 +328,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                 ) : (
                                     <>
-                                        <span>Sign In</span>
+                                        <span>{isSignUp ? 'Create Account' : 'Sign In'}</span>
                                         <ArrowRight className="w-3 h-3 group-hover/btn:translate-x-1 transition-transform" />
                                     </>
                                 )}
@@ -315,17 +338,17 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
 
                     <div className="mt-16 text-center pt-8 border-t border-slate-50 dark:border-white/5">
                         <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                            Don't have an account? <button onClick={() => playClick()} className="font-bold text-black dark:text-white hover:underline decoration-[#bef264] decoration-2 underline-offset-4 transition-all">Create one!</button>
+                            {isSignUp ? "Already have an account?" : "Don't have an account?"} <button type="button" onClick={() => { playClick(); setIsSignUp(!isSignUp); setFormError(null); }} className="font-bold text-black dark:text-white hover:underline decoration-[#bef264] decoration-2 underline-offset-4 transition-all">{isSignUp ? "Sign In!" : "Create one!"}</button>
                         </p>
                     </div>
                 </div>
             </div>
 
             {/* Right Column: Visual Sculpture Side */}
-            <div className="hidden lg:flex flex-1 items-center justify-center relative p-24 overflow-visible bg-slate-50/50 dark:bg-[#0f0f12]">
+            <div className="hidden lg:flex flex-1 items-center justify-center relative p-24 overflow-visible bg-slate-50/50 dark:bg-transparent">
 
                 {/* Replacement for Grid: Soft Spotlight/Gallery Floor Effect */}
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-200/40 via-slate-50/0 to-transparent dark:from-white/5 dark:via-white/0 pointer-events-none" />
+                <div className="absolute inset-[-50%] bg-[radial-gradient(closest-side_at_center,_var(--tw-gradient-stops))] from-slate-200/40 via-slate-50/0 to-transparent dark:from-white/5 dark:via-white/0 pointer-events-none" />
 
                 <EnhancedMonolith focusedField={focusedField} email={email} password={password} />
 

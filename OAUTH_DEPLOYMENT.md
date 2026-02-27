@@ -1,6 +1,13 @@
-# OAuth Deployment Guide (Google Drive, Dropbox, OneDrive)
+# BYOS OAuth Deployment Guide (Google Drive, Dropbox, OneDrive)
 
-TrueHandover supports "Bring Your Own Storage" (BYOS) via cloud-drive connections in:
+> Status (Feb 24, 2026): **Disabled** in the current production-hardening posture.
+>
+> Rationale: browser-held OAuth tokens + direct provider API calls are not acceptable for production security.
+> Current BYOS support is **links-only** (paste a share link). For fully protected delivery, use **native uploads**.
+
+This document is retained as a reference for a future secure connector implementation.
+
+Historically, TrueHandover supported "Bring Your Own Storage" (BYOS) via cloud-drive connections in:
 
 `Settings -> Storage -> Cloud Drive`
 
@@ -94,4 +101,3 @@ For maximum security in a real product, you should:
 - Do token exchange and provider API calls on a backend service
 - Store tokens server-side (encrypted), and never expose provider tokens or real storage URLs to clients
 - Only return short-lived signed download URLs after payment clears
-

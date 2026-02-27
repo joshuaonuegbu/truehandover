@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef, useMemo } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams, Outlet, Link } from 'react-router-dom';
 import {
     Lock, FileText, Settings, Bell,
@@ -37,6 +37,9 @@ import SettingsPage from './components/SettingsPage';
 import ReportsView from './components/ReportsView';
 import ActivityView from './components/ActivityView';
 import { Card, Badge, GRADIENT_TEXT } from './components/Shared';
+import ThemeModeDropdown from './components/ThemeModeDropdown';
+import DesignShowcase from './components/DesignShowcaseHiFi';
+import { supabase } from './services/supabaseClient';
 import { Project, UserProfile, ViewState, FileAsset } from './types';
 import { StoreProvider, useStore } from './context/StoreContext';
 
@@ -273,6 +276,302 @@ const Timeline = () => {
     );
 };
 
+
+const CyclingWidget = () => {
+    const [cycleIndex, setCycleIndex] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const [isReplying, setIsReplying] = useState(false);
+    const [replyText, setReplyText] = useState('');
+    const duration = 10000; // 10 seconds per slide
+    const interval = 50; // Update frequency
+
+    useEffect(() => {
+        let timer: any;
+        if (!isPaused && !isReplying) {
+            timer = setInterval(() => {
+                setProgress((prev) => {
+                    const next = prev + (interval / duration) * 100;
+                    if (next >= 100) {
+                        setCycleIndex((idx) => (idx + 1) % 5); // Updated to 5 slides
+                        return 0;
+                    }
+                    return next;
+                });
+            }, interval);
+        }
+        return () => clearInterval(timer);
+    }, [isPaused, isReplying]);
+
+    // Reset progress when manually changing slides
+    const manualChange = (index: number) => {
+        setCycleIndex(index);
+        setProgress(0);
+        setIsReplying(false);
+    };
+
+    const slides = [
+        {
+            id: 'revenue',
+            render: () => (
+                <div className="absolute inset-0 p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-[#23232e] rounded-3xl transition-all duration-700 ease-in-out">
+                    <div>
+                        <div className="flex justify-between items-start mb-4">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Net Revenue (Oct)</span>
+                            <div className="flex items-center gap-1 text-lime-600 dark:text-[#bef264] font-bold text-[10px] bg-lime-50 dark:bg-[#bef264]/10 px-2 py-1 rounded-full border border-lime-100 dark:border-[#bef264]/20">
+                                <ArrowUpRight className="w-3 h-3" /> 12.5%
+                            </div>
+                        </div>
+                        <div className="flex items-baseline gap-1 mb-6">
+                            <PrivacyBlur strength="strong" className={`font-serif text-5xl md:text-6xl tracking-tighter ${GRADIENT_TEXT}`}>$24,500.00</PrivacyBlur>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300"><PrivacyBlur>$4,200.00</PrivacyBlur> Pending</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 h-32 opacity-20 dark:opacity-40 pointer-events-none">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={[{ v: 10 }, { v: 25 }, { v: 18 }, { v: 30 }, { v: 25 }, { v: 40 }, { v: 35 }, { v: 50 }]}>
+                                <defs>
+                                    <linearGradient id="colorHeroMini" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#bef264" stopOpacity={1} />
+                                        <stop offset="95%" stopColor="#bef264" stopOpacity={0} />
+                                    </linearGradient>
+                                    <filter id="shadow" height="200%">
+                                        <feDropShadow dx="0" dy="5" stdDeviation="6" floodColor="#bef264" floodOpacity="0.8" />
+                                    </filter>
+                                </defs>
+                                <Area type="monotone" dataKey="v" stroke="#bef264" strokeWidth={3} fill="url(#colorHeroMini)" filter="url(#shadow)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'storage',
+            render: () => (
+                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-[#1e293b] rounded-3xl transition-all duration-700 ease-in-out">
+                    <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                            <HardDrive className="w-4 h-4 text-slate-400" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Vault Storage</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-white/10 px-2 py-1 rounded-md">85% Used</span>
+                    </div>
+
+                    <div className="flex-1 flex flex-col justify-center gap-4">
+                        <div className="flex items-baseline gap-2">
+                            <span className="font-serif text-4xl md:text-5xl text-slate-900 dark:text-white tracking-tight">25.5</span>
+                            <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">GB / 30 GB</span>
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <div className="w-full h-2.5 flex rounded-full overflow-hidden gap-0.5 bg-slate-100 dark:bg-white/5">
+                                <div className="h-full bg-indigo-500 w-[45%]" />
+                                <div className="h-full bg-sky-400 w-[25%]" />
+                                <div className="h-full bg-lime-400 w-[15%]" />
+                            </div>
+                            <div className="flex justify-between text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Video (13GB)</span>
+                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> Images (7GB)</span>
+                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-lime-400" /> Docs (5GB)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-start">
+                        <button className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1.5 transition-colors">
+                            Manage Files <ArrowRight className="w-3 h-3" />
+                        </button>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'reviews',
+            render: () => (
+                <div className="absolute inset-0 flex h-full bg-slate-50 dark:bg-[#1e293b] rounded-3xl transition-all duration-700 ease-in-out overflow-hidden">
+                    
+                    {/* Left Side: Original Feedback */}
+                    <div className={`flex flex-col justify-between p-6 sm:p-8 transition-all duration-500 ${isReplying ? 'w-1/2 border-r border-slate-200 dark:border-white/5' : 'w-full'}`}>
+                        {/* Header: Type + Time */}
+                        <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">New Feedback</span>
+                            </div>
+                            <span className="text-[10px] font-mono text-slate-400">09:42 AM</span>
+                        </div>
+
+                        {/* Body: Quote */}
+                        <div className="flex-1 flex flex-col justify-center py-2">
+                            <h3 className={`font-serif leading-snug text-slate-900 dark:text-white transition-all duration-500 ${isReplying ? 'text-lg md:text-xl' : 'text-xl md:text-2xl'}`}>
+                                "The typography system feels incredibly balanced now. Check the mobile spacing?"
+                            </h3>
+                        </div>
+
+                        {/* Footer: User + Actions */}
+                        <div className="flex items-end justify-between pb-2">
+                            <div className="flex items-center gap-3">
+                                <img src="https://api.dicebear.com/9.x/shapes/svg?seed=SarahChen" alt="Client" className="w-8 h-8 rounded-full bg-white border border-slate-200 dark:border-white/10" />
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-slate-900 dark:text-white">Sarah Chen</span>
+                                    <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">Brand Identity</span>
+                                </div>
+                            </div>
+                            
+                            {!isReplying && (
+                                <div className="flex items-center gap-2 pr-16">
+                                    <button className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white dark:hover:bg-white/5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 transition-all">
+                                        Mark Resolved
+                                    </button>
+                                    <button 
+                                        onClick={() => setIsReplying(true)}
+                                        className="px-4 py-2 rounded-lg bg-slate-900 text-white dark:bg-white dark:text-black text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2"
+                                    >
+                                        Reply <ArrowRight className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right Side: Reply Box */}
+                    <div className={`flex flex-col p-6 sm:p-8 bg-white dark:bg-[#23232e] transition-all duration-500 ${isReplying ? 'w-1/2 opacity-100 translate-x-0' : 'w-0 opacity-0 translate-x-full p-0 overflow-hidden'}`}>
+                        <div className="flex justify-between items-center mb-4">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Reply to Sarah</span>
+                            <button onClick={() => setIsReplying(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-4 h-4" /></button>
+                        </div>
+                        <textarea 
+                            className="flex-1 w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-3 text-sm text-slate-900 dark:text-white resize-none focus:outline-none focus:border-lime-500 dark:focus:border-[#bef264] transition-colors"
+                            placeholder="Type your reply..."
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                        />
+                        <div className="flex justify-start mt-4">
+                            <button 
+                                onClick={() => { setIsReplying(false); setReplyText(''); playSuccess(); }}
+                                className="px-4 py-2 rounded-lg bg-lime-600 text-white dark:bg-[#bef264] dark:text-black text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2"
+                            >
+                                Send <Send className="w-3 h-3" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'upgrade',
+            render: () => (
+                <div className="absolute inset-0 p-8 z-10 flex flex-col justify-between h-full bg-slate-900 text-white dark:bg-white/5 dark:text-slate-900 rounded-3xl animate-fade-in relative overflow-hidden transition-all duration-700 ease-in-out">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 dark:bg-black/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
+                    <div className="relative h-full flex flex-col justify-between z-10">
+                        <div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-lime-500 text-white dark:bg-[#bef264] dark:text-black">Upgrade</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest opacity-60 text-white dark:text-white/60">Business Tier</span>
+                            </div>
+                            <h3 className="font-serif text-3xl md:text-4xl leading-tight mb-2 text-white dark:text-white">Unlock unlimited project history.</h3>
+                            <p className="text-sm opacity-80 max-w-[80%] text-slate-300 dark:text-slate-400">Get advanced reporting and client portals.</p>
+                        </div>
+                        <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:gap-4 transition-all mt-4 text-lime-400 dark:text-[#bef264]">
+                            View Plans <ArrowRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'live_activity',
+            render: () => (
+                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-slate-900 dark:bg-black rounded-3xl transition-all duration-700 ease-in-out relative overflow-hidden">
+                    {/* Subtle grid background */}
+                    <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+                    
+                    <div className="relative z-10 flex justify-between items-start">
+                        <div className="flex items-center gap-2 px-2 py-1 rounded bg-white/10 border border-white/10 backdrop-blur-md">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-lime-500"></span>
+                            </span>
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-white">Live Session</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-white/50">Right Now</span>
+                    </div>
+
+                    <div className="relative z-10 flex-1 flex flex-col justify-center">
+                        <div className="flex items-center gap-4 mb-3">
+                            <div className="relative">
+                                <img src="https://api.dicebear.com/9.x/shapes/svg?seed=MikeRoss" alt="Client" className="w-12 h-12 rounded-full border-2 border-slate-800" />
+                                <div className="absolute -bottom-1 -right-1 bg-slate-800 p-1 rounded-full border border-slate-700">
+                                    <Monitor className="w-3 h-3 text-lime-400" />
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-white leading-tight">Mike Ross</h3>
+                                <p className="text-xs text-white/60">Vertex Corp</p>
+                            </div>
+                        </div>
+                        <p className="font-serif text-xl text-white/90 leading-snug">
+                            Currently viewing <span className="text-lime-400 font-sans font-medium">Q4_Financial_Report.pdf</span>
+                        </p>
+                    </div>
+
+                    <div className="relative z-10 flex justify-start">
+                        <button className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2 backdrop-blur-md border border-white/10">
+                            Join Session <ArrowRight className="w-3 h-3" />
+                        </button>
+                    </div>
+                </div>
+            )
+        }
+    ];
+
+    return (
+        <div 
+            className="w-full bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm relative group hover:shadow-md transition-all h-[280px]"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+        >
+            {/* Progress Bar */}
+            <div className="absolute top-0 left-4 right-4 h-0.5 bg-slate-100 dark:bg-white/5 z-30 rounded-b-full overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                <div 
+                    className="h-full bg-lime-500 dark:bg-[#bef264] transition-all duration-100 ease-linear shadow-[0_0_8px_rgba(132,204,22,0.5)]"
+                    style={{ width: `${progress}%`, opacity: isPaused ? 0.2 : 1 }}
+                />
+            </div>
+
+            {slides.map((slide, i) => (
+                <div 
+                    key={slide.id} 
+                    className={`absolute inset-0 w-full h-full transition-all duration-1000 ease-in-out transform ${
+                        i === cycleIndex 
+                            ? 'opacity-100 translate-x-0 z-20' 
+                            : 'opacity-0 translate-x-8 z-10 pointer-events-none'
+                    }`}
+                >
+                    {slide.render()}
+                </div>
+            ))}
+            
+            {/* Cycle Indicators */}
+            <div className="absolute bottom-6 right-8 flex gap-2 z-30 pointer-events-auto">
+                {slides.map((_, i) => (
+                    <button 
+                        key={i} 
+                        onClick={() => manualChange(i)}
+                        className={`h-1.5 rounded-full transition-all duration-500 shadow-sm ${i === cycleIndex ? 'w-8 bg-slate-900 dark:bg-white' : 'w-1.5 bg-slate-300 dark:bg-white/20 hover:bg-slate-400'}`} 
+                    />
+                ))}
+            </div>
+        </div>
+    );
+};
+
 const DashboardView = ({ projects, user }: { projects: Project[], user: UserProfile }) => {
     // ... same as before
     const navigate = useNavigate();
@@ -333,41 +632,9 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 md:gap-12">
                 <div className="xl:col-span-8 flex flex-col gap-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm flex flex-col justify-between relative group hover:shadow-md transition-all h-[280px]">
-                            <div className="p-8 z-10">
-                                <div className="flex justify-between items-start mb-4">
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Net Revenue (Oct)</span>
-                                    <div className="flex items-center gap-1 text-lime-600 dark:text-[#bef264] font-bold text-[10px] bg-lime-50 dark:bg-[#bef264]/10 px-2 py-1 rounded-full border border-lime-100 dark:border-[#bef264]/20">
-                                        <ArrowUpRight className="w-3 h-3" /> 12.5%
-                                    </div>
-                                </div>
-                                <div className="flex items-baseline gap-1 mb-6">
-                                    <PrivacyBlur strength="strong" className={`font-serif text-5xl md:text-6xl tracking-tighter ${GRADIENT_TEXT}`}>$24,500.00</PrivacyBlur>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300"><PrivacyBlur>$4,200.00</PrivacyBlur> Pending</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="absolute bottom-0 left-0 right-0 h-32 opacity-20 dark:opacity-40 pointer-events-none">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={[{ v: 10 }, { v: 25 }, { v: 18 }, { v: 30 }, { v: 25 }, { v: 40 }, { v: 35 }, { v: 50 }]}>
-                                        <defs>
-                                            <linearGradient id="colorHeroMini" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#bef264" stopOpacity={1} />
-                                                <stop offset="95%" stopColor="#bef264" stopOpacity={0} />
-                                            </linearGradient>
-                                            <filter id="shadow" height="200%">
-                                                <feDropShadow dx="0" dy="5" stdDeviation="6" floodColor="#bef264" floodOpacity="0.8" />
-                                            </filter>
-                                        </defs>
-                                        <Area type="monotone" dataKey="v" stroke="#bef264" strokeWidth={3} fill="url(#colorHeroMini)" filter="url(#shadow)" />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
+                        
+                        {/* CYCLING WIDGET COMPONENT */}
+                        <CyclingWidget />
 
                         <div className="flex flex-col gap-4">
                             <div className="flex items-center justify-between px-1 pt-1">
@@ -524,6 +791,44 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
     // ... same as before
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [vaultFilter, setVaultFilter] = useState<'all' | 'active' | 'paid' | 'archived'>('all');
+
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    const visibleProjects = projects.filter((project) => {
+        const statusMatch = (() => {
+            if (vaultFilter === 'all') return true;
+            if (vaultFilter === 'active') return ['draft', 'awaiting_signature', 'awaiting_payment', 'payment_verification'].includes(project.status);
+            if (vaultFilter === 'paid') return project.status === 'paid';
+            if (vaultFilter === 'archived') return project.status === 'completed';
+            return true;
+        })();
+
+        if (!statusMatch) return false;
+        if (!normalizedQuery) return true;
+
+        const projectFields = [
+            project.name,
+            project.description,
+            project.client?.name,
+            project.client?.company,
+            project.client?.email,
+            project.id,
+            project.type,
+            project.status,
+        ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+
+        if (projectFields.includes(normalizedQuery)) return true;
+
+        return (project.files || []).some((file) => {
+            const fileFields = [file.name, file.type, file.tag, file.folderName].filter(Boolean).join(' ').toLowerCase();
+            return fileFields.includes(normalizedQuery);
+        });
+    });
 
     const getFileIcon = (type: string) => {
         switch (type) {
@@ -563,12 +868,27 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/50 dark:bg-[#23232e] backdrop-blur-md p-2 rounded-2xl border border-slate-200 dark:border-white/5">
                 <div className="relative w-full sm:flex-1 group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-lime-600 dark:group-focus-within:text-[#bef264] transition-colors" />
-                    <input type="text" placeholder="Search projects..." className="w-full h-12 pl-12 pr-4 rounded-xl bg-transparent text-sm focus:bg-white dark:focus:bg-white/5 outline-none transition-all placeholder:text-slate-500" />
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search projects, clients, or files..."
+                        className="w-full h-12 pl-12 pr-4 rounded-xl bg-transparent text-sm focus:bg-white dark:focus:bg-white/5 outline-none transition-all placeholder:text-slate-500"
+                    />
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto no-scrollbar">
-                    {['All Projects', 'Active', 'Paid', 'Archived'].map((filter, i) => (
-                        <button key={i} className={`px-6 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-colors ${i === 0 ? 'bg-white dark:bg-white/10 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white/5'}`}>
-                            {filter}
+                    {[
+                        { key: 'all', label: 'All Projects' },
+                        { key: 'active', label: 'Active' },
+                        { key: 'paid', label: 'Paid' },
+                        { key: 'archived', label: 'Archived' },
+                    ].map((filter) => (
+                        <button
+                            key={filter.key}
+                            onClick={() => setVaultFilter(filter.key as 'all' | 'active' | 'paid' | 'archived')}
+                            className={`px-6 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-colors ${vaultFilter === filter.key ? 'bg-white dark:bg-white/10 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white/5'}`}
+                        >
+                            {filter.label}
                         </button>
                     ))}
                     <div className="w-px h-6 bg-slate-300 dark:bg-white/10 mx-2" />
@@ -577,7 +897,13 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                 </div>
             </div>
             <div className="grid grid-cols-1 gap-6 lg:gap-12">
-                {projects.map(project => (
+                {visibleProjects.length === 0 && (
+                    <div className="py-20 flex flex-col items-center justify-center opacity-50">
+                        <Search className="w-10 h-10 mb-4 stroke-1" />
+                        <p className="font-serif text-xl italic">No projects matched your search.</p>
+                    </div>
+                )}
+                {visibleProjects.map(project => (
                     <div key={project.id} className="group relative w-full bg-white dark:bg-[#0f0f15] rounded-2xl lg:rounded-[2.5rem] overflow-hidden border border-slate-200 dark:border-white/5 transition-all duration-300 hover:scale-[1.01] hover:-translate-y-1 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.08)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)]">
                         <div className="flex flex-col lg:flex-row h-full min-h-[280px] lg:min-h-[340px]">
                             <div className="lg:w-[35%] bg-slate-50 dark:bg-[#18181b] flex flex-col justify-between relative border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-white/10 transition-colors overflow-hidden">
@@ -648,19 +974,42 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                 </div>
                                 <div className="h-16 lg:h-20 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#18181b]/50 backdrop-blur-md flex items-center justify-between px-3 sm:px-4 md:px-8 overflow-x-auto no-scrollbar gap-3">
                                     <div className="flex items-center gap-2 lg:gap-3 shrink-0">
-                                        <button onClick={() => { playClick(); navigate(`/preview/${project.id}`, { state: { from: location.pathname } }); }} className="h-10 lg:h-12 px-4 lg:px-6 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 rounded-xl font-bold text-[10px] lg:text-xs uppercase tracking-widest flex items-center gap-2 lg:gap-3 hover:scale-105 transition-transform shadow-xl shadow-black/10 dark:shadow-white/5 group/preview shrink-0">
-                                            <div className="w-5 h-5 lg:w-6 lg:h-6 rounded-full bg-white/20 dark:bg-black/10 flex items-center justify-center shrink-0"><Eye className="w-3 h-3 group-hover/preview:scale-110 transition-transform" /></div>
-                                            <span className="shrink-0 hidden sm:inline">Launch Preview</span>
-                                            <span className="shrink-0 sm:hidden">Preview</span>
+                                        {/* Launch Preview — primary CTA: gradient bg in dark, rich solid in light */}
+                                        <button
+                                            onClick={() => { playClick(); navigate(`/preview/${project.id}`, { state: { from: location.pathname } }); }}
+                                            className="h-10 lg:h-12 px-4 lg:px-6 rounded-xl font-bold text-[10px] lg:text-xs uppercase tracking-widest flex items-center gap-2 lg:gap-3 transition-all hover:scale-105 shadow-xl group/preview shrink-0 relative overflow-hidden
+                                                bg-slate-900 text-white shadow-black/20
+                                                dark:bg-transparent dark:text-[#111] dark:shadow-[#bef264]/20"
+                                            style={{} as React.CSSProperties}
+                                        >
+                                            {/* Dark mode: lime gradient bg layer (no reflection) */}
+                                            <span className="hidden dark:block absolute inset-0 bg-gradient-to-br from-[#d9f99d] via-[#bef264] to-[#a3e635] rounded-xl" />
+                                            {/* Light mode: subtle gradient sheen */}
+                                            <span className="dark:hidden absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-600 rounded-xl" />
+                                            <span className="relative z-10 flex items-center gap-2 lg:gap-3">
+                                                <span className="w-5 h-5 lg:w-6 lg:h-6 rounded-full bg-white/20 dark:bg-black/15 flex items-center justify-center shrink-0">
+                                                    <Eye className="w-3 h-3 group-hover/preview:scale-110 transition-transform" />
+                                                </span>
+                                                <span className="shrink-0 hidden sm:inline">Launch Preview</span>
+                                                <span className="shrink-0 sm:hidden">Preview</span>
+                                            </span>
                                         </button>
-                                        <button className="h-10 lg:h-12 px-3 lg:px-6 rounded-xl border font-bold text-[10px] lg:text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-sm shrink-0 bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200/70 dark:bg-white/5 dark:border-white/10 dark:text-white/70 dark:hover:bg-white/10">
-                                            <Copy className="w-3.5 h-3.5" />
-                                            <span className="shrink-0 hidden md:inline">Copy Client Link</span>
-                                            <span className="shrink-0 md:hidden hidden sm:inline">Copy</span>
+
+                                        {/* Copy Client Link — gradient text, frosted border */}
+                                        <button className="h-10 lg:h-12 px-3 lg:px-6 rounded-xl border font-bold text-[10px] lg:text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-sm shrink-0 group/copy
+                                            bg-white/60 border-slate-200 hover:bg-white hover:border-slate-300 hover:shadow-md
+                                            dark:bg-white/[0.04] dark:border-[#bef264]/20 dark:hover:bg-[#bef264]/10 dark:hover:border-[#bef264]/40">
+                                            <Copy className="w-3.5 h-3.5 text-slate-500 dark:text-[#bef264] group-hover/copy:scale-110 transition-transform" />
+                                            <span className="shrink-0 hidden md:inline bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500 dark:from-[#bef264] dark:to-white">Copy Client Link</span>
+                                            <span className="shrink-0 md:hidden hidden sm:inline bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500 dark:from-[#bef264] dark:to-white">Copy</span>
                                         </button>
-                                        <button className="hidden md:flex h-10 lg:h-12 px-6 rounded-xl border font-bold text-xs uppercase tracking-wider items-center gap-2 transition-all shadow-sm shrink-0 bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200/70 dark:bg-white/5 dark:border-white/10 dark:text-white/70 dark:hover:bg-white/10">
-                                            <Send className="w-3.5 h-3.5" />
-                                            <span className="shrink-0">Send to Client</span>
+
+                                        {/* Send to Client — gradient text, frosted border */}
+                                        <button className="hidden md:flex h-10 lg:h-12 px-6 rounded-xl border font-bold text-xs uppercase tracking-wider items-center gap-2 transition-all shadow-sm shrink-0 group/send
+                                            bg-white/60 border-slate-200 hover:bg-white hover:border-slate-300 hover:shadow-md
+                                            dark:bg-white/[0.04] dark:border-[#c4b5fd]/20 dark:hover:bg-[#c4b5fd]/10 dark:hover:border-[#c4b5fd]/40">
+                                            <Send className="w-3.5 h-3.5 text-slate-500 dark:text-[#c4b5fd] group-hover/send:scale-110 transition-transform" />
+                                            <span className="shrink-0 bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500 dark:from-[#c4b5fd] dark:to-white">Send to Client</span>
                                         </button>
                                     </div>
                                     <div className="flex items-center gap-1.5 lg:gap-2 shrink-0">
@@ -692,7 +1041,7 @@ const MobileNavBar = ({ navItems, currentPath, onNavigate }: { navItems: any[], 
                         className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-300 ${isActive ? 'text-lime-600 dark:text-[#bef264]' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300'}`}
                     >
                         <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-lime-100/50 dark:bg-[#bef264]/10 -translate-y-1' : ''}`}>
-                            <item.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${isActive ? 'fill-current' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
+                            <item.icon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={isActive ? 2.5 : 2} />
                         </div>
                         <span className={`text-[9px] font-bold uppercase tracking-wider transition-all ${isActive ? 'opacity-100' : 'opacity-0 scale-0 hidden sm:block'}`}>
                             {item.label}
@@ -704,11 +1053,12 @@ const MobileNavBar = ({ navItems, currentPath, onNavigate }: { navItems: any[], 
     </div>
 );
 
-const AppLayout = ({ user, isDarkMode, themeMode, cycleTheme, togglePrivacyMode, privacyMode }: any) => {
+const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togglePrivacyMode, privacyMode }: any) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false); // NEW State
+    const [showDesignLab, setShowDesignLab] = useState(false);
 
     // Determine current view state based on pathname for active highlighting
     const currentPath = location.pathname.split('/')[1] || 'dashboard';
@@ -756,40 +1106,120 @@ const AppLayout = ({ user, isDarkMode, themeMode, cycleTheme, togglePrivacyMode,
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [isProfileOpen]);
 
-    const SearchCommandPalette = ({ onClose }: { onClose: () => void }) => (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-32 px-4">
-            <div className="absolute inset-0 bg-slate-900/20 dark:bg-black/40 transition-colors duration-300" onClick={onClose} />
-            <div className="relative w-full max-w-2xl bg-white dark:bg-[#1a1a23] rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden animate-slide-up ring-1 ring-black/5">
-                <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-white/5">
-                    <Search className="w-5 h-5 text-slate-400" />
-                    <input
-                        autoFocus
-                        placeholder="Search projects, files, or settings..."
-                        className="flex-1 bg-transparent outline-none text-lg text-slate-900 dark:text-white placeholder:text-slate-400 font-medium"
-                    />
-                    <div className="px-2 py-1 rounded bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-white/10">ESC</div>
-                </div>
-                <div className="p-2">
-                    <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Recent</div>
-                    {/* Mock results */}
-                    <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors text-left group">
-                        <FileText className="w-4 h-4 text-slate-400 group-hover:text-lime-600 dark:group-hover:text-[#bef264]" />
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Brand Identity_v2.pdf</span>
-                        <span className="ml-auto text-xs text-slate-400">Project Asset</span>
-                    </button>
-                    <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors text-left group">
-                        <User className="w-4 h-4 text-slate-400 group-hover:text-lime-600 dark:group-hover:text-[#bef264]" />
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Vertex Corp</span>
-                        <span className="ml-auto text-xs text-slate-400">Client</span>
-                    </button>
-                </div>
-                <div className="px-4 py-2 bg-slate-50 dark:bg-black/20 border-t border-slate-100 dark:border-white/5 flex justify-between items-center text-[10px] text-slate-400">
-                    <span><strong>Enter</strong> to select</span>
-                    <span><strong>↑↓</strong> to navigate</span>
+    const SearchCommandPalette = ({ onClose }: { onClose: () => void }) => {
+        const [query, setQuery] = useState('');
+
+        const routeItems = useMemo(() => ([
+            { id: 'route-dashboard', title: 'Dashboard', subtitle: 'View your overview', icon: LayoutDashboard, action: () => navigate('/dashboard') },
+            { id: 'route-vault', title: 'Vault', subtitle: 'Project and file ledger', icon: LockKeyhole, action: () => navigate('/vault') },
+            { id: 'route-activity', title: 'Activity', subtitle: 'Recent actions and logs', icon: ActivityIcon, action: () => navigate('/activity') },
+            { id: 'route-reports', title: 'Reports', subtitle: 'Revenue and metrics', icon: PieChartIcon, action: () => navigate('/reports') },
+            { id: 'route-settings', title: 'Settings', subtitle: 'Profile and integrations', icon: Settings, action: () => navigate('/settings') },
+        ]), [navigate]);
+
+        const normalized = query.trim().toLowerCase();
+
+        const projectResults = (projects || []).flatMap((project: Project) => {
+            const projectHaystack = [project.name, project.description, project.client?.name, project.client?.company, project.client?.email, project.id]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+
+            const projectMatch = !normalized || projectHaystack.includes(normalized)
+                ? [{
+                    id: `project-${project.id}`,
+                    title: project.name,
+                    subtitle: `${project.client?.company || project.client?.name || 'Client'} · ${project.status.replace('_', ' ')}`,
+                    icon: Briefcase,
+                    kind: 'Project',
+                    action: () => navigate(`/preview/${project.id}`),
+                }]
+                : [];
+
+            const fileMatches = (project.files || [])
+                .filter((file) => {
+                    if (!normalized) return false;
+                    const fileHaystack = [file.name, file.type, file.tag, file.folderName].filter(Boolean).join(' ').toLowerCase();
+                    return fileHaystack.includes(normalized);
+                })
+                .slice(0, 3)
+                .map((file) => ({
+                    id: `file-${project.id}-${file.id}`,
+                    title: file.name,
+                    subtitle: `${project.name} · ${file.type.toUpperCase()}`,
+                    icon: FileText,
+                    kind: 'Asset',
+                    action: () => navigate(`/preview/${project.id}`),
+                }));
+
+            return [...projectMatch, ...fileMatches];
+        });
+
+        const routeResults = routeItems.filter((route) => {
+            if (!normalized) return true;
+            return `${route.title} ${route.subtitle}`.toLowerCase().includes(normalized);
+        }).map((route) => ({ ...route, kind: 'Navigate' }));
+
+        const results = [...routeResults, ...projectResults].slice(0, 12);
+        const topResult = results[0];
+
+        const executeResult = (action: () => void) => {
+            playClick();
+            action();
+            onClose();
+        };
+
+        return (
+            <div className="fixed inset-0 z-[100] flex items-start justify-center pt-32 px-4">
+                <div className="absolute inset-0 bg-slate-900/20 dark:bg-black/40 transition-colors duration-300" onClick={onClose} />
+                <div className="relative w-full max-w-2xl bg-white dark:bg-[#1a1a23] rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden animate-slide-up ring-1 ring-black/5">
+                    <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-white/5">
+                        <Search className="w-5 h-5 text-slate-400" />
+                        <input
+                            autoFocus
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && topResult) {
+                                    e.preventDefault();
+                                    executeResult(topResult.action);
+                                }
+                            }}
+                            placeholder="Search projects, files, clients, or routes..."
+                            className="flex-1 bg-transparent outline-none text-lg text-slate-900 dark:text-white placeholder:text-slate-400 font-medium"
+                        />
+                        <div className="px-2 py-1 rounded bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-white/10">ESC</div>
+                    </div>
+                    <div className="p-2 max-h-[420px] overflow-y-auto">
+                        <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                            {query.trim() ? 'Results' : 'Quick Access'}
+                        </div>
+                        {results.length === 0 && (
+                            <div className="px-4 py-8 text-sm text-slate-500 dark:text-slate-400">No matches found. Try another keyword.</div>
+                        )}
+                        {results.map((result) => (
+                            <button
+                                key={result.id}
+                                onClick={() => executeResult(result.action)}
+                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors text-left group"
+                            >
+                                <result.icon className="w-4 h-4 text-slate-400 group-hover:text-lime-600 dark:group-hover:text-[#bef264]" />
+                                <div className="min-w-0 flex-1">
+                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200 block truncate">{result.title}</span>
+                                    <span className="text-xs text-slate-400 block truncate">{result.subtitle}</span>
+                                </div>
+                                <span className="ml-auto text-xs text-slate-400">{result.kind}</span>
+                            </button>
+                        ))}
+                    </div>
+                    <div className="px-4 py-2 bg-slate-50 dark:bg-black/20 border-t border-slate-100 dark:border-white/5 flex justify-between items-center text-[10px] text-slate-400">
+                        <span><strong>Enter</strong> to open top result</span>
+                        <span><strong>Esc</strong> to close</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     const ProfileMenu = () => (
         <div className="absolute top-16 right-0 w-80 bg-white/90 dark:bg-[#1a1a23]/90 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-4 animate-fade-in z-50 origin-top-right">
@@ -864,9 +1294,9 @@ const AppLayout = ({ user, isDarkMode, themeMode, cycleTheme, togglePrivacyMode,
                     {/* Header Content */}
                     <div className="flex flex-row items-center justify-between h-20 gap-4">
 
-                        {/* Left: Brand - UPDATED: Island Design + 5% Scale */}
+                        {/* Left: Brand - UPDATED: Clean Design (No Island) */}
                         <div className="flex items-center gap-3 cursor-pointer group flex-shrink-0 scale-[1.05] origin-left" onClick={() => { playClick(); navigate('/'); }}>
-                            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm transition-all hover:shadow-md">
+                            <div className="flex items-center gap-2 px-2 py-2 transition-all">
                                 <EditorialIcon className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
                                 <span className={`font-serif font-medium tracking-tight text-lg text-slate-900 dark:text-white hidden sm:block`}>TrueHandover</span>
                             </div>
@@ -900,7 +1330,7 @@ const AppLayout = ({ user, isDarkMode, themeMode, cycleTheme, togglePrivacyMode,
                             {/* Search Trigger Button - REDESIGNED: Compact Pill with Hover Reveal */}
                             <button
                                 onClick={() => { playClick(); setIsSearchOpen(true); }}
-                                className="hidden lg:flex items-center gap-2.5 px-3 min-[1792px]:px-5 py-2.5 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full shadow-sm hover:shadow-md transition-all duration-300 group text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                                className="hidden lg:flex items-center gap-2.5 px-3 min-[1792px]:px-5 py-2.5 bg-slate-100 dark:bg-white/5 border border-transparent dark:border-white/10 rounded-full shadow-sm hover:shadow-md transition-all duration-300 group text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                             >
                                 <Search className="w-4 h-4" strokeWidth={2.5} />
                                 <span className="hidden min-[1792px]:inline text-xs font-bold uppercase tracking-widest">Search</span>
@@ -912,18 +1342,25 @@ const AppLayout = ({ user, isDarkMode, themeMode, cycleTheme, togglePrivacyMode,
                             <button onClick={() => { playClick(); setIsSearchOpen(true); }} className="lg:hidden p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"><Search className="w-5 h-5" /></button>
 
                             {/* Utility Buttons - Moved to group with Search */}
-                            <button onClick={togglePrivacyMode} className={`p-2.5 rounded-xl transition-all hover:scale-105 ${privacyMode ? 'bg-lime-700/15 text-lime-700 dark:bg-[#bef264] dark:text-black' : 'bg-[#EAEBE8] dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`} title="Privacy Mode">
+                            <button onClick={togglePrivacyMode} className={`p-2.5 rounded-xl transition-all hover:scale-105 ${privacyMode ? 'bg-lime-700/15 text-lime-700 dark:bg-[#bef264] dark:text-black' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`} title="Privacy Mode">
                                 {privacyMode ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                             </button>
 
+                            <ThemeModeDropdown
+                                themeMode={themeMode}
+                                onChange={(mode) => { playClick(); onSetThemeMode(mode); }}
+                                isDarkMode={isDarkMode}
+                                compact
+                                buttonClassName="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 transition-all flex items-center"
+                            />
+
+                            {/* Design Lab Button */}
                             <button
-                                onClick={cycleTheme}
-                                className="p-2.5 rounded-xl bg-[#EAEBE8] dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 transition-all hover:rotate-12"
-                                title={`Current Theme: ${themeMode.charAt(0).toUpperCase() + themeMode.slice(1)}`}
+                                onClick={() => { playClick(); setShowDesignLab(true); }}
+                                className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-lime-100 dark:hover:bg-[#bef264]/10 hover:text-lime-700 dark:hover:text-[#bef264] transition-all"
+                                title="Design Lab — Preview UI variants"
                             >
-                                {themeMode === 'light' && <Sun className="w-5 h-5" />}
-                                {themeMode === 'dark' && <Moon className="w-5 h-5" />}
-                                {themeMode === 'system' && <Monitor className="w-5 h-5" />}
+                                <Sparkles className="w-5 h-5" />
                             </button>
 
                             <div className="h-6 w-px bg-slate-300 dark:bg-white/10 mx-1 hidden sm:block" />
@@ -979,6 +1416,14 @@ const AppLayout = ({ user, isDarkMode, themeMode, cycleTheme, togglePrivacyMode,
 
             {/* Search Overlay */}
             {isSearchOpen && <SearchCommandPalette onClose={() => setIsSearchOpen(false)} />}
+
+            {/* Design Lab Overlay */}
+            {showDesignLab && (
+                <DesignShowcase
+                    isDarkMode={isDarkMode}
+                    onClose={() => setShowDesignLab(false)}
+                />
+            )}
         </div>
     );
 }
@@ -986,8 +1431,14 @@ const AppLayout = ({ user, isDarkMode, themeMode, cycleTheme, togglePrivacyMode,
 // Wrapper to handle project lookup for Editor routes
 const EditorWrapper = ({ projects, onSave, user }: { projects: Project[], onSave: (p: Project) => void, user: UserProfile }) => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const project = projects.find(p => p.id === id) || projects[0];
-    return <CreatorPage existingProject={project} allProjects={projects} user={user} onSave={onSave} onBack={() => window.history.back()} />;
+    return <CreatorPage existingProject={project} allProjects={projects} user={user} onSave={onSave} onBack={() => navigate('/vault')} />;
+};
+
+const CreatorWrapper = ({ projects, onSave, user }: { projects: Project[], onSave: (p: Project) => void, user: UserProfile }) => {
+    const navigate = useNavigate();
+    return <CreatorPage allProjects={projects} user={user} onSave={onSave} onBack={() => navigate('/vault')} />;
 };
 
 // Wrapper to handle project lookup for Preview routes
@@ -1030,6 +1481,108 @@ const PreviewWrapper = ({ projects, user, isDarkMode, themeMode, onToggleTheme, 
     });
 
     return <ClientPreviewBiz project={project} user={user} onBack={handleBack} isDarkMode={isDarkMode} themeMode={themeMode} onToggleTheme={onToggleTheme} onSetThemeMode={onSetThemeMode} libraryProjects={libraryProjects} libraryEnabled={libraryEnabled} />;
+};
+
+const ClientLinkWrapper = ({ isDarkMode, themeMode, onToggleTheme, onSetThemeMode }: { isDarkMode: boolean, themeMode: 'light' | 'dark' | 'system', onToggleTheme: () => void, onSetThemeMode: (mode: 'light' | 'dark' | 'system') => void }) => {
+    const { token } = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [project, setProject] = useState<Project | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let cancelled = false;
+        let pollTimer: number | null = null;
+        let pollAttempts = 0;
+        const shouldPoll = () => {
+            try {
+                const payment = new URLSearchParams(location.search).get('payment');
+                return payment === 'success';
+            } catch {
+                return false;
+            }
+        };
+        const run = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                if (!supabase) throw new Error('Supabase is not configured.');
+                const clientLink = (token || '').trim();
+                if (!clientLink) throw new Error('Invalid client link.');
+                const { data, error } = await supabase.functions.invoke('client-preview', {
+                    body: { clientLink }
+                });
+                if (error) throw new Error(error.message);
+                if (!data?.project) throw new Error('Project not found.');
+                if (!cancelled) {
+                    const next = data.project as Project;
+                    setProject(next);
+
+                    if (shouldPoll()) {
+                        const isPaid = next.status === 'paid' || next.status === 'completed';
+                        const anyLocked = (next.files || []).some((f: any) => f.locked);
+                        // Webhooks can be eventually consistent; poll briefly after a successful payment redirect.
+                        if ((!isPaid || anyLocked) && pollAttempts < 12) {
+                            pollAttempts += 1;
+                            if (pollTimer) window.clearTimeout(pollTimer);
+                            pollTimer = window.setTimeout(run, 2000);
+                        }
+                    }
+                }
+            } catch (e: any) {
+                if (!cancelled) setError(e?.message || 'Failed to load preview.');
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        };
+        run();
+        return () => {
+            cancelled = true;
+            if (pollTimer) window.clearTimeout(pollTimer);
+        };
+    }, [token, location.search]);
+
+    if (loading) {
+        return (
+            <div className={`min-h-screen w-full flex items-center justify-center ${isDarkMode ? 'bg-[#0f0f12] text-white' : 'bg-white text-slate-900'}`}>
+                <div className="text-sm font-bold tracking-wide opacity-80">Loading secure preview…</div>
+            </div>
+        );
+    }
+
+    if (error || !project) {
+        return (
+            <div className={`min-h-screen w-full flex items-center justify-center ${isDarkMode ? 'bg-[#0f0f12] text-white' : 'bg-white text-slate-900'}`}>
+                <div className="max-w-md w-full px-6">
+                    <div className={`rounded-2xl border p-5 ${isDarkMode ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'}`}>
+                        <div className="font-black tracking-wide mb-2">Preview unavailable</div>
+                        <div className="text-sm opacity-80">{error || 'This link may be invalid or expired.'}</div>
+                        <button
+                            type="button"
+                            onClick={() => navigate('/')}
+                            className={`mt-4 w-full h-11 rounded-xl font-bold text-xs uppercase tracking-widest ${isDarkMode ? 'bg-[#bef264] text-black hover:bg-[#a3e635]' : 'bg-lime-600 text-white hover:bg-lime-700'}`}
+                        >
+                            Back to home
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <ClientPreviewBiz
+            key={`${project.id}:${project.status}`}
+            project={project}
+            onBack={() => navigate('/')}
+            isDarkMode={isDarkMode}
+            themeMode={themeMode}
+            onToggleTheme={onToggleTheme}
+            onSetThemeMode={onSetThemeMode}
+            libraryEnabled={false}
+        />
+    );
 };
 
 const AppContent = () => {
@@ -1080,7 +1633,7 @@ const AppContent = () => {
 
     useEffect(() => {
         try {
-            const isPreviewRoute = window.location.hash.startsWith('#/preview/');
+            const isPreviewRoute = window.location.hash.startsWith('#/preview/') || window.location.hash.startsWith('#/c/');
             if (isPreviewRoute) return;
 
             const alreadySeen = localStorage.getItem('th_theme_notice_seen') === '1';
@@ -1135,16 +1688,19 @@ const AppContent = () => {
                                 <LandingPage
                                     onGetStarted={() => window.location.hash = '#/dashboard'}
                                     currentTheme={themeMode}
+                                    onSetThemeMode={setThemeMode}
                                     toggleTheme={cycleTheme}
                                 />
                             }
                         />
                         <Route path="/signin" element={<SignInPage themeMode={themeMode} toggleTheme={cycleTheme} />} />
+                        <Route path="/c/:token" element={<ClientLinkWrapper isDarkMode={isDarkMode} themeMode={themeMode} onToggleTheme={cycleTheme} onSetThemeMode={setThemeMode} />} />
                         <Route element={<AppLayout
                             user={user}
+                            projects={projects}
                             isDarkMode={isDarkMode}
                             themeMode={themeMode}
-                            cycleTheme={cycleTheme}
+                            onSetThemeMode={setThemeMode}
                             setIsDarkMode={setIsDarkMode} // Kept for legacy prop compatibility if needed
                             togglePrivacyMode={togglePrivacyMode}
                             privacyMode={privacyMode}
@@ -1158,7 +1714,7 @@ const AppContent = () => {
                             <Route path="/trash" element={<TrashPage onBack={() => window.history.back()} />} />
                             <Route path="/help" element={<HelpPage onBack={() => window.history.back()} />} />
                         </Route>
-                        <Route path="/create" element={<CreatorPage allProjects={projects} user={user} onSave={saveProject} onBack={() => window.history.back()} />} />
+                        <Route path="/create" element={<CreatorWrapper projects={projects} onSave={saveProject} user={user} />} />
 
                         {/* Dynamic Route Handlers */}
                         <Route path="/editor/:id" element={<EditorWrapper projects={projects} onSave={saveProject} user={user} />} />

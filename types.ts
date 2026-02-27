@@ -27,6 +27,8 @@ export interface FileAsset {
     metadata?: FileMetadata;
     milestoneId?: string; // NEW: Link file to specific milestone
     includeInLibrary?: boolean;
+    importSourceUrl?: string; // Original URL entered by creator (pre-normalisation) — used for dup detection
+    folderName?: string;      // Folder label when file was imported as part of a folder link
 }
 
 export interface Milestone {
@@ -94,6 +96,8 @@ export interface Project {
     enableClientLibrary?: boolean;
     accessConfig?: AccessConfig;
     clientViewedAt?: string; // ISO String — set when client first opens link
+    showWatermark?: boolean;       // default true — toggle the tiled watermark text overlay on protected previews
+    showProtectedLabel?: boolean;  // default true — toggle the "Protected Preview" card on locked images
 }
 
 export interface AgencySettings {
@@ -106,21 +110,16 @@ export interface AgencySettings {
 }
 
 export interface StorageSettings {
-    provider: 'custom' | 'aws' | 'r2' | 'wasabi' | 'spaces';
-    endpoint: string;
-    bucket: string;
-    accessKey: string;
-    secretKey?: string;
-    region?: string;
-    accountId?: string; // Specific for Cloudflare R2
+    /**
+     * Production posture:
+     * - Platform storage (private R2) is handled via server-issued presigned URLs.
+     * - Do not store any cloud OAuth tokens or S3/R2 secret keys in the browser or in `profiles.storage_settings`.
+     */
+    mode: 'platform';
+
+    // Optional non-sensitive BYOS label (links-only workflow; no OAuth tokens stored client-side).
     byosDriveProvider?: 'google' | 'dropbox' | 'onedrive';
-    byosGoogleToken?: string;
-    byosGoogleApiKey?: string;
-    byosDropboxToken?: string;
-    byosOneDriveToken?: string;
-    byosGoogleAccountLabel?: string;
-    byosDropboxAccountLabel?: string;
-    byosOneDriveAccountLabel?: string;
+    byosDriveAccountLabel?: string;
 }
 
 export interface UserProfile {
