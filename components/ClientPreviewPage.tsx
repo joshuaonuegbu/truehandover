@@ -1960,24 +1960,24 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                         className={`lg:hidden relative shrink-0 z-50 ${!isMobileInfoOpen ? 'border-b border-slate-200 dark:border-white/5' : ''} ${isDarkMode ? 'bg-[#2b2b38]' : 'bg-[#f1f5f9]'}`}
                         style={{ paddingTop: headerChromePadTop }}
                      >
-                        <div className="grid grid-cols-[auto,1fr,auto] items-center gap-3 px-5 pb-2">
+                        <div className="flex items-center gap-3 px-4 sm:px-5 pb-2">
                             <button
                                 onClick={onBack}
-                                className={`p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors`}
+                                className={`shrink-0 p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors`}
                                 aria-label="Back"
                             >
                                 <ChevronLeft className={`w-5 h-5 ${textPrimary}`} />
                             </button>
 
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                                 <h1 className={`font-serif ${isMobileInfoOpen ? 'text-base' : 'text-lg'} font-medium ${textPrimary} truncate leading-none`}>{project.name}</h1>
-                                <p className={`text-[10px] ${textSecondary} mt-0.5 font-bold uppercase tracking-wider`}>{project.files.length} Assets{isLocked && !isMobileInfoOpen ? ` · $${project.amount.toLocaleString()}` : ''}</p>
+                                <p className={`text-[10px] ${textSecondary} mt-0.5 font-bold uppercase tracking-wider truncate`}>{project.files.length} Assets{isLocked && !isMobileInfoOpen ? ` · $${project.amount.toLocaleString()}` : ''}</p>
                             </div>
 
                             {isMobileInfoOpen ? (
                                 <button
                                     onClick={() => { setIsMobileInfoOpen(false); showMobileHeader(); }}
-                                    className={`p-2.5 rounded-full ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'} transition-colors`}
+                                    className={`shrink-0 p-2.5 rounded-full ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'} transition-colors`}
                                     aria-label="Close Details"
                                 >
                                     <X className="w-4 h-4" />
@@ -1985,7 +1985,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             ) : (
                                 <button
                                     onClick={() => { playClick(); openMobileDetails(); }}
-                                    className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'} transition-colors`}
+                                    className={`shrink-0 whitespace-nowrap px-3.5 sm:px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'} transition-colors`}
                                     aria-label="Details"
                                 >
                                     <Menu className="w-3.5 h-3.5" />
@@ -2002,32 +2002,29 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                         className={`lg:hidden relative shrink-0 z-50 border-b border-slate-200 dark:border-white/5 ${isDarkMode ? 'bg-[#2b2b38]' : 'bg-[#f1f5f9]'}`}
                         style={{ paddingTop: headerChromePadTop }}
                     >
-                        <div className="grid grid-cols-[auto,1fr,auto] items-center gap-3 px-4 pb-2">
+                        <div className="flex items-center gap-3 px-4 pb-2">
                             <button
                                 onClick={() => { playClick(); onBack(); }}
-                                className={`p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors`}
+                                className={`shrink-0 p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors`}
                                 aria-label="Back"
                             >
                                 <ChevronLeft className={`w-5 h-5 ${textPrimary}`} />
                             </button>
 
-                            <div className="min-w-0 flex items-center gap-2">
-                                <button
-                                    onClick={collapseDockedSidebar}
-                                    className={`p-2.5 rounded-full ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'} transition-colors`}
-                                    aria-label="Collapse Details"
-                                    title="Hide Details"
-                                >
-                                    <PanelRightClose className="w-4 h-4" />
-                                </button>
-
-                                <div className="min-w-0">
-                                    <p className={`text-xs font-bold ${textPrimary} truncate leading-tight`}>{project.name}</p>
-                                    <p className={`text-[10px] font-bold uppercase tracking-wider ${textSecondary} truncate`}>{project.files.length} Assets</p>
-                                </div>
+                            <div className="min-w-0 flex-1">
+                                <p className={`text-sm font-bold ${textPrimary} truncate leading-tight`}>{project.name}</p>
+                                <p className={`text-[10px] font-bold uppercase tracking-wider ${textSecondary} truncate`}>{project.files.length} Assets{isLocked ? ` · $${project.amount.toLocaleString()}` : ''}</p>
                             </div>
 
-                            <div />
+                            <button
+                                onClick={collapseDockedSidebar}
+                                className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'} transition-colors`}
+                                aria-label="Collapse Details"
+                                title="Hide Details"
+                            >
+                                <PanelRightClose className="w-3.5 h-3.5" />
+                                <span>Details</span>
+                            </button>
                         </div>
                     </div>
                 )}
@@ -2246,46 +2243,70 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                         to the same y-level as the expanded desktop sidebar header (which sits below 32px padding). */}
                                     {isTrueDesktop && <div aria-hidden className="h-[22px]" />}
                         <div className={`flex items-center justify-between gap-3 px-4 sm:px-5 md:px-6 lg:px-8 ${isTrueDesktop ? 'th-desktop-flush-content py-2.5' : 'pb-2'}`}>
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <button
-                                                type="button"
-                                                onClick={() => { playClick(); onBack(); }}
-                                                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${isDarkMode ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
-                                                aria-label="Back"
-                                            >
-                                                <ChevronLeft className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => { playClick(); setIsSplitSidebarCollapsed(false); }}
-                                                className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                                                aria-label="Show Details"
-                                                title="Show Details"
-                                            >
-                                                <PanelRightOpen className="w-3.5 h-3.5" />
-                                                <span>Details</span>
-                                            </button>
-                                        </div>
+                                        {isTrueDesktop ? (
+                                            <>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { playClick(); onBack(); }}
+                                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${isDarkMode ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
+                                                        aria-label="Back"
+                                                    >
+                                                        <ChevronLeft className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { playClick(); setIsSplitSidebarCollapsed(false); }}
+                                                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                                                        aria-label="Show Details"
+                                                        title="Show Details"
+                                                    >
+                                                        <PanelRightOpen className="w-3.5 h-3.5" />
+                                                        <span>Details</span>
+                                                    </button>
+                                                </div>
 
-                                        <div className="min-w-0 flex-1">
-                                            {isTrueDesktop ? (
-                                                <p className={`text-sm font-bold ${textPrimary} truncate`}>
-                                                    {project.name}
-                                                    <span className={`ml-2 text-[10px] font-bold uppercase tracking-wider ${textSecondary}`}>{project.files.length} Assets</span>
-                                                </p>
-                                            ) : (
-                                                <>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className={`text-sm font-bold ${textPrimary} truncate`}>
+                                                        {project.name}
+                                                        <span className={`ml-2 text-[10px] font-bold uppercase tracking-wider ${textSecondary}`}>{project.files.length} Assets</span>
+                                                    </p>
+                                                </div>
+
+                                                {!project.clientViewedAt && (
+                                                    <div className={`hidden md:flex px-3 py-1.5 rounded-full items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-700'}`}>
+                                                        <Eye className="w-3.5 h-3.5" />
+                                                        <span>Creator Preview</span>
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { playClick(); onBack(); }}
+                                                    className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${isDarkMode ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
+                                                    aria-label="Back"
+                                                >
+                                                    <ChevronLeft className="w-5 h-5" />
+                                                </button>
+
+                                                <div className="min-w-0 flex-1">
                                                     <p className={`text-xs font-bold ${textPrimary} truncate leading-tight`}>{project.name}</p>
-                                                    <p className={`text-[10px] font-bold uppercase tracking-wider ${textSecondary} truncate`}>{project.files.length} Assets</p>
-                                                </>
-                                            )}
-                                        </div>
+                                                    <p className={`text-[10px] font-bold uppercase tracking-wider ${textSecondary} truncate`}>{project.files.length} Assets{isLocked ? ` · $${project.amount.toLocaleString()}` : ''}</p>
+                                                </div>
 
-                                        {!project.clientViewedAt && (
-                                            <div className={`hidden md:flex px-3 py-1.5 rounded-full items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-700'}`}>
-                                                <Eye className="w-3.5 h-3.5" />
-                                                <span>Creator Preview</span>
-                                            </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { playClick(); setIsSplitSidebarCollapsed(false); }}
+                                                    className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                                                    aria-label="Show Details"
+                                                    title="Show Details"
+                                                >
+                                                    <PanelRightOpen className="w-3.5 h-3.5" />
+                                                    <span>Details</span>
+                                                </button>
+                                            </>
                                         )}
                                     </div>
                                 </div>
@@ -2435,11 +2456,11 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 </div>
                                 <div className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                                     {activeFilter === 'all'
-                                        ? 'No files in this vault'
-                                        : `No ${activeFilter} files in this vault`}
+                                        ? 'No files available yet'
+                                        : `No ${activeFilter} files available`}
                                 </div>
                                 <div className="text-xs mt-2 opacity-70">
-                                    {activeFilter === 'all' ? 'Upload files to populate this vault.' : 'Try another file type or view all files.'}
+                                    {activeFilter === 'all' ? 'Files will appear here once they are added to this project.' : 'Try another file type or switch back to all files.'}
                                 </div>
                                 {project.files.length > 0 && activeFilter !== 'all' && (
                                     <div className="mt-6 flex items-center justify-center gap-3">

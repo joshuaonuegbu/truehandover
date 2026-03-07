@@ -1,7 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Project, UserProfile, ProjectTheme } from '../types';
-import { DB, supabase } from '../services/supabaseClient'; // Import the Real Backend Service
+import { DB, supabase } from '../services/supabaseClient';
+import { isMockMode } from '../config/mockMode';
 
 // --- MOCK DATA CONSTANTS (Moved from App.tsx for Fallback) ---
 
@@ -14,8 +15,9 @@ const DEFAULT_THEME_MOCK: ProjectTheme = {
   pattern: 'lines'
 };
 
-const DEMO_SEED_VERSION = 3;
+const DEMO_SEED_VERSION = 5;
 const DEMO_SEED_VERSION_KEY = 'th_seed_version';
+const DEMO_PROFILE_AVATAR = 'https://randomuser.me/api/portraits/men/32.jpg';
 
 const isDicebearAvatar = (url?: string) => !!url && url.includes('api.dicebear.com/');
 
@@ -25,6 +27,17 @@ const migrateDemoProjects = (projects: Project[]): Project[] => {
     if (!['p1', 'p2', 'p4', 'p5'].includes(p.id)) return p;
 
     const next: Project = { ...p };
+
+    if (next.id === 'p1') {
+      next.status = 'awaiting_payment';
+    }
+    if (next.id === 'p2') {
+      next.status = 'paid';
+      next.clientViewedAt = new Date().toISOString();
+    }
+    if (next.id === 'p5') {
+      next.status = 'awaiting_signature';
+    }
 
     // Ensure demo clients never use real-photo avatars.
     if (!isDicebearAvatar(next.client?.avatar)) {
@@ -115,7 +128,7 @@ const INITIAL_USER: UserProfile = {
   id: 'u1',
   name: 'Bogdan Nikitin',
   email: 'bogdan@nixtio.com',
-  avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=Bogdan&backgroundColor=0a0a0a&shape1Color=bef264&shape2Color=ffffff&shape3Color=52525b',
+  avatar: DEMO_PROFILE_AVATAR,
   role: '@Nixtio',
   subdomain: 'nashua',
   stripeConnect: {
@@ -140,8 +153,48 @@ const INITIAL_USER: UserProfile = {
     supportEmail: 'help@nixtio.com'
   },
   storageSettings: {
-    mode: 'platform',
+    provider: 'r2',
+    endpoint: '',
+    bucket: '',
+    accessKey: '',
   }
+};
+
+const EMPTY_USER: UserProfile = {
+  id: '',
+  name: '',
+  email: '',
+  avatar: '',
+  role: '',
+  subdomain: '',
+  stripeConnect: {
+    accountId: '',
+    connected: false,
+    displayName: '',
+    chargesEnabled: false,
+    payoutsEnabled: false,
+  },
+  paymentMethods: {
+    venmo: '',
+    cashapp: '',
+    zelle: '',
+    bankInfo: '',
+    paypal: '',
+  },
+  agencySettings: {
+    cname: '',
+    cnameVerified: false,
+    customSmtp: false,
+    removeBranding: false,
+    dataRetentionDays: 30,
+    supportEmail: '',
+  },
+  storageSettings: {
+    provider: 'r2',
+    endpoint: '',
+    bucket: '',
+    accessKey: '',
+  },
 };
 
 const INITIAL_PROJECTS: Project[] = [
@@ -324,20 +377,22 @@ interface StoreContextType {
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Lazy initialization from LocalStorage
+  // Lazy initialization — demo data in mock mode, empty state in production
   const [projects, setProjects] = useState<Project[]>(() => {
+    if (!isMockMode()) return [];
     try {
       const stored = localStorage.getItem('th_projects');
-      const parsed: Project[] = stored ? JSON.parse(stored) : INITIAL_PROJECTS;
-
-      // Non-destructive demo migration: update ONLY known demo records (p1/p2/p4/p5) so UI improvements
-      // (thumbnails/wallpapers/etc) reflect even if the user has old demo data stored locally.
       const version = Number(localStorage.getItem(DEMO_SEED_VERSION_KEY) || 0);
-      const migrated = migrateDemoProjects(parsed);
+      
+      // If version is older than current, FORCE migration from INITIAL_PROJECTS
+      // rather than migrating stale `stored` data that may not have the right shapes.
       if (version < DEMO_SEED_VERSION) {
+        const migrated = migrateDemoProjects(INITIAL_PROJECTS);
         try { localStorage.setItem(DEMO_SEED_VERSION_KEY, String(DEMO_SEED_VERSION)); } catch { }
+        return migrated;
       }
-      return migrated;
+      
+      return stored ? JSON.parse(stored) : migrateDemoProjects(INITIAL_PROJECTS);
     } catch (e) {
       console.error("Failed to load projects", e);
       return INITIAL_PROJECTS;
@@ -345,8 +400,14 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   });
 
   const [user, setUser] = useState<UserProfile>(() => {
+    if (!isMockMode()) return EMPTY_USER;
     try {
       const stored = localStorage.getItem('th_user');
+      const version = Number(localStorage.getItem(DEMO_SEED_VERSION_KEY) || 0);
+      if (version < DEMO_SEED_VERSION) {
+        try { localStorage.setItem(DEMO_SEED_VERSION_KEY, String(DEMO_SEED_VERSION)); } catch { }
+        return INITIAL_USER;
+      }
       return stored ? JSON.parse(stored) : INITIAL_USER;
     } catch (e) {
       console.error("Failed to load user", e);
@@ -395,9 +456,16 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (session?.user) {
         syncWithSupabase(session.user.id);
       } else {
-        // Not authenticated; clear state back to defaults
-        setProjects(INITIAL_PROJECTS);
-        setUser(INITIAL_USER);
+        // Not authenticated — use demo data in mock mode, empty state in production
+        if (isMockMode()) {
+          const version = Number(localStorage.getItem(DEMO_SEED_VERSION_KEY) || 0);
+          const migrated = migrateDemoProjects(INITIAL_PROJECTS);
+          setProjects(migrated);
+          setUser(INITIAL_USER);
+        } else {
+          setProjects([]);
+          setUser(EMPTY_USER);
+        }
       }
     });
 
@@ -417,7 +485,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       return [updatedProject, ...prev];
     });
 
-    if (supabase && user.id !== INITIAL_USER.id) {
+    if (supabase && user.id && user.id !== INITIAL_USER.id) {
       const ensureClientLink = (link?: string) => {
         const trimmed = (link || '').trim();
         if (trimmed && trimmed !== '#') return trimmed;
@@ -499,20 +567,25 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       // Refresh local state from server-mapped projects (includes signed preview URLs).
       const { data: refreshed } = await DB.getCreatorProjects();
-      if (refreshed && refreshed.length > 0) setProjects(refreshed as any[]);
+      if (refreshed && refreshed.length > 0) {
+        const merged = (refreshed as any[]).map((p) =>
+          p.id === projectId ? { ...p, credentials: updatedProject.credentials || [] } : p
+        );
+        setProjects(merged);
+      }
     }
   };
 
   const deleteProject = async (id: string) => {
     setProjects(prev => prev.filter(p => p.id !== id));
-    if (supabase && user.id !== INITIAL_USER.id) {
+    if (supabase && user.id && user.id !== INITIAL_USER.id) {
       await DB.deleteProject(id);
     }
   };
 
   const updateUser = async (updates: Partial<UserProfile>) => {
     setUser(prev => ({ ...prev, ...updates }));
-    if (supabase && user.id !== INITIAL_USER.id) {
+    if (supabase && user.id && user.id !== INITIAL_USER.id) {
       // Map the frontend nesting over to the JSONB columns if needed
       await DB.updateProfile(user.id, {
         name: updates.name,

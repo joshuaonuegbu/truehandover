@@ -298,7 +298,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
             const draft = _initialDraft.formData as any;
             const safePaymentMethods = { ...(draft.paymentMethods || {}) };
             if (safePaymentMethods.bankInfo) safePaymentMethods.bankInfo = '';
-            return { ...draft, credentials: [], paymentMethods: safePaymentMethods };
+            return { ...draft, paymentMethods: safePaymentMethods };
         }
 
         const base = existingProject || {
@@ -389,6 +389,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
     const draftClientLinkRef = React.useRef<string>(existingProject?.clientLink && existingProject.clientLink !== '#'
         ? existingProject.clientLink
         : createClientLinkToken());
+    const appliedBrandKitEmailRef = React.useRef<string | null>(null);
 
     useEffect(() => {
         const media = window.matchMedia('(prefers-color-scheme: dark)');
@@ -396,6 +397,34 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
         media.addEventListener('change', listener);
         return () => media.removeEventListener('change', listener);
     }, []);
+
+    useEffect(() => {
+        const email = (formData.client?.email || '').trim().toLowerCase();
+        if (!email) {
+            appliedBrandKitEmailRef.current = null;
+            return;
+        }
+        if (appliedBrandKitEmailRef.current === email) return;
+
+        const kits = (user?.agencySettings?.brandKits || {}) as Record<string, any>;
+        const kit = kits[email];
+        if (!kit) return;
+
+        appliedBrandKitEmailRef.current = email;
+        setFormData(prev => ({
+            ...prev,
+            client: {
+                ...(prev.client as any),
+                avatar: kit.logoUrl || (prev.client as any)?.avatar,
+            },
+            theme: {
+                ...(prev.theme || WALLPAPER_PRESETS[1]),
+                brandPrimary: kit.primaryColor || (prev.theme as any)?.brandPrimary,
+                brandAccent: kit.accentColor || (prev.theme as any)?.brandAccent,
+                brandLogoUrl: kit.logoUrl || (prev.theme as any)?.brandLogoUrl,
+            },
+        }));
+    }, [formData.client?.email, user?.agencySettings?.brandKits]);
 
     // Continuous auto-save — persists every editor change to localStorage so
     // navigating away never loses work.  Draft is cleared only on Publish.
@@ -409,7 +438,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
         }
         const safePaymentMethods = { ...(formData.paymentMethods || {}) };
         if ((safePaymentMethods as any).bankInfo) (safePaymentMethods as any).bankInfo = '';
-        const safeFormData = { ...formData, credentials: [], paymentMethods: safePaymentMethods };
+        const safeFormData = { ...formData, paymentMethods: safePaymentMethods };
         localStorage.setItem(DRAFT_KEY, JSON.stringify({ formData: safeFormData, files }));
     }, [formData, files]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1032,7 +1061,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             <button
                                 onClick={() => {
                                     playClick();
-                                    setFormData({ ...formData, accessConfig: { mode: 'permanent' } });
+                                    setFormData({ ...formData, accessConfig: { ...(formData.accessConfig || {}), mode: 'permanent' } });
                                 }}
                                 className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === 'permanent' || !formData.accessConfig ? 'bg-brand/10 border-brand text-brand dark:bg-brand/10 dark:border-brand dark:text-brand' : 'bg-editorial dark:bg-white/5 border-transparent text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
                             >
@@ -1043,7 +1072,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             <button
                                 onClick={() => {
                                     playClick();
-                                    setFormData({ ...formData, accessConfig: { mode: '7_day' } });
+                                    setFormData({ ...formData, accessConfig: { ...(formData.accessConfig || {}), mode: '7_day' } });
                                 }}
                                 className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === '7_day' ? 'bg-amber-500/10 border-amber-500 text-amber-500' : 'bg-editorial dark:bg-white/5 border-transparent text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
                             >
@@ -1054,7 +1083,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             <button
                                 onClick={() => {
                                     playClick();
-                                    setFormData({ ...formData, accessConfig: { mode: 'one_time' } });
+                                    setFormData({ ...formData, accessConfig: { ...(formData.accessConfig || {}), mode: 'one_time' } });
                                 }}
                                 className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === 'one_time' ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-editorial dark:bg-white/5 border-transparent text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
                             >
@@ -1085,6 +1114,43 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             <Activity className="w-3 h-3" /> Project Controls
                         </h3>
                         <div className="space-y-4">
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-2">
+                                    <ShieldAlert className="w-4 h-4 text-slate-400" />
+                                    <div>
+                                        <span className="text-sm font-medium dark:text-white">Scope Creep Pause</span>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">Client sees a hard pause overlay until you resume.</p>
+                                    </div>
+                                </div>
+                                <Toggle
+                                    checked={formData.accessConfig?.scopeCreepPaused === true}
+                                    onChange={v => setFormData({
+                                        ...formData,
+                                        accessConfig: {
+                                            ...(formData.accessConfig || { mode: 'permanent' }),
+                                            scopeCreepPaused: v,
+                                            pauseReason: formData.accessConfig?.pauseReason || 'Project Paused: Revision Limit Reached'
+                                        }
+                                    })}
+                                />
+                            </div>
+                            {formData.accessConfig?.scopeCreepPaused && (
+                                <div className="pl-6">
+                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pause Message</label>
+                                    <input
+                                        value={formData.accessConfig?.pauseReason || 'Project Paused: Revision Limit Reached'}
+                                        onChange={e => setFormData({
+                                            ...formData,
+                                            accessConfig: {
+                                                ...(formData.accessConfig || { mode: 'permanent' }),
+                                                pauseReason: e.target.value
+                                            }
+                                        })}
+                                        placeholder="Project Paused: Revision Limit Reached"
+                                        className="mt-2 w-full p-2 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg focus:border-brand dark:focus:border-brand outline-none transition-colors text-xs text-obsidian dark:text-white"
+                                    />
+                                </div>
+                            )}
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <PenTool className="w-4 h-4 text-slate-400" />
@@ -1196,7 +1262,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                         </div>
 
                         <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-4">
-                            Experimental: stored only in-memory for this session (not synced, not encrypted). Don’t store real passwords.
+                            Stored locally on this device for now (not synced to the server). Don’t paste master passwords here.
                         </p>
 
                         {showCredentialModal && (
@@ -1229,7 +1295,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     />
                                     <div className="flex justify-end gap-2">
                                         <button onClick={() => setShowCredentialModal(false)} className="px-3 py-1.5 text-[10px] font-bold uppercase hover:bg-white/10 rounded">Cancel</button>
-                                        <button onClick={handleAddCredential} className="px-3 py-1.5 bg-brand text-white dark:bg-brand dark:text-black text-[10px] font-bold uppercase rounded shadow-lg">Add (Local)</button>
+                                        <button onClick={handleAddCredential} className="px-3 py-1.5 bg-brand text-white dark:bg-brand dark:text-black text-[10px] font-bold uppercase rounded shadow-lg">Add Credential</button>
                                     </div>
                                 </div>
                             </div>
@@ -1815,6 +1881,28 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     />
                 </div>
             </div>
+
+            {/* Upload Progress Toast Overlay */}
+            {isUploading && (
+                <div className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-[300] bg-white dark:bg-[#1a1a23] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-4 w-72 animate-slide-up ring-1 ring-black/5">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="w-8 h-8 rounded-full bg-lime-100 dark:bg-[#bef264]/20 flex items-center justify-center shrink-0">
+                            <Upload className="w-4 h-4 text-lime-600 dark:text-[#bef264] animate-bounce" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">Uploading Asset...</h4>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 capitalize">{uploadProgress.status}</p>
+                        </div>
+                        <span className="text-xs font-mono font-bold text-lime-600 dark:text-[#bef264]">{Math.round(uploadProgress.percent)}%</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-lime-600 dark:bg-[#bef264] transition-all duration-300 ease-out rounded-full"
+                            style={{ width: `${uploadProgress.percent}%` }}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

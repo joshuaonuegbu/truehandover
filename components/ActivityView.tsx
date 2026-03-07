@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import {
     Banknote, Unlock, DollarSign, Eye, Upload, FileText, Link as LinkIcon,
@@ -6,6 +6,8 @@ import {
     Download, Receipt, ChevronRight
 } from 'lucide-react';
 import { Card, GRADIENT_TEXT } from './Shared';
+import { useStore } from '../context/StoreContext';
+import { isMockMode } from '../config/mockMode';
 
 // --- UTILS ---
 const PrivacyBlur = ({ children, className = "", strength = 'normal' }: { children?: React.ReactNode, className?: string, strength?: 'normal' | 'strong' }) => {
@@ -102,36 +104,165 @@ const PrivacyBlur = ({ children, className = "", strength = 'normal' }: { childr
 };
 
 const ActivityView = () => {
+    const { projects } = useStore();
     const [filter, setFilter] = useState<'all' | 'financial' | 'access' | 'system'>('all');
     const [search, setSearch] = useState('');
 
-    // Grouped by Date for "Editorial" Feel
-    const activityFeed = [
-        {
-            date: 'Today',
-            total: '+$2,500.00',
-            events: [
-                { id: 'ev_1', type: 'financial', title: 'Payment Settled', project: 'Brand Identity', client: 'Vertex Corp', amount: '+$2,500.00', icon: DollarSign, status: 'cleared' },
-                { id: 'ev_2', type: 'system', title: 'Vault Unlocked', project: 'Brand Identity', client: 'Vertex Corp', desc: 'Assets released to client', icon: Unlock, status: 'success' },
-            ]
-        },
-        {
-            date: 'Yesterday',
-            total: null,
-            events: [
-                { id: 'ev_3', type: 'access', title: 'Client Viewed', project: 'Website Redesign', client: 'Mono', desc: 'Viewed 4 items in vault', icon: Eye, status: 'info' },
-                { id: 'ev_4', type: 'system', title: 'File Uploaded', project: 'Q4 Report', client: 'Corp', desc: 'Secure upload (240MB)', icon: Upload, status: 'info' },
-            ]
-        },
-        {
-            date: 'Oct 24',
-            total: '+$4,200.00',
-            events: [
-                { id: 'ev_5', type: 'financial', title: 'Invoice Sent', project: 'Website Redesign', client: 'Mono', desc: 'Invoice #1024 delivered', icon: FileText, status: 'pending' },
-                { id: 'ev_6', type: 'access', title: 'Link Generated', project: 'Mobile App', client: 'Pearson', desc: 'Secure access token created', icon: LinkIcon, status: 'info' },
-            ]
+    const formatGroupDate = (iso: string) => {
+        const d = new Date(iso);
+        const now = new Date();
+        const startOfNow = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const startOfD = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+        const diffDays = Math.floor((startOfNow - startOfD) / (1000 * 60 * 60 * 24));
+        if (diffDays === 0) return 'Today';
+        if (diffDays === 1) return 'Yesterday';
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    };
+
+    const activityFeed = useMemo(() => {
+        const rows: Array<{
+            id: string;
+            dateIso: string;
+            type: 'financial' | 'access' | 'system';
+            title: string;
+            project: string;
+            client: string;
+            amount?: string;
+            desc?: string;
+            icon: any;
+            status: 'cleared' | 'pending' | 'success' | 'info';
+        }> = [];
+
+        projects.forEach((p) => {
+            const baseDate = p.createdAt || new Date().toISOString();
+            const client = p.client?.company || p.client?.name || 'Client';
+            const fileCount = (p.files || []).length;
+
+            rows.push({
+                id: `project-created-${p.id}`,
+                dateIso: baseDate,
+                type: 'system',
+                title: 'Project Created',
+                project: p.name,
+                client,
+                desc: `${p.type || 'General'} vault initialized`,
+                icon: Server,
+                status: 'success',
+            });
+
+            if (fileCount > 0) {
+                rows.push({
+                    id: `files-${p.id}`,
+                    dateIso: baseDate,
+                    type: 'system',
+                    title: 'Files Uploaded',
+                    project: p.name,
+                    client,
+                    desc: `${fileCount} asset${fileCount === 1 ? '' : 's'} uploaded`,
+                    icon: Upload,
+                    status: 'info',
+                });
+            }
+
+            if (p.clientViewedAt) {
+                rows.push({
+                    id: `view-${p.id}`,
+                    dateIso: p.clientViewedAt,
+                    type: 'access',
+                    title: 'Client Viewed',
+                    project: p.name,
+                    client,
+                    desc: 'Vault viewed by client',
+                    icon: Eye,
+                    status: 'info',
+                });
+            }
+
+            if (p.status === 'paid' || p.status === 'completed') {
+                rows.push({
+                    id: `paid-${p.id}`,
+                    dateIso: p.clientViewedAt || p.dueDate || baseDate,
+                    type: 'financial',
+                    title: 'Payment Settled',
+                    project: p.name,
+                    client,
+                    amount: `+$${p.amount.toLocaleString()}`,
+                    icon: DollarSign,
+                    status: 'cleared',
+                });
+                rows.push({
+                    id: `unlock-${p.id}`,
+                    dateIso: p.clientViewedAt || p.dueDate || baseDate,
+                    type: 'system',
+                    title: 'Vault Unlocked',
+                    project: p.name,
+                    client,
+                    desc: 'Assets released to client',
+                    icon: Unlock,
+                    status: 'success',
+                });
+            } else if (p.status === 'awaiting_payment') {
+                rows.push({
+                    id: `invoice-${p.id}`,
+                    dateIso: p.dueDate || baseDate,
+                    type: 'financial',
+                    title: 'Invoice Pending',
+                    project: p.name,
+                    client,
+                    amount: `+$${p.amount.toLocaleString()}`,
+                    icon: Receipt,
+                    status: 'pending',
+                });
+            } else if (p.status === 'awaiting_signature') {
+                rows.push({
+                    id: `signature-${p.id}`,
+                    dateIso: p.dueDate || baseDate,
+                    type: 'access',
+                    title: 'Awaiting Signature',
+                    project: p.name,
+                    client,
+                    desc: 'Contract sent for e-signature',
+                    icon: FileText,
+                    status: 'pending',
+                });
+            }
+        });
+
+        // Keep a tiny demo fallback when mock mode is enabled and there is no project data.
+        if (rows.length === 0 && isMockMode()) {
+            rows.push({
+                id: 'demo-1',
+                dateIso: new Date().toISOString(),
+                type: 'access',
+                title: 'Link Generated',
+                project: 'Demo Project',
+                client: 'Demo Client',
+                desc: 'Secure access token created',
+                icon: LinkIcon,
+                status: 'info',
+            });
         }
-    ];
+
+        const grouped = rows
+            .sort((a, b) => new Date(b.dateIso).getTime() - new Date(a.dateIso).getTime())
+            .reduce((acc, row) => {
+                const key = formatGroupDate(row.dateIso);
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(row);
+                return acc;
+            }, {} as Record<string, typeof rows>);
+
+        return Object.entries(grouped).map(([date, events]) => ({
+            date,
+            total: events
+                .filter(e => e.type === 'financial' && e.amount)
+                .reduce((sum, e) => sum + Number((e.amount || '').replace(/[^0-9.-]/g, '')), 0),
+            events,
+        })).map(group => ({
+            ...group,
+            total: group.total > 0 ? `+$${group.total.toLocaleString()}` : null,
+        }));
+    }, [projects]);
 
     const filteredGroups = activityFeed.map(group => ({
         ...group,
@@ -143,6 +274,15 @@ const ActivityView = () => {
             return matchesFilter && matchesSearch;
         })
     })).filter(group => group.events.length > 0);
+
+    const pendingRevenue = projects
+        .filter(p => p.status === 'awaiting_payment' || p.status === 'awaiting_signature' || p.status === 'payment_verification')
+        .reduce((sum, p) => sum + p.amount, 0);
+    const clearedMtd = projects
+        .filter(p => (p.status === 'paid' || p.status === 'completed') && new Date(p.createdAt).getMonth() === new Date().getMonth())
+        .reduce((sum, p) => sum + p.amount, 0);
+    const activeVaults = projects.filter(p => p.status !== 'completed').length;
+    const awaitingAction = projects.filter(p => p.status === 'awaiting_payment' || p.status === 'awaiting_signature').length;
 
     return (
         <div className="lg:h-[calc(100vh-140px)] h-auto flex flex-col gap-6 animate-slide-up relative z-10 pb-0">
@@ -169,7 +309,7 @@ const ActivityView = () => {
             <div className="flex-1 flex flex-col lg:flex-row gap-8 lg:overflow-hidden">
 
                 {/* Left: Filters & Metrics Sidebar - Scrollable independently if needed */}
-                <div className="lg:w-80 flex-shrink-0 flex flex-col gap-8 lg:overflow-y-auto no-scrollbar pr-2 pb-6">
+                <div className="lg:w-80 shrink-0 flex flex-col gap-8 lg:overflow-y-auto no-scrollbar pr-2 pb-6">
                     {/* Filters */}
                     <div>
                         <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 px-1">Ledger Filters</h3>
@@ -206,7 +346,7 @@ const ActivityView = () => {
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Pending Revenue</span>
                                 <Clock className="w-4 h-4 text-amber-500" />
                             </div>
-                            <PrivacyBlur className="text-2xl font-serif font-medium text-obsidian dark:text-white tracking-tight">$4,200.00</PrivacyBlur>
+                            <PrivacyBlur className="text-2xl font-serif font-medium text-obsidian dark:text-white tracking-tight">${pendingRevenue.toLocaleString()}</PrivacyBlur>
                             <p className="text-[10px] text-amber-600 dark:text-amber-500 mt-1 font-bold">Locked in active vaults</p>
                         </div>
 
@@ -216,7 +356,7 @@ const ActivityView = () => {
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Cleared (MTD)</span>
                                 <CheckCircle className="w-4 h-4 text-lime-600 dark:text-brand" />
                             </div>
-                            <PrivacyBlur className="text-2xl font-serif font-medium text-obsidian dark:text-white tracking-tight">$12,450.00</PrivacyBlur>
+                            <PrivacyBlur className="text-2xl font-serif font-medium text-obsidian dark:text-white tracking-tight">${clearedMtd.toLocaleString()}</PrivacyBlur>
                             <p className="text-[10px] text-lime-600 dark:text-brand mt-1 font-bold">+12% from last month</p>
                         </div>
 
@@ -226,8 +366,8 @@ const ActivityView = () => {
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Active Vaults</span>
                                 <FolderLock className="w-4 h-4 text-blue-500" />
                             </div>
-                            <div className="text-2xl font-serif font-medium text-obsidian dark:text-white tracking-tight">8</div>
-                            <p className="text-[10px] text-slate-500 mt-1 font-bold">3 awaiting client action</p>
+                            <div className="text-2xl font-serif font-medium text-obsidian dark:text-white tracking-tight">{activeVaults}</div>
+                            <p className="text-[10px] text-slate-500 mt-1 font-bold">{awaitingAction} awaiting client action</p>
                         </div>
                     </div>
                 </div>

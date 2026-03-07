@@ -1,14 +1,9 @@
-/* Intentionally minimal.
-   Tailwind is loaded via CDN in index.html. This file exists to:
-   1) avoid runtime 404s for /index.css
-   2) allow a small amount of global polish if needed later */
+/* Global styles that sit outside Tailwind's processing pipeline */
 
 html, body {
   height: 100%;
 }
 
-/* Reduce layout shift when scrollbars appear/disappear (supported browsers). */
 html {
   scrollbar-gutter: stable;
 }
-

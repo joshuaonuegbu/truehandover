@@ -103,8 +103,11 @@ ok =
     [
       "ALLOWED_ORIGINS",
       "APP_BASE_URL",
+      "CLIENT_PORTAL_HMAC_SECRET",
       "STRIPE_SECRET_KEY",
       "STRIPE_WEBHOOK_SECRET",
+      "RESEND_API_KEY",
+      "NUDGE_FROM_EMAIL",
       "R2_ACCOUNT_ID",
       "R2_ACCESS_KEY_ID",
       "R2_SECRET_ACCESS_KEY",
@@ -123,4 +126,3 @@ printR2CorsSuggestion(String(functions.env.ALLOWED_ORIGINS || "").trim());
 
 console.log(ok ? "\nResult: OK" : "\nResult: NEEDS FIXES");
 process.exit(ok ? 0 : 1);
-

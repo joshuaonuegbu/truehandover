@@ -110,5 +110,141 @@ export const DB = {
             .from('projects')
             .delete()
             .eq('id', projectId);
-    }
+    },
+
+    /**
+     * Download Audit Trail PDF for a project.
+     * Calls the `audit-trail` Edge Function and returns a Blob.
+     */
+    async downloadAuditTrail(projectId: string): Promise<{ blob: Blob | null; error: string | null }> {
+        if (!supabase) return { blob: null, error: 'No connection' };
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) return { blob: null, error: sessionError.message };
+        const accessToken = sessionData.session?.access_token;
+        if (!accessToken) return { blob: null, error: 'Unauthorized' };
+
+        const baseUrl = supabaseUrl.replace(/\/$/, '');
+        const res = await fetch(`${baseUrl}/functions/v1/audit-trail`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${accessToken}`,
+                apikey: supabaseAnonKey,
+            },
+            body: JSON.stringify({ projectId }),
+        });
+
+        if (!res.ok) {
+            const text = await res.text().catch(() => '');
+            try {
+                const json = JSON.parse(text);
+                return { blob: null, error: json?.error || `HTTP ${res.status}` };
+            } catch {
+                return { blob: null, error: text || `HTTP ${res.status}` };
+            }
+        }
+
+        return { blob: await res.blob(), error: null };
+    },
+
+    async downloadRightsTransfer(projectId: string): Promise<{ blob: Blob | null; error: string | null }> {
+        if (!supabase) return { blob: null, error: 'No connection' };
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) return { blob: null, error: sessionError.message };
+        const accessToken = sessionData.session?.access_token;
+        if (!accessToken) return { blob: null, error: 'Unauthorized' };
+
+        const baseUrl = supabaseUrl.replace(/\/$/, '');
+        const res = await fetch(`${baseUrl}/functions/v1/rights-transfer`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${accessToken}`,
+                apikey: supabaseAnonKey,
+            },
+            body: JSON.stringify({ projectId }),
+        });
+
+        if (!res.ok) {
+            const text = await res.text().catch(() => '');
+            try {
+                const json = JSON.parse(text);
+                return { blob: null, error: json?.error || `HTTP ${res.status}` };
+            } catch {
+                return { blob: null, error: text || `HTTP ${res.status}` };
+            }
+        }
+
+        return { blob: await res.blob(), error: null };
+    },
+
+    /**
+     * Send a payment nudge email to the client of a project.
+     * Calls the `nudge-sender` Edge Function.
+     */
+    async sendNudge(projectId: string): Promise<{ ok: boolean; error: string | null; next_allowed_at?: string }> {
+        if (!supabase) return { ok: false, error: 'No connection' };
+        const { data, error } = await supabase.functions.invoke('nudge-sender', {
+            body: { projectId },
+        });
+        if (error) return { ok: false, error: error.message };
+        if (data?.error) return { ok: false, error: data.error, next_allowed_at: data.next_allowed_at };
+        return { ok: data?.ok === true, error: null };
+    },
+
+    async createRetainerLink(input: { clientName: string; clientEmail: string; amount: number; interval: 'week' | 'month' | 'year' }): Promise<{ ok: boolean; url?: string; error: string | null }> {
+        if (!supabase) return { ok: false, error: 'No connection' };
+        const { data, error } = await supabase.functions.invoke('stripe-retainer-link', { body: input });
+        if (error) return { ok: false, error: error.message };
+        if (data?.error) return { ok: false, error: data.error };
+        return { ok: true, url: data?.url, error: null };
+    },
+
+    async createClientPortalToken(clientEmail: string, ttlDays?: number): Promise<{ ok: boolean; token?: string; expiresAt?: string; error: string | null }> {
+        if (!supabase) return { ok: false, error: 'No connection' };
+        const { data, error } = await supabase.functions.invoke('client-portal-token', {
+            body: { clientEmail, ttlDays },
+        });
+        if (error) return { ok: false, error: error.message };
+        if (data?.error) return { ok: false, error: data.error };
+        return { ok: true, token: data?.token, expiresAt: data?.expiresAt, error: null };
+    },
+
+    async getClientPortal(portalToken: string): Promise<{ portal: any | null; error: string | null }> {
+        if (!supabase) return { portal: null, error: 'No connection' };
+        const { data, error } = await supabase.functions.invoke('client-portal', {
+            body: { portalToken },
+        });
+        if (error) return { portal: null, error: error.message };
+        if (data?.error) return { portal: null, error: data.error };
+        return { portal: data?.portal ?? null, error: null };
+    },
+
+    /**
+     * Download all original files for a project as a single ZIP archive.
+     * Uses the clientLink for auth (no creator JWT required — client-facing).
+     * Calls the `r2-zip-export` Edge Function.
+     */
+    async downloadProjectZip(clientLink: string): Promise<{ blob: Blob | null; error: string | null }> {
+        if (!supabase) return { blob: null, error: 'No connection' };
+        const baseUrl = supabaseUrl.replace(/\/$/, '');
+        const res = await fetch(`${baseUrl}/functions/v1/r2-zip-export`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                apikey: supabaseAnonKey,
+            },
+            body: JSON.stringify({ clientLink }),
+        });
+        if (!res.ok) {
+            const text = await res.text().catch(() => '');
+            try {
+                const json = JSON.parse(text);
+                return { blob: null, error: json?.error || `HTTP ${res.status}` };
+            } catch {
+                return { blob: null, error: text || `HTTP ${res.status}` };
+            }
+        }
+        return { blob: await res.blob(), error: null };
+    },
 };

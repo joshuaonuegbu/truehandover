@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Block internal app routes from indexing
+Disallow: /dashboard
+Disallow: /create
+Disallow: /editor/
+Disallow: /preview/
+Disallow: /settings
+Disallow: /activity
+Disallow: /reports
+Disallow: /clients
+Disallow: /trash
+Disallow: /vault
+Disallow: /help
+Disallow: /portal/
+
+# Public-facing client links are indexable
+Allow: /c/
+
+Sitemap: https://truehandover.com/sitemap.xml

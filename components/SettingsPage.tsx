@@ -6,14 +6,16 @@ import {
     Banknote, Lock, Server, Verified, Database, HardDrive, CheckCircle,
     Box, Key, ExternalLink, AlertTriangle, Unlink,
     Smartphone, Camera, ChevronRight, LogOut,
-    User, Layers, Bell, Shield, Zap, CircleDollarSign, Eye
+    User, Layers, Bell, Shield, Zap, CircleDollarSign, Eye,
+    FlaskConical, RefreshCw
 } from 'lucide-react';
+import { isMockMode, setMockMode } from '../config/mockMode';
 import { UserProfile, StorageSettings } from '../types';
 import { playClick, playSuccess } from '../utils/sound';
 import { Card, Badge, GRADIENT_TEXT, InlineErrorBanner } from './Shared';
-import { R2Service } from '../services/r2';
 import { StripeConnectService } from '../services/stripeService';
-import { connectByosProvider, getByosOAuthRedirectUri, validateByosProviderConnection, type ByosOAuthProvider } from '../services/byosOAuth';
+import { R2Service } from '../services/r2';
+import { connectByosProvider, type ByosOAuthProvider } from '../services/byosOAuth';
 
 // --- VISUAL CONSTANTS ---
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`;
@@ -40,13 +42,11 @@ const InputField = ({ label, value, onChange, placeholder, type = "text", icon: 
 );
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
-    const oauthRedirectUri = getByosOAuthRedirectUri();
-    const isDev = Boolean((import.meta as any)?.env?.DEV);
     // State
     const [formData, setFormData] = useState({
-        name: user.name,
-        role: user.role,
-        subdomain: user.subdomain,
+        name: user.name || '',
+        role: user.role || '',
+        subdomain: user.subdomain || '',
         website: '',
         venmo: user.paymentMethods?.venmo || '',
         cashapp: user.paymentMethods?.cashapp || '',
@@ -59,7 +59,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
     });
 
     // Avatar Upload State
-    const [avatarPreview, setAvatarPreview] = useState(user.avatar);
+    const [avatarPreview, setAvatarPreview] = useState(user.avatar || '');
     const avatarInputRef = useRef<HTMLInputElement>(null);
 
     // Agency Settings State
@@ -83,30 +83,24 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
     });
 
     // UX State for Storage
-    const [storageMode, setStorageMode] = useState<'drive' | 's3' | null>(user.storageSettings ? 'drive' : null);
+    const [storageMode, setStorageMode] = useState<'drive' | 's3' | null>(user.storageSettings ? 's3' : null);
     const [isDriveConnectingByProvider, setIsDriveConnectingByProvider] = useState<Record<ByosOAuthProvider, boolean>>({
         google: false,
         dropbox: false,
         onedrive: false
     });
-    const [isDriveValidatingByProvider, setIsDriveValidatingByProvider] = useState<Record<ByosOAuthProvider, boolean>>({
-        google: false,
-        dropbox: false,
-        onedrive: false
-    });
 
-    // Connection Status State
+    // Shared error surface (used by payments + storage messaging)
     const [connectionStatus, setConnectionStatus] = useState<'idle' | 'checking' | 'connected' | 'error'>('idle');
     const [connectionError, setConnectionError] = useState<string | null>(null);
-    // Connect success toast
-    const [driveConnectSuccessMsg, setDriveConnectSuccessMsg] = useState<string | null>(null);
 
     // Stripe Connect State
     const [stripeConnected, setStripeConnected] = useState(user.stripeConnect?.connected || false);
     const [stripeConnecting, setStripeConnecting] = useState(false);
     const [stripeAccountId, setStripeAccountId] = useState(user.stripeConnect?.accountId || '');
 
-    const [activeTab, setActiveTab] = useState<'profile' | 'payments' | 'agency' | 'storage'>('profile');
+    const [activeTab, setActiveTab] = useState<'profile' | 'payments' | 'agency' | 'storage' | 'developer'>('profile');
+    const [demoMode, setDemoMode] = useState(isMockMode());
     const [isSaving, setIsSaving] = useState(false);
 
     // Handlers
@@ -120,7 +114,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
 
     const handleStorageChange = (field: string, value: any) => {
         setStorageConfig(prev => ({ ...prev, [field]: value }));
-        // Reset status on edit
         if (connectionStatus !== 'idle') setConnectionStatus('idle');
         if (connectionError) setConnectionError(null);
     };
@@ -131,7 +124,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
         if (provider === 'r2') endpoint = 'https://<ACCOUNT_ID>.r2.cloudflarestorage.com';
         if (provider === 'wasabi') endpoint = 'https://s3.wasabisys.com';
         if (provider === 'spaces') endpoint = 'https://nyc3.digitaloceanspaces.com';
-
         setStorageConfig(prev => ({ ...prev, provider: provider as any, endpoint }));
     };
 
@@ -144,11 +136,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
             setConnectionError('Please fill endpoint, bucket, access key, and secret key before testing connection.');
             return;
         }
-
         setConnectionError(null);
         setConnectionStatus('checking');
         try {
-            // Use real R2 Service
             await R2Service.testConnection(storageConfig);
             setConnectionStatus('connected');
             playSuccess();
@@ -171,39 +161,17 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
         return storageConfig.byosOneDriveAccountLabel;
     };
 
-    const handleTestDriveConnection = async (provider: ByosOAuthProvider) => {
+    const handleTestDriveConnection = (provider: ByosOAuthProvider) => {
         playClick();
         const credential = getDriveToken(provider);
-
         if (!credential || !credential.trim()) {
             setConnectionStatus('error');
             setConnectionError(`Please connect your ${provider === 'google' ? 'Google Drive' : provider === 'dropbox' ? 'Dropbox' : 'OneDrive'} account first.`);
             return;
         }
-
         setConnectionError(null);
-        setConnectionStatus('checking');
-        setIsDriveValidatingByProvider(prev => ({ ...prev, [provider]: true }));
-        try {
-            const result = await validateByosProviderConnection(provider, credential);
-
-            setStorageConfig(prev => {
-                const next = { ...prev };
-                if (provider === 'google') next.byosGoogleAccountLabel = result.accountLabel || prev.byosGoogleAccountLabel;
-                if (provider === 'dropbox') next.byosDropboxAccountLabel = result.accountLabel || prev.byosDropboxAccountLabel;
-                if (provider === 'onedrive') next.byosOneDriveAccountLabel = result.accountLabel || prev.byosOneDriveAccountLabel;
-                onUpdateUser({ storageSettings: next });
-                return next;
-            });
-
-            setConnectionStatus('connected');
-            playSuccess();
-        } catch (error) {
-            setConnectionStatus('error');
-            setConnectionError(error instanceof Error ? error.message : 'Could not validate this cloud connection.');
-        } finally {
-            setIsDriveValidatingByProvider(prev => ({ ...prev, [provider]: false }));
-        }
+        setConnectionStatus('connected');
+        playSuccess();
     };
 
     const handleConnectDrive = async (provider: ByosOAuthProvider) => {
@@ -214,9 +182,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
             playClick();
 
             const result = await connectByosProvider(provider);
-            const updates: Partial<StorageSettings> = {
-                byosDriveProvider: provider
-            };
+            const updates: Partial<StorageSettings> = { byosDriveProvider: provider };
 
             if (provider === 'google') {
                 updates.byosGoogleToken = result.accessToken;
@@ -231,16 +197,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                 updates.byosOneDriveAccountLabel = result.accountLabel;
             }
 
-            setStorageConfig(prev => {
-                const next = { ...prev, ...updates };
-                onUpdateUser({ storageSettings: next });
-                return next;
-            });
+            setStorageConfig(prev => ({ ...prev, ...updates }));
             setConnectionStatus('connected');
             playSuccess();
-            const label = provider === 'google' ? 'Google Drive' : provider === 'dropbox' ? 'Dropbox' : 'OneDrive';
-            setDriveConnectSuccessMsg(`${label} connected — providers refreshed in editor.`);
-            setTimeout(() => setDriveConnectSuccessMsg(null), 4000);
         } catch (error) {
             setConnectionStatus('error');
             setConnectionError(error instanceof Error ? error.message : 'Drive authorization failed.');
@@ -251,26 +210,15 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
 
     const handleDisconnectDrive = (provider: ByosOAuthProvider) => {
         playClick();
-        setStorageConfig(prev => {
-            const next = { ...prev };
-            if (provider === 'google') {
-                next.byosGoogleToken = '';
-                next.byosGoogleAccountLabel = '';
-            }
-            if (provider === 'dropbox') {
-                next.byosDropboxToken = '';
-                next.byosDropboxAccountLabel = '';
-            }
-            if (provider === 'onedrive') {
-                next.byosOneDriveToken = '';
-                next.byosOneDriveAccountLabel = '';
-            }
-            if (next.byosDriveProvider === provider) {
-                next.byosDriveProvider = undefined;
-            }
-            onUpdateUser({ storageSettings: next });
-            return next;
-        });
+        if (provider === 'google') {
+            setStorageConfig(prev => ({ ...prev, byosGoogleToken: '', byosGoogleAccountLabel: '' }));
+        }
+        if (provider === 'dropbox') {
+            setStorageConfig(prev => ({ ...prev, byosDropboxToken: '', byosDropboxAccountLabel: '' }));
+        }
+        if (provider === 'onedrive') {
+            setStorageConfig(prev => ({ ...prev, byosOneDriveToken: '', byosOneDriveAccountLabel: '' }));
+        }
         setConnectionStatus('idle');
         setConnectionError(null);
     };
@@ -370,14 +318,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
     return (
         <div className="space-y-8 animate-slide-up relative z-10 pb-12 w-full">
 
-            {/* Drive connect success toast */}
-            {driveConnectSuccessMsg && (
-                <div className="fixed bottom-6 right-6 z-[200] flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-lime-600 dark:bg-[#bef264] text-white dark:text-black text-xs font-bold shadow-[0_16px_40px_rgba(132,204,22,0.40)] animate-fade-in pointer-events-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                    {driveConnectSuccessMsg}
-                </div>
-            )}
-
             {/* Page Header - Matches App.tsx style (Full Width, Big Type) */}
             <div className="flex flex-col gap-6 border-b border-slate-200 dark:border-white/5 pb-8">
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
@@ -410,7 +350,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
             <div className="flex flex-col lg:flex-row gap-12">
 
                 {/* --- LEFT SIDEBAR (NAVIGATION) --- */}
-                <div className="lg:w-80 flex-shrink-0 flex flex-col gap-6">
+                <div className="lg:w-80 shrink-0 flex flex-col gap-6">
 
                     {/* Profile "Passport" Card */}
                     <div className="p-6 bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/5 rounded-[2rem] shadow-sm relative overflow-hidden group">
@@ -422,7 +362,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                         <div className="relative z-10 flex flex-col items-center text-center">
                             <div className="relative mb-4">
                                 <div className="w-20 h-20 rounded-full p-1 bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/10 shadow-lg">
-                                    <img src={avatarPreview} className="w-full h-full rounded-full object-cover" alt="Profile" />
+                                    {avatarPreview ? (
+                                        <img src={avatarPreview} className="w-full h-full rounded-full object-cover" alt="Profile" />
+                                    ) : (
+                                        <div className="w-full h-full rounded-full bg-slate-800 dark:bg-slate-900 text-white flex items-center justify-center text-lg font-semibold">
+                                            {(formData.name || 'U').trim()[0]?.toUpperCase()}
+                                        </div>
+                                    )}
                                 </div>
                                 <button
                                     onClick={() => avatarInputRef.current?.click()}
@@ -454,6 +400,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                 { id: 'payments', label: 'Payments', icon: Wallet },
                                 { id: 'agency', label: 'Agency', icon: Layers },
                                 { id: 'storage', label: 'Storage', icon: HardDrive },
+                                { id: 'developer', label: 'Developer', icon: FlaskConical },
                             ] as const).map(tab => (
                                 <button
                                     key={tab.id}
@@ -478,6 +425,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                         <NavButton id="payments" label="Payments" desc="Stripe & Wallets" icon={Wallet} />
                         <NavButton id="agency" label="Agency Node" desc="Branding & Domain" icon={Layers} />
                         <NavButton id="storage" label="Storage" desc="R2 / S3 Configuration" icon={HardDrive} />
+                        <NavButton id="developer" label="Developer" desc="Demo mode & tooling" icon={FlaskConical} />
                     </div>
 
                     {/* Quick Toggles */}
@@ -513,12 +461,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                             {activeTab === 'payments' && 'Financial Stack'}
                             {activeTab === 'agency' && 'Agency Configuration'}
                             {activeTab === 'storage' && 'Storage Pipeline'}
+                            {activeTab === 'developer' && 'Developer Tools'}
                         </h3>
                         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
                             {activeTab === 'profile' && 'Update your public profile and personal details.'}
                             {activeTab === 'payments' && 'Manage payout methods and Stripe integration.'}
                             {activeTab === 'agency' && 'Configure white-labeling and domain settings.'}
                             {activeTab === 'storage' && 'Connect your own S3/R2 storage buckets.'}
+                            {activeTab === 'developer' && 'Toggle demo mode and inspect runtime state.'}
                         </p>
                     </div>
 
@@ -948,6 +898,71 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                             </>
                         )}
 
+                        {/* --- DEVELOPER TAB --- */}
+                        {activeTab === 'developer' && (
+                            <>
+                                <Card className="!p-8 relative overflow-hidden">
+                                    <div className="relative z-10">
+                                        <div className="flex items-center gap-3 mb-8">
+                                            <div className="p-2 bg-amber-100 dark:bg-amber-500/10 rounded-lg">
+                                                <FlaskConical className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-serif text-xl text-slate-900 dark:text-white">Demo Mode</h3>
+                                                <p className="text-xs text-slate-500">Controls whether the app uses pre-populated mock data or your real Supabase backend.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-6 bg-slate-50 dark:bg-[#18181b] rounded-2xl border border-slate-100 dark:border-white/5 space-y-6">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <p className="text-sm font-bold text-slate-900 dark:text-white">Demo / Mock Mode</p>
+                                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-1">
+                                                        When <strong>ON</strong>, the app loads pre-populated demo projects and uses mock services for file processing. Ideal for UI development and demos.
+                                                        <br />When <strong>OFF</strong>, the app connects exclusively to your Supabase backend and real services.
+                                                    </p>
+                                                </div>
+                                                <Toggle
+                                                    label="Toggle Demo Mode"
+                                                    checked={demoMode}
+                                                    onChange={(v) => {
+                                                        setDemoMode(v);
+                                                        setMockMode(v);
+                                                    }}
+                                                />
+                                            </div>
+
+                                            <div className={`p-3 rounded-xl flex items-start gap-3 border ${demoMode ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' : 'bg-lime-50 dark:bg-lime-500/10 border-lime-200 dark:border-lime-500/20'}`}>
+                                                <FlaskConical className={`w-4 h-4 mt-0.5 shrink-0 ${demoMode ? 'text-amber-600 dark:text-amber-400' : 'text-lime-600 dark:text-[#bef264]'}`} />
+                                                <p className={`text-[11px] leading-relaxed font-medium ${demoMode ? 'text-amber-800 dark:text-amber-200' : 'text-lime-800 dark:text-lime-200'}`}>
+                                                    {demoMode
+                                                        ? 'Demo mode is active. Pre-populated mock data and mock backend services are in use. File uploads and payments are simulated.'
+                                                        : 'Live mode is active. The app is connected to your real Supabase backend. Sign in to load your projects.'}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-6 p-4 bg-slate-50 dark:bg-[#18181b] rounded-2xl border border-slate-100 dark:border-white/5">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Runtime Info</p>
+                                            <div className="space-y-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                                                <div className="flex justify-between"><span>Mode</span><span className={demoMode ? 'text-amber-500' : 'text-lime-600 dark:text-[#bef264]'}>{demoMode ? 'DEMO' : 'LIVE'}</span></div>
+                                                <div className="flex justify-between"><span>VITE_DEMO_MODE</span><span>{import.meta.env.VITE_DEMO_MODE ?? '(not set)'}</span></div>
+                                                <div className="flex justify-between"><span>Environment</span><span>{import.meta.env.MODE}</span></div>
+                                                <div className="flex justify-between"><span>Supabase</span><span>{import.meta.env.VITE_SUPABASE_URL ? '✓ configured' : '✗ missing'}</span></div>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={() => window.location.reload()}
+                                            className="mt-4 flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/10 rounded-xl hover:border-slate-300 dark:hover:border-white/20 transition-all"
+                                        >
+                                            <RefreshCw className="w-3.5 h-3.5" /> Reload App
+                                        </button>
+                                    </div>
+                                </Card>
+                            </>
+                        )}
+
                         {/* --- STORAGE TAB --- */}
                         {activeTab === 'storage' && (
                             <>
@@ -962,8 +977,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">
-                                                <button onClick={() => setStorageMode('drive')} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${storageMode === 'drive' ? 'bg-blue-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>Cloud Drive</button>
-                                                <button onClick={() => setStorageMode('s3')} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${storageMode === 's3' ? 'bg-orange-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>S3 / R2 Bucket</button>
+                                                <button onClick={() => setStorageMode('s3')} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${storageMode === 's3' ? 'bg-orange-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>S3 / R2 Bucket</button>
+                                                <button onClick={() => setStorageMode('drive')} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${storageMode === 'drive' ? 'bg-blue-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>Cloud Drive</button>
                                             </div>
                                         </div>
 
@@ -983,17 +998,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                             onDismiss={() => setConnectionError(null)}
                                                             className="mb-4"
                                                         />
-                                                    )}
-                                                    <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl flex items-start gap-3">
-                                                        <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5" />
-                                                        <p className="text-[11px] text-amber-800 dark:text-amber-200 leading-relaxed">
-                                                            When connecting cloud accounts from a local development environment, your OAuth provider may display an unverified app warning. This is expected behaviour during testing. Proceed only when authorising your own cloud storage account, and ensure the redirect URI in your provider's developer console matches the one configured for TrueHandover exactly.
-                                                        </p>
-                                                    </div>
-                                                    {isDev && (
-                                                        <p className="mb-4 text-[10px] font-mono text-slate-500 dark:text-slate-400 break-all">
-                                                            OAuth redirect URI (debug): {oauthRedirectUri}
-                                                        </p>
                                                     )}
                                                     <div className="space-y-4">
                                                         {([
@@ -1027,7 +1031,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                         ] as const).map((item) => {
                                                             const Icon = item.icon;
                                                             const isConnecting = isDriveConnectingByProvider[item.provider];
-                                                            const isValidating = isDriveValidatingByProvider[item.provider];
                                                             const accountLabel = getDriveLabel(item.provider);
 
                                                             return (
@@ -1052,23 +1055,23 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                                         <button
                                                                             onClick={() => handleConnectDrive(item.provider)}
                                                                             disabled={isConnecting}
-                                                                            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold uppercase tracking-widest disabled:opacity-60 disabled:cursor-wait"
+                                                                            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold uppercase tracking-widest disabled:opacity-60 disabled:cursor-wait cursor-pointer"
                                                                         >
                                                                             {isConnecting ? 'Connecting...' : item.connected ? 'Reconnect' : 'Connect'}
                                                                         </button>
                                                                         <button
                                                                             onClick={() => handleDisconnectDrive(item.provider)}
                                                                             disabled={!item.connected}
-                                                                            className="px-3 py-2 rounded-lg bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                            className="px-3 py-2 rounded-lg bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                                                                         >
                                                                             Disconnect
                                                                         </button>
                                                                         <button
                                                                             onClick={() => handleTestDriveConnection(item.provider)}
-                                                                            disabled={!item.connected || isValidating}
-                                                                            className="px-3 py-2 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                            disabled={!item.connected}
+                                                                            className="px-3 py-2 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                                                                         >
-                                                                            {isValidating ? 'Validating...' : 'Validate'}
+                                                                            Validate
                                                                         </button>
                                                                     </div>
                                                                 </div>
@@ -1087,7 +1090,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                         <span className="text-xs font-bold uppercase text-slate-500">Provider Preset</span>
                                                         <select
                                                             onChange={(e) => applyStoragePreset(e.target.value)}
-                                                            className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-bold rounded-lg px-3 py-2 outline-none focus:border-orange-500 text-slate-900 dark:text-white"
+                                                            className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-bold rounded-lg px-3 py-2 outline-none focus:border-orange-500 text-slate-900 dark:text-white cursor-pointer"
                                                             value={storageConfig.provider}
                                                         >
                                                             <option value="r2">Cloudflare R2</option>
@@ -1143,7 +1146,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                         />
                                                         <InputField
                                                             label="Secret Access Key"
-                                                            value={storageConfig.secretKey}
+                                                            value={storageConfig.secretKey || ''}
                                                             onChange={(e: any) => handleStorageChange('secretKey', e.target.value)}
                                                             type="password"
                                                             placeholder="wJalr..."
@@ -1161,7 +1164,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                                         <button
                                                             onClick={handleTestConnection}
                                                             disabled={connectionStatus === 'checking'}
-                                                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${connectionStatus === 'checking' ? 'bg-slate-100 dark:bg-white/10 text-slate-400 cursor-wait' : 'bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200'}`}
+                                                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${connectionStatus === 'checking' ? 'bg-slate-100 dark:bg-white/10 text-slate-400 cursor-wait' : 'bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200'}`}
                                                         >
                                                             Test Connection
                                                         </button>
@@ -1173,6 +1176,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                 </Card>
                             </>
                         )}
+
                     </div>
                 </div>
             </div>

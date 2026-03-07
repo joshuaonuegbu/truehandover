@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext, useRef, useMemo } from 'react';
-import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams, Outlet, Link } from 'react-router-dom';
+import React, { useState, useEffect, useContext, useRef, useMemo, lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams, Outlet, Link, useOutletContext } from 'react-router-dom';
 import {
     Lock, FileText, Settings, Bell,
     LayoutDashboard, Check,
@@ -23,29 +23,176 @@ import {
     ArrowUpRight, Grip, MousePointerClick, Siren, FileWarning, ArrowDownRight,
     FileInput, Radio, Wifi, Receipt, ArrowLeftRight, TrendingDown, ShieldAlert,
     BarChart3, FileDigit, Landmark, Printer, PieChart, Users,
-    Sparkles
+    QrCode
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, BarChart, Bar, Cell, Legend, ReferenceLine, YAxis, Pie, PieChart as RePieChart } from 'recharts';
+import { QRCodeSVG } from 'qrcode.react';
 import { playClick, playSuccess } from './utils/sound';
+import { isMockMode, setMockMode } from './config/mockMode';
+// Critical path — loaded eagerly (needed before auth resolves)
 import LandingPage from './components/LandingPage';
 import SignInPage from './components/SignInPage';
-import CreatorPage from './components/CreatorPage';
-import ClientPreviewBiz from './components/ClientPreviewBiz';
-import TrashPage from './components/TrashPage';
-import HelpPage from './components/HelpPage';
-import SettingsPage from './components/SettingsPage';
-import ReportsView from './components/ReportsView';
-import ActivityView from './components/ActivityView';
 import { Card, Badge, GRADIENT_TEXT } from './components/Shared';
 import ThemeModeDropdown from './components/ThemeModeDropdown';
-import DesignShowcase from './components/DesignShowcaseHiFi';
-import { supabase } from './services/supabaseClient';
+import { ClientRolodexContent } from './components/ClientsPage';
+
+// Route-level code-splitting — only loaded when the user navigates to that route
+const _importCreator = () => import('./components/CreatorPage');
+const _importPreviewBiz = () => import('./components/ClientPreviewBiz');
+const _importPortal = () => import('./components/ClientPortalPage');
+const _importTrash = () => import('./components/TrashPage');
+const _importHelp = () => import('./components/HelpPage');
+const _importSettings = () => import('./components/SettingsPage');
+const _importReports = () => import('./components/ReportsView');
+const _importActivity = () => import('./components/ActivityView');
+
+const CreatorPage = lazy(_importCreator);
+const ClientPreviewBiz = lazy(_importPreviewBiz);
+const ClientPortalPage = lazy(_importPortal);
+const TrashPage = lazy(_importTrash);
+const HelpPage = lazy(_importHelp);
+const SettingsPage = lazy(_importSettings);
+const ReportsView = lazy(_importReports);
+const ActivityView = lazy(_importActivity);
+
+// Hover-prefetch map — call the matching _import* fn on nav item hover so the
+// chunk is in the module cache before the user even clicks the link.
+const routePreloadMap: Record<string, () => Promise<unknown>> = {
+    vault: _importPreviewBiz,   // Vault renders file cards; preload preview biz alongside
+    activity: _importActivity,
+    reports: _importReports,
+    settings: _importSettings,
+    help: _importHelp,
+    trash: _importTrash,
+};
+import { DB, supabase } from './services/supabaseClient';
 import { Project, UserProfile, ViewState, FileAsset } from './types';
 import { StoreProvider, useStore } from './context/StoreContext';
+
+// ─── Toast system ────────────────────────────────────────────────────────────
+type ToastKind = 'success' | 'error' | 'info' | 'warning';
+interface Toast { id: number; message: string; kind: ToastKind; }
+type ToastFn = (message: string, kind?: ToastKind) => void;
+
+const ToastContext = React.createContext<ToastFn>(() => {});
+
+export const useToast = () => React.useContext(ToastContext);
+
+/** Height (px) of the connection/update strip when visible; 0 when hidden. Lets header + main align with strip. */
+const StripOffsetContext = React.createContext(0);
+const useStripOffset = () => React.useContext(StripOffsetContext);
+
+const ToastContainer = ({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: number) => void }) => {
+    if (toasts.length === 0) return null;
+    const kindStyles: Record<ToastKind, string> = {
+        success: 'bg-white dark:bg-[#1e2420] border-lime-300 dark:border-lime-700/40 text-slate-800 dark:text-white',
+        error:   'bg-white dark:bg-[#201e1e] border-red-300   dark:border-red-700/40   text-slate-800 dark:text-white',
+        info:    'bg-white dark:bg-[#1e2028] border-blue-300  dark:border-blue-700/40  text-slate-800 dark:text-white',
+        warning: 'bg-white dark:bg-[#201f1e] border-amber-300 dark:border-amber-700/40 text-slate-800 dark:text-white',
+    };
+    const iconStyles: Record<ToastKind, string> = {
+        success: 'text-lime-600 dark:text-lime-400',
+        error:   'text-red-500',
+        info:    'text-blue-500',
+        warning: 'text-amber-500',
+    };
+    const icons: Record<ToastKind, React.ElementType> = {
+        success: CheckCircle, error: AlertCircle, info: Bell, warning: AlertCircle,
+    };
+    return (
+        <div className="fixed bottom-24 lg:bottom-8 right-4 lg:right-6 z-[200] flex flex-col gap-2 items-end pointer-events-none">
+            {toasts.map(t => {
+                const Icon = icons[t.kind];
+                return (
+                    <div
+                        key={t.id}
+                        className={`pointer-events-auto flex items-center gap-3 pl-4 pr-3 py-3 rounded-xl border shadow-lg backdrop-blur-sm animate-slide-up max-w-xs ${kindStyles[t.kind]}`}
+                    >
+                        <Icon className={`w-4 h-4 shrink-0 ${iconStyles[t.kind]}`} />
+                        <span className="text-sm font-medium flex-1 leading-snug">{t.message}</span>
+                        <button onClick={() => dismiss(t.id)} className="ml-1 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors text-slate-400">
+                            <X className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+// ─────────────────────────────────────────────────────────────────────────────
 
 // --- CONSTANTS ---
 // OPTIMIZED: High-Fidelity Fine Grain SVG
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
+
+// Shimmer base used by all skeleton blocks
+const Shimmer = ({ className = '' }: { className?: string }) => (
+    <div className={`bg-slate-200 dark:bg-white/[0.07] rounded-xl relative overflow-hidden ${className}`}>
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/40 dark:via-white/5 to-transparent" />
+    </div>
+);
+
+// Dashboard skeleton — mirrors the greeting + stats + project list shape
+const DashboardSkeleton = () => (
+    <div className="space-y-6 pb-12 animate-fade-in absolute inset-0 w-full z-10 bg-[#f0f2f5] dark:bg-cosmic">
+        <div className="flex flex-col gap-3 border-b border-slate-200 dark:border-white/5 pb-8">
+            <Shimmer className="h-10 w-64" />
+            <Shimmer className="h-4 w-48" />
+            <Shimmer className="h-7 w-72 rounded-full" />
+        </div>
+        <div className="grid grid-cols-2 xl:grid-cols-12 gap-8">
+            <div className="xl:col-span-8 space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Shimmer className="h-48 w-full" />
+                    <div className="space-y-3">
+                        <Shimmer className="h-14 w-full" />
+                        <Shimmer className="h-14 w-full" />
+                        <Shimmer className="h-14 w-full" />
+                    </div>
+                </div>
+                {[1,2,3].map(i => (
+                    <div key={i} className="flex items-center gap-4 py-5 border-b border-slate-100 dark:border-white/5">
+                        <Shimmer className="w-12 h-12 rounded-lg shrink-0" />
+                        <div className="flex-1 space-y-2">
+                            <Shimmer className="h-4 w-48" />
+                            <Shimmer className="h-3 w-32" />
+                        </div>
+                        <Shimmer className="h-5 w-16 rounded-full shrink-0" />
+                    </div>
+                ))}
+            </div>
+            <div className="xl:col-span-4 space-y-4">
+                <Shimmer className="h-6 w-32" />
+                {[1,2,3,4].map(i => <Shimmer key={i} className="h-16 w-full" />)}
+            </div>
+        </div>
+    </div>
+);
+
+// Vault skeleton — mirrors the search bar + card rows shape
+const VaultSkeleton = () => (
+    <div className="space-y-6 pb-12 animate-fade-in absolute inset-0 w-full z-10 bg-[#f0f2f5] dark:bg-cosmic">
+        <div className="flex justify-between items-end border-b border-slate-200 dark:border-white/5 pb-8">
+            <div className="space-y-2">
+                <Shimmer className="h-9 w-48" />
+                <Shimmer className="h-4 w-72" />
+            </div>
+            <Shimmer className="h-12 w-36" />
+        </div>
+        <Shimmer className="h-14 w-full rounded-2xl" />
+        {[1,2,3].map(i => <Shimmer key={i} className="h-64 w-full rounded-[2.5rem]" />)}
+    </div>
+);
+
+// Generic thin-bar loader for all other routes
+const PageLoader = () => (
+    <div className="flex items-center justify-center h-64 w-full">
+        <div className="flex flex-col items-center gap-3 opacity-40">
+            <div className="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-white/20 border-t-lime-600 dark:border-t-[#bef264] animate-spin" />
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Loading</span>
+        </div>
+    </div>
+);
 
 // --- PRIVACY & CONTEXT ---
 const PrivacyContext = React.createContext({
@@ -195,19 +342,54 @@ const HeaderClock = () => {
     );
 };
 
-const StatusRibbon = () => {
+const parseSizeToBytes = (size?: string): number => {
+    if (!size) return 0;
+    const m = String(size).trim().match(/^([\d.]+)\s*(B|KB|MB|GB|TB)$/i);
+    if (!m) return 0;
+    const value = Number(m[1]);
+    const unit = m[2].toUpperCase();
+    const multipliers: Record<string, number> = {
+        B: 1,
+        KB: 1024,
+        MB: 1024 ** 2,
+        GB: 1024 ** 3,
+        TB: 1024 ** 4,
+    };
+    return Number.isFinite(value) ? value * (multipliers[unit] || 1) : 0;
+};
+
+const formatBytes = (bytes: number): string => {
+    if (bytes <= 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let value = bytes;
+    let idx = 0;
+    while (value >= 1024 && idx < units.length - 1) {
+        value /= 1024;
+        idx += 1;
+    }
+    const precision = idx >= 3 ? 1 : 0;
+    return `${value.toFixed(precision)} ${units[idx]}`;
+};
+
+const StatusRibbon = ({ projects, user }: { projects: Project[]; user: UserProfile }) => {
+    const stripeConnected = Boolean(user?.stripeConnect?.connected);
+    const payoutsEnabled = Boolean(user?.stripeConnect?.payoutsEnabled);
+    const totalBytes = projects.reduce((sum, p) => sum + (p.files || []).reduce((s, f) => s + parseSizeToBytes(f.size), 0), 0);
+    const totalFiles = projects.reduce((sum, p) => sum + (p.files || []).length, 0);
+    const usagePct = Math.max(0, Math.min(100, Math.round((totalBytes / (30 * 1024 ** 3)) * 100)));
+
     return (
         <div className="flex flex-wrap items-center gap-4 md:gap-8 p-4 bg-white/50 dark:bg-[#23232e] border border-slate-200 dark:border-white/5 rounded-2xl mb-8 backdrop-blur-md shadow-sm">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 <CreditCard className="w-3.5 h-3.5" />
-                <span>Stripe Connect: <span className="text-lime-600 dark:text-[#bef264]">Active</span></span>
+                <span>Stripe Connect: <span className={stripeConnected ? 'text-lime-600 dark:text-[#bef264]' : 'text-slate-500 dark:text-slate-400'}>{stripeConnected ? 'Connected' : 'Not connected'}</span></span>
             </div>
 
             <div className="hidden md:block w-px h-4 bg-slate-200 dark:bg-white/10" />
 
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 <Banknote className="w-3.5 h-3.5" />
-                <span>Next Payout: <span className="text-slate-900 dark:text-white">17:00 EST</span></span>
+                <span>Next Payout: <span className="text-slate-900 dark:text-white">{stripeConnected && payoutsEnabled ? 'Managed in Stripe' : 'Unavailable'}</span></span>
             </div>
 
             <div className="ml-auto flex items-center gap-4">
@@ -219,10 +401,10 @@ const StatusRibbon = () => {
                     <div className="flex flex-col gap-1.5 min-w-[180px]">
                         <div className="flex justify-between items-center leading-none">
                             <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Storage Usage</span>
-                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">2.4GB <span className="opacity-50">/ 30GB</span></span>
+                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">{formatBytes(totalBytes)} <span className="opacity-50">({totalFiles} files)</span></span>
                         </div>
                         <div className="w-full h-2 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
-                            <div className="h-full bg-lime-600 dark:bg-[#bef264] w-[8%] rounded-full shadow-[0_0_12px_rgba(132,204,22,0.6)]" />
+                            <div className="h-full bg-lime-600 dark:bg-[#bef264] rounded-full shadow-[0_0_12px_rgba(132,204,22,0.6)] transition-all" style={{ width: `${usagePct}%` }} />
                         </div>
                     </div>
                 </div>
@@ -231,22 +413,86 @@ const StatusRibbon = () => {
     );
 };
 
-const Timeline = () => {
-    // ... Timeline implementation ...
-    const activities = [
-        { date: 'Today', title: 'Payment Received', subtitle: 'Brand Identity', icon: CreditCardIcon, color: 'lime' },
-        { date: 'Yesterday', title: 'File Uploaded', subtitle: 'logo_final.png', icon: Upload, color: 'white' },
-        { date: '28.09', title: 'Client Viewed', subtitle: 'Website Redesign', icon: Eye, color: 'orange' },
-        { date: '27.09', title: 'Invoice Sent', subtitle: '#INV-2023-001', icon: FileText, color: 'white' },
-        { date: '26.09', title: 'Project Created', subtitle: 'Q4 Report', icon: Plus, color: 'lime' },
-        { date: '25.09', title: 'Vault Locked', subtitle: '3 Files', icon: Lock, color: 'white' },
-        { date: '24.09', title: 'New Client', subtitle: 'Vertex Corp', icon: User, color: 'orange' },
-        { date: '22.09', title: 'Project Created', subtitle: 'App Design', icon: Plus, color: 'white' },
-        { date: '20.09', title: 'File Uploaded', subtitle: 'mockup.fig', icon: Upload, color: 'white' },
-        { date: '18.09', title: 'Contract Signed', subtitle: 'Vertex Corp', icon: FileText, color: 'lime' },
-        { date: '17.09', title: 'Client Viewed', subtitle: 'Brand Identity', icon: Eye, color: 'orange' },
-        { date: '15.09', title: 'Project Started', subtitle: 'Brand Identity', icon: Plus, color: 'lime' },
-    ];
+const Timeline = ({ projects }: { projects: Project[] }) => {
+    const formatLabel = (iso?: string) => {
+        if (!iso) return 'Today';
+        const d = new Date(iso);
+        const now = new Date();
+        const startNow = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const startD = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+        const diff = Math.floor((startNow - startD) / (1000 * 60 * 60 * 24));
+        if (diff === 0) return 'Today';
+        if (diff === 1) return 'Yesterday';
+        return d.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit' });
+    };
+
+    const activities = projects
+        .flatMap((p) => {
+            const list: Array<{ date: string; dateSort: string; title: string; subtitle: string; icon: React.ElementType; color: 'lime' | 'orange' | 'white'; }> = [];
+            const baseIso = p.createdAt || new Date().toISOString();
+            list.push({
+                date: formatLabel(baseIso),
+                dateSort: baseIso,
+                title: 'Project Created',
+                subtitle: p.name,
+                icon: Plus,
+                color: 'white',
+            });
+            if ((p.files || []).length > 0) {
+                list.push({
+                    date: formatLabel(baseIso),
+                    dateSort: baseIso,
+                    title: 'Files Uploaded',
+                    subtitle: `${p.files.length} assets`,
+                    icon: Upload,
+                    color: 'white',
+                });
+            }
+            if (p.clientViewedAt) {
+                list.push({
+                    date: formatLabel(p.clientViewedAt),
+                    dateSort: p.clientViewedAt,
+                    title: 'Client Viewed',
+                    subtitle: p.name,
+                    icon: Eye,
+                    color: 'orange',
+                });
+            }
+            if (p.status === 'paid' || p.status === 'completed') {
+                const paidIso = p.clientViewedAt || p.dueDate || baseIso;
+                list.push({
+                    date: formatLabel(paidIso),
+                    dateSort: paidIso,
+                    title: 'Payment Received',
+                    subtitle: p.name,
+                    icon: CreditCardIcon,
+                    color: 'lime',
+                });
+            } else if (p.status === 'awaiting_signature') {
+                const signIso = p.dueDate || baseIso;
+                list.push({
+                    date: formatLabel(signIso),
+                    dateSort: signIso,
+                    title: 'Awaiting Signature',
+                    subtitle: p.client?.company || p.client?.name || 'Client',
+                    icon: FileText,
+                    color: 'orange',
+                });
+            }
+            return list;
+        })
+        .sort((a, b) => new Date(b.dateSort).getTime() - new Date(a.dateSort).getTime())
+        .slice(0, 12);
+
+    if (activities.length === 0) {
+        return (
+            <div className="h-full min-h-[220px] flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 dark:border-white/15 bg-slate-50/70 dark:bg-white/[0.02] px-6 text-center">
+                <Clock className="w-7 h-7 text-slate-400 mb-3" />
+                <p className="font-serif text-lg italic text-slate-600 dark:text-slate-300">No briefing activity yet.</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-xs">Events will appear here as projects are created, viewed, signed, and paid.</p>
+            </div>
+        );
+    }
 
     return (
         <div className="relative flex flex-col gap-6 py-2 pb-12">
@@ -277,12 +523,14 @@ const Timeline = () => {
 };
 
 
-const CyclingWidget = () => {
+const CyclingWidget = ({ projects }: { projects: Project[] }) => {
+    const navigate = useNavigate();
     const [cycleIndex, setCycleIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
     const [progress, setProgress] = useState(0);
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState('');
+    const demoMode = isMockMode();
     const duration = 10000; // 10 seconds per slide
     const interval = 50; // Update frequency
 
@@ -309,6 +557,55 @@ const CyclingWidget = () => {
         setProgress(0);
         setIsReplying(false);
     };
+
+    if (!demoMode) {
+        const securedRevenue = projects
+            .filter((p) => p.status === 'paid' || p.status === 'completed')
+            .reduce((sum, p) => sum + p.amount, 0);
+        const pendingRevenue = projects
+            .filter((p) => p.status === 'awaiting_payment' || p.status === 'awaiting_signature' || p.status === 'payment_verification')
+            .reduce((sum, p) => sum + p.amount, 0);
+        const totalFiles = projects.reduce((sum, p) => sum + (p.files || []).length, 0);
+        const totalBytes = projects.reduce((sum, p) => sum + (p.files || []).reduce((s, f) => s + parseSizeToBytes(f.size), 0), 0);
+        const activeClients = new Set(
+            projects
+                .filter((p) => p.clientViewedAt)
+                .map((p) => p.client?.email || p.client?.name || p.client?.company || '')
+                .filter(Boolean)
+        ).size;
+
+        return (
+            <div className="w-full bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm relative h-[280px] p-6 sm:p-8">
+                {projects.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center opacity-90 p-4">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4 shadow-sm">
+                            <Database className="w-8 h-8 text-slate-400 stroke-[1.5]" />
+                        </div>
+                        <h3 className="font-serif text-xl text-slate-900 dark:text-white mb-2">Unlock Your Analytics</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[280px] leading-relaxed mb-6">
+                            Create your first project to start tracking secured revenue, storage usage, and client engagement metrics securely.
+                        </p>
+                        <button onClick={() => { playClick(); navigate('/create'); }} className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-bold uppercase tracking-wider transition-all">
+                            Initialize Analytics
+                        </button>
+                    </div>
+                ) : (
+                    <div className="h-full grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] p-5">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Secured Revenue</span>
+                            <PrivacyBlur strength="strong" className={`font-serif text-4xl tracking-tight ${GRADIENT_TEXT}`}>${securedRevenue.toLocaleString()}</PrivacyBlur>
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Pending: ${pendingRevenue.toLocaleString()}</span>
+                        </div>
+                        <div className="flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] p-5">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Vault Storage</span>
+                            <span className="font-serif text-3xl text-slate-900 dark:text-white tracking-tight">{formatBytes(totalBytes)}</span>
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{totalFiles} files • {activeClients} active client{activeClients === 1 ? '' : 's'}</span>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     const slides = [
         {
@@ -576,7 +873,14 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
     // ... same as before
     const navigate = useNavigate();
     const location = useLocation();
+    const { openSearch } = useOutletContext<{ privacyMode: boolean; openSearch?: () => void }>();
     const [projectTab, setProjectTab] = useState<'pending' | 'draft' | 'paid'>('pending');
+
+    // Projects / Clients toggle — reads ?view=clients from URL so command palette can deep-link
+    const [dashView, setDashView] = useState<'projects' | 'clients'>(() => {
+        const params = new URLSearchParams(location.search);
+        return params.get('view') === 'clients' ? 'clients' : 'projects';
+    });
 
     const filteredProjects = projects.filter(p => {
         if (projectTab === 'pending') return p.status === 'awaiting_payment';
@@ -592,17 +896,36 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
         return "Good Evening";
     };
 
-    const liveClients = [
-        { id: 1, name: 'John Smith', project: 'Brand Identity', status: 'viewing', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=JohnSmith&backgroundColor=18181b&shape1Color=3b82f6&shape2Color=93c5fd&shape3Color=1e3a8a' },
-        { id: 2, name: 'Sarah Chen', project: 'Website Redesign', status: 'idle', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=SarahChen&backgroundColor=0f172a&shape1Color=f472b6&shape2Color=fbcfe8&shape3Color=831843' },
-        { id: 3, name: 'Mike Ross', project: 'Mobile App', status: 'offline', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=MikeRoss&backgroundColor=27272a&shape1Color=a78bfa&shape2Color=ddd6fe&shape3Color=5b21b6' },
-    ];
+    const demoMode = isMockMode();
+    const liveClients = demoMode
+        ? [
+            { id: 1, name: 'John Smith', project: 'Brand Identity', status: 'viewing', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=JohnSmith&backgroundColor=18181b&shape1Color=3b82f6&shape2Color=93c5fd&shape3Color=1e3a8a' },
+            { id: 2, name: 'Sarah Chen', project: 'Website Redesign', status: 'idle', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=SarahChen&backgroundColor=0f172a&shape1Color=f472b6&shape2Color=fbcfe8&shape3Color=831843' },
+            { id: 3, name: 'Mike Ross', project: 'Mobile App', status: 'offline', avatar: 'https://api.dicebear.com/9.x/shapes/svg?seed=MikeRoss&backgroundColor=27272a&shape1Color=a78bfa&shape2Color=ddd6fe&shape3Color=5b21b6' },
+        ]
+        : projects
+            .filter((p) => p.client?.name || p.client?.company)
+            .slice(0, 3)
+            .map((p, idx) => {
+                const viewedRecently = p.clientViewedAt && (Date.now() - new Date(p.clientViewedAt).getTime()) < 1000 * 60 * 15;
+                const fallbackAvatar = `https://api.dicebear.com/9.x/shapes/svg?seed=${encodeURIComponent(p.client.name || p.client.company || `Client${idx}`)}`;
+                return {
+                    id: p.id || idx,
+                    name: p.client.name || p.client.company || 'Client',
+                    project: p.name,
+                    status: viewedRecently ? 'viewing' : (p.clientViewedAt ? 'idle' : 'offline'),
+                    avatar: p.client.avatar || (demoMode ? fallbackAvatar : ''),
+                };
+            });
 
+    const awaitingSignature = projects.filter((p) => p.status === 'awaiting_signature').length;
+    const awaitingPayment = projects.filter((p) => p.status === 'awaiting_payment').length;
+    const paidToday = projects.filter((p) => (p.status === 'paid' || p.status === 'completed') && p.clientViewedAt && new Date(p.clientViewedAt).toDateString() === new Date().toDateString()).length;
     const alerts = [
-        { id: 1, type: 'critical', message: 'Signature Required: Vertex Contract', icon: FileWarning },
-        { id: 2, type: 'warning', message: 'Vault Link Expiring: 2h remaining', icon: Clock },
-        { id: 3, type: 'info', message: 'Payment Verified: $2,500.00', icon: Verified },
-    ];
+        awaitingSignature > 0 ? { id: 1, type: 'critical' as const, message: `${awaitingSignature} project${awaitingSignature === 1 ? '' : 's'} awaiting signature`, icon: FileWarning } : null,
+        awaitingPayment > 0 ? { id: 2, type: 'warning' as const, message: `${awaitingPayment} project${awaitingPayment === 1 ? '' : 's'} awaiting payment`, icon: Clock } : null,
+        paidToday > 0 ? { id: 3, type: 'info' as const, message: `${paidToday} payment${paidToday === 1 ? '' : 's'} confirmed today`, icon: Verified } : null,
+    ].filter(Boolean) as Array<{ id: number; type: 'critical' | 'warning' | 'info'; message: string; icon: React.ElementType }>;
 
     return (
         <div className="space-y-6 animate-slide-up relative z-10 pb-12">
@@ -610,9 +933,59 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                     <div>
                         <h1 className="font-serif text-3xl md:text-5xl text-slate-900 dark:text-white leading-tight mb-2">
-                            <span className={GRADIENT_TEXT}>{getGreeting()}</span>, <span className="italic text-lime-600 dark:text-[#bef264]">{user.name.split(' ')[0]}.</span>
+                            <span className={GRADIENT_TEXT}>{getGreeting()}</span>, <span className="italic text-lime-600 dark:text-[#bef264]">{(user.name || 'there').split(' ')[0]}.</span>
                         </h1>
                         <p className="text-slate-500 dark:text-slate-400 text-lg">Here's your project overview for today.</p>
+                        {/* At-a-Glance strip — live stats derived from store */}
+                        {(() => {
+                            const pendingPayment = projects.filter(p => p.status === 'awaiting_payment');
+                            const awaitingSignature = projects.filter(p => p.status === 'awaiting_signature');
+                            const pendingTotal = pendingPayment.reduce((s, p) => s + p.amount, 0);
+                            const chips = [
+                                pendingPayment.length > 0 && {
+                                    label: `${pendingPayment.length} payment${pendingPayment.length !== 1 ? 's' : ''} due`,
+                                    value: `$${pendingTotal.toLocaleString()}`,
+                                    color: 'amber' as const,
+                                    icon: DollarSign,
+                                    action: () => setProjectTab('pending'),
+                                },
+                                awaitingSignature.length > 0 && {
+                                    label: `${awaitingSignature.length} awaiting signature`,
+                                    value: null,
+                                    color: 'blue' as const,
+                                    icon: FileText,
+                                    action: () => setProjectTab('draft'),
+                                },
+                                projects.length === 0 && {
+                                    label: 'No projects yet',
+                                    value: 'Create your first',
+                                    color: 'slate' as const,
+                                    icon: Briefcase,
+                                    action: () => navigate('/create'),
+                                },
+                            ].filter(Boolean) as { label: string; value: string | null; color: 'amber' | 'blue' | 'lime' | 'slate'; icon: React.ElementType; action: () => void }[];
+                            if (chips.length === 0) return (
+                                <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-lime-50 dark:bg-lime-900/20 border border-lime-200 dark:border-lime-700/30 text-[11px] font-bold text-lime-700 dark:text-lime-400">
+                                    <CheckCircle className="w-3 h-3" /> All caught up — nothing pending.
+                                </div>
+                            );
+                            const colorMap = {
+                                amber: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/30 text-amber-700 dark:text-amber-400',
+                                blue: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700/30 text-blue-700 dark:text-blue-400',
+                                lime: 'bg-lime-50 dark:bg-lime-900/20 border-lime-200 dark:border-lime-700/30 text-lime-700 dark:text-lime-400',
+                                slate: 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400',
+                            };
+                            return (
+                                <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+                                    {chips.map((chip, i) => (
+                                        <button key={i} onClick={() => { playClick(); chip.action(); }} className={`inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-bold transition-all hover:scale-[1.03] ${colorMap[chip.color]}`}>
+                                            <chip.icon className="w-3 h-3" />
+                                            <span className="whitespace-nowrap">{chip.label}{chip.value && <span className="opacity-70"> · {chip.value}</span>}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            );
+                        })()}
                     </div>
                     <div className="flex items-center gap-2 p-1.5 bg-white dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm overflow-x-auto no-scrollbar max-w-full">
                         <button onClick={() => navigate('/create')} className="px-5 py-3 rounded-xl bg-lime-600 text-white dark:bg-[#bef264] dark:text-black font-bold text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform flex items-center gap-2 whitespace-nowrap">
@@ -626,37 +999,73 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
                 </div>
             </div>
 
+            {/* Projects / Clients toggle */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 rounded-2xl p-1 w-fit border border-slate-200 dark:border-white/10 shadow-sm">
+                <button
+                    onClick={() => { playClick(); setDashView('projects'); }}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${dashView === 'projects' ? 'bg-white dark:bg-white/10 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                >
+                    <FolderLock className="w-3.5 h-3.5" /> Projects
+                </button>
+                <button
+                    onClick={() => { playClick(); setDashView('clients'); }}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${dashView === 'clients' ? 'bg-white dark:bg-white/10 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                >
+                    <Users className="w-3.5 h-3.5" /> Clients
+                </button>
+            </div>
+
+            {dashView === 'clients' && <ClientRolodexContent />}
+
+            {dashView === 'projects' && <>
+
             {/* Status Ribbon - Now part of dashboard logic */}
-            <StatusRibbon />
+            <StatusRibbon projects={projects} user={user} />
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 md:gap-12">
                 <div className="xl:col-span-8 flex flex-col gap-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
                         {/* CYCLING WIDGET COMPONENT */}
-                        <CyclingWidget />
+                        <CyclingWidget projects={projects} />
 
                         <div className="flex flex-col gap-4">
                             <div className="flex items-center justify-between px-1 pt-1">
                                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                                    <Siren className="w-3.5 h-3.5 text-red-500" /> Action Center
+                                    <Siren className="w-3.5 h-3.5 text-red-500" /> Today's Priorities
                                 </h3>
-                                <span className="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full shadow-lg shadow-red-500/30">3 Alerts</span>
+                                <span className="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full shadow-lg shadow-red-500/30 animate-pulse">{alerts.length} Actions</span>
                             </div>
                             <div className="flex-1 flex flex-col gap-3">
-                                {alerts.map((alert) => (
-                                    <div key={alert.id} className="bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/5 p-4 rounded-2xl flex items-center gap-3 hover:border-slate-300 dark:hover:border-white/20 transition-all cursor-pointer group shadow-sm flex-1">
-                                        <div className={`p-2.5 rounded-xl flex-shrink-0 ${alert.type === 'critical' ? 'bg-red-500/10 text-red-500' : alert.type === 'warning' ? 'bg-amber-500/10 text-amber-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                                {alerts.length === 0 ? (
+                                    <div className="bg-slate-50 dark:bg-black/20 border-2 border-dashed border-slate-200 dark:border-white/10 p-6 rounded-3xl flex flex-col items-center justify-center text-center flex-1 min-h-[220px]">
+                                        <div className="w-14 h-14 rounded-2xl bg-white dark:bg-white/5 flex items-center justify-center mb-4 shadow-sm border border-slate-100 dark:border-white/10">
+                                            <CheckCircle className="w-6 h-6 text-lime-600 dark:text-[#bef264]" strokeWidth={1.5} />
+                                        </div>
+                                        <p className="font-serif text-xl text-slate-900 dark:text-white mb-1">Clear Horizon</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[200px] mb-5">
+                                            Everything is up to date. Ready for new incoming clients?
+                                        </p>
+                                        <button onClick={() => { playClick(); navigate('/create'); }} className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-[#bef264] text-white dark:text-black text-[11px] font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-2 group shadow-lg shadow-black/5">
+                                            <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform" /> Create Project
+                                        </button>
+                                    </div>
+                                ) : alerts.map((alert) => (
+                                    <div
+                                        key={alert.id}
+                                        role="button"
+                                        tabIndex={0}
+                                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
+                                        className="bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/5 p-4 rounded-2xl flex items-center gap-3 hover:border-slate-300 dark:hover:border-white/20 transition-all cursor-pointer group shadow-sm"
+                                    >
+                                        <div className={`p-2.5 rounded-xl shrink-0 ${alert.type === 'critical' ? 'bg-red-500/10 text-red-500' : alert.type === 'warning' ? 'bg-amber-500/10 text-amber-500' : 'bg-blue-500/10 text-blue-500'}`}>
                                             <alert.icon className="w-5 h-5" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between items-center mb-1">
-                                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{alert.type === 'critical' ? 'Urgent' : 'Notice'}</p>
-                                                <span className="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">Dismiss</span>
-                                            </div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{alert.type === 'critical' ? 'Urgent' : alert.type === 'warning' ? 'Warning' : 'Info'}</p>
                                             <p className="text-sm font-bold text-slate-900 dark:text-white truncate leading-tight">{alert.message}</p>
                                         </div>
-                                        <ArrowRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:translate-x-1 transition-transform" />
+                                        <ArrowRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-lime-600 dark:group-hover:text-[#bef264] group-hover:translate-x-1 transition-all" />
                                     </div>
                                 ))}
                             </div>
@@ -668,30 +1077,38 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
                         <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
                             <ActivityIcon className="w-3.5 h-3.5 text-lime-600 dark:text-[#bef264]" /> Live Client Pulse
                         </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {liveClients.map((client) => (
-                                <Card key={client.id} className="p-4 flex items-center gap-4 hover:border-lime-500/50 dark:hover:border-[#bef264]/50 cursor-pointer group" noPadding>
-                                    <div className="relative">
-                                        <img src={client.avatar} className="w-10 h-10 rounded-full object-cover" />
-                                        {client.status === 'viewing' && (
-                                            <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-3 w-3 bg-lime-500"></span>
-                                            </span>
-                                        )}
-                                        {client.status === 'idle' && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white dark:border-[#23232e]" />}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between items-center mb-0.5">
-                                            <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">{client.name}</h4>
-                                            {client.status === 'viewing' && <span className="text-[9px] font-bold text-lime-600 dark:text-[#bef264] uppercase tracking-wider animate-pulse">Live</span>}
+                        {liveClients.length === 0 ? (
+                            <div className="rounded-2xl border border-dashed border-slate-300 dark:border-white/15 p-6 text-center bg-white/70 dark:bg-white/[0.02]">
+                                <Monitor className="w-5 h-5 text-slate-400 mx-auto mb-2" />
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">No active client sessions.</p>
+                                <p className="text-xs text-slate-400 mt-1">Recent client activity appears here once someone opens a project link.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {liveClients.map((client) => (
+                                    <Card key={client.id} className="p-4 flex items-center gap-4 hover:border-lime-500/50 dark:hover:border-[#bef264]/50 cursor-pointer group" noPadding>
+                                        <div className="relative">
+                                            <img src={client.avatar} className="w-10 h-10 rounded-full object-cover" />
+                                            {client.status === 'viewing' && (
+                                                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-lime-500"></span>
+                                                </span>
+                                            )}
+                                            {client.status === 'idle' && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white dark:border-[#23232e]" />}
                                         </div>
-                                        <p className="text-xs text-slate-500 truncate">{client.project}</p>
-                                    </div>
-                                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-lime-600 dark:group-hover:text-[#bef264] transition-colors" />
-                                </Card>
-                            ))}
-                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-center mb-0.5">
+                                                <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">{client.name}</h4>
+                                                {client.status === 'viewing' && <span className="text-[9px] font-bold text-lime-600 dark:text-[#bef264] uppercase tracking-wider animate-pulse">Live</span>}
+                                            </div>
+                                            <p className="text-xs text-slate-500 truncate">{client.project}</p>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-lime-600 dark:group-hover:text-[#bef264] transition-colors" />
+                                    </Card>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div>
@@ -711,9 +1128,27 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
                         </div>
                         <div className="flex flex-col border-t border-slate-200 dark:border-white/5">
                             {filteredProjects.length === 0 ? (
-                                <div className="py-20 flex flex-col items-center justify-center opacity-40">
-                                    <Briefcase className="w-12 h-12 mb-4 stroke-1" />
-                                    <p className="font-serif text-xl italic">No active projects in this ledger.</p>
+                                <div className="py-24 flex flex-col items-center justify-center opacity-80 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-3xl m-4 bg-slate-50 dark:bg-black/20">
+                                    <div className="w-20 h-20 rounded-[2rem] bg-white dark:bg-white/5 flex items-center justify-center mb-6 shadow-sm border border-slate-100 dark:border-white/10 relative">
+                                        <Briefcase className="w-10 h-10 stroke-[1.5] text-slate-400" />
+                                        <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-lime-100 dark:bg-[#bef264]/20 rounded-xl flex items-center justify-center border-2 border-white dark:border-[#23232e]">
+                                            <Plus className="w-4 h-4 text-lime-600 dark:text-[#bef264]" />
+                                        </div>
+                                    </div>
+                                    <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">Start Your First Project</h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 max-w-[320px] text-center mb-8 leading-relaxed">
+                                        Securely share files, collect payments, and manage client handovers in one professional workspace.
+                                    </p>
+                                    
+                                    <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                                        <button onClick={() => { playClick(); navigate('/create'); }} className="px-6 py-3.5 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-black/5">
+                                            <Plus className="w-4 h-4" /> Create Project
+                                        </button>
+                                        <button onClick={() => { playClick(); document.getElementById('vault-tab-draft')?.click(); }} className="px-6 py-3.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-white/10 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
+                                            Start with a Draft
+                                        </button>
+                                    </div>
+                                    <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Takes less than 30 seconds</p>
                                 </div>
                             ) : (
                                 filteredProjects.map((p, i) => (
@@ -728,7 +1163,7 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
                                         <div className="flex items-center gap-6">
                                             <span className="font-mono text-xs text-slate-300 dark:text-slate-600 w-8">{(i + 1).toString().padStart(2, '0')}</span>
                                             <div className="relative">
-                                                <img src={p.client.avatar} className="w-12 h-12 rounded-lg object-cover grayscale group-hover:grayscale-0 transition-all" />
+                                                <img src={p.client.avatar} loading="lazy" className="w-12 h-12 rounded-lg object-cover grayscale group-hover:grayscale-0 transition-all" />
                                                 <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-[#23232e] ${p.status === 'paid' ? 'bg-lime-500' : 'bg-amber-500'}`} />
                                             </div>
                                             <div>
@@ -775,14 +1210,13 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
                             </button>
                         </div>
                         <div className="flex-1 overflow-y-auto relative pr-2 briefing-scroll">
-                            <Timeline />
+                            <Timeline projects={projects} />
                         </div>
-                        <button className="w-full mt-6 py-4 rounded-xl border border-dashed border-slate-300 dark:border-white/20 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 dark:hover:text-white hover:border-slate-400 dark:hover:border-white/40 transition-all flex items-center justify-center gap-2 flex-shrink-0">
-                            Load Previous Days
-                        </button>
                     </div>
                 </div>
             </div>
+
+            </>}
         </div>
     );
 };
@@ -793,6 +1227,11 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
     const location = useLocation();
     const [searchQuery, setSearchQuery] = useState('');
     const [vaultFilter, setVaultFilter] = useState<'all' | 'active' | 'paid' | 'archived'>('all');
+    const [vaultLayout, setVaultLayout] = useState<'grid' | 'list'>('grid');
+    const [qrProjectId, setQrProjectId] = useState<string | null>(null);
+
+    const qrProject = qrProjectId ? projects.find(p => p.id === qrProjectId) : null;
+    const qrUrl = qrProject ? `${window.location.origin}/c/${qrProject.clientLink}` : '';
 
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
@@ -892,17 +1331,101 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                         </button>
                     ))}
                     <div className="w-px h-6 bg-slate-300 dark:bg-white/10 mx-2" />
-                    <button className="p-3 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/5 transition-colors"><LayoutGrid className="w-5 h-5" /></button>
-                    <button className="p-3 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/5 transition-colors"><ListIcon className="w-5 h-5" /></button>
+                    <button onClick={() => { playClick(); setVaultLayout('grid'); }} className={`p-2.5 rounded-lg transition-colors ${vaultLayout === 'grid' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/5'}`} title="Card view"><LayoutGrid className="w-5 h-5" /></button>
+                    <button onClick={() => { playClick(); setVaultLayout('list'); }} className={`p-2.5 rounded-lg transition-colors ${vaultLayout === 'list' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/5'}`} title="List view"><ListIcon className="w-5 h-5" /></button>
                 </div>
             </div>
-            <div className="grid grid-cols-1 gap-6 lg:gap-12">
-                {visibleProjects.length === 0 && (
-                    <div className="py-20 flex flex-col items-center justify-center opacity-50">
-                        <Search className="w-10 h-10 mb-4 stroke-1" />
-                        <p className="font-serif text-xl italic">No projects matched your search.</p>
+            {/* Empty state */}
+            {visibleProjects.length === 0 && (
+                <div className="py-24 flex flex-col items-center justify-center opacity-80 border border-dashed border-slate-200 dark:border-white/10 rounded-3xl bg-slate-50 dark:bg-black/20 m-6">
+                    <div className="w-20 h-20 rounded-[2rem] bg-white dark:bg-white/5 flex items-center justify-center mb-6 shadow-sm border border-slate-100 dark:border-white/10">
+                        {searchQuery ? <Search className="w-10 h-10 stroke-[1.5] text-slate-400" /> : <LockKeyhole className="w-10 h-10 stroke-[1.5] text-slate-400" />}
                     </div>
-                )}
+                    
+                    {searchQuery ? (
+                        <>
+                            <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">No results found</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 text-center mb-8 max-w-[300px]">
+                                We couldn't find any projects matching "{searchQuery}". Try adjusting your filters or search terms.
+                            </p>
+                            <button onClick={() => { playClick(); setSearchQuery(''); }} className="px-6 py-3 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-white/10 transition-colors">
+                                Clear Search
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">No Projects Yet</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 text-center mb-8 max-w-[320px] leading-relaxed">
+                                Create your first project to organize deliverables, share files, and track payments in one place.
+                            </p>
+                            <button onClick={() => { playClick(); navigate('/create'); }} className="px-8 py-4 rounded-2xl bg-slate-900 dark:bg-[#bef264] text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-3 shadow-xl shadow-slate-900/10 dark:shadow-[#bef264]/10">
+                                <Plus className="w-5 h-5" /> Create First Project
+                            </button>
+                        </>
+                    )}
+                </div>
+            )}
+
+            {/* ── List view ── */}
+            {vaultLayout === 'list' && visibleProjects.length > 0 && (
+                <div className="bg-white dark:bg-charcoal border border-slate-200 dark:border-white/5 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="border-b border-slate-100 dark:border-white/5">
+                                <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Project</th>
+                                <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hidden md:table-cell">Client</th>
+                                <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hidden sm:table-cell">Status</th>
+                                <th className="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Value</th>
+                                <th className="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hidden lg:table-cell">Files</th>
+                                <th className="w-10" />
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {visibleProjects.map(project => {
+                                const statusColors: Record<string, string> = {
+                                    draft: 'text-slate-500 bg-slate-100 dark:bg-white/5',
+                                    awaiting_signature: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:text-indigo-400',
+                                    awaiting_payment: 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400',
+                                    payment_verification: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400',
+                                    paid: 'text-lime-700 bg-lime-50 dark:bg-lime-900/20 dark:text-lime-400',
+                                    completed: 'text-lime-700 bg-lime-50 dark:bg-lime-900/20 dark:text-lime-400',
+                                };
+                                return (
+                                    <tr
+                                        key={project.id}
+                                        onClick={() => navigate(`/preview/${project.id}`, { state: { from: location.pathname } })}
+                                        className="border-b border-slate-50 dark:border-white/[0.03] hover:bg-slate-50 dark:hover:bg-white/[0.03] cursor-pointer group transition-colors last:border-0"
+                                    >
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <img src={project.client.avatar} className="w-8 h-8 rounded-lg object-cover grayscale group-hover:grayscale-0 transition-all shrink-0" />
+                                                <div>
+                                                    <div className="font-bold text-slate-900 dark:text-white group-hover:text-lime-700 dark:group-hover:text-[#bef264] transition-colors">{project.name}</div>
+                                                    <div className="text-[10px] font-mono text-slate-400">#{project.id.toUpperCase()}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-4 text-slate-600 dark:text-slate-300 hidden md:table-cell">{project.client.company || project.client.name}</td>
+                                        <td className="px-5 py-4 hidden sm:table-cell">
+                                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusColors[project.status] || statusColors.draft}`}>
+                                                {project.status.replace(/_/g, ' ')}
+                                            </span>
+                                        </td>
+                                        <td className="px-5 py-4 text-right font-serif text-slate-900 dark:text-white">${project.amount.toLocaleString()}</td>
+                                        <td className="px-5 py-4 text-right font-mono text-slate-500 hidden lg:table-cell">{project.files.length}</td>
+                                        <td className="px-3 py-4">
+                                            <ArrowUpRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-lime-600 dark:group-hover:text-[#bef264] transition-colors" />
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {/* ── Grid / card view ── */}
+            <div className={`grid grid-cols-1 gap-6 lg:gap-12 ${vaultLayout === 'list' ? 'hidden' : ''}`}>
                 {visibleProjects.map(project => (
                     <div key={project.id} className="group relative w-full bg-white dark:bg-[#0f0f15] rounded-2xl lg:rounded-[2.5rem] overflow-hidden border border-slate-200 dark:border-white/5 transition-all duration-300 hover:scale-[1.01] hover:-translate-y-1 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.08)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)]">
                         <div className="flex flex-col lg:flex-row h-full min-h-[280px] lg:min-h-[340px]">
@@ -950,16 +1473,16 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                             <div className="lg:w-[65%] bg-white dark:bg-[#23232e] flex flex-col relative">
                                 <div className="flex-1 p-8 overflow-x-auto no-scrollbar flex items-center">
                                     <div className="flex gap-5">
-                                        <button onClick={() => { playClick(); navigate(`/editor/${project.id}`); }} className="flex-shrink-0 w-40 h-48 rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-lime-600 dark:hover:border-[#bef264] hover:bg-lime-50 dark:hover:bg-[#bef264]/5 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all group/add">
+                                        <button onClick={() => { playClick(); navigate(`/editor/${project.id}`); }} className="shrink-0 w-40 h-48 rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-lime-600 dark:hover:border-[#bef264] hover:bg-lime-50 dark:hover:bg-[#bef264]/5 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all group/add">
                                             <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center group-hover/add:bg-lime-600 dark:group-hover/add:bg-[#bef264] transition-colors">
                                                 <Plus className="w-5 h-5 text-slate-400 group-hover/add:text-white dark:group-hover/add:text-black" />
                                             </div>
                                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover/add:text-lime-700 dark:group-hover/add:text-[#bef264]">Add Asset</span>
                                         </button>
                                         {project.files.map(f => (
-                                            <div key={f.id} className="flex-shrink-0 w-28 h-36 sm:w-32 sm:h-40 lg:w-40 lg:h-48 bg-slate-50 dark:bg-[#1c1c21] rounded-xl lg:rounded-2xl border border-slate-100 dark:border-white/5 overflow-hidden group/file relative hover:scale-110 hover:z-50 hover:shadow-2xl transition-all duration-300 ease-out origin-center">
+                                            <div key={f.id} className="shrink-0 w-28 h-36 sm:w-32 sm:h-40 lg:w-40 lg:h-48 bg-slate-50 dark:bg-[#1c1c21] rounded-xl lg:rounded-2xl border border-slate-100 dark:border-white/5 overflow-hidden group/file relative hover:scale-110 hover:z-50 hover:shadow-2xl transition-all duration-300 ease-out origin-center">
                                                 <div className="h-20 sm:h-24 lg:h-32 w-full bg-slate-200 dark:bg-white/5 relative overflow-hidden">
-                                                    {f.previewUrl ? <img src={f.previewUrl} className="w-full h-full object-cover transition-opacity" /> : <div className="w-full h-full flex items-center justify-center text-slate-400">{getFileIcon(f.type)}</div>}
+                                                    {f.previewUrl ? <img src={f.previewUrl} loading="lazy" className="w-full h-full object-cover transition-opacity" /> : <div className="w-full h-full flex items-center justify-center text-slate-400">{getFileIcon(f.type)}</div>}
                                                 </div>
                                                 <div className="p-2 lg:p-3">
                                                     <div className="text-[10px] lg:text-xs font-bold text-slate-900 dark:text-white truncate mb-0.5 lg:mb-1">{f.name}</div>
@@ -1015,6 +1538,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                     <div className="flex items-center gap-1.5 lg:gap-2 shrink-0">
                                         <button className="hidden lg:flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-white/5 hover:text-lime-600 dark:hover:text-[#bef264] transition-all" title="Invoice"><FileText className="w-4 h-4" /></button>
                                         <button className="hidden lg:flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-white/5 hover:text-lime-600 dark:hover:text-[#bef264] transition-all" title="Receipt"><CheckCircle className="w-4 h-4" /></button>
+                                        <button onClick={() => { playClick(); setQrProjectId(project.id); }} className="hidden lg:flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-white/5 hover:text-lime-600 dark:hover:text-[#bef264] transition-all" title="Generate QR Code"><QrCode className="w-4 h-4" /></button>
                                         <div className="hidden lg:block h-6 w-px bg-slate-300 dark:bg-white/10 mx-1" />
                                         <button onClick={() => navigate(`/editor/${project.id}`)} className="h-9 lg:h-10 w-9 lg:w-auto lg:px-4 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-lime-50 dark:hover:bg-[#bef264]/10 hover:border-lime-200 dark:hover:border-[#bef264]/30 transition-all flex items-center justify-center gap-2"><Pencil className="w-3.5 h-3.5" /><span className="hidden lg:inline"> Edit</span></button>
                                         <button className="h-9 lg:h-10 w-9 lg:w-10 flex items-center justify-center rounded-lg border border-red-200 dark:border-red-500/20 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all" title="Delete"><Trash2 className="w-4 h-4" /></button>
@@ -1024,7 +1548,64 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                         </div>
                     </div>
                 ))}
-            </div>
+            </div>{/* end grid/card view */}
+
+            {/* QR Code Modal / Bottom Sheet */}
+            {qrProjectId && qrProject && (
+                <div
+                    className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4 animate-in fade-in duration-300"
+                    onClick={() => setQrProjectId(null)}
+                >
+                    <div
+                        className="bg-white dark:bg-charcoal rounded-t-3xl sm:rounded-[2rem] p-8 max-w-sm w-full mx-auto shadow-2xl border border-slate-200 dark:border-white/10 mt-auto sm:mt-0 animate-slide-up"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Mobile handle */}
+                        <div className="w-12 h-1.5 bg-slate-200 dark:bg-white/10 rounded-full mx-auto mb-6 sm:hidden" />
+                        <div className="flex items-start justify-between mb-6">
+                            <div>
+                                <h3 className="font-serif text-xl font-bold text-slate-900 dark:text-white">Vault QR Code</h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Scan to open the client vault</p>
+                            </div>
+                            <button onClick={() => setQrProjectId(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors">
+                                <X className="w-4 h-4 text-slate-400" />
+                            </button>
+                        </div>
+                        <div className="flex flex-col items-center gap-5">
+                            <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                                <QRCodeSVG
+                                    id="vault-qr-svg"
+                                    value={qrUrl}
+                                    size={200}
+                                    bgColor="#ffffff"
+                                    fgColor="#0e0e12"
+                                    level="M"
+                                    includeMargin={false}
+                                />
+                            </div>
+                            <div className="w-full text-center">
+                                <p className="font-bold text-sm text-slate-900 dark:text-white truncate">{qrProject.name}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{qrProject.client.name}</p>
+                                <p className="text-[10px] font-mono text-slate-400 mt-1 break-all">{qrUrl}</p>
+                            </div>
+                            <div className="flex gap-3 w-full">
+                                <button
+                                    onClick={() => { navigator.clipboard.writeText(qrUrl); }}
+                                    className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Copy className="w-3.5 h-3.5" /> Copy URL
+                                </button>
+                                <button
+                                    onClick={() => navigate(`/preview/${qrProject.id}`)}
+                                    className="flex-1 py-3 rounded-xl bg-slate-900 dark:bg-[#bef264] text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                                >
+                                    <Eye className="w-3.5 h-3.5" /> Open Vault
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -1038,6 +1619,8 @@ const MobileNavBar = ({ navItems, currentPath, onNavigate }: { navItems: any[], 
                     <button
                         key={item.id}
                         onClick={() => onNavigate(item.id)}
+                        onMouseEnter={() => routePreloadMap[item.id]?.()}
+                        onTouchStart={() => routePreloadMap[item.id]?.()}
                         className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-300 ${isActive ? 'text-lime-600 dark:text-[#bef264]' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300'}`}
                     >
                         <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-lime-100/50 dark:bg-[#bef264]/10 -translate-y-1' : ''}`}>
@@ -1056,12 +1639,52 @@ const MobileNavBar = ({ navItems, currentPath, onNavigate }: { navItems: any[], 
 const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togglePrivacyMode, privacyMode }: any) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const stripOffset = useStripOffset();
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false); // NEW State
-    const [showDesignLab, setShowDesignLab] = useState(false);
+    const [demoMode, setDemoMode] = useState(isMockMode());
 
     // Determine current view state based on pathname for active highlighting
     const currentPath = location.pathname.split('/')[1] || 'dashboard';
+
+    const [isDraggingGlobal, setIsDraggingGlobal] = useState(false);
+
+    useEffect(() => {
+        const handleDragOver = (e: DragEvent) => {
+            e.preventDefault();
+            // Don't show global dropzone if we are in creator/editor where they have specific dropzones
+            if (location.pathname.includes('/create') || location.pathname.includes('/editor')) return;
+            if (e.dataTransfer?.types.includes('Files')) {
+                setIsDraggingGlobal(true);
+            }
+        };
+        const handleDragLeave = (e: DragEvent) => {
+            e.preventDefault();
+            if (e.clientX === 0 && e.clientY === 0) {
+                setIsDraggingGlobal(false);
+            }
+        };
+        const handleDrop = (e: DragEvent) => {
+            e.preventDefault();
+            setIsDraggingGlobal(false);
+            if (location.pathname.includes('/create') || location.pathname.includes('/editor')) return;
+            
+            if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+                // Navigate to create with some global state (in a real app, pass files via context/state)
+                navigate('/create', { state: { autoDrop: true } });
+            }
+        };
+
+        window.addEventListener('dragover', handleDragOver);
+        window.addEventListener('dragleave', handleDragLeave);
+        window.addEventListener('drop', handleDrop);
+
+        return () => {
+            window.removeEventListener('dragover', handleDragOver);
+            window.removeEventListener('dragleave', handleDragLeave);
+            window.removeEventListener('drop', handleDrop);
+        };
+    }, [location.pathname, navigate]);
 
     const navItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -1070,6 +1693,10 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
         { id: 'reports', label: 'Reports', icon: PieChartIcon },
         { id: 'settings', label: 'Settings', icon: Settings },
     ];
+
+    // g-chord state for "g+d / g+v / g+r / g+a / g+s" navigation shortcuts
+    const gChordRef = useRef(false);
+    const gChordTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         const handleDown = (e: KeyboardEvent) => {
@@ -1085,15 +1712,36 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
             if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
                 setIsSearchOpen((open) => !open);
+                return;
             }
             if (e.key === 'Escape') {
                 setIsSearchOpen(false);
                 setIsProfileOpen(false);
+                gChordRef.current = false;
+                return;
             }
-        }
+
+            // "g" chord navigation — press g then a letter within 800 ms
+            if (e.key === 'g' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+                gChordRef.current = true;
+                if (gChordTimer.current) clearTimeout(gChordTimer.current);
+                gChordTimer.current = setTimeout(() => { gChordRef.current = false; }, 800);
+                return;
+            }
+            if (gChordRef.current) {
+                gChordRef.current = false;
+                if (gChordTimer.current) clearTimeout(gChordTimer.current);
+                const map: Record<string, string> = { d: '/dashboard', v: '/vault', a: '/activity', r: '/reports', s: '/settings', c: '/create' };
+                const dest = map[e.key];
+                if (dest) { e.preventDefault(); navigate(dest); }
+            }
+        };
         document.addEventListener('keydown', handleDown);
-        return () => document.removeEventListener('keydown', handleDown);
-    }, []);
+        return () => {
+            document.removeEventListener('keydown', handleDown);
+            if (gChordTimer.current) clearTimeout(gChordTimer.current);
+        };
+    }, [navigate]);
 
     // Close profile menu when clicking outside
     useEffect(() => {
@@ -1108,14 +1756,25 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
 
     const SearchCommandPalette = ({ onClose }: { onClose: () => void }) => {
         const [query, setQuery] = useState('');
+        const [selectedIndex, setSelectedIndex] = useState(0);
+        const listRef = useRef<HTMLDivElement>(null);
+        const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
         const routeItems = useMemo(() => ([
             { id: 'route-dashboard', title: 'Dashboard', subtitle: 'View your overview', icon: LayoutDashboard, action: () => navigate('/dashboard') },
             { id: 'route-vault', title: 'Vault', subtitle: 'Project and file ledger', icon: LockKeyhole, action: () => navigate('/vault') },
             { id: 'route-activity', title: 'Activity', subtitle: 'Recent actions and logs', icon: ActivityIcon, action: () => navigate('/activity') },
             { id: 'route-reports', title: 'Reports', subtitle: 'Revenue and metrics', icon: PieChartIcon, action: () => navigate('/reports') },
+            { id: 'route-clients', title: 'Clients', subtitle: 'Rolodex and lifetime value', icon: Users, action: () => navigate('/dashboard?view=clients') },
             { id: 'route-settings', title: 'Settings', subtitle: 'Profile and integrations', icon: Settings, action: () => navigate('/settings') },
         ]), [navigate]);
+
+        const commandItems = useMemo(() => ([
+            { id: 'cmd-create', title: 'Create Project', subtitle: 'Start a new handover', icon: Plus, action: () => navigate('/create'), kind: 'Action' },
+            { id: 'cmd-theme', title: 'Toggle Theme', subtitle: 'Switch between light and dark mode', icon: themeMode === 'dark' ? Sun : Moon, action: () => { onSetThemeMode(themeMode === 'dark' ? 'light' : 'dark'); }, kind: 'Action' },
+            { id: 'cmd-privacy', title: 'Toggle Privacy', subtitle: 'Hide sensitive financial data', icon: privacyMode ? Eye : EyeOff, action: togglePrivacyMode, kind: 'Action' },
+            { id: 'cmd-mock', title: 'Toggle Demo Data', subtitle: 'Switch between real and mock data', icon: Database, action: () => { setDemoMode(!demoMode); setMockMode(!demoMode); window.location.reload(); }, kind: 'Action' },
+        ]), [navigate, themeMode, privacyMode, demoMode, onSetThemeMode, togglePrivacyMode]);
 
         const normalized = query.trim().toLowerCase();
 
@@ -1159,9 +1818,21 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
             if (!normalized) return true;
             return `${route.title} ${route.subtitle}`.toLowerCase().includes(normalized);
         }).map((route) => ({ ...route, kind: 'Navigate' }));
+        
+        const commandResults = commandItems.filter((cmd) => {
+            if (!normalized) return true;
+            return `${cmd.title} ${cmd.subtitle}`.toLowerCase().includes(normalized);
+        });
 
-        const results = [...routeResults, ...projectResults].slice(0, 12);
-        const topResult = results[0];
+        const results = [...commandResults, ...routeResults, ...projectResults].slice(0, 12);
+
+        // Reset selection when query or results change
+        React.useEffect(() => { setSelectedIndex(0); }, [query]);
+
+        // Scroll selected item into view
+        React.useEffect(() => {
+            itemRefs.current[selectedIndex]?.scrollIntoView({ block: 'nearest' });
+        }, [selectedIndex]);
 
         const executeResult = (action: () => void) => {
             playClick();
@@ -1169,56 +1840,127 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
             onClose();
         };
 
+        const handleKeyDown = (e: React.KeyboardEvent) => {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setSelectedIndex(i => Math.min(i + 1, results.length - 1));
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setSelectedIndex(i => Math.max(i - 1, 0));
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                const r = results[selectedIndex];
+                if (r) executeResult(r.action);
+            } else if (e.key === 'Tab') {
+                // Focus trap: cycle through results
+                e.preventDefault();
+                if (e.shiftKey) {
+                    setSelectedIndex(i => (i - 1 + results.length) % results.length);
+                } else {
+                    setSelectedIndex(i => (i + 1) % results.length);
+                }
+            }
+        };
+
         return (
-            <div className="fixed inset-0 z-[100] flex items-start justify-center pt-32 px-4">
-                <div className="absolute inset-0 bg-slate-900/20 dark:bg-black/40 transition-colors duration-300" onClick={onClose} />
-                <div className="relative w-full max-w-2xl bg-white dark:bg-[#1a1a23] rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden animate-slide-up ring-1 ring-black/5">
+            <div className="fixed inset-0 z-[100] flex items-end sm:items-start justify-center sm:pt-32 sm:px-4" onKeyDown={handleKeyDown}>
+                <div className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-colors duration-300" onClick={onClose} />
+                <div className="relative w-full sm:max-w-2xl bg-white dark:bg-[#1a1a23] rounded-t-3xl sm:rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden animate-slide-up ring-1 ring-black/5 pb-8 sm:pb-0">
+                    <div className="w-12 h-1.5 bg-slate-200 dark:bg-white/10 rounded-full mx-auto mt-4 mb-2 sm:hidden" />
                     <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-white/5">
                         <Search className="w-5 h-5 text-slate-400" />
                         <input
                             autoFocus
                             value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && topResult) {
-                                    e.preventDefault();
-                                    executeResult(topResult.action);
-                                }
-                            }}
+                            onChange={(e) => { setQuery(e.target.value); }}
                             placeholder="Search projects, files, clients, or routes..."
                             className="flex-1 bg-transparent outline-none text-lg text-slate-900 dark:text-white placeholder:text-slate-400 font-medium"
                         />
-                        <div className="px-2 py-1 rounded bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border border-slate-200 dark:border-white/10">ESC</div>
+                        <kbd className="px-2 py-1 rounded bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-400 tracking-wider border border-slate-200 dark:border-white/10">ESC</kbd>
                     </div>
-                    <div className="p-2 max-h-[420px] overflow-y-auto">
+                    <div ref={listRef} className="p-2 max-h-[420px] overflow-y-auto">
                         <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                             {query.trim() ? 'Results' : 'Quick Access'}
                         </div>
                         {results.length === 0 && (
                             <div className="px-4 py-8 text-sm text-slate-500 dark:text-slate-400">No matches found. Try another keyword.</div>
                         )}
-                        {results.map((result) => (
+                        {results.map((result, idx) => (
                             <button
                                 key={result.id}
+                                ref={el => { itemRefs.current[idx] = el; }}
                                 onClick={() => executeResult(result.action)}
-                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors text-left group"
+                                onMouseEnter={() => setSelectedIndex(idx)}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left group ${idx === selectedIndex ? 'bg-slate-100 dark:bg-white/10' : 'hover:bg-slate-50 dark:hover:bg-white/5'}`}
                             >
-                                <result.icon className="w-4 h-4 text-slate-400 group-hover:text-lime-600 dark:group-hover:text-[#bef264]" />
+                                <result.icon className={`w-4 h-4 transition-colors ${idx === selectedIndex ? 'text-lime-600 dark:text-[#bef264]' : 'text-slate-400 group-hover:text-lime-600 dark:group-hover:text-[#bef264]'}`} />
                                 <div className="min-w-0 flex-1">
                                     <span className="text-sm font-medium text-slate-700 dark:text-slate-200 block truncate">{result.title}</span>
                                     <span className="text-xs text-slate-400 block truncate">{result.subtitle}</span>
                                 </div>
-                                <span className="ml-auto text-xs text-slate-400">{result.kind}</span>
+                                <span className={`ml-auto text-xs transition-colors ${idx === selectedIndex ? 'text-lime-600 dark:text-[#bef264]' : 'text-slate-400'}`}>{result.kind}</span>
                             </button>
                         ))}
                     </div>
-                    <div className="px-4 py-2 bg-slate-50 dark:bg-black/20 border-t border-slate-100 dark:border-white/5 flex justify-between items-center text-[10px] text-slate-400">
-                        <span><strong>Enter</strong> to open top result</span>
-                        <span><strong>Esc</strong> to close</span>
+                    <div className="px-4 py-2.5 bg-slate-50 dark:bg-black/20 border-t border-slate-100 dark:border-white/5 flex flex-wrap gap-x-4 gap-y-1.5 items-center text-[10px] text-slate-400">
+                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-slate-500 dark:text-slate-300">↑↓</kbd> navigate</span>
+                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-slate-500 dark:text-slate-300">↵</kbd> open</span>
+                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-slate-500 dark:text-slate-300">Esc</kbd> close</span>
+                        <span className="w-px h-3 bg-slate-200 dark:bg-white/10 mx-1" />
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-300 dark:text-slate-600">Jump to —</span>
+                        {([['d','Dashboard'],['v','Vault'],['r','Reports'],['a','Activity'],['s','Settings'],['c','Create']] as [string, string][]).map(([key, label]) => (
+                            <button key={key} onClick={() => { navigate(label === 'Create' ? '/create' : `/${label.toLowerCase()}`); onClose(); }} className="flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
+                                <kbd className="px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-slate-500 dark:text-slate-300">g</kbd>
+                                <kbd className="px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-slate-500 dark:text-slate-300">{key}</kbd>
+                                {label}
+                            </button>
+                        ))}
                     </div>
                 </div>
             </div>
         );
+    };
+
+    const recentProfileEvents = projects
+        .flatMap((p) => {
+            const clientName = p.client?.company || p.client?.name || 'Client';
+            const baseDate = p.createdAt || new Date().toISOString();
+            const events: Array<{ id: string; title: string; detail: string; isHot?: boolean; ts: string }> = [];
+            if (p.status === 'paid' || p.status === 'completed') {
+                events.push({
+                    id: `pay-${p.id}`,
+                    title: 'Payment Received',
+                    detail: `${clientName} paid $${p.amount.toLocaleString()}`,
+                    isHot: true,
+                    ts: p.clientViewedAt || p.dueDate || baseDate,
+                });
+            }
+            if ((p.files || []).length > 0) {
+                events.push({
+                    id: `file-${p.id}`,
+                    title: 'Files Updated',
+                    detail: `${(p.files || []).length} assets in ${p.name}`,
+                    ts: baseDate,
+                });
+            }
+            if (p.clientViewedAt) {
+                events.push({
+                    id: `view-${p.id}`,
+                    title: 'Client Viewed Vault',
+                    detail: `${clientName} opened ${p.name}`,
+                    ts: p.clientViewedAt,
+                });
+            }
+            return events;
+        })
+        .sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime())
+        .slice(0, 2);
+
+    const getInitials = (name?: string) => {
+        if (!name) return 'U';
+        const parts = name.trim().split(/\s+/);
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     };
 
     const ProfileMenu = () => (
@@ -1226,14 +1968,20 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
             {/* Header */}
             <div className="flex items-center gap-4 pb-4 border-b border-slate-100 dark:border-white/5 mb-4">
                 <div className="relative">
-                    <img src={user?.avatar || 'https://api.dicebear.com/9.x/shapes/svg?seed=User&backgroundColor=0a0a0a&shape1Color=bef264&shape2Color=ffffff&shape3Color=52525b'} className="w-12 h-12 rounded-xl object-cover shadow-sm" alt="Profile" />
+                    {user?.avatar ? (
+                        <img src={user.avatar} className="w-12 h-12 rounded-xl object-cover shadow-sm" alt="Profile" />
+                    ) : (
+                        <div className="w-12 h-12 rounded-xl bg-slate-800 dark:bg-slate-900 text-white flex items-center justify-center font-semibold shadow-sm">
+                            {getInitials(user?.name)}
+                        </div>
+                    )}
                     <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-lime-500 rounded-full border-2 border-white dark:border-[#1a1a23] flex items-center justify-center">
                         <Check className="w-2 h-2 text-white" />
                     </div>
                 </div>
                 <div>
-                    <h4 className="font-bold text-slate-900 dark:text-white leading-tight">{user.name}</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[140px]">{user.email}</p>
+                    <h4 className="font-bold text-slate-900 dark:text-white leading-tight">{user.name || 'Your Account'}</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[140px]">{user.email || 'No email on file'}</p>
                     <span className="text-[10px] font-bold uppercase text-lime-600 dark:text-[#bef264] tracking-wider mt-1 block">Pro Plan</span>
                 </div>
             </div>
@@ -1244,24 +1992,23 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
                     <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Recent Activity</span>
                     <button className="text-[10px] font-bold text-lime-600 dark:text-[#bef264] hover:underline">Mark all read</button>
                 </div>
-                <div className="space-y-1">
-                    <div className="flex gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group">
-                        <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5 shrink-0 animate-pulse" />
-                        <div>
-                            <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight group-hover:text-lime-600 dark:group-hover:text-[#bef264] transition-colors">Payment Received</p>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400">Vertex Corp paid $2,500.00</p>
-                        </div>
-                        <span className="ml-auto text-[9px] text-slate-400 font-mono">2m</span>
+                {recentProfileEvents.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-slate-300 dark:border-white/15 p-3 text-center">
+                        <p className="text-xs font-bold text-slate-600 dark:text-slate-300">No recent events yet.</p>
                     </div>
-                    <div className="flex gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group">
-                        <div className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 mt-1.5 shrink-0" />
-                        <div>
-                            <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight group-hover:text-lime-600 dark:group-hover:text-[#bef264] transition-colors">File Downloaded</p>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400">Sarah viewed 'Brand_Final.zip'</p>
-                        </div>
-                        <span className="ml-auto text-[9px] text-slate-400 font-mono">1h</span>
+                ) : (
+                    <div className="space-y-1">
+                        {recentProfileEvents.map((evt) => (
+                            <div key={evt.id} className="flex gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group">
+                                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${evt.isHot ? 'bg-red-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                                <div>
+                                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight group-hover:text-lime-600 dark:group-hover:text-[#bef264] transition-colors">{evt.title}</p>
+                                    <p className="text-[10px] text-slate-500 dark:text-slate-400">{evt.detail}</p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                </div>
+                )}
             </div>
 
             {/* Quick Actions */}
@@ -1282,20 +2029,38 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
         </div>
     );
 
+    const headerHeightPx = 80; // h-20
+
     return (
-        <div className="min-h-screen font-sans bg-[#f0f2f5] dark:bg-cosmic text-slate-900 dark:text-slate-100 transition-colors duration-500 overflow-x-hidden relative">
+        <div className="flex-1 font-sans bg-[#f0f2f5] dark:bg-cosmic text-slate-900 dark:text-slate-100 transition-colors duration-500 overflow-x-hidden relative">
+            {/* GLOBAL DRAG DROP OVERLAY */}
+            {isDraggingGlobal && (
+                <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-black/80 backdrop-blur-md flex items-center justify-center pointer-events-none animate-in fade-in duration-200">
+                    <div className="w-full max-w-lg mx-4 rounded-[2rem] border-2 border-dashed border-lime-500 dark:border-[#bef264] bg-white/10 dark:bg-[#1a1a23]/50 flex flex-col items-center justify-center p-16 text-center shadow-2xl scale-105 animate-pulse">
+                        <div className="w-24 h-24 rounded-full bg-lime-600 dark:bg-[#bef264] flex items-center justify-center mb-6 shadow-xl shadow-lime-900/20 dark:shadow-[#bef264]/20">
+                            <Plus className="w-12 h-12 text-white dark:text-black" strokeWidth={3} />
+                        </div>
+                        <h2 className="text-3xl font-serif font-bold text-white mb-2">Drop to Create Project</h2>
+                        <p className="text-slate-200">Release files anywhere to start a new handover instantly.</p>
+                    </div>
+                </div>
+            )}
+
             {/* AMBIENT BACKGROUND EFFECTS */}
             <BackgroundOrbs />
             <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] bg-grain mix-blend-overlay dark:block hidden"></div>
 
-            {/* FIXED HEADER STACK - UPDATED DESIGN (NO TICKER) */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-[#f0f2f5]/90 dark:bg-cosmic/90 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5 transition-colors duration-500">
+            {/* FIXED HEADER — sticks below strip when strip is visible, at top when not; never scrolls away */}
+            <header
+                className="fixed left-0 right-0 z-50 bg-[#f0f2f5]/90 dark:bg-cosmic/90 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5 transition-[top] duration-200"
+                style={{ top: stripOffset }}
+            >
                 <div className="w-full max-w-[98%] mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Header Content */}
                     <div className="flex flex-row items-center justify-between h-20 gap-4">
 
-                        {/* Left: Brand - UPDATED: Clean Design (No Island) */}
-                        <div className="flex items-center gap-3 cursor-pointer group flex-shrink-0 scale-[1.05] origin-left" onClick={() => { playClick(); navigate('/'); }}>
+                        {/* Left: Brand — always returns to dashboard home */}
+                        <div className="flex items-center gap-3 cursor-pointer group shrink-0 scale-[1.05] origin-left" title="Go to Dashboard" onClick={() => { playClick(); navigate('/dashboard'); }}>
                             <div className="flex items-center gap-2 px-2 py-2 transition-all">
                                 <EditorialIcon className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
                                 <span className={`font-serif font-medium tracking-tight text-lg text-slate-900 dark:text-white hidden sm:block`}>TrueHandover</span>
@@ -1310,6 +2075,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
                                     <button
                                         key={item.id}
                                         onClick={() => { playClick(); navigate(`/${item.id}`); }}
+                                        onMouseEnter={() => routePreloadMap[item.id]?.()}
                                         className={`
                                             relative text-base font-medium transition-colors duration-200 py-1
                                             ${isActive ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}
@@ -1325,7 +2091,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
                         </nav>
 
                         {/* Right: User Profile & Controls */}
-                        <div className="flex items-center justify-end gap-3 flex-shrink-0">
+                        <div className="flex items-center justify-end gap-3 shrink-0">
 
                             {/* Search Trigger Button - REDESIGNED: Compact Pill with Hover Reveal */}
                             <button
@@ -1354,13 +2120,21 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
                                 buttonClassName="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 transition-all flex items-center"
                             />
 
-                            {/* Design Lab Button */}
+                            {/* Data source toggle (Mock <-> Real) */}
                             <button
-                                onClick={() => { playClick(); setShowDesignLab(true); }}
-                                className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-lime-100 dark:hover:bg-[#bef264]/10 hover:text-lime-700 dark:hover:text-[#bef264] transition-all"
-                                title="Design Lab — Preview UI variants"
+                                onClick={() => {
+                                    playClick();
+                                    const next = !demoMode;
+                                    setDemoMode(next);
+                                    setMockMode(next);
+                                }}
+                                className={`px-3 py-2.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all ${demoMode
+                                    ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-700/30 dark:text-amber-300'
+                                    : 'bg-lime-50 border-lime-200 text-lime-700 dark:bg-lime-900/20 dark:border-lime-700/30 dark:text-lime-300'
+                                    }`}
+                                title={demoMode ? 'Switch to real backend data' : 'Switch to mock demo data'}
                             >
-                                <Sparkles className="w-5 h-5" />
+                                {demoMode ? 'Mock Data' : 'Real Data'}
                             </button>
 
                             <div className="h-6 w-px bg-slate-300 dark:bg-white/10 mx-1 hidden sm:block" />
@@ -1376,7 +2150,13 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
                                     aria-label="Open User Menu"
                                 >
                                     <div className="relative group-hover/profile:scale-105 transition-transform">
-                                        <img src={user?.avatar || 'https://api.dicebear.com/9.x/shapes/svg?seed=User&backgroundColor=0a0a0a&shape1Color=bef264&shape2Color=ffffff&shape3Color=52525b'} className="w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 shadow-sm object-cover" alt="Profile" />
+                                        {user?.avatar ? (
+                                            <img src={user.avatar} className="w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 shadow-sm object-cover" alt="Profile" />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 shadow-sm bg-slate-800 dark:bg-slate-900 text-white flex items-center justify-center text-xs font-semibold">
+                                                {getInitials(user?.name)}
+                                            </div>
+                                        )}
                                         <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#f0f2f5] dark:border-cosmic animate-pulse" />
 
                                         {/* Refined Hover Tooltip */}
@@ -1395,9 +2175,16 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
                 </div>
             </header>
 
-            {/* MAIN CONTENT GRID (Padded top to clear fixed header - reduced since ticker is gone) */}
-            <main className={`w-full max-w-[99%] mx-auto px-3 md:px-5 lg:px-7 pb-24 lg:pb-16 pt-[100px] min-h-[500px] relative z-10 transition-all duration-300 font-sans`}>
-                <Outlet context={{ privacyMode }} />
+            {/* MAIN CONTENT — keep padding static so UI below header never shifts. 
+                Includes maximum space for the header + strip so they never overlap content. */}
+            <main
+                className="w-full max-w-[99%] mx-auto px-3 md:px-5 lg:px-7 pb-24 lg:pb-16 min-h-[500px] relative z-10 transition-all duration-300 font-sans"
+                style={{ paddingTop: headerHeightPx + 28 /* max strip height */ }}
+            >
+                {/* key on pathname triggers the CSS route-in animation on every navigation */}
+                <div key={location.pathname} className="animate-route-in">
+                    <Outlet context={{ privacyMode, openSearch: () => setIsSearchOpen(true) }} />
+                </div>
             </main>
 
             {/* Floating Action Button (Mapped to Help Page) */}
@@ -1417,13 +2204,6 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
             {/* Search Overlay */}
             {isSearchOpen && <SearchCommandPalette onClose={() => setIsSearchOpen(false)} />}
 
-            {/* Design Lab Overlay */}
-            {showDesignLab && (
-                <DesignShowcase
-                    isDarkMode={isDarkMode}
-                    onClose={() => setShowDesignLab(false)}
-                />
-            )}
         </div>
     );
 }
@@ -1585,24 +2365,89 @@ const ClientLinkWrapper = ({ isDarkMode, themeMode, onToggleTheme, onSetThemeMod
     );
 };
 
+const ClientPortalWrapper = () => {
+    const { token } = useParams();
+    const [portal, setPortal] = useState<any | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let cancelled = false;
+        const run = async () => {
+            setLoading(true);
+            setError(null);
+            const portalToken = (token || '').trim();
+            if (!portalToken) {
+                setError('Invalid portal token.');
+                setLoading(false);
+                return;
+            }
+            const result = await DB.getClientPortal(portalToken);
+            if (cancelled) return;
+            if (result.error) setError(result.error);
+            else setPortal(result.portal);
+            setLoading(false);
+        };
+        run();
+        return () => { cancelled = true; };
+    }, [token]);
+
+    return <ClientPortalPage portal={portal} loading={loading} error={error} />;
+};
+
 const AppContent = () => {
     const [privacyMode, setPrivacyMode] = useState(false);
-    // Read theme from URL hash query params (for iframe sync)
+    // Read theme from URL search params (for iframe sync)
     const getInitialTheme = (): 'light' | 'dark' | 'system' => {
         try {
-            const hash = window.location.hash;
-            const qIndex = hash.indexOf('?');
-            if (qIndex !== -1) {
-                const params = new URLSearchParams(hash.substring(qIndex));
-                const t = params.get('theme');
-                if (t === 'light' || t === 'dark' || t === 'system') return t;
-            }
+            const params = new URLSearchParams(window.location.search);
+            const t = params.get('theme');
+            if (t === 'light' || t === 'dark' || t === 'system') return t;
         } catch { }
         return 'system';
     };
     const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>(getInitialTheme());
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [firstVisitThemeNotice, setFirstVisitThemeNotice] = useState<string | null>(null);
+
+    // ── Offline / SW-update awareness ────────────────────────────────────────
+    const [isOffline, setIsOffline] = useState(!navigator.onLine);
+    const [offlineDismissed, setOfflineDismissed] = useState(false);
+    const [swUpdateReady, setSwUpdateReady] = useState(false);
+    const swRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
+
+    useEffect(() => {
+        const goOnline = () => {
+            setIsOffline(false);
+            setOfflineDismissed(false); // reset so strip shows again next time
+        };
+        const goOffline = () => {
+            setIsOffline(true);
+            setOfflineDismissed(false); // always show strip when connection drops
+        };
+        window.addEventListener('online', goOnline);
+        window.addEventListener('offline', goOffline);
+        return () => {
+            window.removeEventListener('online', goOnline);
+            window.removeEventListener('offline', goOffline);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.ready.then(reg => {
+            swRegistrationRef.current = reg;
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                if (!newWorker) return;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        setSwUpdateReady(true);
+                    }
+                });
+            });
+        });
+    }, []);
 
     // -- STATE MANAGEMENT via Store --
     const { projects, user, saveProject, updateUser } = useStore();
@@ -1633,7 +2478,7 @@ const AppContent = () => {
 
     useEffect(() => {
         try {
-            const isPreviewRoute = window.location.hash.startsWith('#/preview/') || window.location.hash.startsWith('#/c/');
+            const isPreviewRoute = window.location.pathname.startsWith('/preview/') || window.location.pathname.startsWith('/c/') || window.location.pathname.startsWith('/portal/');
             if (isPreviewRoute) return;
 
             const alreadySeen = localStorage.getItem('th_theme_notice_seen') === '1';
@@ -1661,10 +2506,122 @@ const AppContent = () => {
         setPrivacyMode(!privacyMode);
     };
 
+    // ── Toast queue ────────────────────────────────────────────────────────────
+    const [toasts, setToasts] = useState<Toast[]>([]);
+    const toastCounter = useRef(0);
+    const showToast: ToastFn = React.useCallback((message, kind = 'success') => {
+        const id = ++toastCounter.current;
+        setToasts(prev => [...prev, { id, message, kind }]);
+        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
+    }, []);
+    const dismissToast = (id: number) => setToasts(prev => prev.filter(t => t.id !== id));
+    // ──────────────────────────────────────────────────────────────────────────
+
+    // Connection state: show "back online" briefly after reconnecting
+    const [backOnline, setBackOnline] = useState(false);
+    useEffect(() => {
+        if (!isOffline && !offlineDismissed) {
+            // just came back online — show confirmation strip for 3 s then hide
+            setBackOnline(true);
+            const t = setTimeout(() => setBackOnline(false), 3000);
+            return () => clearTimeout(t);
+        }
+    }, [isOffline]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const isLandingRoute = (() => {
+        try {
+            return window.location.pathname === '/';
+        } catch {
+            return false;
+        }
+    })();
+
+    const [isSmallScreen, setIsSmallScreen] = useState(false);
+    useEffect(() => {
+        const checkScreen = () => setIsSmallScreen(window.innerWidth <= 1024);
+        checkScreen();
+        window.addEventListener('resize', checkScreen);
+        return () => window.removeEventListener('resize', checkScreen);
+    }, []);
+
+    const isPreviewRoute = (() => {
+        try {
+            const p = window.location.pathname;
+            return p.startsWith('/preview') || p.startsWith('/c/') || p.startsWith('/portal/');
+        } catch {
+            return false;
+        }
+    })();
+
+    const suppressStrips = isLandingRoute || isPreviewRoute || isSmallScreen;
+
+    const showOfflineStrip = !suppressStrips && isOffline && !offlineDismissed;
+    const showBackOnlineStrip = !suppressStrips && !isOffline && backOnline;
+    const showUpdateStrip = swUpdateReady && !suppressStrips;
+
+    const anyStripVisible = showOfflineStrip || showBackOnlineStrip || showUpdateStrip;
+    const stripHeightPx = 28; // h-7
+
     return (
+        <ToastContext.Provider value={showToast}>
         <PrivacyContext.Provider value={{ privacyMode, togglePrivacyMode }}>
-            <HashRouter>
-                <div className={`font-sans min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+            <StripOffsetContext.Provider value={anyStripVisible ? stripHeightPx : 0}>
+            {/* Outermost flex-col wrapper carries the dark class so strips honour it */}
+            <div className={`${isDarkMode ? 'dark' : ''} flex flex-col min-h-screen font-sans`}>
+                <ToastContainer toasts={toasts} dismiss={dismissToast} />
+
+                {/* ── Connection / update strips — fixed to viewport top so they're
+                    always visible regardless of scroll position. The header and
+                    main content read stripOffset via context to shift down. ── */}
+                {showOfflineStrip && (
+                    <div className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 bg-slate-800 dark:bg-[#0f0f15] border-b border-slate-700 dark:border-white/10 text-slate-100 text-[11px] font-bold h-7 z-[200]">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <Wifi className="w-3 h-3 shrink-0 opacity-60" />
+                            <span className="truncate">You're working offline — the app remains fully available.</span>
+                        </div>
+                        <button
+                            onClick={() => setOfflineDismissed(true)}
+                            className="shrink-0 p-0.5 rounded hover:bg-white/10 transition-colors"
+                            aria-label="Dismiss"
+                        >
+                            <X className="w-3 h-3" />
+                        </button>
+                    </div>
+                )}
+                {showBackOnlineStrip && (
+                    <div className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 bg-lime-600 dark:bg-lime-600 text-white text-[11px] font-bold h-7 z-[200]">
+                        <div className="flex items-center gap-2">
+                            <CheckCircle className="w-3 h-3 shrink-0" />
+                            <span>Back online — connection restored.</span>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── SW update available strip ── */}
+                {showUpdateStrip && (
+                    <div className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 bg-lime-600 text-white text-[11px] font-bold h-7 z-[200]">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <RefreshCw className="w-3 h-3 shrink-0" />
+                            <span className="truncate">A new version is ready.</span>
+                            <button
+                                onClick={() => { swRegistrationRef.current?.waiting?.postMessage({ type: 'SKIP_WAITING' }); window.location.reload(); }}
+                                className="underline hover:no-underline transition-all shrink-0 ml-1"
+                            >
+                                Reload now
+                            </button>
+                        </div>
+                        <button
+                            onClick={() => setSwUpdateReady(false)}
+                            className="shrink-0 p-0.5 rounded hover:bg-white/20 transition-colors"
+                            aria-label="Dismiss"
+                        >
+                            <X className="w-3 h-3" />
+                        </button>
+                    </div>
+                )}
+
+                <BrowserRouter>
+                    {/* First-visit theme notice — floats above content */}
                     {firstVisitThemeNotice && (
                         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[120] px-4">
                             <div className="flex items-center gap-2 rounded-full border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-[#18181b]/90 backdrop-blur-md shadow-lg px-4 py-2 text-[11px] font-bold tracking-wide text-slate-700 dark:text-slate-200">
@@ -1681,12 +2638,13 @@ const AppContent = () => {
                             </div>
                         </div>
                     )}
+                    <Suspense fallback={<PageLoader />}>
                     <Routes>
                         <Route
                             path="/"
                             element={
                                 <LandingPage
-                                    onGetStarted={() => window.location.hash = '#/dashboard'}
+                                    onGetStarted={() => window.location.href = '/dashboard'}
                                     currentTheme={themeMode}
                                     onSetThemeMode={setThemeMode}
                                     toggleTheme={cycleTheme}
@@ -1695,35 +2653,37 @@ const AppContent = () => {
                         />
                         <Route path="/signin" element={<SignInPage themeMode={themeMode} toggleTheme={cycleTheme} />} />
                         <Route path="/c/:token" element={<ClientLinkWrapper isDarkMode={isDarkMode} themeMode={themeMode} onToggleTheme={cycleTheme} onSetThemeMode={setThemeMode} />} />
+                        <Route path="/portal/:token" element={<ClientPortalWrapper />} />
                         <Route element={<AppLayout
                             user={user}
                             projects={projects}
                             isDarkMode={isDarkMode}
                             themeMode={themeMode}
                             onSetThemeMode={setThemeMode}
-                            setIsDarkMode={setIsDarkMode} // Kept for legacy prop compatibility if needed
+                            setIsDarkMode={setIsDarkMode}
                             togglePrivacyMode={togglePrivacyMode}
                             privacyMode={privacyMode}
                         />}>
-                            <Route path="/dashboard" element={<DashboardView projects={projects} user={user} />} />
-                            <Route path="/activity" element={<ActivityView />} />
-                            <Route path="/vault" element={<VaultView projects={projects} />} />
-                            <Route path="/reports" element={<ReportsView />} />
+                            <Route path="/dashboard" element={<Suspense fallback={<DashboardSkeleton />}><DashboardView projects={projects} user={user} /></Suspense>} />
+                            <Route path="/activity" element={<Suspense fallback={<PageLoader />}><ActivityView /></Suspense>} />
+                            <Route path="/vault" element={<Suspense fallback={<VaultSkeleton />}><VaultView projects={projects} /></Suspense>} />
+                            <Route path="/reports" element={<Suspense fallback={<PageLoader />}><ReportsView /></Suspense>} />
                             {/* @ts-ignore - Prop will be added in next step */}
                             <Route path="/settings" element={<SettingsPage user={user} onUpdateUser={updateUser} />} />
                             <Route path="/trash" element={<TrashPage onBack={() => window.history.back()} />} />
                             <Route path="/help" element={<HelpPage onBack={() => window.history.back()} />} />
                         </Route>
                         <Route path="/create" element={<CreatorWrapper projects={projects} onSave={saveProject} user={user} />} />
-
-                        {/* Dynamic Route Handlers */}
                         <Route path="/editor/:id" element={<EditorWrapper projects={projects} onSave={saveProject} user={user} />} />
-                        {/* Updated Route: Passing dynamic user prop */}
                         <Route path="/preview/:id" element={<PreviewWrapper projects={projects} user={user} isDarkMode={isDarkMode} themeMode={themeMode} onToggleTheme={cycleTheme} onSetThemeMode={setThemeMode} />} />
                     </Routes>
-                </div>
-            </HashRouter>
+                    </Suspense>
+                </BrowserRouter>
+
+            </div>{/* end outermost flex-col dark wrapper */}
+            </StripOffsetContext.Provider>
         </PrivacyContext.Provider>
+        </ToastContext.Provider>
     );
 };
 

@@ -51,7 +51,7 @@ const PayflowVariant = ({ activeSection }: { activeSection: string }) => {
     const transactions = useMemo(() => projects.slice(0, 6).map(p => ({
         n: p.name,
         id: `#${p.id.toUpperCase()}`,
-        d: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—',
+        d: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Â—',
         s: p.status === 'paid' ? 'Received' : p.status === 'awaiting_payment' ? 'Payment' : 'Pending',
         a: p.status === 'paid' ? `+ $${p.amount?.toLocaleString()}` : `~ $${p.amount?.toLocaleString()}`,
         img: p.client?.avatar || undefined,
@@ -246,7 +246,7 @@ const PayflowVariant = ({ activeSection }: { activeSection: string }) => {
                                                     )}
                                                     <div>
                                                         <p className="font-bold text-sm text-[#111] truncate max-w-[140px]">{t.n}</p>
-                                                        <p className="text-[10px] text-gray-400 font-mono mt-0.5">{t.id} · {t.clientName}</p>
+                                                        <p className="text-[10px] text-gray-400 font-mono mt-0.5">{t.id} Â· {t.clientName}</p>
                                                     </div>
                                                 </div>
                                             </td>
@@ -359,7 +359,7 @@ const PayflowVariant = ({ activeSection }: { activeSection: string }) => {
                                 <input type="text" value="275.68" className="w-20 text-right font-bold text-sm outline-none bg-transparent text-gray-500" readOnly />
                             </div>
                             <div className="flex justify-between text-[10px] text-gray-400 mb-6 font-medium px-2">
-                                <span>1.00 USD ˜ 0.92 Euro</span>
+                                <span>1.00 USD Â˜ 0.92 Euro</span>
                                 <span>Exchange Fee: $12.44</span>
                             </div>
                             <button className="w-full py-3.5 bg-[#111] text-white rounded-xl text-sm font-bold hover:bg-black hover:shadow-lg transition-all active:scale-[0.98]">Exchange Money</button>
@@ -879,7 +879,7 @@ const CarRentalVariant = ({ activeSection }: { activeSection: string }) => {
         <div className="w-full h-full font-sans overflow-y-auto rounded-[24px]" style={{ background: bgMain }}>
             {/* Floating Header Pill */}
             <div className="sticky top-6 z-50 flex justify-center mb-8 px-4">
-                <div className="bg-[#CFF005] pl-1.5 pr-1.5 py-1.5 rounded-full shadow-2xl flex items-center gap-1 max-w-2xl w-full mx-auto backdrop-blur-sm bg-opacity-90 ring-4 ring-black/5">
+                <div className="bg-[#CFF005]/90 pl-1.5 pr-1.5 py-1.5 rounded-full shadow-2xl flex items-center gap-1 max-w-2xl w-full mx-auto backdrop-blur-sm ring-4 ring-black/5">
                     <div className="flex font-bold text-sm bg-white/20 rounded-full p-1">
                         <button className="bg-black text-[#CFF005] px-6 py-2.5 rounded-full hover:scale-105 transition-transform shadow-lg">Rent</button>
                         <button className="px-6 py-2.5 text-black/60 hover:text-black transition-colors rounded-full hover:bg-black/5">Buy</button>
@@ -1253,15 +1253,15 @@ const CeloxisVariant = ({ activeSection }: { activeSection: string }) => {
                                     <div className="absolute top-3 left-2 right-2 h-px bg-gray-100 -z-10" />
 
                                     <div className="text-center bg-white/80 p-2 rounded-xl backdrop-blur-sm">
-                                        <span className="text-red-500 font-black text-2xl">• 49</span>
+                                        <span className="text-red-500 font-black text-2xl">Â• 49</span>
                                         <p className="text-[10px] text-red-400 uppercase font-bold mt-1 tracking-wider">Critical</p>
                                     </div>
                                     <div className="text-center bg-white/80 p-2 rounded-xl backdrop-blur-sm">
-                                        <span className="text-orange-400 font-black text-2xl">• 146</span>
+                                        <span className="text-orange-400 font-black text-2xl">Â• 146</span>
                                         <p className="text-[10px] text-orange-400 uppercase font-bold mt-1 tracking-wider">Medium</p>
                                     </div>
                                     <div className="text-center bg-white/80 p-2 rounded-xl backdrop-blur-sm">
-                                        <span className="text-yellow-400 font-black text-2xl">• 27</span>
+                                        <span className="text-yellow-400 font-black text-2xl">Â• 27</span>
                                         <p className="text-[10px] text-yellow-500 uppercase font-bold mt-1 tracking-wider">Low</p>
                                     </div>
                                 </div>
@@ -2039,7 +2039,7 @@ const SantoriniVariant = ({ activeSection }: { activeSection: string }) => {
         <div className="w-full h-full font-sans bg-[#F4F4F5] p-6 overflow-hidden flex flex-col">
             {/* Nav */}
             <div className="flex items-center gap-6 mb-6 px-2">
-                <div className="w-10 h-10 bg-[#EAFF8C] rounded-full flex items-center justify-center font-black text-xl shadow-md">•</div>
+                <div className="w-10 h-10 bg-[#EAFF8C] rounded-full flex items-center justify-center font-black text-xl shadow-md">Â•</div>
                 <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm text-sm font-bold w-64">
                     Travel planning <X className="w-3 h-3 ml-auto text-gray-400 cursor-pointer hover:text-red-500" />
                 </div>
@@ -2127,7 +2127,7 @@ const SantoriniVariant = ({ activeSection }: { activeSection: string }) => {
                             <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-100 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity" />
                             <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white"><Sun className="w-4 h-4" /></div>
                             <div className="mt-4 text-center">
-                                <span className="text-6xl font-black text-gray-800">28<span className="text-2xl align-top text-gray-400">°C</span></span>
+                                <span className="text-6xl font-black text-gray-800">28<span className="text-2xl align-top text-gray-400">Â°C</span></span>
                                 <p className="text-sm font-bold text-gray-400 mt-2">For your dates</p>
                             </div>
                         </div>
@@ -2183,7 +2183,7 @@ const JobFlowVariant = ({ activeSection }: { activeSection: string }) => {
                     <Search className="w-5 h-5 text-gray-400" />
                 </div>
 
-                <div className="bg-white p-1.5 pr-2 rounded-full shadow-lg border border-gray-100 flex items-center gap-4 max-w-2xl w-full mx-auto backdrop-blur-md bg-opacity-80">
+                <div className="bg-white/80 p-1.5 pr-2 rounded-full shadow-lg border border-gray-100 flex items-center gap-4 max-w-2xl w-full mx-auto backdrop-blur-md">
                     <span className="text-xs font-bold pl-4 text-gray-500">Your Schedule</span>
                     <div className="flex-1 h-12 bg-gradient-to-r from-blue-50 via-green-50 to-yellow-50 rounded-full relative flex items-center px-2 overflow-hidden">
                         <div className="flex items-center gap-2 absolute left-4">
@@ -2540,7 +2540,7 @@ const EdTechVariant = ({ activeSection }: { activeSection: string }) => {
     const contacts = useMemo(() => projects.slice(0, 3).map(p => ({
         n: p.client?.name || 'Unknown Client',
         r: p.description || p.type || 'Project',
-        p: p.client?.email || '—',
+        p: p.client?.email || 'Â—',
         seed: p.client?.name || 'default',
         avatar: p.client?.avatar,
     })), [projects]);
@@ -3269,7 +3269,7 @@ export const DesignShowcase = ({ onClose, isDarkMode }: { onClose: () => void, i
 
                     <div className="flex items-center gap-4 shrink-0 pl-4 border-l border-white/5 ml-4">
                         <div className="text-[10px] text-gray-500 font-mono hidden xl:block bg-[#1A1A1A] px-3 py-1.5 rounded-lg border border-white/5">
-                            RES: 1920x1080 • SCALE: 100% • MODE: HIFI
+                            RES: 1920x1080 Â• SCALE: 100% Â• MODE: HIFI
                         </div>
                         <button onClick={onClose} className="w-8 h-8 flex items-center justify-center hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded-lg transition-colors">
                             <X className="w-5 h-5" />

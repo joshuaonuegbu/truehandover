@@ -56,8 +56,11 @@ The UI uses a **"Cyber-Vault" aesthetic**:
 ## Production Checklist
 
 - **Supabase DB:** Apply `supabase/schema.sql` and `supabase/migrations/20260224_production_hardening.sql`.
-- **Edge Functions:** Deploy `stripe-checkout`, `stripe-onboarding`, `stripe-webhook`, `client-preview`, `creator-projects`, `r2-presign`, `r2-download`.
-- **Server env vars (Edge Functions):** `ALLOWED_ORIGINS`, `APP_BASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`.
+- **Supabase DB (new):** Apply `supabase/migrations/20260228_nudge_and_audit.sql`.
+- **Edge Functions:** Deploy `stripe-checkout`, `stripe-onboarding`, `stripe-webhook`, `client-preview`, `creator-projects`, `r2-presign`, `r2-download`, `audit-trail`, `rights-transfer`, `nudge-sender`, `client-portal`, `client-portal-token`, `stripe-retainer-link`.
+- **Server env vars (Edge Functions):** `ALLOWED_ORIGINS`, `APP_BASE_URL`, `CLIENT_PORTAL_HMAC_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `RESEND_API_KEY`, `NUDGE_FROM_EMAIL`.
 - **Frontend env vars:** `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, optional `VITE_STRIPE_PUBLISHABLE_KEY`.
 - **R2 bucket CORS:** Allow browser `PUT`/`GET` to your presigned URLs (otherwise uploads/downloads will fail).
 - Runbook: `DEPLOYMENT.md`.
+
+Tip: generate safe random secrets with `npm run gen:secrets`.

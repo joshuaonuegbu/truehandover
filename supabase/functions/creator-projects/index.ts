@@ -55,7 +55,8 @@ const mapProject = async (project: DbProject) => {
     dueDate: project.due_date || "",
     files: mappedFiles,
     milestones: project.milestones || [],
-    credentials: project.credentials || [],
+    // Credentials are intentionally kept local-only for now (no passwords stored server-side).
+    credentials: [],
     requiresSignature: Boolean(project.requires_signature),
     enableTips: project.enable_tips !== false,
     paymentMethods: project.payment_methods || {},

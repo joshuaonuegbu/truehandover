@@ -2,20 +2,20 @@
 
 This app is a Vite + React SPA backed by Supabase (DB/Auth + Edge Functions), Stripe Connect, and Cloudflare R2.
 
-## Current status snapshot (2026-02-24)
+## Current status snapshot (2026-02-28)
 
 - `0) Prereqs`: ⚠️ Partially verifiable (dashboard prerequisites cannot be fully checked from repo)
 - `1) Create/migrate DB`: ✅ Files exist, ⚠️ execution against remote DB not fully verifiable here
 - `2) Supabase CLI`: ✅ Done (`npx supabase --version` returns `2.76.14`)
-- `3) Repo linked`: ⚠️ Cannot verify from repo only (requires Supabase account/project context)
-- `4) Function env vars`: ❌ Not done (missing required keys in `supabase/.env.local`)
-- `5) Deploy functions`: ⚠️ Function code exists; deployment to hosted project cannot be verified here
-- `6) Stripe webhook`: ⚠️ Cannot verify dashboard endpoint/subscription from local repo
-- `7) R2 CORS`: ⚠️ Cannot verify Cloudflare dashboard CORS from local repo
-- `8) Frontend deploy env`: ❌ Not done in `.env.local` for this runbook path (`prod:check` fails)
-- `9) End-to-end verification`: ⚠️ Not yet evidenced in repo/tool output
+- `3) Repo linked`: ✅ Linked to project `tbioyegnvllsgikvbymy`
+- `4) Function env vars`: ⚠️ `CLIENT_PORTAL_HMAC_SECRET` ✅ set (2026-02-28). R2 + prod domain still needed.
+- `5) Deploy functions`: ✅ All 11 functions deployed (last: `client-portal-token`, `client-portal` 2026-02-28)
+- `6) Stripe webhook`: ⚠️ Test keys active — swap to live keys + register prod webhook URL before launch
+- `7) R2 CORS`: ❌ R2 credentials empty — bucket not configured yet
+- `8) Frontend deploy env`: ⚠️ Supabase + Stripe keys present in `.env.local`; swap to prod values for deploy
+- `9) End-to-end verification`: ⚠️ Not yet evidenced end-to-end on production domain
 
-`npm run prod:check` current result: `NEEDS FIXES`.
+`npm run prod:check` current result: `NEEDS FIXES` (R2 keys + prod ALLOWED_ORIGINS/APP_BASE_URL missing).
 
 ---
 
@@ -89,8 +89,12 @@ Create `supabase/.env.local` from `supabase/.env.example` and fill:
 
 - `ALLOWED_ORIGINS` (comma-separated; must include your `APP_BASE_URL`)
 - `APP_BASE_URL` (no trailing slash)
+- `CLIENT_PORTAL_HMAC_SECRET` (used to sign client portal links)
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
+- `RESEND_API_KEY`
+- `NUDGE_FROM_EMAIL`
+- Optional: `CRON_SECRET` (for automated nudges)
 - `R2_ACCOUNT_ID`
 - `R2_ACCESS_KEY_ID`
 - `R2_SECRET_ACCESS_KEY`
@@ -113,6 +117,12 @@ Deploy required functions:
 `npx supabase functions deploy stripe-webhook`
 `npx supabase functions deploy client-preview`
 `npx supabase functions deploy creator-projects`
+`npx supabase functions deploy audit-trail`
+`npx supabase functions deploy rights-transfer`
+`npx supabase functions deploy nudge-sender`
+`npx supabase functions deploy client-portal`
+`npx supabase functions deploy client-portal-token`
+`npx supabase functions deploy stripe-retainer-link`
 `npx supabase functions deploy r2-presign`
 `npx supabase functions deploy r2-download`
 

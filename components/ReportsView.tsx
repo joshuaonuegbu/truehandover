@@ -14,7 +14,9 @@ import {
 } from 'recharts';
 import { GRADIENT_TEXT, Card } from './Shared';
 import { useStore } from '../context/StoreContext';
+import { DB } from '../services/supabaseClient';
 import { playClick } from '../utils/sound';
+import { isMockMode } from '../config/mockMode';
 
 // Local constant for noise texture
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
@@ -117,6 +119,111 @@ const ReportsView = () => {
     const navigate = useNavigate();
     const [timeRange, setTimeRange] = useState('ALL');
     const [excludeOneOffs, setExcludeOneOffs] = useState(false);
+    const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
+    const [downloadingRights, setDownloadingRights] = useState<string | null>(null);
+    const [sendingNudge, setSendingNudge] = useState<string | null>(null);
+    const [nudgeMsg, setNudgeMsg] = useState<{ id: string; ok: boolean; text: string } | null>(null);
+
+    const handleDownloadAuditTrail = async (projectId: string, projectName: string) => {
+        if (downloadingPdf) return;
+        setDownloadingPdf(projectId);
+        try {
+            const { blob, error } = await DB.downloadAuditTrail(projectId);
+            if (error || !blob) { alert(`Could not generate PDF: ${error ?? 'Unknown error'}`); return; }
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `TrueHandover_AuditTrail_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } finally { setDownloadingPdf(null); }
+    };
+
+    const handleSendNudge = async (projectId: string) => {
+        if (sendingNudge) return;
+        setSendingNudge(projectId);
+        setNudgeMsg(null);
+        try {
+            const result = await DB.sendNudge(projectId);
+            setNudgeMsg({
+                id: projectId,
+                ok: result.ok,
+                text: result.ok ? 'Reminder sent!' : (result.error ?? 'Failed to send'),
+            });
+            setTimeout(() => setNudgeMsg(null), 4000);
+        } finally { setSendingNudge(null); }
+    };
+
+    const handleDownloadRightsTransfer = async (projectId: string, projectName: string) => {
+        if (downloadingRights) return;
+        setDownloadingRights(projectId);
+        try {
+            const { blob, error } = await DB.downloadRightsTransfer(projectId);
+            if (error || !blob) { alert(`Could not generate rights certificate: ${error ?? 'Unknown error'}`); return; }
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `TrueHandover_RightsTransfer_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } finally {
+            setDownloadingRights(null);
+        }
+    };
+
+    const handleDownloadICS = () => {
+        const fmtIcsDate = (iso: string) =>
+            new Date(iso).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        const escIcs = (s: string) =>
+            (s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+
+        const lines = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//TrueHandover//Delivery Calendar//EN',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+            'X-WR-CALNAME:TrueHandover Projects',
+            'X-WR-CALDESC:Project due dates and payment deadlines from TrueHandover',
+        ];
+
+        projects.forEach(p => {
+            if (!p.dueDate) return;
+            const uid = `truehandover-${p.id}@truehandover.com`;
+            const statusLabel = {
+                draft: 'Draft',
+                awaiting_signature: 'Awaiting Signature',
+                awaiting_payment: 'Awaiting Payment',
+                payment_verification: 'Payment Verification',
+                paid: 'Paid',
+                completed: 'Completed',
+            }[p.status] ?? p.status;
+
+            lines.push(
+                'BEGIN:VEVENT',
+                `UID:${uid}`,
+                `DTSTAMP:${fmtIcsDate(new Date().toISOString())}`,
+                `DTSTART;VALUE=DATE:${new Date(p.dueDate).toISOString().slice(0, 10).replace(/-/g, '')}`,
+                `DTEND;VALUE=DATE:${new Date(p.dueDate).toISOString().slice(0, 10).replace(/-/g, '')}`,
+                `SUMMARY:${escIcs(`${p.name} — ${statusLabel}`)}`,
+                `DESCRIPTION:${escIcs(`Client: ${p.client.name}\nValue: $${p.amount.toLocaleString()}\nStatus: ${statusLabel}\nProject ID: ${p.id}`)}`,
+                `CATEGORIES:TrueHandover`,
+                `STATUS:${['paid', 'completed'].includes(p.status) ? 'COMPLETED' : 'CONFIRMED'}`,
+                'END:VEVENT',
+            );
+        });
+
+        lines.push('END:VCALENDAR');
+
+        const icsContent = lines.join('\r\n');
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `TrueHandover_Calendar_${new Date().toISOString().slice(0, 10)}.ics`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     // --- DATA PROCESSING ---
 
@@ -157,7 +264,7 @@ const ReportsView = () => {
     const clientRevenue: Record<string, number> = {};
     let totalRevenue = 0;
 
-    // Filter projects based on "One Offs" toggle logic (Mock logic: projects < $500 are one-offs)
+    // Optional filter: treat projects under $500 as one-offs
     const relevantProjects = excludeOneOffs
         ? projects.filter(p => p.amount > 500)
         : projects;
@@ -182,6 +289,19 @@ const ReportsView = () => {
         .sort((a, b) => b.value - a.value)
         .slice(0, 5);
 
+    const latestLiquid = chartData[chartData.length - 1]?.liquid || 0;
+    const previousLiquid = chartData[chartData.length - 2]?.liquid || 0;
+    const trendPct = previousLiquid > 0
+        ? ((latestLiquid - previousLiquid) / previousLiquid) * 100
+        : (latestLiquid > 0 ? 100 : 0);
+    const trendLabel = `${trendPct >= 0 ? '+' : ''}${trendPct.toFixed(1)}%`;
+    const trendIsPositive = trendPct >= 0;
+    const statementMonths = Array.from({ length: 3 }).map((_, i) => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        return `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
+    });
+
     const COLORS = ['#bef264', '#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
 
     // 4. Evidence Locker Data (Recent Transactions)
@@ -191,19 +311,21 @@ const ReportsView = () => {
         client: p.client.name,
         date: new Date(p.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
         status: p.status === 'paid' ? 'Secured' : 'Locked',
+        originalStatus: p.status,
         amount: p.amount,
-        hash: 'e3b0...' + p.id.substring(0, 4)
+        hash: 'e3b0...' + p.id.substring(0, 4),
+        isReal: true,
     }));
 
-    // Add extra mock logs to demonstrate scrolling and satisfy request
-    const mockLogs = [
+    // Keep extra demo-only rows only when mock mode is enabled.
+    const mockLogs = isMockMode() ? [
         { id: 'm1', name: 'Legacy Archive 2022', client: 'Acme Corp', date: 'Oct 12', status: 'Secured', amount: 12500, hash: 'a1b2...9988' },
         { id: 'm2', name: 'Q3 Asset Bundle', client: 'Stark Ind', date: 'Sep 28', status: 'Secured', amount: 8400, hash: 'c3d4...7766' },
         { id: 'm3', name: 'Preliminary Sketches', client: 'Wayne Ent', date: 'Sep 15', status: 'Locked', amount: 3200, hash: 'e5f6...5544' },
         { id: 'm4', name: 'Consultation Record', client: 'Cyberdyne', date: 'Aug 30', status: 'Secured', amount: 1500, hash: 'g7h8...3322' },
         { id: 'm5', name: 'System Audit Log', client: 'Internal', date: 'Aug 12', status: 'Secured', amount: 0, hash: 'i9j0...1100' },
         { id: 'm6', name: 'Beta Access Keys', client: 'Tyrell Corp', date: 'Jul 22', status: 'Locked', amount: 5000, hash: 'k1l2...3344' },
-    ];
+    ] : [];
 
     const evidenceProjects = [...mappedProjects, ...mockLogs];
 
@@ -265,7 +387,7 @@ const ReportsView = () => {
             </div>
 
             {/* --- SECTION 1: THE SUMMARY (Hero Stats — Redesigned) --- */}
-            <div className="relative p-6 lg:p-10 rounded-2xl bg-white dark:bg-[#1a1a24] border border-slate-200 dark:border-white/[0.06] shadow-sm overflow-hidden">
+            <div className="relative p-6 lg:p-10 rounded-[2rem] bg-white dark:bg-charcoal border border-slate-200 dark:border-white/[0.06] shadow-sm dark:shadow-md overflow-hidden">
                 {/* Subtle grain texture */}
                 <div className="absolute inset-0 pointer-events-none rounded-2xl opacity-[0.02] dark:opacity-[0.04]" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
                 {/* Ambient glow */}
@@ -281,10 +403,10 @@ const ReportsView = () => {
                             </PrivacyBlur>
                         </div>
                         <div className="mt-6 flex items-center gap-4">
-                            <span className="inline-flex items-center gap-1 text-lime-600 dark:text-brand bg-lime-100 dark:bg-brand/10 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
-                                <ArrowUpRight className="w-3 h-3" /> +12.5%
+                            <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${trendIsPositive ? 'text-lime-600 dark:text-brand bg-lime-100 dark:bg-brand/10' : 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/20'}`}>
+                                <ArrowUpRight className={`w-3 h-3 ${trendIsPositive ? '' : 'rotate-90'}`} /> {trendLabel}
                             </span>
-                            <span className="text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">vs Previous Period</span>
+                            <span className="text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">vs Previous Month</span>
                         </div>
                     </div>
 
@@ -334,7 +456,7 @@ const ReportsView = () => {
 
                     {/* Capital Flow Engine (Area Chart) */}
                     <div className="lg:col-span-2">
-                        <div className="h-[400px] w-full bg-editorial dark:bg-[#1a1a20] border border-slate-200 dark:border-white/5 rounded-none lg:rounded-3xl p-6 relative overflow-hidden group mb-8 shadow-sm">
+                        <div className="h-[400px] w-full bg-white dark:bg-charcoal border border-slate-200 dark:border-white/5 rounded-none lg:rounded-[2rem] p-6 relative overflow-hidden group mb-8 shadow-sm dark:shadow-md">
                             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: NOISE_SVG }}></div>
 
                             {/* Header within Graph for Context */}
@@ -393,7 +515,7 @@ const ReportsView = () => {
                         <div className="flex flex-col md:flex-row md:items-center gap-6 p-6 bg-editorial dark:bg-white/[0.03] rounded-xl border border-dashed border-slate-200 dark:border-white/10 relative overflow-hidden">
                             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: NOISE_SVG }}></div>
 
-                            <div className="p-4 bg-white dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 flex-shrink-0">
+                            <div className="p-4 bg-white dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 shrink-0">
                                 <Briefcase className="w-6 h-6 text-slate-400" />
                             </div>
 
@@ -501,18 +623,18 @@ const ReportsView = () => {
                     </button>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden bg-white dark:bg-[#1a1a20]">
+                <div className="rounded-[2rem] border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-md overflow-hidden bg-white dark:bg-charcoal">
                     <div className="overflow-y-auto max-h-[400px]">
                         <table className="w-full text-left border-collapse">
-                            <thead className="sticky top-0 z-10 bg-editorial dark:bg-[#1a1a20] shadow-sm">
+                            <thead className="sticky top-0 z-10 bg-editorial dark:bg-charcoal shadow-sm">
                                 <tr className="border-b border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-widest text-obsidian dark:text-white">
-                                    <th className="py-4 pl-6 pr-4 w-32 bg-editorial dark:bg-[#1a1a20]">Date</th>
-                                    <th className="py-4 px-4 w-1/4 bg-editorial dark:bg-[#1a1a20]">Project</th>
-                                    <th className="py-4 px-4 bg-editorial dark:bg-[#1a1a20]">Client</th>
-                                    <th className="py-4 px-4 bg-editorial dark:bg-[#1a1a20]">Status</th>
-                                    <th className="py-4 px-4 hidden md:table-cell bg-editorial dark:bg-[#1a1a20]">Cryptographic Hash</th>
-                                    <th className="py-4 px-4 text-right bg-editorial dark:bg-[#1a1a20]">Amount</th>
-                                    <th className="py-4 pl-4 pr-6 text-right w-40 bg-editorial dark:bg-[#1a1a20]">Action</th>
+                                    <th className="py-4 pl-6 pr-4 w-32 bg-editorial dark:bg-charcoal">Date</th>
+                                    <th className="py-4 px-4 w-1/4 bg-editorial dark:bg-charcoal">Project</th>
+                                    <th className="py-4 px-4 bg-editorial dark:bg-charcoal">Client</th>
+                                    <th className="py-4 px-4 bg-editorial dark:bg-charcoal">Status</th>
+                                    <th className="py-4 px-4 hidden md:table-cell bg-editorial dark:bg-charcoal">Cryptographic Hash</th>
+                                    <th className="py-4 px-4 text-right bg-editorial dark:bg-charcoal">Amount</th>
+                                    <th className="py-4 pl-4 pr-6 text-right w-40 bg-editorial dark:bg-charcoal">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-sm font-medium">
@@ -532,13 +654,49 @@ const ReportsView = () => {
                                             <PrivacyBlur>${item.amount.toLocaleString()}</PrivacyBlur>
                                         </td>
                                         <td className="py-5 pl-4 text-right pr-6">
-                                            <button
-                                                title="Download Chain of Custody PDF"
-                                                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 hover:bg-editorial dark:hover:bg-white/10 hover:text-obsidian dark:hover:text-white transition-colors shadow-sm group/btn w-full justify-center"
-                                            >
-                                                <FileText className="w-3.5 h-3.5 text-slate-400 group-hover/btn:text-obsidian dark:group-hover/btn:text-white" />
-                                                Download Evidence
-                                            </button>
+                                            <div className="flex flex-col gap-1.5">
+                                                {(item as any).isReal ? (
+                                                    <button
+                                                        title="Download Audit Trail PDF"
+                                                        disabled={downloadingPdf === item.id}
+                                                        onClick={() => handleDownloadAuditTrail(item.id, item.name)}
+                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 hover:bg-editorial dark:hover:bg-white/10 hover:text-obsidian dark:hover:text-white transition-colors shadow-sm group/btn w-full justify-center disabled:opacity-50 disabled:cursor-wait"
+                                                    >
+                                                        <FileText className="w-3.5 h-3.5 text-slate-400 group-hover/btn:text-obsidian dark:group-hover/btn:text-white" />
+                                                        {downloadingPdf === item.id ? 'Generating…' : 'Audit Trail PDF'}
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        title="Demo row — no PDF"
+                                                        disabled
+                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-slate-400 transition-colors shadow-sm group/btn w-full justify-center opacity-40 cursor-not-allowed"
+                                                    >
+                                                        <FileText className="w-3.5 h-3.5" />
+                                                        Demo Row
+                                                    </button>
+                                                )}
+                                                {(item as any).isReal && (item as any).originalStatus === 'awaiting_payment' && (
+                                                    <button
+                                                        title="Send payment reminder to client"
+                                                        disabled={sendingNudge === item.id}
+                                                        onClick={() => handleSendNudge(item.id)}
+                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm group/btn w-full justify-center disabled:opacity-50 disabled:cursor-wait bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40"
+                                                    >
+                                                        {sendingNudge === item.id ? 'Sending…' : nudgeMsg?.id === item.id ? (nudgeMsg.ok ? '✓ Sent!' : '✗ Failed') : 'Send Reminder'}
+                                                    </button>
+                                                )}
+                                                {(item as any).isReal && ((item as any).originalStatus === 'paid' || (item as any).originalStatus === 'completed') && (
+                                                    <button
+                                                        title="Download Rights Transfer Certificate"
+                                                        disabled={downloadingRights === item.id}
+                                                        onClick={() => handleDownloadRightsTransfer(item.id, item.name)}
+                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm group/btn w-full justify-center disabled:opacity-50 disabled:cursor-wait bg-lime-50 dark:bg-lime-900/20 border border-lime-200 dark:border-lime-700/30 text-lime-700 dark:text-lime-400 hover:bg-lime-100 dark:hover:bg-lime-900/40"
+                                                    >
+                                                        <FileCheck className="w-3.5 h-3.5" />
+                                                        {downloadingRights === item.id ? 'Generating…' : 'Rights Certificate'}
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -567,7 +725,7 @@ const ReportsView = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
                     {/* Monthly Statements */}
-                    <div className="p-8 border border-slate-200 dark:border-white/10 rounded-2xl flex flex-col justify-between bg-white dark:bg-[#1a1a20] relative overflow-hidden group">
+                    <div className="p-8 border border-slate-200 dark:border-white/5 rounded-[2rem] shadow-sm dark:shadow-md flex flex-col justify-between bg-white dark:bg-charcoal relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-6 opacity-50"><FileDigit className="w-12 h-12 text-slate-100 dark:text-white/5 -rotate-12" /></div>
                         <div className="relative z-10">
                             <h4 className="font-serif text-xl font-bold text-obsidian dark:text-white mb-2">Monthly Statement</h4>
@@ -575,9 +733,9 @@ const ReportsView = () => {
                             <div className="flex gap-3">
                                 <div className="relative flex-1">
                                     <select className="w-full appearance-none bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold px-4 py-3 outline-none text-obsidian dark:text-white cursor-pointer hover:border-slate-200 transition-colors">
-                                        <option className="bg-white dark:bg-[#1a1a20] text-obsidian dark:text-white">October 2023</option>
-                                        <option className="bg-white dark:bg-[#1a1a20] text-obsidian dark:text-white">September 2023</option>
-                                        <option className="bg-white dark:bg-[#1a1a20] text-obsidian dark:text-white">August 2023</option>
+                                        {statementMonths.map((label) => (
+                                            <option key={label} className="bg-white dark:bg-charcoal text-obsidian dark:text-white">{label}</option>
+                                        ))}
                                     </select>
                                     <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
                                 </div>
@@ -589,18 +747,42 @@ const ReportsView = () => {
                     </div>
 
                     {/* Tax Ledger */}
-                    <div className="p-8 border border-slate-200 dark:border-white/10 rounded-2xl flex flex-col justify-between bg-white dark:bg-[#1a1a20] relative overflow-hidden group">
+                    <div className="p-8 border border-slate-200 dark:border-white/5 rounded-[2rem] shadow-sm dark:shadow-md flex flex-col justify-between bg-white dark:bg-charcoal relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-6 opacity-50"><Landmark className="w-12 h-12 text-slate-100 dark:text-white/5 -rotate-12" /></div>
                         <div className="relative z-10">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h4 className="font-serif text-xl font-bold text-obsidian dark:text-white mb-2">Tax Ledger (FY 2023)</h4>
+                                    <h4 className="font-serif text-xl font-bold text-obsidian dark:text-white mb-2">Tax Ledger (FY {new Date().getFullYear()})</h4>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 max-w-sm">Fiscal year transaction export formatted for tax filing software.</p>
                                 </div>
                                 <span className="text-[10px] font-bold uppercase bg-slate-200 dark:bg-white/10 text-slate-500 px-2 py-1 rounded">CSV</span>
                             </div>
                             <button className="w-full flex items-center justify-center gap-2 px-5 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-editorial dark:hover:bg-white/5 transition-colors group/btn">
                                 Export Annual Ledger <Download className="w-3.5 h-3.5 group-hover/btn:translate-y-0.5 transition-transform" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Calendar Feed */}
+                    <div className="p-8 border border-slate-200 dark:border-white/5 rounded-[2rem] shadow-sm dark:shadow-md flex flex-col justify-between bg-white dark:bg-charcoal relative overflow-hidden group col-span-full md:col-span-1">
+                        <div className="absolute top-0 right-0 p-6 opacity-50"><Calendar className="w-12 h-12 text-slate-100 dark:text-white/5 -rotate-12" /></div>
+                        <div className="relative z-10">
+                            <h4 className="font-serif text-xl font-bold text-obsidian dark:text-white mb-2">Calendar Feed</h4>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 max-w-sm">
+                                Download an .ics file of all project due dates. Import into Google Calendar, Apple Calendar, or Outlook.
+                            </p>
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                    <span className="w-2 h-2 rounded-full bg-lime-500" />
+                                    {projects.filter(p => p.dueDate).length} events
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleDownloadICS}
+                                className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-obsidian dark:bg-white text-white dark:text-black rounded-xl text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg group/btn"
+                            >
+                                <Calendar className="w-3.5 h-3.5" />
+                                Download .ics File
                             </button>
                         </div>
                     </div>

@@ -65,9 +65,26 @@ serve(async (req) => {
       (files || []).map(async (f: DbFile) => {
         const lockedEffective = Boolean(f.locked) || !paid;
 
+        // Route native image previews through the watermark proxy so the raw
+        // R2 URL is never sent to the browser. Non-image and BYOS files
+        // continue to use direct presigned URLs (or the external URL as-is).
+        const fileMimeType = String(f.type || "").toLowerCase();
+        const isWatermarkableImage = [
+          "image/jpeg", "image/jpg", "image/png",
+          "image/webp", "image/gif", "image/avif",
+        ].includes(fileMimeType);
+
         let previewUrl: string | undefined;
         if (f.storage_provider === "native" && f.preview_url) {
-          previewUrl = (await signR2GetObject({ key: f.preview_url, expiresInSeconds: 600 })).url;
+          if (isWatermarkableImage && project.show_watermark !== false) {
+            // Proxy URL — watermark is burned server-side; raw R2 URL stays private
+            const supabaseUrl = (Deno.env.get("SUPABASE_URL") || "").replace(/\/$/, "");
+            previewUrl =
+              `${supabaseUrl}/functions/v1/r2-watermark-proxy` +
+              `?clientLink=${encodeURIComponent(token)}&fileId=${encodeURIComponent(f.id)}`;
+          } else {
+            previewUrl = (await signR2GetObject({ key: f.preview_url, expiresInSeconds: 600 })).url;
+          }
         } else {
           previewUrl = f.preview_url || undefined;
         }

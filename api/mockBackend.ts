@@ -42,7 +42,7 @@ export const AuditService = {
             ip: '10.0.0.1', // Mock Client IP
             metadata
         };
-        console.log(`[Audit Trail] New Entry:`, entry);
+
         AuditService.logs.push(entry);
         return entry;
     },
@@ -52,7 +52,7 @@ export const AuditService = {
      * This is the "Evidence Pack" in the roadmap.
      */
     generateEvidencePack: async (projectId: string): Promise<{ url: string; filename: string }> => {
-        console.log(`[Audit Service] Generating Evidence Pack for ${projectId}...`);
+
 
         // Filter logs
         // Note: For demo, if projectId is not found, we just return all logs or a sample set
@@ -100,7 +100,7 @@ export const StorageService = {
      * This replaces the previous mock implementation with real storage calls.
      */
     uploadFileToNativeStorage: async (file: File): Promise<{ key: string; size: string; url: string }> => {
-        console.log(`[Backend] Initiating Native R2 Upload for ${file.name}...`);
+
 
         // Production posture: never upload to R2 directly from the browser using secret keys.
         // True uploads are performed via Supabase Edge Function presigned URLs in `services/r2.ts`.
@@ -141,7 +141,7 @@ export const ProcessingService = {
      * In prod: Uses 'sharp' for images or 'ffmpeg' for video to burn in the watermark.
      */
     generateWatermarkedPreview: async (file: File): Promise<string> => {
-        console.log(`[Processing Worker] Job started: Watermarking ${file.name}...`);
+
 
         // Use the WatermarkService to actually generate a visual result
         if (file.type.startsWith('image/')) {
@@ -154,7 +154,7 @@ export const ProcessingService = {
 
         await new Promise(resolve => setTimeout(resolve, processingTime));
 
-        console.log(`[Processing Worker] Job complete. Preview generated.`);
+
 
         // For video/other, return original for now (mock)
         return URL.createObjectURL(file);
@@ -164,7 +164,7 @@ export const ProcessingService = {
      * Simulates zipping all assets for a "Download All" button.
      */
     createSecureZip: async (fileKeys: string[]): Promise<string> => {
-        console.log(`[Processing Worker] Zipping ${fileKeys.length} files...`);
+
         await new Promise(resolve => setTimeout(resolve, 3000));
         return `https://cdn.truehandover.com/downloads/package_${Date.now()}.zip`;
     }
@@ -176,7 +176,7 @@ export const StripeConnectService = {
      * Simulates the OAuth flow to onboard a freelancer.
      */
     createConnectAccount: async (email: string) => {
-        console.log(`[Stripe Connect] Initializing OAuth for ${email}...`);
+
         return {
             url: `https://connect.stripe.com/oauth/authorize?response_type=code&client_id=ca_mock_123&scope=read_write&state=${btoa(email)}`,
             mockAccountId: `acct_mock_${Math.random().toString(36).substr(2, 9)}`
@@ -187,7 +187,7 @@ export const StripeConnectService = {
      * Mocks the dashboard link generation for users to view their payouts.
      */
     getDashboardLoginLink: async (accountId: string) => {
-        console.log(`[Stripe Connect] Generating dashboard link for ${accountId}...`);
+
         return {
             url: `https://dashboard.stripe.com/test/dashboard`
         };
@@ -213,8 +213,8 @@ export const PaymentService = {
                 const user = JSON.parse(storedUser);
                 if (user.stripeConnect?.connected && user.stripeConnect?.accountId) {
                     connectedAccountIdResolved = user.stripeConnect.accountId;
-                    console.log(`[Stripe Connect] 🟢 FOUND CONNECTED ACCOUNT: ${connectedAccountIdResolved}`);
-                    console.log(`[Stripe Connect] In Production, charges would be routed to this account via transfer_data.`);
+
+
                 }
             }
         } catch (e) {
@@ -232,15 +232,15 @@ export const PaymentService = {
         // What the freelancer actually sees in their dashboard
         const freelancerNet = amount - applicationFee - stripeProcessingFee;
 
-        console.log('--- [Stripe Direct Routing Ledger] ---');
-        console.log(`Transaction ID: tx_${Math.random().toString(36).substr(2, 9)}`);
-        console.log(`Routing Mode: ${connectedAccountIdResolved !== connectedAccountId ? 'Connected Account (Real)' : 'Platform Mock (Test)'}`);
-        console.log(`Connected Account: ${connectedAccountIdResolved}`);
-        console.log(`Total Client Charge: $${amount.toFixed(2)}`);
-        console.log(`Platform Fee (TrueHandover): $${applicationFee.toFixed(2)}`);
-        console.log(`Stripe Processing (Est): $${stripeProcessingFee.toFixed(2)}`);
-        console.log(`>>> DIRECT TRANSFER to Connected Account (${connectedAccountIdResolved}): $${freelancerNet.toFixed(2)}`);
-        console.log('--------------------------------------');
+
+
+
+
+
+
+
+
+
 
         // Log to Audit Trail
         AuditService.logEvent('pending_project_id', 'PAYMENT_SESSION_INIT', {
@@ -261,7 +261,7 @@ export const PaymentService = {
      * Transitions a project from 'payment_verification' to 'paid'.
      */
     verifyManualPayment: async (projectId: string) => {
-        console.log(`[Digital Handshake] Verifying manual payment for ${projectId}...`);
+
 
         // Simulate API latency
         await new Promise(resolve => setTimeout(resolve, 800));
@@ -271,7 +271,7 @@ export const PaymentService = {
             timestamp: new Date().toISOString()
         });
 
-        console.log(`[Digital Handshake] Success. Assets unlocked.`);
+
         return { success: true, status: 'paid' };
     }
 };
@@ -284,7 +284,7 @@ export const WatermarkService = {
      * or a client-side pre-processor before upload.
      */
     applyWatermark: async (file: File, text: string = "PROTECTED PREVIEW"): Promise<string> => {
-        console.log(`[Watermark Service] Processing ${file.name}...`);
+
 
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -893,7 +893,7 @@ export const CredentialService = {
      * Returns a safe reference ID.
      */
     vaultStore: async (plaintext: string): Promise<string> => {
-        console.log(`[Credential Vault] Encrypting sensitive data...`);
+
         // Mock encryption: Base64 encode + salt
         const salt = Math.random().toString(36).substring(7);
         const encrypted = btoa(plaintext); // In prod: AES-256
@@ -910,7 +910,7 @@ export const CredentialService = {
      * This simulates the key release mechanism.
      */
     vaultRetrieve: async (vaultId: string, projectStatus: Project['status']): Promise<{ success: boolean, data?: string, error?: string }> => {
-        console.log(`[Credential Vault] Access request for ${vaultId}. Status: ${projectStatus}`);
+
 
         // Security Gate
         if (projectStatus !== 'paid' && projectStatus !== 'completed') {

@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+/* Class-based dark mode — driven by .dark on <html>, not by OS preference */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Give every interactive element a pointer cursor by default */
+@layer base {
+  button,
+  a,
+  [role="button"],
+  [role="tab"],
+  [role="switch"],
+  [role="menuitem"],
+  [role="menuitemradio"],
+  [role="option"],
+  select,
+  summary {
+    cursor: pointer;
+  }
+
+  /* On-brand keyboard focus rings — only shown for keyboard navigation */
+  :focus-visible {
+    outline: 2px solid #84cc16;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Inputs use the lime border style instead of an outline ring */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #84cc16;
+  }
+}
+
+@theme {
+  /* ── Base Colors ── */
+  --color-cosmic: #323242;
+  --color-obsidian: #0f0f15;
+  --color-charcoal: #23232e;
+  --color-surface: #2D2E45;
+  --color-editorial: #F8FAFC;
+
+  /* ── Brand Colors ── */
+  --color-brand: #bef264;
+  --color-brand-hover: #a3e635;
+  --color-brand-glow: rgba(190, 242, 100, 0.5);
+
+  /* ── Typography ── */
+  --font-sans: "Space Grotesk", sans-serif;
+  --font-serif: "Playfair Display", "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* ── Animations ── */
+  --animate-fade-in: fadeIn 0.6s ease-out;
+  --animate-slide-up: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-ticker: ticker 545s linear infinite;
+  --animate-blob: blob 7s infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-sheet-up: sheetUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-sheet-down: sheetDown 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+  --animate-route-in: routeIn 0.18s ease-out;
+
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes slideUp {
+    0% { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes sheetUp {
+    0% { transform: translateY(100%); }
+    100% { transform: translateY(0); }
+  }
+  @keyframes sheetDown {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(100%); opacity: 0; }
+  }
+  @keyframes routeIn {
+    0%  { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+}

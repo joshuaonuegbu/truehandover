@@ -392,8 +392,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                             24;
 
     const iframeSrc = useMemo(() => {
-        const base = window.location.origin + window.location.pathname;
-        return `${base}#/preview/${project.id}?raw=1&theme=${themeMode || 'system'}&pt=${statusBarHeightPx}&pb=20&device=${deviceMode}`;
+        return `${window.location.origin}/preview/${project.id}?raw=1&theme=${themeMode || 'system'}&pt=${statusBarHeightPx}&pb=20&device=${deviceMode}`;
     }, [project.id, themeMode, deviceMode, statusBarHeightPx]);
 
     // Live-sync the canvas iframe with the current project data (important for Creator/editor embedded previews).

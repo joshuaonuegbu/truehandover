@@ -53,6 +53,9 @@ export interface ProjectTheme {
     brightness: 'dark' | 'light';
     pattern?: 'lines' | 'dots' | 'grid' | 'waves' | 'none' | 'plus' | 'circuit' | 'rhombus';
     showGrain?: boolean;
+    brandPrimary?: string;
+    brandAccent?: string;
+    brandLogoUrl?: string;
 }
 
 export interface ProjectPaymentMethods {
@@ -71,6 +74,8 @@ export interface AccessConfig {
     mode: 'permanent' | '7_day' | 'one_time';
     expiresAt?: string; // ISO String
     viewCount?: number;
+    scopeCreepPaused?: boolean;
+    pauseReason?: string;
 }
 
 export interface Project {
@@ -107,19 +112,31 @@ export interface AgencySettings {
     removeBranding: boolean;
     dataRetentionDays: number;
     supportEmail: string;
+    brandKits?: Record<string, {
+        primaryColor?: string;
+        accentColor?: string;
+        logoUrl?: string;
+        notes?: string;
+        updatedAt?: string;
+    }>;
 }
 
 export interface StorageSettings {
-    /**
-     * Production posture:
-     * - Platform storage (private R2) is handled via server-issued presigned URLs.
-     * - Do not store any cloud OAuth tokens or S3/R2 secret keys in the browser or in `profiles.storage_settings`.
-     */
-    mode: 'platform';
-
-    // Optional non-sensitive BYOS label (links-only workflow; no OAuth tokens stored client-side).
+    provider: 'custom' | 'aws' | 'r2' | 'wasabi' | 'spaces';
+    endpoint: string;
+    bucket: string;
+    accessKey: string;
+    secretKey?: string;
+    region?: string;
+    accountId?: string;
     byosDriveProvider?: 'google' | 'dropbox' | 'onedrive';
-    byosDriveAccountLabel?: string;
+    byosGoogleToken?: string;
+    byosGoogleApiKey?: string;
+    byosDropboxToken?: string;
+    byosOneDriveToken?: string;
+    byosGoogleAccountLabel?: string;
+    byosDropboxAccountLabel?: string;
+    byosOneDriveAccountLabel?: string;
 }
 
 export interface UserProfile {

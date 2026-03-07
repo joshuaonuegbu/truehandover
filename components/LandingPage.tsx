@@ -155,7 +155,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
 
                     {/* Sign In Button - Black in Light Mode, White in Dark Mode */}
                     <button
-                        onClick={() => { playClick(); handleClose(); window.location.hash = '#/signin'; }}
+                        onClick={() => { playClick(); handleClose(); window.location.href = '/signin'; }}
                         className="px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest transition-all shadow-lg hover:scale-105 bg-black text-white hover:bg-obsidian dark:bg-white dark:text-black dark:hover:bg-slate-200"
                     >
                         Sign In
@@ -217,7 +217,6 @@ const BentoCard = ({ children, className = "", title, subtitle, icon: Icon }: { 
 // I will include them to ensure the file is complete and works.
 
 const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () => void, currentTheme: 'light' | 'dark' | 'system', onSetThemeMode: (mode: 'light' | 'dark' | 'system') => void, isHidden: boolean }) => {
-    // ... [Same implementation as before] ...
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const scrollTo = (id: string) => {
@@ -229,7 +228,6 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
     return (
         <nav
             className={`fixed top-0 left-0 right-0 z-50 px-6 pb-6 transition-all duration-500 ${isHidden ? 'opacity-0 -translate-y-full pointer-events-none' : 'opacity-100 translate-y-0'}`}
-            // Nudge the nav pill down slightly so it never feels cramped against the status bar.
             style={{ paddingTop: 'max(32px, calc(env(safe-area-inset-top, 0px) + 18px))' }}
         >
             <div className="max-w-[1200px] mx-auto bg-white/80 dark:bg-[#0E0E11]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
@@ -245,16 +243,8 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
                 </div>
 
                 <div className="hidden md:flex items-center gap-3">
-                    <ThemeModeDropdown
-                        themeMode={currentTheme}
-                        onChange={(mode) => { playClick(); onSetThemeMode(mode); }}
-                        isDarkMode={currentTheme === 'dark'}
-                        compact
-                        buttonClassName="w-11 h-11 lg:w-12 lg:h-12 rounded-full flex items-center justify-center text-slate-500 hover:text-black dark:text-slate-300 dark:hover:text-white bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 shadow-lg transition-all hover:scale-105"
-                    />
-
                     <button
-                        onClick={() => { playClick(); window.location.hash = '#/signin'; }}
+                        onClick={() => { playClick(); window.location.href = '/signin'; }}
                         className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors px-3 py-2"
                     >
                         Sign In
@@ -270,13 +260,6 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
 
                 {/* Mobile Menu Toggle */}
                 <div className="flex md:hidden items-center gap-3">
-                    <ThemeModeDropdown
-                        themeMode={currentTheme}
-                        onChange={(mode) => { playClick(); onSetThemeMode(mode); }}
-                        isDarkMode={currentTheme === 'dark'}
-                        compact
-                        buttonClassName="p-2 rounded-full text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all flex items-center"
-                    />
                     <button
                         onClick={() => { playClick(); setIsMenuOpen(!isMenuOpen); }}
                         className="p-2 rounded-full text-obsidian dark:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all duration-300"
@@ -302,9 +285,20 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
                         <button onClick={() => scrollTo('pricing')} className="text-lg font-serif text-obsidian dark:text-white text-left px-2">Pricing</button>
                     </div>
                     <div className="h-px bg-slate-200 dark:bg-white/10 w-full" />
+                    <div className="flex items-center justify-between px-2">
+                        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Theme</span>
+                        <ThemeModeDropdown
+                            themeMode={currentTheme}
+                            onChange={(mode) => { playClick(); onSetThemeMode(mode); }}
+                            isDarkMode={currentTheme === 'dark'}
+                            align="right"
+                            buttonClassName="p-2.5 rounded-full text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 transition-all"
+                        />
+                    </div>
+                    <div className="h-px bg-slate-200 dark:bg-white/10 w-full" />
                     <div className="flex flex-col gap-4">
                         <button
-                            onClick={() => { setIsMenuOpen(false); window.location.hash = '#/signin'; }}
+                            onClick={() => { setIsMenuOpen(false); window.location.href = '/signin'; }}
                             className="w-full py-4 rounded-xl border border-slate-200 dark:border-white/10 text-obsidian dark:text-white font-bold text-xs uppercase tracking-widest"
                         >
                             Sign In
@@ -841,11 +835,11 @@ const BentoGrid = () => {
                     </BentoCard>
 
                     {/* 5 & 6. VERTICAL STACK: STORAGE FREEDOM & SMART CONTRACTS */}
-                    <div className="md:col-span-6 lg:col-span-4 flex flex-col gap-6 h-[540px]">
+                    <div className="md:col-span-6 lg:col-span-4 flex flex-col gap-6 min-h-[540px]">
 
                         {/* 5. STORAGE FREEDOM (Compressed) */}
-                        <BentoCard className="h-[258px]" title="Storage Freedom" subtitle="BYOS (Bring Your Own Storage)" icon={HardDrive}>
-                            <div className="p-6 pt-0 h-full flex flex-col justify-between">
+                        <BentoCard className="min-h-[258px]" title="Storage Freedom" subtitle="BYOS (Bring Your Own Storage)" icon={HardDrive}>
+                            <div className="p-6 pt-0 flex flex-col justify-between gap-4">
                                 <p className="text-slate-600 dark:text-slate-200 text-xs leading-relaxed mb-4">
                                     All paid plans support BYOS links (Bring Your Own Storage). Paste your own S3/Drive/Dropbox share links so you keep full custody of the originals. (Connectors coming soon.)
                                 </p>
@@ -879,7 +873,7 @@ const BentoGrid = () => {
                         </BentoCard>
 
                         {/* 6. SMART CONTRACTS (New) */}
-                        <BentoCard className="h-[258px]" title="Formal Sign-off" subtitle="Integrated Signatures" icon={PenTool}>
+                        <BentoCard className="min-h-[258px]" title="Formal Sign-off" subtitle="Integrated Signatures" icon={PenTool}>
                             <div className="p-6 pt-0 h-full flex flex-col">
                                 <p className="text-slate-600 dark:text-slate-200 text-xs leading-relaxed mb-4">
                                     Require a digital signature approval before assets are unlocked.
@@ -1368,6 +1362,23 @@ export default function LandingPage({ onGetStarted, currentTheme, onSetThemeMode
 
     return (
         <div className="min-h-screen bg-editorial dark:bg-[#0E0E11] text-black dark:text-white font-sans selection:bg-brand selection:text-black transition-colors duration-700">
+            {/* Floating Theme Toggle — desktop only, aligned to the right edge of the nav pill */}
+            <div
+                className="fixed left-0 right-0 z-[999] hidden md:flex pointer-events-none px-6"
+                style={{ paddingTop: 'max(32px, calc(env(safe-area-inset-top, 0px) + 18px))' }}
+            >
+                <div className="max-w-[1200px] mx-auto w-full flex justify-end pointer-events-none">
+                    <div className="translate-x-14 py-3 pointer-events-auto">
+                        <ThemeModeDropdown
+                            themeMode={currentTheme}
+                            onChange={onSetThemeMode || (() => toggleTheme?.())}
+                            isDarkMode={currentTheme === 'dark'}
+                            align="right"
+                            buttonClassName="w-11 h-11 rounded-full flex items-center justify-center text-slate-500 hover:text-black dark:text-slate-300 dark:hover:text-white bg-white/80 dark:bg-[#0E0E11]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 shadow-2xl transition-all hover:scale-105"
+                        />
+                    </div>
+                </div>
+            </div>
             {/* Nav receives isHidden prop to create cinema mode */}
             <Nav onStart={onGetStarted} currentTheme={currentTheme} onSetThemeMode={onSetThemeMode || (() => toggleTheme?.())} isHidden={isVideoOpen} />
             <main>
