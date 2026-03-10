@@ -9,7 +9,7 @@ import {
     User, Layers, Bell, Shield, Zap, CircleDollarSign, Eye,
     FlaskConical, RefreshCw
 } from 'lucide-react';
-import { isMockMode, setMockMode } from '../config/mockMode';
+import { canToggleMockMode, isMockMode, setMockMode } from '../config/mockMode';
 import { UserProfile, StorageSettings } from '../types';
 import { playClick, playSuccess } from '../utils/sound';
 import { Card, Badge, GRADIENT_TEXT, InlineErrorBanner } from './Shared';
@@ -85,7 +85,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
     const [activeTab, setActiveTab] = useState<'profile' | 'payments' | 'agency' | 'storage' | 'developer'>('profile');
     const [demoMode, setDemoMode] = useState(isMockMode());
     const [isSaving, setIsSaving] = useState(false);
-    const showDeveloperTools = import.meta.env.DEV === true;
+    const showDeveloperTools = canToggleMockMode();
 
     // Handlers
     const handleChange = (field: string, value: any) => {

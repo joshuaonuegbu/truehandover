@@ -28,7 +28,7 @@ import {
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, BarChart, Bar, Cell, Legend, ReferenceLine, YAxis, Pie, PieChart as RePieChart } from 'recharts';
 import { QRCodeSVG } from 'qrcode.react';
 import { playClick, playSuccess } from './utils/sound';
-import { isMockMode, setMockMode, setMockModeAndNavigate } from './config/mockMode';
+import { canToggleMockMode, isMockMode, setMockMode, setMockModeAndNavigate } from './config/mockMode';
 // Critical path — loaded eagerly (needed before auth resolves)
 import LandingPage from './components/LandingPage';
 import SignInPage from './components/SignInPage';
@@ -1994,12 +1994,17 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
             { id: 'route-settings', title: 'Settings', subtitle: 'Profile and integrations', icon: Settings, action: () => navigate('/settings') },
         ]), [navigate]);
 
-        const commandItems = useMemo(() => ([
-            { id: 'cmd-create', title: 'Create Project', subtitle: 'Start a new handover', icon: Plus, action: () => navigate('/create'), kind: 'Action' },
-            { id: 'cmd-theme', title: 'Toggle Theme', subtitle: 'Switch between light and dark mode', icon: themeMode === 'dark' ? Sun : Moon, action: () => { onSetThemeMode(themeMode === 'dark' ? 'light' : 'dark'); }, kind: 'Action' },
-            { id: 'cmd-privacy', title: 'Toggle Privacy', subtitle: 'Hide sensitive financial data', icon: privacyMode ? Eye : EyeOff, action: togglePrivacyMode, kind: 'Action' },
-            { id: 'cmd-mock', title: 'Toggle Demo Data', subtitle: 'Switch between real and mock data', icon: Database, action: () => handleDemoModeToggle(!demoMode), kind: 'Action' },
-        ]), [navigate, themeMode, privacyMode, demoMode, onSetThemeMode, togglePrivacyMode, handleDemoModeToggle]);
+        const commandItems = useMemo(() => {
+            const items: any[] = [
+                { id: 'cmd-create', title: 'Create Project', subtitle: 'Start a new handover', icon: Plus, action: () => navigate('/create'), kind: 'Action' },
+                { id: 'cmd-theme', title: 'Toggle Theme', subtitle: 'Switch between light and dark mode', icon: themeMode === 'dark' ? Sun : Moon, action: () => { onSetThemeMode(themeMode === 'dark' ? 'light' : 'dark'); }, kind: 'Action' },
+                { id: 'cmd-privacy', title: 'Toggle Privacy', subtitle: 'Hide sensitive financial data', icon: privacyMode ? Eye : EyeOff, action: togglePrivacyMode, kind: 'Action' },
+            ];
+            if (canToggleMockMode()) {
+                items.push({ id: 'cmd-mock', title: 'Toggle Demo Data', subtitle: 'Switch between real and mock data', icon: Database, action: () => handleDemoModeToggle(!demoMode), kind: 'Action' });
+            }
+            return items;
+        }, [navigate, themeMode, privacyMode, demoMode, onSetThemeMode, togglePrivacyMode, handleDemoModeToggle]);
 
         const normalized = query.trim().toLowerCase();
 
@@ -2346,19 +2351,21 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
                             />
 
                             {/* Data source toggle (Mock <-> Real) */}
-                            <button
-                                onClick={() => {
-                                    playClick();
-                                    handleDemoModeToggle(!demoMode);
-                                }}
-                                className={`px-3 py-2.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all ${demoMode
-                                    ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-700/30 dark:text-amber-300'
-                                    : 'bg-lime-50 border-lime-200 text-lime-700 dark:bg-lime-900/20 dark:border-lime-700/30 dark:text-lime-300'
-                                    }`}
-                                title={demoMode ? 'Switch to real backend data' : 'Switch to mock demo data'}
-                            >
-                                {demoMode ? 'Mock Data' : 'Real Data'}
-                            </button>
+                            {canToggleMockMode() && (
+                                <button
+                                    onClick={() => {
+                                        playClick();
+                                        handleDemoModeToggle(!demoMode);
+                                    }}
+                                    className={`px-3 py-2.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all ${demoMode
+                                        ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-700/30 dark:text-amber-300'
+                                        : 'bg-lime-50 border-lime-200 text-lime-700 dark:bg-lime-900/20 dark:border-lime-700/30 dark:text-lime-300'
+                                        }`}
+                                    title={demoMode ? 'Switch to real backend data' : 'Switch to mock demo data'}
+                                >
+                                    {demoMode ? 'Mock Data' : 'Real Data'}
+                                </button>
+                            )}
 
                             <div className="h-6 w-px bg-slate-300 dark:bg-white/10 mx-1 hidden sm:block" />
 

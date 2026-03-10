@@ -8,7 +8,7 @@ import {
 import { playClick, playSuccess } from '../utils/sound';
 import { InlineErrorBanner } from './Shared';
 import { supabase } from '../services/supabaseClient';
-import { setMockModeAndNavigate } from '../config/mockMode';
+import { canToggleMockMode, setMockModeAndNavigate } from '../config/mockMode';
 
 const EditorialIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 32 32" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -183,7 +183,11 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
         playClick();
 
         if (signInSource === 'mode-switch') {
-            setMockModeAndNavigate(true, returnTo);
+            if (canToggleMockMode()) {
+                setMockModeAndNavigate(true, returnTo);
+                return;
+            }
+            navigate(returnTo, { replace: true });
             return;
         }
 
