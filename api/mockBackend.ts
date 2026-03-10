@@ -565,13 +565,11 @@ export const ByosLinkService = {
         customName,
         customSize,
         typeHint,
-        storageConfig
     }: {
         url: string;
         customName?: string;
         customSize?: string;
         typeHint?: FileAsset['type'];
-        storageConfig?: StorageSettings;
     }): Promise<FileAsset> => {
         const trimmed = (url || '').trim();
         if (!trimmed) throw new Error('A URL is required.');

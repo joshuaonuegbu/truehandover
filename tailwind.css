@@ -5,6 +5,14 @@
 
 /* Give every interactive element a pointer cursor by default */
 @layer base {
+  :root {
+    --color-lime-600: #65a30d;
+  }
+
+  .dark {
+    --color-lime-600: #65a30d;
+  }
+
   button,
   a,
   [role="button"],
@@ -20,7 +28,7 @@
 
   /* On-brand keyboard focus rings — only shown for keyboard navigation */
   :focus-visible {
-    outline: 2px solid #84cc16;
+    outline: 2px solid var(--color-lime-600);
     outline-offset: 2px;
     border-radius: 6px;
   }
@@ -30,7 +38,7 @@
   textarea:focus-visible,
   select:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px #84cc16;
+    box-shadow: 0 0 0 2px var(--color-lime-600);
   }
 }
 

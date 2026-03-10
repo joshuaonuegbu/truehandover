@@ -17,6 +17,7 @@ CREATE TABLE public.profiles (
     payment_methods JSONB DEFAULT '{}'::jsonb,
     agency_settings JSONB DEFAULT '{}'::jsonb,
     storage_settings JSONB DEFAULT '{}'::jsonb,
+    profile_preferences JSONB DEFAULT '{"emailAlerts": true, "pushNotifs": false, "twoFactor": true, "biometric": true}'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

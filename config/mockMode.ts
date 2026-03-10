@@ -24,3 +24,8 @@ export const setMockMode = (value: boolean): void => {
     localStorage.setItem(MOCK_MODE_KEY, String(value));
     window.location.reload();
 };
+
+export const setMockModeAndNavigate = (value: boolean, path: string): void => {
+    localStorage.setItem(MOCK_MODE_KEY, String(value));
+    window.location.assign(path);
+};

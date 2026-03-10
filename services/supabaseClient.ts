@@ -35,6 +35,7 @@ export interface DatabaseProfile {
     payment_methods: any;
     agency_settings: any;
     storage_settings: any;
+    profile_preferences: any;
 }
 
 export interface DatabaseProject {

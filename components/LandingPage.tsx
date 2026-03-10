@@ -155,7 +155,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
 
                     {/* Sign In Button - Black in Light Mode, White in Dark Mode */}
                     <button
-                        onClick={() => { playClick(); handleClose(); window.location.href = '/signin'; }}
+                        onClick={() => { playClick(); handleClose(); window.location.href = '/signin?from=landing'; }}
                         className="px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest transition-all shadow-lg hover:scale-105 bg-black text-white hover:bg-obsidian dark:bg-white dark:text-black dark:hover:bg-slate-200"
                     >
                         Sign In
@@ -244,7 +244,7 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
 
                 <div className="hidden md:flex items-center gap-3">
                     <button
-                        onClick={() => { playClick(); window.location.href = '/signin'; }}
+                        onClick={() => { playClick(); window.location.href = '/signin?from=landing'; }}
                         className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors px-3 py-2"
                     >
                         Sign In
@@ -298,7 +298,7 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
                     <div className="h-px bg-slate-200 dark:bg-white/10 w-full" />
                     <div className="flex flex-col gap-4">
                         <button
-                            onClick={() => { setIsMenuOpen(false); window.location.href = '/signin'; }}
+                            onClick={() => { setIsMenuOpen(false); window.location.href = '/signin?from=landing'; }}
                             className="w-full py-4 rounded-xl border border-slate-200 dark:border-white/10 text-obsidian dark:text-white font-bold text-xs uppercase tracking-widest"
                         >
                             Sign In

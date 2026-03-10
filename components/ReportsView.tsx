@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 import {
     TrendingUp, Download, Lock, CheckCircle,
     Activity as ActivityIcon, PieChart, ArrowUpRight,
@@ -12,7 +12,7 @@ import {
     AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
     CartesianGrid, PieChart as RePieChart, Pie, Cell, ReferenceLine
 } from 'recharts';
-import { GRADIENT_TEXT, Card } from './Shared';
+import { GRADIENT_TEXT, Card, InlineErrorBanner } from './Shared';
 import { useStore } from '../context/StoreContext';
 import { DB } from '../services/supabaseClient';
 import { playClick } from '../utils/sound';
@@ -41,7 +41,7 @@ const PrivacyBlur = ({ children, className = "", strength = 'normal' }: { childr
     }, [children, isScrambling, isBlurred]);
 
     useEffect(() => {
-        const chars = '0123456789$£€%&@#';
+        const chars = '0123456789$%&@#';
         const maxIterations = 12;
         let iteration = 0;
 
@@ -117,19 +117,87 @@ const PrivacyBlur = ({ children, className = "", strength = 'normal' }: { childr
 const ReportsView = () => {
     const { projects } = useStore();
     const navigate = useNavigate();
+    const location = useLocation();
     const [timeRange, setTimeRange] = useState('ALL');
     const [excludeOneOffs, setExcludeOneOffs] = useState(false);
     const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
     const [downloadingRights, setDownloadingRights] = useState<string | null>(null);
     const [sendingNudge, setSendingNudge] = useState<string | null>(null);
     const [nudgeMsg, setNudgeMsg] = useState<{ id: string; ok: boolean; text: string } | null>(null);
+    const [reportError, setReportError] = useState<string | null>(null);
+    const [statementMonth, setStatementMonth] = useState<string>(() => {
+        const d = new Date();
+        return `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
+    });
+
+    const downloadTextFile = (filename: string, content: string, type = 'text/plain;charset=utf-8') => {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const toCsv = (rows: Array<Record<string, any>>) => {
+        if (!rows.length) return '';
+        const cols = Object.keys(rows[0]);
+        const esc = (v: any) => {
+            const s = String(v ?? '');
+            if (/[",\r\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+            return s;
+        };
+        return [
+            cols.join(','),
+            ...rows.map((r) => cols.map((c) => esc(r[c])).join(',')),
+        ].join('\r\n');
+    };
+
+    const parseMaybeDate = (iso?: string) => {
+        const d = iso ? new Date(iso) : null;
+        return d && !Number.isNaN(d.getTime()) ? d : null;
+    };
+
+    const now = new Date();
+    const rangeStart = (() => {
+        if (timeRange === '6M') {
+            const d = new Date(now);
+            d.setMonth(d.getMonth() - 6);
+            return d;
+        }
+        if (timeRange === 'YTD') {
+            return new Date(now.getFullYear(), 0, 1);
+        }
+        return null;
+    })();
+
+    const scopedProjects = rangeStart
+        ? projects.filter((p) => {
+            const created = parseMaybeDate(p.createdAt);
+            return created ? created >= rangeStart : true;
+        })
+        : projects;
+
+    const scrollToAuditLog = () => {
+        const el = document.getElementById('audit-log');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        if (params.get('focus') === 'audit') {
+            window.setTimeout(scrollToAuditLog, 50);
+        }
+    }, [location.search]);
 
     const handleDownloadAuditTrail = async (projectId: string, projectName: string) => {
         if (downloadingPdf) return;
         setDownloadingPdf(projectId);
+        setReportError(null);
         try {
             const { blob, error } = await DB.downloadAuditTrail(projectId);
-            if (error || !blob) { alert(`Could not generate PDF: ${error ?? 'Unknown error'}`); return; }
+            if (error || !blob) { setReportError(`Could not generate PDF: ${error ?? 'Unknown error'}`); return; }
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -157,9 +225,10 @@ const ReportsView = () => {
     const handleDownloadRightsTransfer = async (projectId: string, projectName: string) => {
         if (downloadingRights) return;
         setDownloadingRights(projectId);
+        setReportError(null);
         try {
             const { blob, error } = await DB.downloadRightsTransfer(projectId);
-            if (error || !blob) { alert(`Could not generate rights certificate: ${error ?? 'Unknown error'}`); return; }
+            if (error || !blob) { setReportError(`Could not generate rights certificate: ${error ?? 'Unknown error'}`); return; }
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -225,6 +294,69 @@ const ReportsView = () => {
         URL.revokeObjectURL(url);
     };
 
+    const handleExportLedgerCsv = () => {
+        const rows = scopedProjects
+            .slice()
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .map((p) => ({
+                project_id: p.id,
+                project_name: p.name,
+                client_name: p.client?.name || '',
+                client_email: p.client?.email || '',
+                status: p.status,
+                amount_usd: p.amount,
+                created_at: p.createdAt,
+                due_date: p.dueDate || '',
+            }));
+        const label = timeRange === 'ALL' ? 'ALL' : timeRange;
+        downloadTextFile(`TrueHandover_Ledger_${label}_${new Date().toISOString().slice(0, 10)}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
+    };
+
+    const handleExportTaxLedgerCsv = () => {
+        const year = now.getFullYear();
+        const rows = projects
+            .filter((p) => (p.status === 'paid' || p.status === 'completed'))
+            .filter((p) => {
+                const created = parseMaybeDate(p.createdAt);
+                return created ? created.getFullYear() === year : false;
+            })
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .map((p) => ({
+                tax_year: year,
+                project_id: p.id,
+                project_name: p.name,
+                client_name: p.client?.name || '',
+                client_email: p.client?.email || '',
+                amount_usd: p.amount,
+                created_at: p.createdAt,
+            }));
+        downloadTextFile(`TrueHandover_TaxLedger_${year}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
+    };
+
+    const handleExportMonthlyStatementCsv = () => {
+        const selected = statementMonth;
+        const rows = projects
+            .filter((p) => {
+                const created = parseMaybeDate(p.createdAt);
+                if (!created) return false;
+                const label = `${created.toLocaleString('default', { month: 'long' })} ${created.getFullYear()}`;
+                return label === selected;
+            })
+            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+            .map((p) => ({
+                statement_month: selected,
+                project_id: p.id,
+                project_name: p.name,
+                client_name: p.client?.name || '',
+                status: p.status,
+                amount_usd: p.amount,
+                created_at: p.createdAt,
+                due_date: p.dueDate || '',
+            }));
+        const safe = selected.replace(/[^a-z0-9]+/gi, '_');
+        downloadTextFile(`TrueHandover_Statement_${safe}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
+    };
+
     // --- DATA PROCESSING ---
 
     // 1. Chart Data (Capital Flow)
@@ -236,7 +368,7 @@ const ReportsView = () => {
             const key = d.toLocaleString('default', { month: 'short' });
             monthMap.set(key, { name: key, liquid: 0, frozen: 0, total: 0 });
         }
-        projects.forEach(p => {
+        scopedProjects.forEach(p => {
             const date = new Date(p.createdAt);
             const key = date.toLocaleString('default', { month: 'short' });
             if (monthMap.has(key)) {
@@ -252,12 +384,12 @@ const ReportsView = () => {
     const chartData = processChartData();
 
     // 2. Metrics
-    const totalVolume = projects.reduce((sum, p) => sum + p.amount, 0);
-    const lockedVolume = projects.filter(p => p.status !== 'paid' && p.status !== 'completed').reduce((sum, p) => sum + p.amount, 0);
+    const totalVolume = scopedProjects.reduce((sum, p) => sum + p.amount, 0);
+    const lockedVolume = scopedProjects.filter(p => p.status !== 'paid' && p.status !== 'completed').reduce((sum, p) => sum + p.amount, 0);
     const securedVolume = totalVolume - lockedVolume;
     const unlockRate = totalVolume > 0 ? Math.round((securedVolume / totalVolume) * 100) : 0;
 
-    const potentialProjects = projects.filter(p => p.status === 'draft' || p.status === 'awaiting_signature');
+    const potentialProjects = scopedProjects.filter(p => p.status === 'draft' || p.status === 'awaiting_signature');
     const potentialValue = potentialProjects.reduce((sum, p) => sum + p.amount, 0);
 
     // 3. Client Concentration (Revenue Intelligence)
@@ -266,8 +398,8 @@ const ReportsView = () => {
 
     // Optional filter: treat projects under $500 as one-offs
     const relevantProjects = excludeOneOffs
-        ? projects.filter(p => p.amount > 500)
-        : projects;
+        ? scopedProjects.filter(p => p.amount > 500)
+        : scopedProjects;
 
     relevantProjects.forEach(p => {
         const clientName = p.client.name || 'Unknown';
@@ -305,7 +437,7 @@ const ReportsView = () => {
     const COLORS = ['#bef264', '#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
 
     // 4. Evidence Locker Data (Recent Transactions)
-    const mappedProjects = projects.map(p => ({
+    const mappedProjects = scopedProjects.map(p => ({
         id: p.id,
         name: p.name,
         client: p.client.name,
@@ -313,7 +445,7 @@ const ReportsView = () => {
         status: p.status === 'paid' ? 'Secured' : 'Locked',
         originalStatus: p.status,
         amount: p.amount,
-        hash: 'e3b0...' + p.id.substring(0, 4),
+        evidenceId: `EV-${p.id.substring(0, 8).toUpperCase()}`,
         isReal: true,
     }));
 
@@ -379,11 +511,21 @@ const ReportsView = () => {
                                 </button>
                             ))}
                         </div>
-                        <button className="px-5 py-2.5 rounded-xl bg-obsidian dark:bg-white text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg flex items-center gap-2">
+                        <button
+                            onClick={() => { playClick(); handleExportLedgerCsv(); }}
+                            className="px-5 py-2.5 rounded-xl bg-obsidian dark:bg-white text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg flex items-center gap-2"
+                        >
                             <Download className="w-3.5 h-3.5" /> Export
                         </button>
                     </div>
                 </div>
+                {reportError && (
+                    <InlineErrorBanner
+                        message={reportError}
+                        onDismiss={() => setReportError(null)}
+                        className="mt-4"
+                    />
+                )}
             </div>
 
             {/* --- SECTION 1: THE SUMMARY (Hero Stats — Redesigned) --- */}
@@ -611,14 +753,17 @@ const ReportsView = () => {
                 </div>
             </div>
 
-            {/* --- SECTION 3: AUDIT LOG & EVIDENCE --- */}
-            <div className="mb-24">
+            {/* --- SECTION 3: EVIDENCE LEDGER --- */}
+            <div id="audit-log" className="mb-24">
                 <div className="flex items-end justify-between mb-8 border-b border-slate-200 dark:border-white/5 pb-4">
                     <div className="flex flex-col gap-1">
-                        <h3 className={`font-serif text-3xl tracking-tight ${GRADIENT_TEXT}`}>Audit Log</h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Immutable transaction records for dispute resolution and evidence.</p>
+                        <h3 className={`font-serif text-3xl tracking-tight ${GRADIENT_TEXT}`}>Evidence Ledger</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Project-level evidence packs, reminders, and rights certificates.</p>
                     </div>
-                    <button className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-obsidian dark:hover:text-white transition-colors flex items-center gap-2 group">
+                    <button
+                        onClick={() => { playClick(); scrollToAuditLog(); }}
+                        className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-obsidian dark:hover:text-white transition-colors flex items-center gap-2 group"
+                    >
                         View Full Ledger <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                     </button>
                 </div>
@@ -632,7 +777,7 @@ const ReportsView = () => {
                                     <th className="py-4 px-4 w-1/4 bg-editorial dark:bg-charcoal">Project</th>
                                     <th className="py-4 px-4 bg-editorial dark:bg-charcoal">Client</th>
                                     <th className="py-4 px-4 bg-editorial dark:bg-charcoal">Status</th>
-                                    <th className="py-4 px-4 hidden md:table-cell bg-editorial dark:bg-charcoal">Cryptographic Hash</th>
+                                    <th className="py-4 px-4 hidden md:table-cell bg-editorial dark:bg-charcoal">Evidence ID</th>
                                     <th className="py-4 px-4 text-right bg-editorial dark:bg-charcoal">Amount</th>
                                     <th className="py-4 pl-4 pr-6 text-right w-40 bg-editorial dark:bg-charcoal">Action</th>
                                 </tr>
@@ -649,7 +794,7 @@ const ReportsView = () => {
                                                 {item.status}
                                             </div>
                                         </td>
-                                        <td className="py-5 px-4 hidden md:table-cell font-mono text-[10px] text-slate-400">{item.hash}</td>
+                                        <td className="py-5 px-4 hidden md:table-cell font-mono text-[10px] text-slate-400">{(item as any).evidenceId || (item as any).hash || ''}</td>
                                         <td className="py-5 px-4 text-right font-serif text-base text-obsidian dark:text-white">
                                             <PrivacyBlur>${item.amount.toLocaleString()}</PrivacyBlur>
                                         </td>
@@ -711,7 +856,7 @@ const ReportsView = () => {
                     <div>
                         <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Chain of Custody</h4>
                         <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed max-w-3xl">
-                            Evidence Packs contain immutable access logs including IP addresses, timestamps, and file hash verifications.
+                            Evidence Packs contain a tamper-evident summary of project events, timestamps, and any recorded file hashes.
                             While TrueHandover provides this data to support dispute resolution, we do not guarantee its admissibility in legal proceedings.
                             Consult with a legal professional regarding specific jurisdiction requirements.
                         </p>
@@ -732,14 +877,21 @@ const ReportsView = () => {
                             <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 max-w-sm">Consolidated earnings report for accounting and reconciliation purposes.</p>
                             <div className="flex gap-3">
                                 <div className="relative flex-1">
-                                    <select className="w-full appearance-none bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold px-4 py-3 outline-none text-obsidian dark:text-white cursor-pointer hover:border-slate-200 transition-colors">
+                                    <select
+                                        value={statementMonth}
+                                        onChange={(e) => setStatementMonth(e.target.value)}
+                                        className="w-full appearance-none bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold px-4 py-3 outline-none text-obsidian dark:text-white cursor-pointer hover:border-slate-200 transition-colors"
+                                    >
                                         {statementMonths.map((label) => (
                                             <option key={label} className="bg-white dark:bg-charcoal text-obsidian dark:text-white">{label}</option>
                                         ))}
                                     </select>
                                     <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
                                 </div>
-                                <button className="flex items-center gap-2 px-5 py-3 bg-obsidian dark:bg-white text-white dark:text-black rounded-xl text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg">
+                                <button
+                                    onClick={() => { playClick(); handleExportMonthlyStatementCsv(); }}
+                                    className="flex items-center gap-2 px-5 py-3 bg-obsidian dark:bg-white text-white dark:text-black rounded-xl text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg"
+                                >
                                     Download <Download className="w-3.5 h-3.5" />
                                 </button>
                             </div>
@@ -757,7 +909,10 @@ const ReportsView = () => {
                                 </div>
                                 <span className="text-[10px] font-bold uppercase bg-slate-200 dark:bg-white/10 text-slate-500 px-2 py-1 rounded">CSV</span>
                             </div>
-                            <button className="w-full flex items-center justify-center gap-2 px-5 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-editorial dark:hover:bg-white/5 transition-colors group/btn">
+                            <button
+                                onClick={() => { playClick(); handleExportTaxLedgerCsv(); }}
+                                className="w-full flex items-center justify-center gap-2 px-5 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-editorial dark:hover:bg-white/5 transition-colors group/btn"
+                            >
                                 Export Annual Ledger <Download className="w-3.5 h-3.5 group-hover/btn:translate-y-0.5 transition-transform" />
                             </button>
                         </div>

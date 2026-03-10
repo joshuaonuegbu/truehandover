@@ -181,7 +181,7 @@ function ClientCard({
     const [portalBusy, setPortalBusy] = useState(false);
     const [portalUrl, setPortalUrl] = useState<string>('');
     const [kitDraft, setKitDraft] = useState({
-        primaryColor: brandKit?.primaryColor || '#84cc16',
+        primaryColor: brandKit?.primaryColor || '#65a30d',
         accentColor: brandKit?.accentColor || '#0f172a',
         logoUrl: brandKit?.logoUrl || '',
         notes: brandKit?.notes || '',
@@ -189,7 +189,7 @@ function ClientCard({
 
     useEffect(() => {
         setKitDraft({
-            primaryColor: brandKit?.primaryColor || '#84cc16',
+            primaryColor: brandKit?.primaryColor || '#65a30d',
             accentColor: brandKit?.accentColor || '#0f172a',
             logoUrl: brandKit?.logoUrl || '',
             notes: brandKit?.notes || '',
@@ -425,7 +425,7 @@ function ClientCard({
                                     value={kitDraft.primaryColor}
                                     onChange={(e) => setKitDraft({ ...kitDraft, primaryColor: e.target.value })}
                                     className="mt-1 w-full h-9 px-3 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-xs"
-                                    placeholder="#84cc16"
+                                    placeholder="#65a30d"
                                 />
                             </div>
                             <div>

@@ -14,8 +14,6 @@ import { UserProfile, StorageSettings } from '../types';
 import { playClick, playSuccess } from '../utils/sound';
 import { Card, Badge, GRADIENT_TEXT, InlineErrorBanner } from './Shared';
 import { StripeConnectService } from '../services/stripeService';
-import { R2Service } from '../services/r2';
-import { connectByosProvider, type ByosOAuthProvider } from '../services/byosOAuth';
 
 // --- VISUAL CONSTANTS ---
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`;
@@ -23,6 +21,7 @@ const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='h
 interface SettingsPageProps {
     user: UserProfile;
     onUpdateUser: (updates: Partial<UserProfile>) => void;
+    onSignOut: () => void;
 }
 
 const InputField = ({ label, value, onChange, placeholder, type = "text", icon: Icon, className = "" }: any) => (
@@ -41,7 +40,7 @@ const InputField = ({ label, value, onChange, placeholder, type = "text", icon: 
     </div>
 );
 
-const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
+const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignOut }) => {
     // State
     const [formData, setFormData] = useState({
         name: user.name || '',
@@ -52,10 +51,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
         cashapp: user.paymentMethods?.cashapp || '',
         zelle: user.paymentMethods?.zelle || '',
         bankInfo: user.paymentMethods?.bankInfo || '',
-        emailAlerts: true,
-        pushNotifs: false,
-        twoFactor: true,
-        biometric: true
+        emailAlerts: user.profilePreferences?.emailAlerts ?? true,
+        pushNotifs: user.profilePreferences?.pushNotifs ?? false,
+        twoFactor: user.profilePreferences?.twoFactor ?? true,
+        biometric: user.profilePreferences?.biometric ?? true
     });
 
     // Avatar Upload State
@@ -72,26 +71,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
         supportEmail: ''
     });
 
-    // Storage Settings State - Initialize from user profile or default to R2 preset
-    const [storageConfig, setStorageConfig] = useState<StorageSettings>(user.storageSettings || {
-        provider: 'r2',
-        endpoint: 'https://<ACCOUNT_ID>.r2.cloudflarestorage.com',
-        bucket: '',
-        accessKey: '',
-        secretKey: '',
-        accountId: ''
-    });
-
-    // UX State for Storage
-    const [storageMode, setStorageMode] = useState<'drive' | 's3' | null>(user.storageSettings ? 's3' : null);
-    const [isDriveConnectingByProvider, setIsDriveConnectingByProvider] = useState<Record<ByosOAuthProvider, boolean>>({
-        google: false,
-        dropbox: false,
-        onedrive: false
-    });
+    // Storage Settings State (production posture: platform-managed storage only)
+    const [storageSettings] = useState<StorageSettings>(user.storageSettings || { mode: 'platform' });
 
     // Shared error surface (used by payments + storage messaging)
-    const [connectionStatus, setConnectionStatus] = useState<'idle' | 'checking' | 'connected' | 'error'>('idle');
     const [connectionError, setConnectionError] = useState<string | null>(null);
 
     // Stripe Connect State
@@ -102,6 +85,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
     const [activeTab, setActiveTab] = useState<'profile' | 'payments' | 'agency' | 'storage' | 'developer'>('profile');
     const [demoMode, setDemoMode] = useState(isMockMode());
     const [isSaving, setIsSaving] = useState(false);
+    const showDeveloperTools = import.meta.env.DEV === true;
 
     // Handlers
     const handleChange = (field: string, value: any) => {
@@ -110,117 +94,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
 
     const handleAgencyChange = (field: string, value: any) => {
         setAgencySettings(prev => ({ ...prev, [field]: value }));
-    };
-
-    const handleStorageChange = (field: string, value: any) => {
-        setStorageConfig(prev => ({ ...prev, [field]: value }));
-        if (connectionStatus !== 'idle') setConnectionStatus('idle');
-        if (connectionError) setConnectionError(null);
-    };
-
-    const applyStoragePreset = (provider: string) => {
-        let endpoint = '';
-        if (provider === 'aws') endpoint = 'https://s3.amazonaws.com';
-        if (provider === 'r2') endpoint = 'https://<ACCOUNT_ID>.r2.cloudflarestorage.com';
-        if (provider === 'wasabi') endpoint = 'https://s3.wasabisys.com';
-        if (provider === 'spaces') endpoint = 'https://nyc3.digitaloceanspaces.com';
-        setStorageConfig(prev => ({ ...prev, provider: provider as any, endpoint }));
-    };
-
-    const handleTestConnection = async () => {
-        playClick();
-        const requiredFields: Array<keyof StorageSettings> = ['endpoint', 'bucket', 'accessKey', 'secretKey'];
-        const hasMissingRequired = requiredFields.some((field) => !(storageConfig[field] || '').toString().trim());
-        if (hasMissingRequired) {
-            setConnectionStatus('error');
-            setConnectionError('Please fill endpoint, bucket, access key, and secret key before testing connection.');
-            return;
-        }
-        setConnectionError(null);
-        setConnectionStatus('checking');
-        try {
-            await R2Service.testConnection(storageConfig);
-            setConnectionStatus('connected');
-            playSuccess();
-        } catch (e) {
-            console.error(e);
-            setConnectionStatus('error');
-            setConnectionError(e instanceof Error ? e.message : 'Connection test failed. Please verify your credentials and endpoint.');
-        }
-    };
-
-    const getDriveToken = (provider: ByosOAuthProvider) => {
-        if (provider === 'google') return storageConfig.byosGoogleToken;
-        if (provider === 'dropbox') return storageConfig.byosDropboxToken;
-        return storageConfig.byosOneDriveToken;
-    };
-
-    const getDriveLabel = (provider: ByosOAuthProvider) => {
-        if (provider === 'google') return storageConfig.byosGoogleAccountLabel;
-        if (provider === 'dropbox') return storageConfig.byosDropboxAccountLabel;
-        return storageConfig.byosOneDriveAccountLabel;
-    };
-
-    const handleTestDriveConnection = (provider: ByosOAuthProvider) => {
-        playClick();
-        const credential = getDriveToken(provider);
-        if (!credential || !credential.trim()) {
-            setConnectionStatus('error');
-            setConnectionError(`Please connect your ${provider === 'google' ? 'Google Drive' : provider === 'dropbox' ? 'Dropbox' : 'OneDrive'} account first.`);
-            return;
-        }
-        setConnectionError(null);
-        setConnectionStatus('connected');
-        playSuccess();
-    };
-
-    const handleConnectDrive = async (provider: ByosOAuthProvider) => {
-        try {
-            setIsDriveConnectingByProvider(prev => ({ ...prev, [provider]: true }));
-            setConnectionError(null);
-            setConnectionStatus('checking');
-            playClick();
-
-            const result = await connectByosProvider(provider);
-            const updates: Partial<StorageSettings> = { byosDriveProvider: provider };
-
-            if (provider === 'google') {
-                updates.byosGoogleToken = result.accessToken;
-                updates.byosGoogleAccountLabel = result.accountLabel;
-            }
-            if (provider === 'dropbox') {
-                updates.byosDropboxToken = result.accessToken;
-                updates.byosDropboxAccountLabel = result.accountLabel;
-            }
-            if (provider === 'onedrive') {
-                updates.byosOneDriveToken = result.accessToken;
-                updates.byosOneDriveAccountLabel = result.accountLabel;
-            }
-
-            setStorageConfig(prev => ({ ...prev, ...updates }));
-            setConnectionStatus('connected');
-            playSuccess();
-        } catch (error) {
-            setConnectionStatus('error');
-            setConnectionError(error instanceof Error ? error.message : 'Drive authorization failed.');
-        } finally {
-            setIsDriveConnectingByProvider(prev => ({ ...prev, [provider]: false }));
-        }
-    };
-
-    const handleDisconnectDrive = (provider: ByosOAuthProvider) => {
-        playClick();
-        if (provider === 'google') {
-            setStorageConfig(prev => ({ ...prev, byosGoogleToken: '', byosGoogleAccountLabel: '' }));
-        }
-        if (provider === 'dropbox') {
-            setStorageConfig(prev => ({ ...prev, byosDropboxToken: '', byosDropboxAccountLabel: '' }));
-        }
-        if (provider === 'onedrive') {
-            setStorageConfig(prev => ({ ...prev, byosOneDriveToken: '', byosOneDriveAccountLabel: '' }));
-        }
-        setConnectionStatus('idle');
-        setConnectionError(null);
     };
 
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,6 +122,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
             role: formData.role,
             subdomain: formData.subdomain,
             avatar: avatarPreview,
+            profilePreferences: {
+                emailAlerts: formData.emailAlerts,
+                pushNotifs: formData.pushNotifs,
+                twoFactor: formData.twoFactor,
+                biometric: formData.biometric,
+            },
             paymentMethods: {
                 venmo: formData.venmo,
                 cashapp: formData.cashapp,
@@ -257,7 +136,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                 paypal: ''
             },
             agencySettings: agencySettings,
-            storageSettings: storageConfig
+            storageSettings,
         };
 
         // Call the prop function to update App state
@@ -400,8 +279,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                 { id: 'payments', label: 'Payments', icon: Wallet },
                                 { id: 'agency', label: 'Agency', icon: Layers },
                                 { id: 'storage', label: 'Storage', icon: HardDrive },
-                                { id: 'developer', label: 'Developer', icon: FlaskConical },
-                            ] as const).map(tab => (
+                                ...(showDeveloperTools ? [{ id: 'developer', label: 'Developer', icon: FlaskConical }] : []),
+                            ] as any[]).map(tab => (
                                 <button
                                     key={tab.id}
                                     onClick={() => { playClick(); setActiveTab(tab.id); }}
@@ -424,8 +303,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                         <NavButton id="profile" label="Profile" desc="Personal & Public Info" icon={Fingerprint} />
                         <NavButton id="payments" label="Payments" desc="Stripe & Wallets" icon={Wallet} />
                         <NavButton id="agency" label="Agency Node" desc="Branding & Domain" icon={Layers} />
-                        <NavButton id="storage" label="Storage" desc="R2 / S3 Configuration" icon={HardDrive} />
-                        <NavButton id="developer" label="Developer" desc="Demo mode & tooling" icon={FlaskConical} />
+                        <NavButton id="storage" label="Storage" desc="Uploads & deliveries" icon={HardDrive} />
+                        {showDeveloperTools && <NavButton id="developer" label="Developer" desc="Demo mode & tooling" icon={FlaskConical} />}
                     </div>
 
                     {/* Quick Toggles */}
@@ -446,7 +325,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                         </div>
                     </div>
 
-                    <button className="flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors mt-auto">
+                    <button
+                        onClick={() => { playClick(); onSignOut(); }}
+                        className="flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors mt-auto"
+                    >
                         <LogOut className="w-4 h-4" /> Sign Out
                     </button>
                 </div>
@@ -460,14 +342,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                             {activeTab === 'profile' && 'Profile Settings'}
                             {activeTab === 'payments' && 'Financial Stack'}
                             {activeTab === 'agency' && 'Agency Configuration'}
-                            {activeTab === 'storage' && 'Storage Pipeline'}
+                            {activeTab === 'storage' && 'Storage'}
                             {activeTab === 'developer' && 'Developer Tools'}
                         </h3>
                         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
                             {activeTab === 'profile' && 'Update your public profile and personal details.'}
                             {activeTab === 'payments' && 'Manage payout methods and Stripe integration.'}
                             {activeTab === 'agency' && 'Configure white-labeling and domain settings.'}
-                            {activeTab === 'storage' && 'Connect your own S3/R2 storage buckets.'}
+                            {activeTab === 'storage' && 'Platform-managed presigned storage and link imports.'}
                             {activeTab === 'developer' && 'Toggle demo mode and inspect runtime state.'}
                         </p>
                     </div>
@@ -962,221 +844,52 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser }) => {
                                 </Card>
                             </>
                         )}
-
                         {/* --- STORAGE TAB --- */}
                         {activeTab === 'storage' && (
                             <>
                                 <Card className="!p-8 relative overflow-hidden">
                                     <div className="relative z-10">
-                                        <div className="flex justify-between items-center mb-8">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-slate-100 dark:bg-white/5 rounded-lg"><Database className="w-5 h-5 text-slate-500" /></div>
-                                                <div>
-                                                    <h3 className="font-serif text-xl text-slate-900 dark:text-white">Storage Pipeline</h3>
-                                                    <p className="text-xs text-slate-500">Bypass limits with your own cloud.</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <button onClick={() => setStorageMode('s3')} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${storageMode === 's3' ? 'bg-orange-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>S3 / R2 Bucket</button>
-                                                <button onClick={() => setStorageMode('drive')} className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${storageMode === 'drive' ? 'bg-blue-500 text-white shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>Cloud Drive</button>
+                                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-white/5">
+                                            <HardDrive className="w-5 h-5 text-lime-600 dark:text-[#bef264]" />
+                                            <div>
+                                                <h3 className="font-serif text-xl text-slate-900 dark:text-white">Storage</h3>
+                                                <p className="text-xs text-slate-500">Uploads and deliveries are platform-managed in production.</p>
                                             </div>
                                         </div>
 
-                                        <div className="p-6 bg-slate-50 dark:bg-[#18181b] rounded-2xl border border-slate-100 dark:border-white/5">
-                                            {storageMode === null && (
-                                                <div className="text-center py-8">
-                                                    <Cloud className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                                                    <p className="text-sm font-medium text-slate-500">Select a provider type above to configure external storage.</p>
+                                        <div className="space-y-4">
+                                            <div className="p-5 bg-slate-50 dark:bg-[#18181b] rounded-2xl border border-slate-100 dark:border-white/5">
+                                                <div className="flex items-start gap-3">
+                                                    <ShieldCheck className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+                                                    <div>
+                                                        <p className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Platform Vault</p>
+                                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
+                                                            TrueHandover uses server-issued presigned URLs for uploads and downloads. No S3/R2 secret keys or cloud OAuth tokens are stored in the browser or in your profile.
+                                                        </p>
+                                                        <div className="mt-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                                            <span className="px-2 py-1 rounded bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10">Mode</span>
+                                                            <span className="text-slate-600 dark:text-slate-300">{storageSettings.mode === 'platform' ? 'PLATFORM' : storageSettings.mode}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            )}
+                                            </div>
 
-                                            {storageMode === 'drive' && (
-                                                <div className="animate-slide-up">
-                                                    {connectionError && (
-                                                        <InlineErrorBanner
-                                                            message={connectionError}
-                                                            onDismiss={() => setConnectionError(null)}
-                                                            className="mb-4"
-                                                        />
-                                                    )}
-                                                    <div className="space-y-4">
-                                                        {([
-                                                            {
-                                                                provider: 'google' as const,
-                                                                name: 'Google Drive',
-                                                                icon: HardDrive,
-                                                                connectedClasses: 'bg-blue-50 dark:bg-blue-500/10 border-blue-500',
-                                                                iconWrapConnectedClasses: 'bg-blue-500/15',
-                                                                iconConnectedClasses: 'text-blue-500',
-                                                                connected: !!storageConfig.byosGoogleToken
-                                                            },
-                                                            {
-                                                                provider: 'dropbox' as const,
-                                                                name: 'Dropbox',
-                                                                icon: Box,
-                                                                connectedClasses: 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-500',
-                                                                iconWrapConnectedClasses: 'bg-indigo-500/15',
-                                                                iconConnectedClasses: 'text-indigo-500',
-                                                                connected: !!storageConfig.byosDropboxToken
-                                                            },
-                                                            {
-                                                                provider: 'onedrive' as const,
-                                                                name: 'OneDrive',
-                                                                icon: Cloud,
-                                                                connectedClasses: 'bg-sky-50 dark:bg-sky-500/10 border-sky-500',
-                                                                iconWrapConnectedClasses: 'bg-sky-500/15',
-                                                                iconConnectedClasses: 'text-sky-500',
-                                                                connected: !!storageConfig.byosOneDriveToken
-                                                            }
-                                                        ] as const).map((item) => {
-                                                            const Icon = item.icon;
-                                                            const isConnecting = isDriveConnectingByProvider[item.provider];
-                                                            const accountLabel = getDriveLabel(item.provider);
-
-                                                            return (
-                                                                <div
-                                                                    key={item.provider}
-                                                                    className={`rounded-xl border p-4 flex items-center justify-between gap-3 ${item.connected ? item.connectedClasses : 'border-slate-200 dark:border-white/10 bg-white dark:bg-[#111116]'}`}
-                                                                >
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${item.connected ? item.iconWrapConnectedClasses : 'bg-slate-100 dark:bg-white/10'}`}>
-                                                                            <Icon className={`w-4 h-4 ${item.connected ? item.iconConnectedClasses : 'text-slate-400'}`} />
-                                                                        </div>
-                                                                        <div>
-                                                                            <p className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-widest">{item.name}</p>
-                                                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                                                                                {item.connected
-                                                                                    ? accountLabel ? `Connected: ${accountLabel}` : 'Connected'
-                                                                                    : `Connect your ${item.name} account for folder import.`}
-                                                                            </p>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <button
-                                                                            onClick={() => handleConnectDrive(item.provider)}
-                                                                            disabled={isConnecting}
-                                                                            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold uppercase tracking-widest disabled:opacity-60 disabled:cursor-wait cursor-pointer"
-                                                                        >
-                                                                            {isConnecting ? 'Connecting...' : item.connected ? 'Reconnect' : 'Connect'}
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => handleDisconnectDrive(item.provider)}
-                                                                            disabled={!item.connected}
-                                                                            className="px-3 py-2 rounded-lg bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                                                                        >
-                                                                            Disconnect
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => handleTestDriveConnection(item.provider)}
-                                                                            disabled={!item.connected}
-                                                                            className="px-3 py-2 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-black text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                                                                        >
-                                                                            Validate
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                                                            Connect any combination of providers. TrueHandover will use the right connected account based on each pasted folder link.
+                                            <div className="p-5 bg-white dark:bg-[#111116] rounded-2xl border border-slate-200 dark:border-white/10">
+                                                <div className="flex items-start gap-3">
+                                                    <ExternalLink className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+                                                    <div>
+                                                        <p className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Cloud Drive Imports (Links)</p>
+                                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
+                                                            Paste share links from Google Drive, Dropbox, or OneDrive directly into a project. Folder imports and OAuth-based syncing are intentionally disabled until a fully server-side token flow is implemented.
                                                         </p>
                                                     </div>
                                                 </div>
-                                            )}
-
-                                            {storageMode === 's3' && (
-                                                <div className="space-y-6 animate-slide-up">
-                                                    <div className="flex items-center justify-between mb-4">
-                                                        <span className="text-xs font-bold uppercase text-slate-500">Provider Preset</span>
-                                                        <select
-                                                            onChange={(e) => applyStoragePreset(e.target.value)}
-                                                            className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-bold rounded-lg px-3 py-2 outline-none focus:border-orange-500 text-slate-900 dark:text-white cursor-pointer"
-                                                            value={storageConfig.provider}
-                                                        >
-                                                            <option value="r2">Cloudflare R2</option>
-                                                            <option value="aws">AWS S3</option>
-                                                            <option value="wasabi">Wasabi</option>
-                                                            <option value="spaces">DigitalOcean Spaces</option>
-                                                            <option value="custom">Custom S3...</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {storageConfig.provider === 'r2' && (
-                                                        <div className="mb-4 p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-start gap-3">
-                                                            <Cloud className="w-5 h-5 text-orange-500 mt-0.5" />
-                                                            <div>
-                                                                <h4 className="text-xs font-bold text-orange-600 dark:text-orange-400">R2 Configuration</h4>
-                                                                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed mt-1">
-                                                                    Use your Cloudflare Account ID in the endpoint URL. R2 offers zero egress fees, making it ideal for high-bandwidth deliveries.
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {connectionError && (
-                                                        <InlineErrorBanner
-                                                            message={connectionError}
-                                                            onDismiss={() => setConnectionError(null)}
-                                                            className="mb-2"
-                                                        />
-                                                    )}
-
-                                                    <div className="grid md:grid-cols-2 gap-6">
-                                                        <InputField
-                                                            label="Endpoint URL"
-                                                            value={storageConfig.endpoint}
-                                                            onChange={(e: any) => handleStorageChange('endpoint', e.target.value)}
-                                                            placeholder="https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
-                                                            icon={Server}
-                                                        />
-                                                        <InputField
-                                                            label="Bucket Name"
-                                                            value={storageConfig.bucket}
-                                                            onChange={(e: any) => handleStorageChange('bucket', e.target.value)}
-                                                            placeholder="my-vault-bucket"
-                                                            icon={Database}
-                                                        />
-                                                        <InputField
-                                                            label="Access Key ID"
-                                                            value={storageConfig.accessKey}
-                                                            onChange={(e: any) => handleStorageChange('accessKey', e.target.value)}
-                                                            type="password"
-                                                            placeholder="AKIA..."
-                                                            icon={Key}
-                                                        />
-                                                        <InputField
-                                                            label="Secret Access Key"
-                                                            value={storageConfig.secretKey || ''}
-                                                            onChange={(e: any) => handleStorageChange('secretKey', e.target.value)}
-                                                            type="password"
-                                                            placeholder="wJalr..."
-                                                            icon={Lock}
-                                                        />
-                                                    </div>
-
-                                                    <div className="pt-4 flex justify-end items-center gap-3 border-t border-slate-200 dark:border-white/5">
-                                                        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                                                            {connectionStatus === 'idle' && 'Status: Unknown'}
-                                                            {connectionStatus === 'checking' && 'Pinging Bucket...'}
-                                                            {connectionStatus === 'connected' && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Connected</span>}
-                                                            {connectionStatus === 'error' && <span className="text-red-500 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Connection Failed</span>}
-                                                        </span>
-                                                        <button
-                                                            onClick={handleTestConnection}
-                                                            disabled={connectionStatus === 'checking'}
-                                                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${connectionStatus === 'checking' ? 'bg-slate-100 dark:bg-white/10 text-slate-400 cursor-wait' : 'bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200'}`}
-                                                        >
-                                                            Test Connection
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            )}
+                                            </div>
                                         </div>
                                     </div>
                                 </Card>
                             </>
                         )}
-
                     </div>
                 </div>
             </div>

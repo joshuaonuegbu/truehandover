@@ -4,6 +4,13 @@ import { Project, UserProfile, ProjectTheme } from '../types';
 import { DB, supabase } from '../services/supabaseClient';
 import { isMockMode } from '../config/mockMode';
 
+const DEFAULT_PROFILE_PREFERENCES = {
+  emailAlerts: true,
+  pushNotifs: false,
+  twoFactor: true,
+  biometric: true,
+};
+
 // --- MOCK DATA CONSTANTS (Moved from App.tsx for Fallback) ---
 
 const DEFAULT_THEME_MOCK: ProjectTheme = {
@@ -153,11 +160,9 @@ const INITIAL_USER: UserProfile = {
     supportEmail: 'help@nixtio.com'
   },
   storageSettings: {
-    provider: 'r2',
-    endpoint: '',
-    bucket: '',
-    accessKey: '',
-  }
+    mode: 'platform',
+  },
+  profilePreferences: DEFAULT_PROFILE_PREFERENCES
 };
 
 const EMPTY_USER: UserProfile = {
@@ -190,11 +195,9 @@ const EMPTY_USER: UserProfile = {
     supportEmail: '',
   },
   storageSettings: {
-    provider: 'r2',
-    endpoint: '',
-    bucket: '',
-    accessKey: '',
+    mode: 'platform',
   },
+  profilePreferences: DEFAULT_PROFILE_PREFERENCES,
 };
 
 const INITIAL_PROJECTS: Project[] = [
@@ -368,6 +371,7 @@ const INITIAL_PROJECTS: Project[] = [
 interface StoreContextType {
   projects: Project[];
   user: UserProfile;
+  authResolved: boolean;
   saveProject: (project: Project) => void;
   updateUser: (updates: Partial<UserProfile>) => void;
   deleteProject: (id: string) => void;
@@ -377,6 +381,7 @@ interface StoreContextType {
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [authResolved, setAuthResolved] = useState(() => !supabase || isMockMode());
   // Lazy initialization — demo data in mock mode, empty state in production
   const [projects, setProjects] = useState<Project[]>(() => {
     if (!isMockMode()) return [];
@@ -417,7 +422,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // --- SUPABASE SYNC LOGIC ---
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) {
+      setAuthResolved(true);
+      return;
+    }
 
     const syncWithSupabase = async (userId: string) => {
       const { data: dbUser } = await DB.getProfile(userId);
@@ -443,13 +451,21 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           paymentMethods: (dbUser as any).payment_methods || prev.paymentMethods,
           agencySettings: (dbUser as any).agency_settings || prev.agencySettings,
           storageSettings: (dbUser as any).storage_settings || prev.storageSettings,
+          profilePreferences: {
+            ...DEFAULT_PROFILE_PREFERENCES,
+            ...((dbUser as any).profile_preferences || prev.profilePreferences || {}),
+          },
         }));
       }
 
       const { data: creatorProjects } = await DB.getCreatorProjects();
       if (creatorProjects && creatorProjects.length > 0) {
         setProjects(creatorProjects as any[]);
+      } else if (!isMockMode()) {
+        setProjects([]);
       }
+
+      setAuthResolved(true);
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -466,12 +482,17 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           setProjects([]);
           setUser(EMPTY_USER);
         }
+        setAuthResolved(true);
       }
     });
 
     // Fetch on initial mount if session already exists
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) syncWithSupabase(session.user.id);
+      if (session?.user) {
+        syncWithSupabase(session.user.id);
+      } else {
+        setAuthResolved(true);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -601,21 +622,28 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         } : undefined,
         payment_methods: updates.paymentMethods,
         agency_settings: updates.agencySettings,
-        storage_settings: updates.storageSettings
+        storage_settings: updates.storageSettings,
+        profile_preferences: updates.profilePreferences,
       });
     }
   };
 
   const resetStore = async () => {
     if (supabase) await supabase.auth.signOut();
-    setProjects(INITIAL_PROJECTS);
-    setUser(INITIAL_USER);
+    if (isMockMode()) {
+      setProjects(migrateDemoProjects(INITIAL_PROJECTS));
+      setUser(INITIAL_USER);
+    } else {
+      setProjects([]);
+      setUser(EMPTY_USER);
+    }
+    setAuthResolved(true);
     localStorage.removeItem('th_projects');
     localStorage.removeItem('th_user');
   };
 
   return (
-    <StoreContext.Provider value={{ projects, user, saveProject, updateUser, deleteProject, resetStore }}>
+    <StoreContext.Provider value={{ projects, user, authResolved, saveProject, updateUser, deleteProject, resetStore }}>
       {children}
     </StoreContext.Provider>
   );

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
     ArrowRight, Loader2, Sun, Moon, Monitor,
     ArrowLeft, Lock, Activity, ShieldCheck
@@ -8,6 +8,7 @@ import {
 import { playClick, playSuccess } from '../utils/sound';
 import { InlineErrorBanner } from './Shared';
 import { supabase } from '../services/supabaseClient';
+import { setMockModeAndNavigate } from '../config/mockMode';
 
 const EditorialIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 32 32" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -163,12 +164,31 @@ interface SignInPageProps {
 
 export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInPageProps) {
     const navigate = useNavigate();
+    const location = useLocation();
     const [isLoading, setIsLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [focusedField, setFocusedField] = useState<string | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
     const [isSignUp, setIsSignUp] = useState(false);
+    const searchParams = new URLSearchParams(location.search);
+    const signInSource = searchParams.get('from');
+    const rawReturnTo = searchParams.get('returnTo');
+    const returnTo = rawReturnTo && rawReturnTo.startsWith('/') && !rawReturnTo.startsWith('//')
+        ? rawReturnTo
+        : '/dashboard';
+    const showBackButton = signInSource === 'landing' || signInSource === 'mode-switch';
+
+    const handleBack = () => {
+        playClick();
+
+        if (signInSource === 'mode-switch') {
+            setMockModeAndNavigate(true, returnTo);
+            return;
+        }
+
+        navigate('/', { replace: true });
+    };
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -196,7 +216,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                 if (error) throw error;
                 // Wait for session sync or assume signed in:
                 playSuccess();
-                navigate('/dashboard');
+                navigate(returnTo, { replace: true });
             } else {
                 const { error } = await supabase.auth.signInWithPassword({
                     email: normalizedEmail,
@@ -204,7 +224,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                 });
                 if (error) throw error;
                 playSuccess();
-                navigate('/dashboard');
+                navigate(returnTo, { replace: true });
             }
         } catch (err: any) {
             setFormError(err.message || "Failed to authenticate.");
@@ -238,12 +258,14 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
             <div className="w-full lg:w-[45%] xl:w-[40%] flex flex-col justify-center px-8 md:px-16 lg:px-20 xl:px-24 relative z-10 bg-white/50 dark:bg-transparent">
 
                 {/* Back Button */}
-                <button
-                    onClick={() => navigate(-1)}
-                    className="absolute top-8 left-4 md:left-8 lg:left-12 p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors group z-50 flex items-center justify-center"
-                >
-                    <ArrowLeft className="w-5 h-5 text-slate-400 group-hover:text-black dark:group-hover:text-white transition-colors" />
-                </button>
+                {showBackButton && (
+                    <button
+                        onClick={handleBack}
+                        className="absolute top-8 left-4 md:left-8 lg:left-12 p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors group z-50 flex items-center justify-center"
+                    >
+                        <ArrowLeft className="w-5 h-5 text-slate-400 group-hover:text-black dark:group-hover:text-white transition-colors" />
+                    </button>
+                )}
 
                 {/* Brand Logo */}
                 <div

@@ -1,6 +1,5 @@
 
 import { supabase } from './supabaseClient';
-import type { StorageSettings } from '../types';
 
 /**
  * Cloudflare R2 uploads for TrueHandover (production posture)
@@ -10,28 +9,6 @@ import type { StorageSettings } from '../types';
  */
 
 export const R2Service = {
-    /**
-     * Test an S3-compatible bucket connection via a Supabase Edge Function proxy
-     * so secret keys are never exposed client-side.
-     */
-    testConnection: async (config: StorageSettings): Promise<void> => {
-        if (!supabase) {
-            throw new Error('Supabase is not configured. Cannot test bucket connection.');
-        }
-        const { data, error } = await supabase.functions.invoke('r2-test-connection', {
-            body: {
-                endpoint: config.endpoint,
-                bucket: config.bucket,
-                accessKey: config.accessKey,
-                secretKey: config.secretKey,
-                region: config.region,
-            },
-        });
-        if (error || data?.error) {
-            throw new Error(error?.message || data?.error || 'Bucket connection test failed.');
-        }
-    },
-
     uploadFileWithPresignedUrl: async (
         file: File,
         projectId: string,

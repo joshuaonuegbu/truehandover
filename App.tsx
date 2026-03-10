@@ -28,7 +28,7 @@ import {
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, BarChart, Bar, Cell, Legend, ReferenceLine, YAxis, Pie, PieChart as RePieChart } from 'recharts';
 import { QRCodeSVG } from 'qrcode.react';
 import { playClick, playSuccess } from './utils/sound';
-import { isMockMode, setMockMode } from './config/mockMode';
+import { isMockMode, setMockMode, setMockModeAndNavigate } from './config/mockMode';
 // Critical path — loaded eagerly (needed before auth resolves)
 import LandingPage from './components/LandingPage';
 import SignInPage from './components/SignInPage';
@@ -372,11 +372,15 @@ const formatBytes = (bytes: number): string => {
 };
 
 const StatusRibbon = ({ projects, user }: { projects: Project[]; user: UserProfile }) => {
+    const demoMode = isMockMode();
     const stripeConnected = Boolean(user?.stripeConnect?.connected);
     const payoutsEnabled = Boolean(user?.stripeConnect?.payoutsEnabled);
+    const nativeStorageCapacityBytes = 30 * 1024 ** 3;
+    const demoRemainingNativeStorageBytes = 10 * 1024 ** 3;
     const totalBytes = projects.reduce((sum, p) => sum + (p.files || []).reduce((s, f) => s + parseSizeToBytes(f.size), 0), 0);
     const totalFiles = projects.reduce((sum, p) => sum + (p.files || []).length, 0);
-    const usagePct = Math.max(0, Math.min(100, Math.round((totalBytes / (30 * 1024 ** 3)) * 100)));
+    const usedNativeStorageBytes = demoMode ? nativeStorageCapacityBytes - demoRemainingNativeStorageBytes : totalBytes;
+    const usagePct = Math.max(0, Math.min(100, Math.round((usedNativeStorageBytes / nativeStorageCapacityBytes) * 100)));
 
     return (
         <div className="flex flex-wrap items-center gap-4 md:gap-8 p-4 bg-white/50 dark:bg-[#23232e] border border-slate-200 dark:border-white/5 rounded-2xl mb-8 backdrop-blur-md shadow-sm">
@@ -400,8 +404,10 @@ const StatusRibbon = ({ projects, user }: { projects: Project[]; user: UserProfi
                     </div>
                     <div className="flex flex-col gap-1.5 min-w-[180px]">
                         <div className="flex justify-between items-center leading-none">
-                            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Storage Usage</span>
-                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">{formatBytes(totalBytes)} <span className="opacity-50">({totalFiles} files)</span></span>
+                            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{demoMode ? 'Native Storage' : 'Storage Usage'}</span>
+                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                                {demoMode ? `${formatBytes(demoRemainingNativeStorageBytes)} left` : <><span>{formatBytes(totalBytes)}</span> <span className="opacity-50">({totalFiles} files)</span></>}
+                            </span>
                         </div>
                         <div className="w-full h-2 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
                             <div className="h-full bg-lime-600 dark:bg-[#bef264] rounded-full shadow-[0_0_12px_rgba(132,204,22,0.6)] transition-all" style={{ width: `${usagePct}%` }} />
@@ -534,98 +540,93 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
     const duration = 10000; // 10 seconds per slide
     const interval = 50; // Update frequency
 
-    useEffect(() => {
-        let timer: any;
-        if (!isPaused && !isReplying) {
-            timer = setInterval(() => {
-                setProgress((prev) => {
-                    const next = prev + (interval / duration) * 100;
-                    if (next >= 100) {
-                        setCycleIndex((idx) => (idx + 1) % 5); // Updated to 5 slides
-                        return 0;
-                    }
-                    return next;
+    const paidProjects = projects.filter((p) => p.status === 'paid' || p.status === 'completed');
+    const pendingProjects = projects.filter((p) => p.status === 'awaiting_payment' || p.status === 'awaiting_signature' || p.status === 'payment_verification');
+    const activeClients = new Set(
+        projects
+            .filter((p) => p.clientViewedAt)
+            .map((p) => p.client?.email || p.client?.name || p.client?.company || '')
+            .filter(Boolean)
+    ).size;
+
+    const securedRevenue = demoMode ? 24500 : projects
+        .filter((p) => p.status === 'paid' || p.status === 'completed')
+        .reduce((sum, p) => sum + p.amount, 0);
+        
+    const pendingRevenue = demoMode ? 4200 : projects
+        .filter((p) => p.status === 'awaiting_payment' || p.status === 'awaiting_signature' || p.status === 'payment_verification')
+        .reduce((sum, p) => sum + p.amount, 0);
+        
+    const nativeStorageCapacityBytes = 30 * 1024 ** 3;
+    const demoRemainingNativeStorageBytes = 10 * 1024 ** 3;
+    const demoUsedNativeStorageBytes = nativeStorageCapacityBytes - demoRemainingNativeStorageBytes;
+    const totalFiles = demoMode ? 142 : projects.reduce((sum, p) => sum + (p.files || []).length, 0);
+    const totalBytes = demoMode ? demoUsedNativeStorageBytes : projects.reduce((sum, p) => sum + (p.files || []).reduce((s, f) => s + parseSizeToBytes(f.size), 0), 0);
+
+    const storageBreakdown = demoMode
+        ? [
+            { label: 'Video', bytes: 10 * 1024 * 1024 * 1024, color: 'bg-indigo-500' },
+            { label: 'Images', bytes: 6 * 1024 * 1024 * 1024, color: 'bg-sky-400' },
+            { label: 'Docs', bytes: 4 * 1024 * 1024 * 1024, color: 'bg-lime-400' },
+        ]
+        : (() => {
+            const bytesByType = projects.reduce<Record<string, number>>((acc, project) => {
+                (project.files || []).forEach((file) => {
+                    const bucket = file.type === 'video'
+                        ? 'Video'
+                        : file.type === 'image'
+                            ? 'Images'
+                            : 'Docs';
+                    acc[bucket] = (acc[bucket] || 0) + parseSizeToBytes(file.size);
                 });
-            }, interval);
-        }
-        return () => clearInterval(timer);
-    }, [isPaused, isReplying]);
+                return acc;
+            }, {});
 
-    // Reset progress when manually changing slides
-    const manualChange = (index: number) => {
-        setCycleIndex(index);
-        setProgress(0);
-        setIsReplying(false);
-    };
+            return [
+                { label: 'Video', bytes: bytesByType.Video || 0, color: 'bg-indigo-500' },
+                { label: 'Images', bytes: bytesByType.Images || 0, color: 'bg-sky-400' },
+                { label: 'Docs', bytes: bytesByType.Docs || 0, color: 'bg-lime-400' },
+            ].filter((item) => item.bytes > 0);
+        })();
+    const storageTotal = storageBreakdown.reduce((sum, item) => sum + item.bytes, 0);
+    const recentProject = demoMode
+        ? null
+        : [...projects].sort((a, b) => {
+            const aTime = new Date(a.clientViewedAt || a.createdAt || a.dueDate).getTime();
+            const bTime = new Date(b.clientViewedAt || b.createdAt || b.dueDate).getTime();
+            return bTime - aTime;
+        })[0];
+    const recentProjectTime = recentProject ? new Date(recentProject.clientViewedAt || recentProject.createdAt || recentProject.dueDate) : null;
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const recentProjectLabel = recentProjectTime
+        ? (() => {
+            const dayDiff = Math.floor((Date.now() - recentProjectTime.getTime()) / msPerDay);
+            if (dayDiff <= 0) return 'Today';
+            if (dayDiff === 1) return 'Yesterday';
+            if (dayDiff < 7) return `${dayDiff} days ago`;
+            return recentProjectTime.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        })()
+        : 'No activity yet';
 
-    if (!demoMode) {
-        const securedRevenue = projects
-            .filter((p) => p.status === 'paid' || p.status === 'completed')
-            .reduce((sum, p) => sum + p.amount, 0);
-        const pendingRevenue = projects
-            .filter((p) => p.status === 'awaiting_payment' || p.status === 'awaiting_signature' || p.status === 'payment_verification')
-            .reduce((sum, p) => sum + p.amount, 0);
-        const totalFiles = projects.reduce((sum, p) => sum + (p.files || []).length, 0);
-        const totalBytes = projects.reduce((sum, p) => sum + (p.files || []).reduce((s, f) => s + parseSizeToBytes(f.size), 0), 0);
-        const activeClients = new Set(
-            projects
-                .filter((p) => p.clientViewedAt)
-                .map((p) => p.client?.email || p.client?.name || p.client?.company || '')
-                .filter(Boolean)
-        ).size;
-
-        return (
-            <div className="w-full bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm relative h-[280px] p-6 sm:p-8">
-                {projects.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center opacity-90 p-4">
-                        <div className="w-16 h-16 rounded-[1.5rem] bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4 shadow-sm">
-                            <Database className="w-8 h-8 text-slate-400 stroke-[1.5]" />
-                        </div>
-                        <h3 className="font-serif text-xl text-slate-900 dark:text-white mb-2">Unlock Your Analytics</h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[280px] leading-relaxed mb-6">
-                            Create your first project to start tracking secured revenue, storage usage, and client engagement metrics securely.
-                        </p>
-                        <button onClick={() => { playClick(); navigate('/create'); }} className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-bold uppercase tracking-wider transition-all">
-                            Initialize Analytics
-                        </button>
-                    </div>
-                ) : (
-                    <div className="h-full grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div className="flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] p-5">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Secured Revenue</span>
-                            <PrivacyBlur strength="strong" className={`font-serif text-4xl tracking-tight ${GRADIENT_TEXT}`}>${securedRevenue.toLocaleString()}</PrivacyBlur>
-                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Pending: ${pendingRevenue.toLocaleString()}</span>
-                        </div>
-                        <div className="flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] p-5">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Vault Storage</span>
-                            <span className="font-serif text-3xl text-slate-900 dark:text-white tracking-tight">{formatBytes(totalBytes)}</span>
-                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{totalFiles} files • {activeClients} active client{activeClients === 1 ? '' : 's'}</span>
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    }
-
-    const slides = [
+    const demoSlides = [
         {
             id: 'revenue',
             render: () => (
                 <div className="absolute inset-0 p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-[#23232e] rounded-3xl transition-all duration-700 ease-in-out">
                     <div>
                         <div className="flex justify-between items-start mb-4">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Net Revenue (Oct)</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Net Revenue</span>
                             <div className="flex items-center gap-1 text-lime-600 dark:text-[#bef264] font-bold text-[10px] bg-lime-50 dark:bg-[#bef264]/10 px-2 py-1 rounded-full border border-lime-100 dark:border-[#bef264]/20">
-                                <ArrowUpRight className="w-3 h-3" /> 12.5%
+                                <ArrowUpRight className="w-3 h-3" /> {demoMode ? '12.5%' : 'Active'}
                             </div>
                         </div>
                         <div className="flex items-baseline gap-1 mb-6">
-                            <PrivacyBlur strength="strong" className={`font-serif text-5xl md:text-6xl tracking-tighter ${GRADIENT_TEXT}`}>$24,500.00</PrivacyBlur>
+                            <PrivacyBlur strength="strong" className={`font-serif text-5xl md:text-6xl tracking-tighter ${GRADIENT_TEXT}`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
                                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300"><PrivacyBlur>$4,200.00</PrivacyBlur> Pending</span>
+                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300"><PrivacyBlur>${pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur> Pending</span>
                             </div>
                         </div>
                     </div>
@@ -657,25 +658,25 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
                             <HardDrive className="w-4 h-4 text-slate-400" />
                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Vault Storage</span>
                         </div>
-                        <span className="text-[10px] font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-white/10 px-2 py-1 rounded-md">85% Used</span>
+                        <span className="text-[10px] font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-white/10 px-2 py-1 rounded-md">{formatBytes(demoRemainingNativeStorageBytes)} left</span>
                     </div>
 
                     <div className="flex-1 flex flex-col justify-center gap-4">
                         <div className="flex items-baseline gap-2">
-                            <span className="font-serif text-4xl md:text-5xl text-slate-900 dark:text-white tracking-tight">25.5</span>
+                            <span className="font-serif text-4xl md:text-5xl text-slate-900 dark:text-white tracking-tight">{Math.round(demoUsedNativeStorageBytes / (1024 ** 3))}</span>
                             <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">GB / 30 GB</span>
                         </div>
                         
                         <div className="space-y-2">
                             <div className="w-full h-2.5 flex rounded-full overflow-hidden gap-0.5 bg-slate-100 dark:bg-white/5">
-                                <div className="h-full bg-indigo-500 w-[45%]" />
-                                <div className="h-full bg-sky-400 w-[25%]" />
-                                <div className="h-full bg-lime-400 w-[15%]" />
+                                <div className="h-full bg-indigo-500 w-[50%]" />
+                                <div className="h-full bg-sky-400 w-[30%]" />
+                                <div className="h-full bg-lime-400 w-[20%]" />
                             </div>
                             <div className="flex justify-between text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Video (13GB)</span>
-                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> Images (7GB)</span>
-                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-lime-400" /> Docs (5GB)</span>
+                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Video (10GB)</span>
+                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> Images (6GB)</span>
+                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-lime-400" /> Docs (4GB)</span>
                             </div>
                         </div>
                     </div>
@@ -827,6 +828,217 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
             )
         }
     ];
+
+    const realSlides = [
+        {
+            id: 'revenue',
+            render: () => (
+                <div className="absolute inset-0 p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-[#23232e] rounded-3xl transition-all duration-700 ease-in-out">
+                    <div>
+                        <div className="flex justify-between items-start mb-4 gap-3">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Net Revenue</span>
+                            <div className="flex items-center gap-1 text-lime-600 dark:text-[#bef264] font-bold text-[10px] bg-lime-50 dark:bg-[#bef264]/10 px-2 py-1 rounded-full border border-lime-100 dark:border-[#bef264]/20 shrink-0">
+                                <ArrowUpRight className="w-3 h-3" /> {paidProjects.length} closed
+                            </div>
+                        </div>
+                        <div className="flex items-baseline gap-1 mb-6">
+                            <PrivacyBlur strength="strong" className={`font-serif text-5xl md:text-6xl tracking-tighter ${GRADIENT_TEXT}`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
+                        </div>
+                        <div className="flex items-center gap-3 flex-wrap">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300"><PrivacyBlur>${pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur> Pending</span>
+                            </div>
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                <CheckCircle className="w-3 h-3 text-lime-500" />
+                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{paidProjects.length} paid or completed</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 h-32 opacity-20 dark:opacity-40 pointer-events-none">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart
+                                data={[
+                                    { v: Math.max(securedRevenue * 0.18, pendingRevenue) },
+                                    { v: Math.max(securedRevenue * 0.35, pendingRevenue) },
+                                    { v: Math.max(securedRevenue * 0.52, pendingRevenue) },
+                                    { v: Math.max(securedRevenue * 0.68, pendingRevenue) },
+                                    { v: Math.max(securedRevenue * 0.84, pendingRevenue) },
+                                    { v: Math.max(securedRevenue, pendingRevenue) },
+                                ]}
+                            >
+                                <defs>
+                                    <linearGradient id="colorHeroMiniLive" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#bef264" stopOpacity={1} />
+                                        <stop offset="95%" stopColor="#bef264" stopOpacity={0} />
+                                    </linearGradient>
+                                    <filter id="shadowLive" height="200%">
+                                        <feDropShadow dx="0" dy="5" stdDeviation="6" floodColor="#bef264" floodOpacity="0.8" />
+                                    </filter>
+                                </defs>
+                                <Area type="monotone" dataKey="v" stroke="#bef264" strokeWidth={3} fill="url(#colorHeroMiniLive)" filter="url(#shadowLive)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'storage',
+            render: () => (
+                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-[#1e293b] rounded-3xl transition-all duration-700 ease-in-out">
+                    <div className="flex justify-between items-start gap-3">
+                        <div className="flex items-center gap-2">
+                            <HardDrive className="w-4 h-4 text-slate-400" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Project Storage</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-white/10 px-2 py-1 rounded-md">{totalFiles} files</span>
+                    </div>
+
+                    <div className="flex-1 flex flex-col justify-center gap-4">
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                            <span className="font-serif text-4xl md:text-5xl text-slate-900 dark:text-white tracking-tight">{formatBytes(totalBytes)}</span>
+                            <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Across {projects.length} project{projects.length === 1 ? '' : 's'}</span>
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="w-full h-2.5 flex rounded-full overflow-hidden gap-0.5 bg-slate-100 dark:bg-white/5">
+                                {(storageBreakdown.length > 0 ? storageBreakdown : [{ label: 'Empty', bytes: 1, color: 'bg-slate-300 dark:bg-white/10' }]).map((item) => (
+                                    <div
+                                        key={item.label}
+                                        className={`h-full ${item.color}`}
+                                        style={{ width: `${storageTotal > 0 ? (item.bytes / storageTotal) * 100 : 100}%` }}
+                                    />
+                                ))}
+                            </div>
+                            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                                {(storageBreakdown.length > 0 ? storageBreakdown : [{ label: 'No files', bytes: 0, color: 'bg-slate-300' }]).map((item) => (
+                                    <span key={item.label} className="flex items-center gap-1">
+                                        <span className={`w-1.5 h-1.5 rounded-full ${item.color}`} /> {item.label} ({item.bytes > 0 ? formatBytes(item.bytes) : '0 B'})
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                        <span>{activeClients} active client{activeClients === 1 ? '' : 's'}</span>
+                        <button onClick={() => { playClick(); navigate('/vault'); }} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1.5 transition-colors">
+                            Manage Files <ArrowRight className="w-3 h-3" />
+                        </button>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'activity',
+            render: () => (
+                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-slate-900 dark:bg-black rounded-3xl transition-all duration-700 ease-in-out relative overflow-hidden">
+                    <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+
+                    <div className="relative z-10 flex justify-between items-start gap-3">
+                        <div className="flex items-center gap-2 px-2 py-1 rounded bg-white/10 border border-white/10 backdrop-blur-md">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-lime-500"></span>
+                            </span>
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-white">Recent Activity</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-white/50">{recentProjectLabel}</span>
+                    </div>
+
+                    <div className="relative z-10 flex-1 flex flex-col justify-center">
+                        {recentProject ? (
+                            <>
+                                <div className="flex items-center gap-4 mb-3">
+                                    <div className="relative">
+                                        {recentProject.client.avatar ? (
+                                            <img src={recentProject.client.avatar} alt={recentProject.client.name || 'Client'} className="w-12 h-12 rounded-full border-2 border-slate-800 object-cover" />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-full border-2 border-slate-800 bg-white/10 flex items-center justify-center">
+                                                <User className="w-5 h-5 text-white/70" />
+                                            </div>
+                                        )}
+                                        <div className="absolute -bottom-1 -right-1 bg-slate-800 p-1 rounded-full border border-slate-700">
+                                            <Monitor className="w-3 h-3 text-lime-400" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-white leading-tight">{recentProject.client.name || recentProject.client.company || 'Client'}</h3>
+                                        <p className="text-xs text-white/60">{recentProject.client.company || recentProject.name}</p>
+                                    </div>
+                                </div>
+                                <p className="font-serif text-xl text-white/90 leading-snug">
+                                    {recentProject.clientViewedAt ? 'Last viewed' : 'Most recent project'} <span className="text-lime-400 font-sans font-medium">{recentProject.name}</span>
+                                </p>
+                                <p className="text-xs uppercase tracking-widest text-white/50 mt-3">
+                                    {recentProject.status.replace(/_/g, ' ')} • ${recentProject.amount.toLocaleString()}
+                                </p>
+                            </>
+                        ) : (
+                            <div>
+                                <h3 className="font-serif text-3xl text-white mb-2">No project activity yet.</h3>
+                                <p className="text-sm text-white/70 max-w-sm">Create your first project to start tracking client views, payments, and delivery activity here.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="relative z-10 flex justify-start">
+                        <button onClick={() => { playClick(); navigate(recentProject ? '/activity' : '/create'); }} className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2 backdrop-blur-md border border-white/10">
+                            {recentProject ? 'Open Activity' : 'Create Project'} <ArrowRight className="w-3 h-3" />
+                        </button>
+                    </div>
+                </div>
+            )
+        }
+    ];
+    const slides = demoMode ? demoSlides : realSlides;
+
+    useEffect(() => {
+        setCycleIndex((idx) => (idx >= slides.length ? 0 : idx));
+    }, [slides.length]);
+
+    useEffect(() => {
+        let timer: any;
+        if (!isPaused && !isReplying && slides.length > 1) {
+            timer = setInterval(() => {
+                setProgress((prev) => {
+                    const next = prev + (interval / duration) * 100;
+                    if (next >= 100) {
+                        setCycleIndex((idx) => (idx + 1) % slides.length);
+                        return 0;
+                    }
+                    return next;
+                });
+            }, interval);
+        }
+        return () => clearInterval(timer);
+    }, [isPaused, isReplying, slides.length]);
+
+    const manualChange = (index: number) => {
+        setCycleIndex(index);
+        setProgress(0);
+        setIsReplying(false);
+    };
+
+    if (!demoMode && projects.length === 0) {
+        return (
+            <div className="w-full bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm relative h-[280px] p-6 sm:p-8">
+                <div className="h-full flex flex-col items-center justify-center text-center opacity-90 p-4">
+                    <div className="w-16 h-16 rounded-[1.5rem] bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4 shadow-sm">
+                        <Database className="w-8 h-8 text-slate-400 stroke-[1.5]" />
+                    </div>
+                    <h3 className="font-serif text-xl text-slate-900 dark:text-white mb-2">Unlock Your Analytics</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[280px] leading-relaxed mb-6">
+                        Create your first project to start tracking revenue, storage usage, and client engagement.
+                    </p>
+                    <button onClick={() => { playClick(); navigate('/create'); }} className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-bold uppercase tracking-wider transition-all">
+                        Initialize Analytics
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div 
@@ -1192,7 +1404,7 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
                                 ))
                             )}
                         </div>
-                        <button onClick={() => navigate('/vault')} className="mt-8 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 group transition-colors">
+                        <button onClick={() => navigate('/reports?focus=audit')} className="mt-8 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 group transition-colors">
                             View Full Ledger <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                         </button>
                     </div>
@@ -1636,13 +1848,26 @@ const MobileNavBar = ({ navItems, currentPath, onNavigate }: { navItems: any[], 
     </div>
 );
 
-const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togglePrivacyMode, privacyMode }: any) => {
+const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togglePrivacyMode, privacyMode, onSignOut }: any) => {
     const navigate = useNavigate();
     const location = useLocation();
     const stripOffset = useStripOffset();
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false); // NEW State
     const [demoMode, setDemoMode] = useState(isMockMode());
+    const mainContentTopGapPx = 10;
+
+    const handleDemoModeToggle = (next: boolean) => {
+        setDemoMode(next);
+
+        if (!next) {
+            const returnTo = `${location.pathname}${location.search}${location.hash}`;
+            setMockModeAndNavigate(false, `/signin?from=mode-switch&returnTo=${encodeURIComponent(returnTo)}`);
+            return;
+        }
+
+        setMockMode(true);
+    };
 
     // Determine current view state based on pathname for active highlighting
     const currentPath = location.pathname.split('/')[1] || 'dashboard';
@@ -1773,8 +1998,8 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
             { id: 'cmd-create', title: 'Create Project', subtitle: 'Start a new handover', icon: Plus, action: () => navigate('/create'), kind: 'Action' },
             { id: 'cmd-theme', title: 'Toggle Theme', subtitle: 'Switch between light and dark mode', icon: themeMode === 'dark' ? Sun : Moon, action: () => { onSetThemeMode(themeMode === 'dark' ? 'light' : 'dark'); }, kind: 'Action' },
             { id: 'cmd-privacy', title: 'Toggle Privacy', subtitle: 'Hide sensitive financial data', icon: privacyMode ? Eye : EyeOff, action: togglePrivacyMode, kind: 'Action' },
-            { id: 'cmd-mock', title: 'Toggle Demo Data', subtitle: 'Switch between real and mock data', icon: Database, action: () => { setDemoMode(!demoMode); setMockMode(!demoMode); window.location.reload(); }, kind: 'Action' },
-        ]), [navigate, themeMode, privacyMode, demoMode, onSetThemeMode, togglePrivacyMode]);
+            { id: 'cmd-mock', title: 'Toggle Demo Data', subtitle: 'Switch between real and mock data', icon: Database, action: () => handleDemoModeToggle(!demoMode), kind: 'Action' },
+        ]), [navigate, themeMode, privacyMode, demoMode, onSetThemeMode, togglePrivacyMode, handleDemoModeToggle]);
 
         const normalized = query.trim().toLowerCase();
 
@@ -2023,7 +2248,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
                 </button>
             </div>
 
-            <button onClick={() => { setIsProfileOpen(false); navigate('/signin'); }} className="w-full mt-4 py-2 text-[10px] font-bold uppercase text-slate-400 hover:text-red-500 transition-colors flex items-center justify-center gap-2">
+            <button onClick={async () => { setIsProfileOpen(false); await onSignOut(); navigate('/signin'); }} className="w-full mt-4 py-2 text-[10px] font-bold uppercase text-slate-400 hover:text-red-500 transition-colors flex items-center justify-center gap-2">
                 <LogOut className="w-3 h-3" /> Sign Out
             </button>
         </div>
@@ -2124,9 +2349,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
                             <button
                                 onClick={() => {
                                     playClick();
-                                    const next = !demoMode;
-                                    setDemoMode(next);
-                                    setMockMode(next);
+                                    handleDemoModeToggle(!demoMode);
                                 }}
                                 className={`px-3 py-2.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all ${demoMode
                                     ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-700/30 dark:text-amber-300'
@@ -2175,11 +2398,10 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
                 </div>
             </header>
 
-            {/* MAIN CONTENT — keep padding static so UI below header never shifts. 
-                Includes maximum space for the header + strip so they never overlap content. */}
+            {/* MAIN CONTENT — dynamic padding so it shifts smoothly with the header when strips appear/disappear. */}
             <main
-                className="w-full max-w-[99%] mx-auto px-3 md:px-5 lg:px-7 pb-24 lg:pb-16 min-h-[500px] relative z-10 transition-all duration-300 font-sans"
-                style={{ paddingTop: headerHeightPx + 28 /* max strip height */ }}
+                className="w-full max-w-[99%] mx-auto px-3 md:px-5 lg:px-7 pb-24 lg:pb-16 min-h-[500px] relative z-10 transition-[padding-top] duration-200 font-sans"
+                style={{ paddingTop: headerHeightPx + stripOffset + mainContentTopGapPx }}
             >
                 {/* key on pathname triggers the CSS route-in animation on every navigation */}
                 <div key={location.pathname} className="animate-route-in">
@@ -2450,7 +2672,28 @@ const AppContent = () => {
     }, []);
 
     // -- STATE MANAGEMENT via Store --
-    const { projects, user, saveProject, updateUser } = useStore();
+    const { projects, user, authResolved, saveProject, updateUser, resetStore } = useStore();
+    const isLiveMode = !isMockMode();
+    const handleGetStarted = () => {
+        if (user.id) {
+            window.location.assign('/dashboard');
+            return;
+        }
+
+        if (isLiveMode) {
+            setMockModeAndNavigate(true, '/dashboard');
+            return;
+        }
+
+        window.location.assign('/dashboard');
+    };
+
+    const protectLiveRoute = (element: React.ReactNode) => {
+        if (!isLiveMode) return element;
+        if (!authResolved) return <PageLoader />;
+        if (!user.id) return <Navigate to="/signin" replace />;
+        return element;
+    };
 
     // Theme Management Effect
     useEffect(() => {
@@ -2644,7 +2887,7 @@ const AppContent = () => {
                             path="/"
                             element={
                                 <LandingPage
-                                    onGetStarted={() => window.location.href = '/dashboard'}
+                                    onGetStarted={handleGetStarted}
                                     currentTheme={themeMode}
                                     onSetThemeMode={setThemeMode}
                                     toggleTheme={cycleTheme}
@@ -2654,7 +2897,7 @@ const AppContent = () => {
                         <Route path="/signin" element={<SignInPage themeMode={themeMode} toggleTheme={cycleTheme} />} />
                         <Route path="/c/:token" element={<ClientLinkWrapper isDarkMode={isDarkMode} themeMode={themeMode} onToggleTheme={cycleTheme} onSetThemeMode={setThemeMode} />} />
                         <Route path="/portal/:token" element={<ClientPortalWrapper />} />
-                        <Route element={<AppLayout
+                        <Route element={protectLiveRoute(<AppLayout
                             user={user}
                             projects={projects}
                             isDarkMode={isDarkMode}
@@ -2663,19 +2906,19 @@ const AppContent = () => {
                             setIsDarkMode={setIsDarkMode}
                             togglePrivacyMode={togglePrivacyMode}
                             privacyMode={privacyMode}
-                        />}>
+                            onSignOut={resetStore}
+                        />)}>
                             <Route path="/dashboard" element={<Suspense fallback={<DashboardSkeleton />}><DashboardView projects={projects} user={user} /></Suspense>} />
                             <Route path="/activity" element={<Suspense fallback={<PageLoader />}><ActivityView /></Suspense>} />
                             <Route path="/vault" element={<Suspense fallback={<VaultSkeleton />}><VaultView projects={projects} /></Suspense>} />
                             <Route path="/reports" element={<Suspense fallback={<PageLoader />}><ReportsView /></Suspense>} />
-                            {/* @ts-ignore - Prop will be added in next step */}
-                            <Route path="/settings" element={<SettingsPage user={user} onUpdateUser={updateUser} />} />
+                            <Route path="/settings" element={<SettingsPage user={user} onUpdateUser={updateUser} onSignOut={resetStore} />} />
                             <Route path="/trash" element={<TrashPage onBack={() => window.history.back()} />} />
                             <Route path="/help" element={<HelpPage onBack={() => window.history.back()} />} />
                         </Route>
-                        <Route path="/create" element={<CreatorWrapper projects={projects} onSave={saveProject} user={user} />} />
-                        <Route path="/editor/:id" element={<EditorWrapper projects={projects} onSave={saveProject} user={user} />} />
-                        <Route path="/preview/:id" element={<PreviewWrapper projects={projects} user={user} isDarkMode={isDarkMode} themeMode={themeMode} onToggleTheme={cycleTheme} onSetThemeMode={setThemeMode} />} />
+                        <Route path="/create" element={protectLiveRoute(<CreatorWrapper projects={projects} onSave={saveProject} user={user} />)} />
+                        <Route path="/editor/:id" element={protectLiveRoute(<EditorWrapper projects={projects} onSave={saveProject} user={user} />)} />
+                        <Route path="/preview/:id" element={protectLiveRoute(<PreviewWrapper projects={projects} user={user} isDarkMode={isDarkMode} themeMode={themeMode} onToggleTheme={cycleTheme} onSetThemeMode={setThemeMode} />)} />
                     </Routes>
                     </Suspense>
                 </BrowserRouter>

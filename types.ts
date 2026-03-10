@@ -122,21 +122,23 @@ export interface AgencySettings {
 }
 
 export interface StorageSettings {
-    provider: 'custom' | 'aws' | 'r2' | 'wasabi' | 'spaces';
-    endpoint: string;
-    bucket: string;
-    accessKey: string;
-    secretKey?: string;
-    region?: string;
-    accountId?: string;
+    /**
+     * Production posture:
+     * - Platform storage (private R2) is handled via server-issued presigned URLs.
+     * - Do not store any cloud OAuth tokens or S3/R2 secret keys in the browser or in `profiles.storage_settings`.
+     */
+    mode: 'platform';
+
+    // Optional non-sensitive BYOS label (links-only workflow; no OAuth tokens stored client-side).
     byosDriveProvider?: 'google' | 'dropbox' | 'onedrive';
-    byosGoogleToken?: string;
-    byosGoogleApiKey?: string;
-    byosDropboxToken?: string;
-    byosOneDriveToken?: string;
-    byosGoogleAccountLabel?: string;
-    byosDropboxAccountLabel?: string;
-    byosOneDriveAccountLabel?: string;
+    byosDriveAccountLabel?: string;
+}
+
+export interface ProfilePreferences {
+    emailAlerts: boolean;
+    pushNotifs: boolean;
+    twoFactor: boolean;
+    biometric: boolean;
 }
 
 export interface UserProfile {
@@ -163,4 +165,5 @@ export interface UserProfile {
     };
     agencySettings?: AgencySettings;
     storageSettings?: StorageSettings;
+    profilePreferences?: ProfilePreferences;
 }

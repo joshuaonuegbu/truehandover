@@ -712,7 +712,6 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                 url: trimmedUrl,
                 customName: newLink.name.trim() || undefined,
                 customSize: newLink.size.trim() || undefined,
-                storageConfig: user?.storageSettings
             });
             const renamedAsset = normalizeUnknownSize({ ...importedAsset, name: deduplicateFileName(importedAsset.name, files.map(f => f.name)) });
             setFiles(prev => [...prev, renamedAsset]);
