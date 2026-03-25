@@ -2090,6 +2090,7 @@ const StageBackground = ({ isDarkMode }: { isDarkMode: boolean }) => (
 /** Self-contained delivery widget — the "star" of the main surface */
 const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPublish: (project: Project) => Promise<void> | void }) => {
     const navigate = useNavigate();
+    const toast = useToast();
     const { projects } = useStore();
     const initialDraft = useMemo(() => readQuickDeliveryDraft(), []);
     const widgetShellRef = useRef<HTMLDivElement>(null);
@@ -2116,6 +2117,14 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
     const [publishState, setPublishState] = useState<'idle' | 'publishing' | 'success' | 'error'>('idle');
     const [publishMessage, setPublishMessage] = useState('');
     const [widgetView, setWidgetView] = useState<'create' | 'projects' | 'briefing'>('create');
+    const [linkReady, setLinkReady] = useState<null | {
+        projectId: string;
+        projectName: string;
+        clientUrl: string;
+        clientName: string;
+        clientEmail: string;
+        message: string;
+    }>(null);
 
     const formatWidgetTime = (iso: string) => {
         const ms = Date.now() - new Date(iso).getTime();
@@ -2266,9 +2275,25 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
             }
         };
 
+        const clientUrl = (() => {
+            try {
+                return new URL(`/c/${project.clientLink}`, window.location.origin).toString();
+            } catch {
+                return `/c/${project.clientLink}`;
+            }
+        })();
+
         try {
             await onPublish(project);
-            clearDraft();
+            setLinkReady({
+                projectId: project.id,
+                projectName: project.name,
+                clientUrl,
+                clientName: project.client.name,
+                clientEmail: project.client.email,
+                message: project.message || ''
+            });
+            clearDraft({ keepLinkReady: true });
             setPublishState('success');
             setPublishMessage(`Published "${project.name}"`);
             playSuccess();
@@ -2279,13 +2304,57 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
         }
     };
 
+    const handleCopyClientUrl = async () => {
+        if (!linkReady?.clientUrl) return;
+        try {
+            await navigator.clipboard.writeText(linkReady.clientUrl);
+            toast('Client link copied.');
+            playSuccess();
+        } catch {
+            toast('Could not copy link.', 'error');
+            playClick();
+        }
+    };
+
+    const handleOpenClientVault = () => {
+        if (!linkReady?.clientUrl) return;
+        playClick();
+        window.open(linkReady.clientUrl, '_blank', 'noopener,noreferrer');
+    };
+
+    const handleEmailClient = () => {
+        if (!linkReady?.clientUrl) return;
+        const email = (linkReady.clientEmail || '').trim();
+        if (!email) {
+            toast('Add a client email to send from the widget.', 'info');
+            playClick();
+            return;
+        }
+        const subject = `Your "${linkReady.projectName}" delivery is ready`;
+        const intro = linkReady.message?.trim()
+            ? linkReady.message.trim()
+            : `Hi ${linkReady.clientName || 'there'}, your files are ready for review.`;
+        const body = `${intro}\n\nOpen your vault:\n${linkReady.clientUrl}\n`;
+        window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    };
+
+    const handleCreateAnother = () => {
+        playClick();
+        setLinkReady(null);
+        setPublishState('idle');
+        setPublishMessage('');
+    };
+
     const ingestFiles = (incoming: FileList | File[] | null) => {
         if (!incoming || incoming.length === 0) return;
         setFiles((prev) => [...prev, ...Array.from(incoming).map(buildQuickDraftAsset)]);
     };
 
-    const clearDraft = () => {
+    const clearDraft = (opts?: { keepLinkReady?: boolean }) => {
         playClick();
+        if (!opts?.keepLinkReady) setLinkReady(null);
+        setPublishState('idle');
+        setPublishMessage('');
         setFiles([]);
         setProjectName('');
         setLinkLabel('');
@@ -2538,6 +2607,64 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                 <div className="mt-4 flex-1 min-h-0">
                 {widgetView === 'create' && (
                 <div className="h-full overflow-y-auto pr-1 briefing-scroll">
+                {linkReady ? (
+                    <div className={`rounded-2xl border p-4 ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}>
+                        <div className="flex items-start gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                                <CheckCircle className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm font-bold text-zinc-900 dark:text-white truncate">Link ready</p>
+                                <p className="text-xs text-zinc-500 dark:text-zinc-300 truncate">{linkReady.projectName}</p>
+                            </div>
+                        </div>
+
+                        <div className="mt-3 space-y-2">
+                            <input
+                                value={linkReady.clientUrl}
+                                readOnly
+                                className={inputCls}
+                                onFocus={(e) => e.currentTarget.select()}
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    onClick={handleCopyClientUrl}
+                                    className={`h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode ? 'bg-white/8 text-white hover:bg-white/12 border border-white/10' : 'bg-white text-zinc-900 hover:bg-zinc-50 border border-zinc-200'}`}
+                                >
+                                    <Copy className="w-4 h-4" />
+                                    Copy link
+                                </button>
+                                <button
+                                    onClick={handleOpenClientVault}
+                                    className={`h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode ? 'bg-white/8 text-white hover:bg-white/12 border border-white/10' : 'bg-white text-zinc-900 hover:bg-zinc-50 border border-zinc-200'}`}
+                                >
+                                    <ExternalLink className="w-4 h-4" />
+                                    Open vault
+                                </button>
+                                <button
+                                    onClick={handleEmailClient}
+                                    disabled={!linkReady.clientEmail?.trim()}
+                                    className={`h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors shadow-sm ${!linkReady.clientEmail?.trim() ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${isDarkMode ? 'bg-white/8 text-white hover:bg-white/12 border border-white/10' : 'bg-white text-zinc-900 hover:bg-zinc-50 border border-zinc-200'}`}
+                                >
+                                    <Mail className="w-4 h-4" />
+                                    Email
+                                </button>
+                                <button
+                                    onClick={handleCreateAnother}
+                                    className="h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer bg-blue-600 hover:bg-blue-700 text-white"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    New
+                                </button>
+                            </div>
+                        </div>
+
+                        <p className="mt-3 text-center text-[10px] text-zinc-400 dark:text-zinc-500">
+                            {publishMessage || 'Share the link above with your client.'}
+                        </p>
+                    </div>
+                ) : (
+                <>
                 <div className="grid grid-cols-2 gap-2">
                     <button
                         onClick={() => { playClick(); fileInputRef.current?.click(); }}
@@ -2845,6 +2972,8 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                 <p className={`mt-3 text-center text-[10px] ${publishState === 'error' ? 'text-red-500' : publishState === 'success' ? 'text-emerald-500' : 'text-zinc-400 dark:text-zinc-500'}`}>
                     {publishMessage || 'Draft auto-saves while you work in the widget.'}
                 </p>
+                </>
+                )}
                 </div>
                 )}
 
@@ -2935,7 +3064,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
     );
 };
 
-const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togglePrivacyMode, privacyMode, onSignOut }: any) => {
+const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layoutMode, onSetLayoutMode, togglePrivacyMode, privacyMode, onSignOut }: any) => {
     const navigate = useNavigate();
     const location = useLocation();
     const stripOffset = useStripOffset();
@@ -3012,6 +3141,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
     // g-chord state for "g+d / g+v / g+r / g+a / g+s" navigation shortcuts
     const gChordRef = useRef(false);
     const gChordTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const dockWidgetRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleDown = (e: KeyboardEvent) => {
@@ -3354,7 +3484,38 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
     );
 
     const headerHeightPx = 64;
-    const isPanelOpen = currentPath !== 'workspace';
+    const isDockMode = layoutMode !== 'full';
+    const isPanelOpen = isDockMode && currentPath !== 'workspace';
+
+    useEffect(() => {
+        if (!isDockMode) {
+            document.documentElement.style.removeProperty('--dock-panel-left');
+            return;
+        }
+
+        const update = () => {
+            const el = dockWidgetRef.current;
+            if (!el) return;
+            const rect = el.getBoundingClientRect();
+            const gutter = window.innerWidth >= 1280 ? 36 : 16;
+            const leftPx = Math.round(rect.right + gutter);
+            document.documentElement.style.setProperty('--dock-panel-left', `${leftPx}px`);
+        };
+
+        update();
+        window.addEventListener('resize', update);
+
+        let ro: ResizeObserver | null = null;
+        if (typeof ResizeObserver !== 'undefined' && dockWidgetRef.current) {
+            ro = new ResizeObserver(() => update());
+            ro.observe(dockWidgetRef.current);
+        }
+
+        return () => {
+            window.removeEventListener('resize', update);
+            ro?.disconnect();
+        };
+    }, [isDockMode]);
     const topbarGlassCls = 'bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-zinc-200/60 dark:border-white/10 shadow-lg';
     const topbarGlassHoverCls = 'hover:bg-slate-200/70 dark:hover:bg-white/10';
     const greetingName = useMemo(() => {
@@ -3400,28 +3561,28 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
     const [heroGreetingPrefix, heroGreetingSuffix] = (heroGreetingTemplate || 'Hello, {{name}}.').split('{{name}}');
 
     useEffect(() => {
-        if (isPanelOpen) return;
+        if (!isDockMode || isPanelOpen) return;
         const timer = window.setInterval(() => {
             setHeroTipIndex((index) => (index + 1) % heroTips.length);
         }, 9000);
         return () => window.clearInterval(timer);
-    }, [isPanelOpen, heroTips.length]);
+    }, [isDockMode, isPanelOpen, heroTips.length]);
 
     useEffect(() => {
-        if (heroGreetingPlayed || isPanelOpen) return;
+        if (!isDockMode || heroGreetingPlayed || isPanelOpen) return;
         setShowHeroGreeting(true);
         const timer = window.setTimeout(() => {
             setShowHeroGreeting(false);
             setHeroGreetingPlayed(true);
         }, 9000);
         return () => window.clearTimeout(timer);
-    }, [heroGreetingPlayed, isPanelOpen]);
+    }, [isDockMode, heroGreetingPlayed, isPanelOpen]);
 
     useEffect(() => {
-        if (!isPanelOpen || !showHeroGreeting) return;
+        if (!isDockMode || !isPanelOpen || !showHeroGreeting) return;
         setShowHeroGreeting(false);
         setHeroGreetingPlayed(true);
-    }, [isPanelOpen, showHeroGreeting]);
+    }, [isDockMode, isPanelOpen, showHeroGreeting]);
 
     const handleTopLevelNavigate = (id: string) => {
         if (currentPath === id) {
@@ -3503,6 +3664,17 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
                         title="Search (Ctrl K)"
                     >
                         <Search className="w-4 h-4" />
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            playClick();
+                            onSetLayoutMode?.(layoutMode === 'full' ? 'dock' : 'full');
+                        }}
+                        className={`p-2.5 rounded-xl text-zinc-500 dark:text-zinc-300 transition-all cursor-pointer ${topbarGlassCls} ${topbarGlassHoverCls}`}
+                        title={`Layout: ${layoutMode === 'full' ? 'Full workspace' : 'Docked widget'}`}
+                    >
+                        <ArrowLeftRight className="w-4 h-4" />
                     </button>
 
                     {/* Privacy toggle */}
@@ -3611,15 +3783,39 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
             </header>
 
             {/* ── Delivery Widget: floats left, vertically centered below header ── */}
-            <div
-                className="fixed left-4 right-4 sm:left-8 sm:right-auto z-20 flex items-center transition-[opacity,transform] duration-500"
-                style={{ top: stripOffset + headerHeightPx, bottom: 72 }}
-            >
-                <DeliveryWidget isDarkMode={isDarkMode} onPublish={saveProject} />
-            </div>
+            {isDockMode && (
+                <div
+                    ref={dockWidgetRef}
+                    className="fixed left-4 right-4 sm:left-8 sm:right-auto z-20 flex items-center transition-[opacity,transform] duration-500"
+                    style={{ top: stripOffset + headerHeightPx, bottom: 72 }}
+                >
+                    <DeliveryWidget isDarkMode={isDarkMode} onPublish={saveProject} />
+                </div>
+            )}
 
             {/* ── Main Page Greeting (Hero) ── */}
-            {!isPanelOpen && (
+            {layoutMode === 'full' && (
+                <main
+                    className="fixed left-0 right-0 bottom-0 z-[30] overflow-hidden"
+                    style={{ top: stripOffset + headerHeightPx }}
+                >
+                    <div className="h-full overflow-y-auto px-3 sm:px-5 lg:px-6 xl:px-7 py-3 sm:py-4 bg-[#f0f2f5] dark:bg-cosmic">
+                        {currentPath === 'workspace' ? (
+                            <div className="h-full flex items-stretch justify-center">
+                                <div className="h-full flex items-stretch py-2">
+                                    <DeliveryWidget isDarkMode={isDarkMode} onPublish={saveProject} />
+                                </div>
+                            </div>
+                        ) : (
+                            <div key={location.pathname} className="h-full animate-route-in">
+                                <Outlet context={{ privacyMode, openSearch: () => setIsSearchOpen(true) }} />
+                            </div>
+                        )}
+                    </div>
+                </main>
+            )}
+
+            {isDockMode && !isPanelOpen && (
                 <div className="fixed left-[430px] right-6 top-1/2 -translate-y-1/2 hidden xl:flex flex-col items-center justify-center text-center pointer-events-none z-0 px-10 animate-fade-in duration-1000" style={{ top: `calc(50% + ${stripOffset/2}px)` }}>
                     <div className="relative w-full max-w-[1040px] min-h-[340px]">
                         <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-700 ${showHeroGreeting ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
@@ -3646,37 +3842,41 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
             )}
 
             {/* ── Panel backdrop ── */}
-            <div
-                className={`fixed inset-0 z-[60] transition-opacity duration-300 ${isPanelOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-                style={{ top: stripOffset, background: 'rgba(0,0,0,0.22)' }}
-                onClick={() => { playClick(); navigate('/workspace'); }}
-            />
+            {isDockMode && (
+                <div
+                    className={`fixed inset-0 z-[60] transition-opacity duration-300 ${isPanelOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                    style={{ top: stripOffset, background: 'rgba(0,0,0,0.22)' }}
+                    onClick={() => { playClick(); navigate('/workspace'); }}
+                />
+            )}
 
             {/* ── Side panel ── */}
-            <aside
-                className={`fixed right-0 bottom-0 z-[70] w-full max-w-[960px] lg:w-auto lg:max-w-none lg:left-[420px] xl:left-[440px] bg-[#f0f2f5] dark:bg-cosmic transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}
-                style={{ top: stripOffset }}
-                aria-hidden={!isPanelOpen}
-            >
-                <div className="h-full bg-[#f0f2f5] dark:bg-cosmic border-l border-zinc-200/60 dark:border-white/[0.09] shadow-2xl overflow-hidden flex flex-col transition-[box-shadow,border-color] duration-700" style={{ paddingTop: 12 }}>
-                    <div className="shrink-0 h-14 px-5 flex items-center border-b border-zinc-100 dark:border-white/10 bg-[#f0f2f5] dark:bg-cosmic">
-                        <button
-                            onClick={() => { playClick(); navigate('/workspace'); }}
-                            className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white transition-colors cursor-pointer"
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                            Close
-                        </button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto">
-                        <div className="h-full px-3 sm:px-5 lg:px-6 xl:px-7 py-3 sm:py-4 bg-[#f0f2f5] dark:bg-cosmic">
-                            <div key={location.pathname} className="h-full animate-route-in">
-                                <Outlet context={{ privacyMode, openSearch: () => setIsSearchOpen(true) }} />
+            {isDockMode && (
+                <aside
+                    className={`dock-panel fixed right-0 bottom-0 z-[70] w-full max-w-[960px] lg:w-auto lg:max-w-none bg-[#f0f2f5] dark:bg-cosmic transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                    style={{ top: stripOffset }}
+                    aria-hidden={!isPanelOpen}
+                >
+                    <div className="h-full bg-[#f0f2f5] dark:bg-cosmic border-l border-zinc-200/60 dark:border-white/[0.09] shadow-2xl overflow-hidden flex flex-col transition-[box-shadow,border-color] duration-700" style={{ paddingTop: 12 }}>
+                        <div className="shrink-0 h-14 px-5 flex items-center border-b border-zinc-100 dark:border-white/10 bg-[#f0f2f5] dark:bg-cosmic">
+                            <button
+                                onClick={() => { playClick(); navigate('/workspace'); }}
+                                className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white transition-colors cursor-pointer"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                                Close
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                            <div className="h-full px-3 sm:px-5 lg:px-6 xl:px-7 py-3 sm:py-4 bg-[#f0f2f5] dark:bg-cosmic">
+                                <div key={location.pathname} className="h-full animate-route-in">
+                                    <Outlet context={{ privacyMode, openSearch: () => setIsSearchOpen(true) }} />
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </aside>
+                </aside>
+            )}
 
             {/* ── Help FAB ── */}
             <div className="fixed bottom-24 right-4 lg:bottom-8 lg:right-8 z-40">
@@ -3909,6 +4109,14 @@ const AppContent = () => {
         return 'system';
     };
     const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>(getInitialTheme());
+    const [layoutMode, setLayoutMode] = useState<'dock' | 'full'>(() => {
+        try {
+            const stored = localStorage.getItem('hf_layout_mode');
+            if (stored === 'dock' || stored === 'full') return stored;
+        } catch {
+        }
+        return 'dock';
+    });
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [firstVisitThemeNotice, setFirstVisitThemeNotice] = useState<string | null>(null);
 
@@ -4057,6 +4265,13 @@ const AppContent = () => {
             return () => matchDark.removeEventListener('change', applyTheme);
         }
     }, [themeMode]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('hf_layout_mode', layoutMode);
+        } catch {
+        }
+    }, [layoutMode]);
 
     useEffect(() => {
         try {
@@ -4244,6 +4459,8 @@ const AppContent = () => {
                             isDarkMode={isDarkMode}
                             themeMode={themeMode}
                             onSetThemeMode={setThemeMode}
+                            layoutMode={layoutMode}
+                            onSetLayoutMode={setLayoutMode}
                             setIsDarkMode={setIsDarkMode}
                             togglePrivacyMode={togglePrivacyMode}
                             privacyMode={privacyMode}

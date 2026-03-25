@@ -231,3 +231,10 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
 }
+
+/* Docked layout: panel offset follows widget width */
+@media (min-width: 1024px) {
+  .dock-panel {
+    left: var(--dock-panel-left, 420px);
+  }
+}
