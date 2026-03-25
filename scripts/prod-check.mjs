@@ -87,7 +87,7 @@ const functionsEnvPath = path.join(root, "supabase", ".env.local");
 const frontend = readEnvFile(frontendEnvPath);
 const functions = readEnvFile(functionsEnvPath);
 
-console.log("TrueHandover production check\n");
+console.log("Heartflair production check\n");
 console.log(`Frontend env: ${frontend.exists ? frontendEnvPath : "(missing)"} (copy from .env.example)`);
 console.log(`Functions env: ${functions.exists ? functionsEnvPath : "(missing)"} (copy from supabase/.env.example)`);
 

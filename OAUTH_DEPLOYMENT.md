@@ -7,14 +7,14 @@
 
 This document is retained as a reference for a future secure connector implementation.
 
-Historically, TrueHandover supported "Bring Your Own Storage" (BYOS) via cloud-drive connections in:
+Historically, Heartflair supported "Bring Your Own Storage" (BYOS) via cloud-drive connections in:
 
 `Settings -> Storage -> Cloud Drive`
 
 ## The Non-Negotiable Reality
 
-If you want TrueHandover to show an OAuth consent screen like "TrueHandover wants access to your Drive",
-you (TrueHandover) must register an OAuth app with each provider at least once.
+If you want Heartflair to show an OAuth consent screen like "Heartflair wants access to your Drive",
+you (Heartflair) must register an OAuth app with each provider at least once.
 
 Your customers do **not** create OAuth keys. They simply click **Connect** and grant permissions.
 

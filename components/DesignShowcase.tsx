@@ -4,7 +4,7 @@
  * A fully self-contained design playground. 5 premium layout variants, each
  * covering Dashboard / Vault / Activity / Reports / Settings.
  *
- * Uses TrueHandover's own lime accent + dark-mode tokens — only layout, spacing
+ * Uses Heartflair's own lime accent + dark-mode tokens — only layout, spacing
  * and UI chrome varies between variants.
  *
  * To remove: delete this file, remove the /design-showcase route from App.tsx
@@ -58,7 +58,7 @@ const MOCK_ACTIVITY = [
 ];
 
 // ─── Micro chart (inline sparkline SVG) ───────────────────────────────────────
-const Sparkline = ({ data, color = '#bef264', height = 40, width = 120 }: { data: number[]; color?: string; height?: number; width?: number }) => {
+const Sparkline = ({ data, color = '#a3e635', height = 40, width = 120 }: { data: number[]; color?: string; height?: number; width?: number }) => {
     const max = Math.max(...data);
     const min = Math.min(...data);
     const range = max - min || 1;
@@ -92,8 +92,8 @@ const StatusBadge = ({ status }: { status: string }) => {
     const map: Record<string, string> = {
         pending: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
         active: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400',
-        paid: 'bg-lime-100 text-brand-hover dark:bg-lime-500/15 dark:text-brand',
-        draft: 'bg-slate-200 text-slate-500 dark:bg-white/5 dark:text-slate-400',
+        paid: 'bg-blue-100 text-brand-hover dark:bg-blue-500/15 dark:text-brand',
+        draft: 'bg-zinc-200 text-zinc-500 dark:bg-white/5 dark:text-zinc-400',
     };
     return (
         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${map[status] || map.draft}`}>
@@ -125,13 +125,13 @@ const SECTIONS: { id: Section; label: string; icon: any }[] = [
 const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: boolean }) => {
     const accentText = isDark ? 'text-brand' : 'text-brand';
     const accentBg = isDark ? 'bg-brand text-black' : 'bg-brand text-white';
-    const cardBg = isDark ? 'bg-[#1e1e28] border-white/10' : 'bg-white border-slate-200';
-    const subText = isDark ? 'text-slate-400' : 'text-slate-500';
-    const hrCol = isDark ? 'border-white/10' : 'border-slate-200';
+    const cardBg = isDark ? 'bg-[#1e1e28] border-white/10' : 'glass-panel';
+    const subText = isDark ? 'text-zinc-400' : 'text-zinc-500';
+    const hrCol = isDark ? 'border-white/10' : 'border-zinc-200';
 
     if (section === 'dashboard') return (
         <div className="space-y-6">
-            <h1 className={`font-serif text-3xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>
+            <h1 className={`font-sans tracking-tight text-3xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>
                 Good afternoon, <span className={accentText}>Joshua.</span>
             </h1>
             <div className="grid grid-cols-4 gap-4">
@@ -143,7 +143,7 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
                 ].map(k => (
                     <div key={k.label} className={`${cardBg} border rounded-2xl p-5`}>
                         <p className={`text-[10px] font-bold uppercase tracking-widest ${subText} mb-2`}>{k.label}</p>
-                        <p className={`font-serif text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>{k.value}</p>
+                        <p className={`font-sans tracking-tight text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>{k.value}</p>
                         <p className={`text-xs mt-1 flex items-center gap-1 ${k.up ? accentText : 'text-amber-500'}`}>
                             {k.up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />} {k.change}
                         </p>
@@ -153,25 +153,25 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
             <div className="grid grid-cols-3 gap-4">
                 <div className={`${cardBg} border rounded-2xl p-5 col-span-2`}>
                     <div className="flex justify-between items-center mb-4">
-                        <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>Revenue Trend</p>
+                        <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-zinc-800'}`}>Revenue Trend</p>
                         <span className={`text-[10px] font-bold uppercase ${subText}`}>Last 12 mo</span>
                     </div>
                     <div className="flex items-end gap-2 h-24">
                         {MOCK_REVENUE.map((v, i) => (
                             <div key={i} className="flex-1 flex flex-col items-center gap-1">
                                 <div className="w-full rounded-sm transition-all"
-                                    style={{ height: `${(v / 72) * 80}px`, background: i === 11 ? (isDark ? '#bef264' : '#65a30d') : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.07)') }} />
+                                    style={{ height: `${(v / 72) * 80}px`, background: i === 11 ? (isDark ? '#a3e635' : '#84cc16') : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.07)') }} />
                                 <span className={`text-[9px] ${subText}`}>{MONTH_LABELS[i]}</span>
                             </div>
                         ))}
                     </div>
                 </div>
                 <div className={`${cardBg} border rounded-2xl p-5 flex flex-col gap-3`}>
-                    <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'} mb-1`}>Recent Clients</p>
+                    <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-zinc-800'} mb-1`}>Recent Clients</p>
                     {['Vertex Corp', 'Sarah Chen', 'Mike Ross'].map(n => (
                         <div key={n} className={`flex items-center gap-3 p-2 rounded-xl ${isDark ? 'hover:bg-white/5' : 'hover:bg-editorial'} cursor-pointer`}>
-                            <div className={`w-8 h-8 rounded-full ${isDark ? 'bg-white/10' : 'bg-slate-200'} flex items-center justify-center ${accentText} text-xs font-bold`}>{n[0]}</div>
-                            <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{n}</span>
+                            <div className={`w-8 h-8 rounded-full ${isDark ? 'bg-white/10' : 'bg-zinc-200'} flex items-center justify-center ${accentText} text-xs font-bold`}>{n[0]}</div>
+                            <span className={`text-sm font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{n}</span>
                             <ChevronRight className={`w-3 h-3 ml-auto ${subText}`} />
                         </div>
                     ))}
@@ -179,14 +179,14 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
             </div>
             <div className={`${cardBg} border rounded-2xl`}>
                 <div className="flex items-center justify-between p-5 pb-3">
-                    <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>Active Projects</p>
+                    <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-zinc-800'}`}>Active Projects</p>
                     <button className={`text-xs ${accentText} font-bold`}>View all</button>
                 </div>
                 <div className={`border-t ${hrCol}`}>
                     {MOCK_PROJECTS.slice(0, 4).map((p, i) => (
                         <div key={i} className={`flex items-center justify-between px-5 py-3 border-b ${hrCol} last:border-0 ${isDark ? 'hover:bg-white/5' : 'hover:bg-editorial'} transition-colors`}>
                             <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-lg ${isDark ? 'bg-white/10' : 'bg-slate-200'} flex items-center justify-center text-xs font-bold ${accentText}`}>{p.name[0]}</div>
+                                <div className={`w-8 h-8 rounded-lg ${isDark ? 'bg-white/10' : 'bg-zinc-200'} flex items-center justify-center text-xs font-bold ${accentText}`}>{p.name[0]}</div>
                                 <div>
                                     <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>{p.name}</p>
                                     <p className={`text-[10px] ${subText}`}>{p.client}</p>
@@ -207,13 +207,13 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
     if (section === 'vault') return (
         <div className="space-y-5">
             <div className="flex items-center justify-between">
-                <h1 className={`font-serif text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>Vault</h1>
+                <h1 className={`font-sans tracking-tight text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>Vault</h1>
                 <button className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider ${accentBg} flex items-center gap-2`}><Plus className="w-3 h-3" />New Project</button>
             </div>
             <div className="grid grid-cols-5 gap-3">
                 {MOCK_PROJECTS.map((p, i) => (
-                    <div key={i} className={`${cardBg} border rounded-2xl p-4 hover:border-lime-500/50 transition-all cursor-pointer group`}>
-                        <div className={`w-10 h-10 rounded-xl mb-3 flex items-center justify-center ${isDark ? 'bg-brand/10' : 'bg-lime-50'} ${accentText}`}><FolderLock className="w-5 h-5" /></div>
+                    <div key={i} className={`${cardBg} border rounded-2xl p-4 hover:border-blue-500/50 transition-all cursor-pointer group`}>
+                        <div className={`w-10 h-10 rounded-xl mb-3 flex items-center justify-center ${isDark ? 'bg-brand/10' : 'bg-blue-50'} ${accentText}`}><FolderLock className="w-5 h-5" /></div>
                         <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-obsidian'} mb-0.5`}>{p.name}</p>
                         <p className={`text-[10px] ${subText}`}>{p.client}</p>
                         <div className="mt-3 pt-3 border-t border-dashed ${hrCol} flex justify-between items-center">
@@ -228,13 +228,13 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
 
     if (section === 'activity') return (
         <div className="space-y-5">
-            <h1 className={`font-serif text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>Activity Log</h1>
-            <div className={`${cardBg} border rounded-2xl divide-y ${isDark ? 'divide-white/5' : 'divide-slate-100'}`}>
+            <h1 className={`font-sans tracking-tight text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>Activity Log</h1>
+            <div className={`${cardBg} border rounded-2xl divide-y ${isDark ? 'divide-white/5' : 'divide-zinc-100'}`}>
                 {MOCK_ACTIVITY.map((a, i) => {
-                    const dotColor = a.color === 'lime' ? 'bg-lime-500' : a.color === 'blue' ? 'bg-blue-500' : a.color === 'amber' ? 'bg-amber-500' : 'bg-slate-400';
+                    const dotColor = a.color === 'lime' ? 'bg-blue-500' : a.color === 'blue' ? 'bg-blue-500' : a.color === 'amber' ? 'bg-amber-500' : 'bg-zinc-400';
                     return (
                         <div key={i} className={`flex items-center gap-4 px-5 py-3.5 ${isDark ? 'hover:bg-white/5' : 'hover:bg-editorial'} transition-colors`}>
-                            <div className={`w-8 h-8 rounded-full ${isDark ? 'bg-white/5' : 'bg-slate-200'} flex items-center justify-center`}><a.icon className={`w-4 h-4 ${subText}`} /></div>
+                            <div className={`w-8 h-8 rounded-full ${isDark ? 'bg-white/5' : 'bg-zinc-200'} flex items-center justify-center`}><a.icon className={`w-4 h-4 ${subText}`} /></div>
                             <div className="flex-1">
                                 <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>{a.label}</p>
                                 <p className={`text-xs ${subText}`}>{a.detail}</p>
@@ -250,24 +250,24 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
 
     if (section === 'reports') return (
         <div className="space-y-5">
-            <h1 className={`font-serif text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>Reports</h1>
+            <h1 className={`font-sans tracking-tight text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>Reports</h1>
             <div className="grid grid-cols-2 gap-4">
                 {[{ label: 'Total Revenue', value: '$48,200', sub: '+18% vs last quarter' }, { label: 'Total Payments', value: '24', sub: '3 pending verification' }].map(k => (
                     <div key={k.label} className={`${cardBg} border rounded-2xl p-6`}>
                         <p className={`text-[10px] font-bold uppercase tracking-widest ${subText} mb-2`}>{k.label}</p>
-                        <p className={`font-serif text-4xl font-bold ${isDark ? 'text-white' : 'text-obsidian'} mb-1`}>{k.value}</p>
+                        <p className={`font-sans tracking-tight text-4xl font-bold ${isDark ? 'text-white' : 'text-obsidian'} mb-1`}>{k.value}</p>
                         <p className={`text-xs ${accentText} font-bold`}>{k.sub}</p>
-                        <div className="mt-4"><MiniBarChart data={MOCK_REVENUE} accent={isDark ? '#bef264' : '#65a30d'} /></div>
+                        <div className="mt-4"><MiniBarChart data={MOCK_REVENUE} accent={isDark ? '#a3e635' : '#84cc16'} /></div>
                     </div>
                 ))}
             </div>
             <div className={`${cardBg} border rounded-2xl p-5`}>
-                <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'} mb-4`}>Revenue by Project</p>
+                <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-zinc-800'} mb-4`}>Revenue by Project</p>
                 {MOCK_PROJECTS.map((p, i) => (
                     <div key={i} className="flex items-center gap-3 mb-3">
-                        <span className={`text-xs font-bold w-32 truncate ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{p.name}</span>
-                        <div className="flex-1 h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-white/5">
-                            <div className="h-full rounded-full" style={{ width: `${(p.amount / 12000) * 100}%`, background: isDark ? '#bef264' : '#65a30d' }} />
+                        <span className={`text-xs font-bold w-32 truncate ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>{p.name}</span>
+                        <div className="flex-1 h-2 rounded-full overflow-hidden bg-zinc-200 dark:bg-white/5">
+                            <div className="h-full rounded-full" style={{ width: `${(p.amount / 12000) * 100}%`, background: isDark ? '#a3e635' : '#84cc16' }} />
                         </div>
                         <span className={`text-xs font-mono font-bold ${accentText} w-16 text-right`}>${p.amount.toLocaleString()}</span>
                     </div>
@@ -278,7 +278,7 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
 
     return (
         <div className="space-y-5">
-            <h1 className={`font-serif text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>Settings</h1>
+            <h1 className={`font-sans tracking-tight text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>Settings</h1>
             {[{ label: 'Profile', icon: User, items: ['Display Name', 'Email Address', 'Avatar'] }, { label: 'Payments', icon: CreditCard, items: ['Stripe Connect', 'Bank Account', 'Payout Schedule'] }, { label: 'Security', icon: ShieldCheck, items: ['Password', '2FA', 'Active Sessions'] }].map(g => (
                 <div key={g.label} className={`${cardBg} border rounded-2xl`}>
                     <div className={`flex items-center gap-3 p-5 pb-3`}>
@@ -286,7 +286,7 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
                     </div>
                     {g.items.map((item, i) => (
                         <div key={i} className={`flex items-center justify-between px-5 py-3.5 border-t ${hrCol} ${isDark ? 'hover:bg-white/5' : 'hover:bg-editorial'} cursor-pointer`}>
-                            <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{item}</span>
+                            <span className={`text-sm ${isDark ? 'text-zinc-300' : 'text-zinc-600'}`}>{item}</span>
                             <ChevronRight className={`w-4 h-4 ${subText}`} />
                         </div>
                     ))}
@@ -297,10 +297,10 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
 };
 
 const SidebarClassicLayout = ({ section, isDark }: { section: Section; isDark: boolean }) => {
-    const bg = isDark ? 'bg-[#0f0f15]' : 'bg-[#f4f5f7]';
-    const sidebarBg = isDark ? 'bg-[#111118] border-white/10' : 'bg-white border-slate-200';
-    const activeItem = isDark ? 'bg-brand/10 text-brand' : 'bg-lime-50 text-brand-hover';
-    const inactiveItem = isDark ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-obsidian hover:bg-editorial';
+    const bg = isDark ? 'bg-black' : 'bg-[#f4f5f7]';
+    const sidebarBg = isDark ? 'bg-[#111118] border-white/10' : 'glass-panel';
+    const activeItem = isDark ? 'bg-brand/10 text-brand' : 'bg-blue-50 text-brand-hover';
+    const inactiveItem = isDark ? 'text-zinc-400 hover:text-white hover:bg-white/5' : 'text-zinc-500 hover:text-obsidian hover:bg-editorial';
 
     return (
         <div className={`flex h-full w-full ${bg}`}>
@@ -308,7 +308,7 @@ const SidebarClassicLayout = ({ section, isDark }: { section: Section; isDark: b
             <div className={`w-52 shrink-0 ${sidebarBg} border-r flex flex-col py-6`}>
                 <div className="px-5 mb-8 flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-brand dark:bg-brand flex items-center justify-center"><Zap className="w-4 h-4 text-white dark:text-black" /></div>
-                    <span className={`font-serif font-bold text-base ${isDark ? 'text-white' : 'text-obsidian'}`}>TrueHandover</span>
+                    <span className={`font-sans tracking-tight font-bold text-base ${isDark ? 'text-white' : 'text-obsidian'}`}>Heartflair</span>
                 </div>
                 <nav className="flex-1 px-3 space-y-1">
                     {SECTIONS.map(s => (
@@ -317,23 +317,23 @@ const SidebarClassicLayout = ({ section, isDark }: { section: Section; isDark: b
                         </div>
                     ))}
                 </nav>
-                <div className={`mx-3 mt-4 p-3 rounded-xl ${isDark ? 'bg-brand/10 border border-brand/20' : 'bg-lime-50 border border-lime-100'}`}>
+                <div className={`mx-3 mt-4 p-3 rounded-xl ${isDark ? 'bg-brand/10 border border-brand/20' : 'bg-blue-50 border border-blue-100'}`}>
                     <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-brand' : 'text-brand-hover'}`}>Storage</p>
-                    <div className={`w-full h-1.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-lime-100'} overflow-hidden`}>
-                        <div className="h-full w-[8%] rounded-full bg-lime-500" />
+                    <div className={`w-full h-1.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-blue-100'} overflow-hidden`}>
+                        <div className="h-full w-[8%] rounded-full bg-blue-500" />
                     </div>
-                    <p className={`text-[9px] mt-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>2.4 GB of 30 GB used</p>
+                    <p className={`text-[9px] mt-1.5 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>2.4 GB of 30 GB used</p>
                 </div>
             </div>
             {/* Main */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                <div className={`h-14 px-6 flex items-center justify-between border-b ${isDark ? 'bg-[#111118] border-white/10' : 'bg-white border-slate-200'}`}>
-                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${isDark ? 'bg-white/5 text-slate-400' : 'bg-slate-200 text-slate-400'} text-sm`}>
+                <div className={`h-14 px-6 flex items-center justify-between border-b ${isDark ? 'bg-[#111118] border-white/10' : 'glass-panel'}`}>
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${isDark ? 'bg-white/5 text-zinc-400' : 'bg-zinc-200 text-zinc-400'} text-sm`}>
                         <Search className="w-4 h-4" /><span className="text-xs">Search…</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Bell className={`w-5 h-5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
-                        <div className="w-8 h-8 rounded-full bg-lime-500 flex items-center justify-center text-white text-xs font-bold">J</div>
+                        <Bell className={`w-5 h-5 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`} />
+                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">J</div>
                     </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-6"><SidebarClassicContent section={section} isDark={isDark} /></div>
@@ -346,14 +346,14 @@ const SidebarClassicLayout = ({ section, isDark }: { section: Section; isDark: b
 // VARIANT 2 — BOLD DARK  (Flux Health / image 2)
 // ══════════════════════════════════════════════════════════════════════════════
 const BoldDarkContent = ({ section, isDark }: { section: Section; isDark: boolean }) => {
-    const acc = '#bef264';
-    const card = isDark ? 'bg-[#1a1a22] border-white/8' : 'bg-white border-slate-200';
-    const sub = isDark ? 'text-slate-400' : 'text-slate-500';
+    const acc = '#a3e635';
+    const card = isDark ? 'bg-[#1a1a22] border-white/8' : 'glass-panel';
+    const sub = isDark ? 'text-zinc-400' : 'text-zinc-500';
 
     if (section === 'dashboard') return (
         <div className="space-y-5">
             <div className="flex items-center justify-between">
-                <div><h1 className="text-4xl font-black text-white">Overview</h1><p className="text-slate-400 text-sm mt-0.5">All projects · Feb 2026</p></div>
+                <div><h1 className="text-4xl font-black text-white">Overview</h1><p className="text-zinc-400 text-sm mt-0.5">All projects · Feb 2026</p></div>
                 <button className="px-4 py-2 rounded-2xl text-xs font-black uppercase tracking-wider" style={{ background: acc, color: '#000' }}><Plus className="w-3.5 h-3.5 inline mr-1" />NEW PROJECT</button>
             </div>
             <div className="grid grid-cols-3 gap-4">
@@ -377,7 +377,7 @@ const BoldDarkContent = ({ section, isDark }: { section: Section; isDark: boolea
                             <div key={i} className="flex-1 flex flex-col items-center gap-1">
                                 <div className="w-full rounded-lg transition-all"
                                     style={{ height: `${(v / 72) * 100}px`, background: i >= 10 ? acc : 'rgba(255,255,255,0.07)' }} />
-                                <span className="text-[8px] text-slate-600 font-bold">{MONTH_LABELS[i]}</span>
+                                <span className="text-[8px] text-zinc-600 font-bold">{MONTH_LABELS[i]}</span>
                             </div>
                         ))}
                     </div>
@@ -476,14 +476,14 @@ const BoldDarkContent = ({ section, isDark }: { section: Section; isDark: boolea
 };
 
 const BoldDarkLayout = ({ section, isDark }: { section: Section; isDark: boolean }) => {
-    const acc = '#bef264';
+    const acc = '#a3e635';
     return (
         <div className="flex h-full w-full" style={{ background: isDark ? '#0a0a10' : '#0f0f18' }}>
             {/* Always-dark sidebar */}
             <div className="w-52 shrink-0 border-r border-white/5 flex flex-col py-6" style={{ background: '#111119' }}>
                 <div className="px-5 mb-8 flex items-center gap-2">
                     <div className="w-8 h-8 rounded-2xl flex items-center justify-center" style={{ background: acc }}><Zap className="w-4 h-4 text-black" /></div>
-                    <span className="font-black text-white text-base">TrueHandover</span>
+                    <span className="font-black text-white text-base">Heartflair</span>
                 </div>
                 <nav className="flex-1 px-3 space-y-1">
                     {SECTIONS.map(s => (
@@ -495,7 +495,7 @@ const BoldDarkLayout = ({ section, isDark }: { section: Section; isDark: boolean
                     ))}
                 </nav>
                 {/* Upgrade card */}
-                <div className="mx-3 p-4 rounded-3xl" style={{ background: 'linear-gradient(135deg,#bef264 0%,#65a30d 100%)' }}>
+                <div className="mx-3 p-4 rounded-3xl" style={{ background: 'linear-gradient(135deg,#a3e635 0%,#84cc16 100%)' }}>
                     <Crown className="w-5 h-5 text-black mb-2" />
                     <p className="text-black font-black text-sm leading-snug">Upgrade to Pro</p>
                     <p className="text-black/70 text-[10px] mt-1 mb-3">Unlock unlimited vaults</p>
@@ -505,11 +505,11 @@ const BoldDarkLayout = ({ section, isDark }: { section: Section; isDark: boolean
             {/* Main */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 <div className="h-14 px-6 flex items-center justify-between border-b border-white/5" style={{ background: '#111119' }}>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 text-slate-400 text-sm">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 text-zinc-400 text-sm">
                         <Search className="w-4 h-4" /><span className="text-xs">Search…</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Bell className="w-5 h-5 text-slate-400" />
+                        <Bell className="w-5 h-5 text-zinc-400" />
                         <div className="w-8 h-8 rounded-2xl flex items-center justify-center font-black text-black text-xs" style={{ background: acc }}>J</div>
                     </div>
                 </div>
@@ -523,9 +523,9 @@ const BoldDarkLayout = ({ section, isDark }: { section: Section; isDark: boolean
 // VARIANT 3 — FOCUS FLOW  (Car rental / image 3)
 // ══════════════════════════════════════════════════════════════════════════════
 const FocusFlowContent = ({ section, isDark }: { section: Section; isDark: boolean }) => {
-    const acc = isDark ? '#bef264' : '#16a34a';
-    const bgCard = isDark ? 'bg-[#1c1c28] border-white/8' : 'bg-white border-slate-200/70';
-    const sub = isDark ? 'text-slate-400' : 'text-slate-500';
+    const acc = isDark ? '#a3e635' : '#16a34a';
+    const bgCard = isDark ? 'bg-[#1c1c28] border-white/8' : 'glass-panel/70';
+    const sub = isDark ? 'text-zinc-400' : 'text-zinc-500';
     const mainText = isDark ? 'text-white' : 'text-obsidian';
 
     if (section === 'dashboard') return (
@@ -593,7 +593,7 @@ const FocusFlowContent = ({ section, isDark }: { section: Section; isDark: boole
                 </div>
             )}
             {section === 'activity' && (
-                <div className={`${bgCard} border rounded-[2rem] p-6 shadow-sm divide-y ${isDark ? 'divide-white/5' : 'divide-slate-50'}`}>
+                <div className={`${bgCard} border rounded-[2rem] p-6 shadow-sm divide-y ${isDark ? 'divide-white/5' : 'divide-zinc-50'}`}>
                     {MOCK_ACTIVITY.map((a, i) => (
                         <div key={i} className="flex items-center gap-4 py-3">
                             <a.icon className="w-4 h-4" style={{ color: acc }} />
@@ -629,8 +629,8 @@ const FocusFlowContent = ({ section, isDark }: { section: Section; isDark: boole
 
 const FocusFlowLayout = ({ section, isDark }: { section: Section; isDark: boolean }) => {
     const bg = isDark ? 'bg-[#0d0d14]' : 'bg-[#f7f7f8]';
-    const pillBg = isDark ? 'bg-[#1c1c28] border-white/10 text-white' : 'bg-white border-slate-200 text-obsidian';
-    const acc = isDark ? '#bef264' : '#16a34a';
+    const pillBg = isDark ? 'bg-[#1c1c28] border-white/10 text-white' : 'glass-panel text-obsidian';
+    const acc = isDark ? '#a3e635' : '#16a34a';
     return (
         <div className={`${bg} h-full w-full flex flex-col`}>
             {/* Floating pill nav */}
@@ -638,7 +638,7 @@ const FocusFlowLayout = ({ section, isDark }: { section: Section; isDark: boolea
                 <div className={`flex items-center gap-1 px-2 py-1.5 rounded-full border shadow-lg ${pillBg}`}>
                     <div className="flex items-center gap-2 px-3 py-1 mr-3">
                         <Zap className="w-4 h-4" style={{ color: acc }} />
-                        <span className="font-bold text-sm">TrueHandover</span>
+                        <span className="font-bold text-sm">Heartflair</span>
                     </div>
                     {SECTIONS.map(s => (
                         <button key={s.id} className="px-4 py-1.5 rounded-full text-xs font-bold transition-all"
@@ -663,9 +663,9 @@ const FocusFlowLayout = ({ section, isDark }: { section: Section; isDark: boolea
 // VARIANT 4 — COMMAND CENTER  (Celoxis / image 4)
 // ══════════════════════════════════════════════════════════════════════════════
 const CommandCenterContent = ({ section, isDark }: { section: Section; isDark: boolean }) => {
-    const acc = isDark ? '#bef264' : '#65a30d';
-    const card = isDark ? 'bg-[#18181f] border-white/8' : 'bg-white border-slate-200/80';
-    const sub = isDark ? 'text-slate-400' : 'text-slate-500';
+    const acc = isDark ? '#a3e635' : '#84cc16';
+    const card = isDark ? 'bg-[#18181f] border-white/8' : 'glass-panel/80';
+    const sub = isDark ? 'text-zinc-400' : 'text-zinc-500';
     const mainText = isDark ? 'text-white' : 'text-obsidian';
 
     return (
@@ -701,7 +701,7 @@ const CommandCenterContent = ({ section, isDark }: { section: Section; isDark: b
                             ))}
                         </div>
                         <div className={`${card} border rounded-2xl flex-1 overflow-hidden`}>
-                            <div className={`px-4 py-3 border-b ${isDark ? 'border-white/5' : 'border-slate-200'} flex items-center justify-between`}>
+                            <div className={`px-4 py-3 border-b ${isDark ? 'border-white/5' : 'border-zinc-200'} flex items-center justify-between`}>
                                 <p className={`text-sm font-bold ${mainText}`}>Projects Pipeline</p>
                                 <Filter className={`w-4 h-4 ${sub}`} />
                             </div>
@@ -766,15 +766,15 @@ const CommandCenterContent = ({ section, isDark }: { section: Section; isDark: b
 
 const CommandCenterLayout = ({ section, isDark }: { section: Section; isDark: boolean }) => {
     const bg = isDark ? 'bg-[#0e0e14]' : 'bg-[#f2f3f5]';
-    const sidebarBg = isDark ? 'bg-[#111117] border-white/8' : 'bg-white border-slate-200';
-    const menuItem = isDark ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-obsidian hover:bg-editorial';
-    const activeItem = isDark ? 'bg-brand/10 text-brand' : 'bg-lime-50 text-brand-hover';
+    const sidebarBg = isDark ? 'bg-[#111117] border-white/8' : 'glass-panel';
+    const menuItem = isDark ? 'text-zinc-400 hover:text-white hover:bg-white/5' : 'text-zinc-500 hover:text-obsidian hover:bg-editorial';
+    const activeItem = isDark ? 'bg-brand/10 text-brand' : 'bg-blue-50 text-brand-hover';
     return (
         <div className={`flex h-full w-full ${bg}`}>
             <div className={`w-44 shrink-0 ${sidebarBg} border-r flex flex-col py-5`}>
                 <div className="px-4 mb-6 flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg bg-brand flex items-center justify-center"><Zap className="w-3 h-3 text-white" /></div>
-                    <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-white' : 'text-obsidian'}`}>TrueHandover</span>
+                    <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-white' : 'text-obsidian'}`}>Heartflair</span>
                 </div>
                 <nav className="flex-1 px-2 space-y-0.5">
                     {SECTIONS.map(s => (
@@ -782,7 +782,7 @@ const CommandCenterLayout = ({ section, isDark }: { section: Section; isDark: bo
                             <s.icon className="w-3.5 h-3.5 shrink-0" />{s.label}
                         </div>
                     ))}
-                    <div className={`h-px mx-2 my-3 ${isDark ? 'bg-white/5' : 'bg-slate-200'}`} />
+                    <div className={`h-px mx-2 my-3 ${isDark ? 'bg-white/5' : 'bg-zinc-200'}`} />
                     {['Notifications', 'Account'].map(item => (
                         <div key={item} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer ${menuItem}`}>
                             <Circle className="w-3 h-3 shrink-0" />{item}
@@ -791,11 +791,11 @@ const CommandCenterLayout = ({ section, isDark }: { section: Section; isDark: bo
                 </nav>
             </div>
             <div className="flex-1 flex flex-col overflow-hidden">
-                <div className={`h-12 px-5 flex items-center justify-between border-b ${isDark ? 'bg-[#111117] border-white/5' : 'bg-white border-slate-200'}`}>
-                    <div className={`flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs ${isDark ? 'bg-white/5 text-slate-400' : 'bg-slate-200 text-slate-400'}`}>
+                <div className={`h-12 px-5 flex items-center justify-between border-b ${isDark ? 'bg-[#111117] border-white/5' : 'glass-panel'}`}>
+                    <div className={`flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs ${isDark ? 'bg-white/5 text-zinc-400' : 'bg-zinc-200 text-zinc-400'}`}>
                         <Search className="w-3 h-3" /><span>Search on files…</span>
                     </div>
-                    <Bell className={`w-4 h-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                    <Bell className={`w-4 h-4 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`} />
                 </div>
                 <div className="flex-1 overflow-y-auto p-4"><CommandCenterContent section={section} isDark={isDark} /></div>
             </div>
@@ -807,9 +807,9 @@ const CommandCenterLayout = ({ section, isDark }: { section: Section; isDark: bo
 // VARIANT 5 — ANALYTICS HUB  (Syncdesk / image 5)
 // ══════════════════════════════════════════════════════════════════════════════
 const AnalyticsHubContent = ({ section, isDark }: { section: Section; isDark: boolean }) => {
-    const acc = isDark ? '#bef264' : '#16a34a';
-    const card = isDark ? 'bg-[#1a1a24] border-white/8' : 'bg-white border-slate-200/80';
-    const sub = isDark ? 'text-slate-400' : 'text-slate-500';
+    const acc = isDark ? '#a3e635' : '#16a34a';
+    const card = isDark ? 'bg-[#1a1a24] border-white/8' : 'glass-panel/80';
+    const sub = isDark ? 'text-zinc-400' : 'text-zinc-500';
     const mainText = isDark ? 'text-white' : 'text-obsidian';
 
     return (
@@ -876,7 +876,7 @@ const AnalyticsHubContent = ({ section, isDark }: { section: Section; isDark: bo
                     </div>
                 )}
                 {section === 'activity' && (
-                    <div className={`${card} border rounded-2xl divide-y ${isDark ? 'divide-white/5' : 'divide-slate-50'}`}>
+                    <div className={`${card} border rounded-2xl divide-y ${isDark ? 'divide-white/5' : 'divide-zinc-50'}`}>
                         {MOCK_ACTIVITY.map((a, i) => (
                             <div key={i} className="flex items-center gap-3 px-4 py-3">
                                 <a.icon className="w-4 h-4" style={{ color: acc }} />
@@ -913,21 +913,21 @@ const AnalyticsHubContent = ({ section, isDark }: { section: Section; isDark: bo
             {/* Right panel — AI assistant */}
             <div className="w-60 shrink-0 flex flex-col gap-3 overflow-y-auto">
                 <div className={`${card} border rounded-2xl flex-1 flex flex-col`}>
-                    <div className={`p-4 border-b ${isDark ? 'border-white/5' : 'border-slate-200'}`}>
+                    <div className={`p-4 border-b ${isDark ? 'border-white/5' : 'border-zinc-200'}`}>
                         <p className={`text-[10px] font-bold uppercase tracking-widest ${sub} mb-3`}>AI Assistant</p>
                         <div className="space-y-3">
                             {[{ speaker: 'Joshua', msg: 'Can you check discrepancies in revenue vs. projected values?', time: '10:12' }, { speaker: 'TH AI', msg: 'Main deviations: July $18.9K · August $21.7K · September $11.9K', time: '10:13' }].map((m, i) => (
                                 <div key={i} className={`flex gap-2 ${i % 2 === 1 ? 'flex-row-reverse' : ''}`}>
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${i === 0 ? 'bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-white' : 'text-black'}`} style={i === 1 ? { background: '#bef264' } : undefined}>{m.speaker[0]}</div>
-                                    <div className={`rounded-2xl px-3 py-2 text-[10px] leading-relaxed ${i === 0 ? (isDark ? 'bg-white/5 text-slate-200' : 'bg-slate-200 text-slate-700') : 'text-black'}`} style={i === 1 ? { background: '#bef264' } : undefined}>{m.msg}</div>
+                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${i === 0 ? 'bg-zinc-200 dark:bg-white/10 text-zinc-700 dark:text-white' : 'text-black'}`} style={i === 1 ? { background: '#a3e635' } : undefined}>{m.speaker[0]}</div>
+                                    <div className={`rounded-2xl px-3 py-2 text-[10px] leading-relaxed ${i === 0 ? (isDark ? 'bg-white/5 text-zinc-200' : 'bg-zinc-200 text-zinc-700') : 'text-black'}`} style={i === 1 ? { background: '#a3e635' } : undefined}>{m.msg}</div>
                                 </div>
                             ))}
                         </div>
                     </div>
                     <div className="p-3 mt-auto">
-                        <div className={`flex items-center gap-2 rounded-xl px-3 py-2 ${isDark ? 'bg-white/5 border border-white/8' : 'bg-editorial border border-slate-200'}`}>
-                            <input readOnly placeholder="Enter your AI request" className="flex-1 bg-transparent text-[10px] outline-none placeholder:text-slate-400" />
-                            <div className="w-6 h-6 rounded-lg flex items-center justify-center text-black cursor-pointer" style={{ background: '#bef264' }}><Send className="w-3 h-3" /></div>
+                        <div className={`flex items-center gap-2 rounded-xl px-3 py-2 ${isDark ? 'bg-white/5 border border-white/8' : 'bg-editorial border border-zinc-200'}`}>
+                            <input readOnly placeholder="Enter your AI request" className="flex-1 bg-transparent text-[10px] outline-none placeholder:text-zinc-400" />
+                            <div className="w-6 h-6 rounded-lg flex items-center justify-center text-black cursor-pointer" style={{ background: '#a3e635' }}><Send className="w-3 h-3" /></div>
                         </div>
                     </div>
                 </div>
@@ -938,15 +938,15 @@ const AnalyticsHubContent = ({ section, isDark }: { section: Section; isDark: bo
 
 const AnalyticsHubLayout = ({ section, isDark }: { section: Section; isDark: boolean }) => {
     const bg = isDark ? 'bg-[#0d0d13]' : 'bg-[#f4f5f7]';
-    const topbarBg = isDark ? 'bg-[#111119] border-white/8' : 'bg-white border-slate-200';
+    const topbarBg = isDark ? 'bg-[#111119] border-white/8' : 'glass-panel';
     const activeTab = isDark ? 'border-b-2 border-brand text-white font-bold' : 'border-b-2 border-brand text-obsidian font-bold';
-    const inactiveTab = isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-obsidian';
+    const inactiveTab = isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-obsidian';
     return (
         <div className={`${bg} h-full w-full flex flex-col`}>
             <div className={`${topbarBg} border-b px-6 flex items-center gap-6 h-14 shrink-0`}>
                 <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-brand dark:bg-brand flex items-center justify-center"><Zap className="w-3.5 h-3.5 text-white dark:text-black" /></div>
-                    <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-obsidian'}`}>TrueHandover</span>
+                    <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-obsidian'}`}>Heartflair</span>
                 </div>
                 <div className="flex gap-0.5 h-full ml-4">
                     {SECTIONS.map(s => (
@@ -954,8 +954,8 @@ const AnalyticsHubLayout = ({ section, isDark }: { section: Section; isDark: boo
                     ))}
                 </div>
                 <div className="ml-auto flex items-center gap-3">
-                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs ${isDark ? 'bg-white/5 text-slate-400' : 'bg-slate-200 text-slate-400'}`}><Search className="w-3.5 h-3.5" />Type Client Name or ID</div>
-                    <Bell className={`w-4 h-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs ${isDark ? 'bg-white/5 text-zinc-400' : 'bg-zinc-200 text-zinc-400'}`}><Search className="w-3.5 h-3.5" />Type Client Name or ID</div>
+                    <Bell className={`w-4 h-4 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`} />
                     <div className="w-8 h-8 rounded-full bg-brand dark:bg-brand flex items-center justify-center font-bold text-white dark:text-black text-xs">J</div>
                 </div>
             </div>
@@ -985,12 +985,12 @@ export const DesignShowcase: React.FC<ShowcaseProps> = ({ isDarkMode, onClose })
     return (
         <div className={`fixed inset-0 z-[300] flex flex-col ${isDarkMode ? 'dark bg-[#0a0a10]' : 'bg-[#e8eaed]'}`}>
             {/* Showcase chrome */}
-            <div className={`shrink-0 flex items-center gap-3 px-4 py-2 border-b ${isDarkMode ? 'bg-[#0f0f18] border-white/10' : 'bg-white border-slate-200'} shadow-sm`}>
+            <div className={`shrink-0 flex items-center gap-3 px-4 py-2 border-b ${isDarkMode ? 'bg-[#0f0f18] border-white/10' : 'glass-panel'} shadow-sm`}>
                 {/* Brand badge */}
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ${isDarkMode ? 'bg-brand/10 border-brand/20 text-brand' : 'bg-lime-50 border-lime-200 text-brand-hover'} text-[10px] font-black uppercase tracking-widest`}>
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ${isDarkMode ? 'bg-brand/10 border-brand/20 text-brand' : 'bg-blue-50 border-blue-200 text-brand-hover'} text-[10px] font-black uppercase tracking-widest`}>
                     <Sparkles className="w-3 h-3" /> Design Lab
                 </div>
-                <div className={`hidden md:block h-5 w-px ${isDarkMode ? 'bg-white/10' : 'bg-slate-200'}`} />
+                <div className={`hidden md:block h-5 w-px ${isDarkMode ? 'bg-white/10' : 'bg-zinc-200'}`} />
                 {/* Variant pills */}
                 <div className="flex items-center gap-1.5 flex-1 overflow-x-auto no-scrollbar">
                     {VARIANTS.map(v => (
@@ -998,8 +998,8 @@ export const DesignShowcase: React.FC<ShowcaseProps> = ({ isDarkMode, onClose })
                             key={v.id}
                             onClick={() => setActiveVariant(v.id)}
                             className={`shrink-0 flex flex-col items-start px-3 py-1.5 rounded-xl border text-left transition-all ${activeVariant === v.id
-                                ? (isDarkMode ? 'bg-brand/15 border-brand/30 text-brand' : 'bg-lime-50 border-lime-300 text-brand-hover')
-                                : (isDarkMode ? 'bg-white/5 border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/10' : 'bg-editorial border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-white')
+                                ? (isDarkMode ? 'bg-brand/15 border-brand/30 text-brand' : 'bg-blue-50 border-blue-300 text-brand-hover')
+                                : (isDarkMode ? 'bg-white/5 border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/10' : 'bg-editorial border-zinc-200/50 text-zinc-500 hover:text-zinc-700 hover:bg-white')
                             }`}
                         >
                             <span className="text-[10px] font-black uppercase tracking-wider leading-none">{v.label}</span>
@@ -1008,14 +1008,14 @@ export const DesignShowcase: React.FC<ShowcaseProps> = ({ isDarkMode, onClose })
                     ))}
                 </div>
                 {/* Section tabs */}
-                <div className={`hidden md:flex items-center gap-1 h-8 px-1 rounded-xl border ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-200 border-slate-200'}`}>
+                <div className={`hidden md:flex items-center gap-1 h-8 px-1 rounded-xl border ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-zinc-200 border-zinc-200'}`}>
                     {SECTIONS.map(s => (
                         <button
                             key={s.id}
                             onClick={() => setActiveSection(s.id)}
                             className={`h-6 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${activeSection === s.id
                                 ? (isDarkMode ? 'bg-brand text-black' : 'bg-brand text-white')
-                                : (isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800')
+                                : (isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-800')
                             }`}
                         >
                             {s.label}
@@ -1025,17 +1025,17 @@ export const DesignShowcase: React.FC<ShowcaseProps> = ({ isDarkMode, onClose })
                 {/* Close */}
                 <button
                     onClick={onClose}
-                    className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-xl border font-bold text-xs transition-all ${isDarkMode ? 'bg-white/5 border-white/10 text-slate-400 hover:bg-red-500/15 hover:text-red-400 hover:border-red-500/30' : 'bg-slate-200 border-slate-200 text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200'}`}
+                    className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-xl border font-bold text-xs transition-all ${isDarkMode ? 'bg-white/5 border-white/10 text-zinc-400 hover:bg-red-500/15 hover:text-red-400 hover:border-red-500/30' : 'bg-zinc-200 border-zinc-200/50 text-zinc-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200'}`}
                 >
                     <X className="w-3.5 h-3.5" /> Exit Lab
                 </button>
             </div>
 
             {/* Mobile section switcher */}
-            <div className={`md:hidden flex gap-1 px-3 py-2 overflow-x-auto no-scrollbar shrink-0 border-b ${isDarkMode ? 'bg-[#0f0f18] border-white/10' : 'bg-white border-slate-200'}`}>
+            <div className={`md:hidden flex gap-1 px-3 py-2 overflow-x-auto no-scrollbar shrink-0 border-b ${isDarkMode ? 'bg-[#0f0f18] border-white/10' : 'glass-panel'}`}>
                 {SECTIONS.map(s => (
                     <button key={s.id} onClick={() => setActiveSection(s.id)}
-                        className={`shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${activeSection === s.id ? (isDarkMode ? 'bg-brand text-black' : 'bg-brand text-white') : (isDarkMode ? 'text-slate-400' : 'text-slate-500')}`}>
+                        className={`shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${activeSection === s.id ? (isDarkMode ? 'bg-brand text-black' : 'bg-brand text-white') : (isDarkMode ? 'text-zinc-400' : 'text-zinc-500')}`}>
                         {s.label}
                     </button>
                 ))}
@@ -1050,3 +1050,4 @@ export const DesignShowcase: React.FC<ShowcaseProps> = ({ isDarkMode, onClose })
 };
 
 export default DesignShowcase;
+

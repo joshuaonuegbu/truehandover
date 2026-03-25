@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
+﻿
+import React, { useState, useEffect, useRef } from 'react';
 import {
     ArrowRight, Shield, Zap, Globe,
     Lock, Check, Eye, FileText, Smartphone,
@@ -30,6 +30,7 @@ import {
     Youtube
 } from 'lucide-react';
 import { playClick } from '../utils/sound';
+import BrandLogo from './BrandLogo';
 import ThemeModeDropdown from './ThemeModeDropdown';
 
 // --- VISUAL PRIMITIVES ---
@@ -39,11 +40,7 @@ import ThemeModeDropdown from './ThemeModeDropdown';
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.7' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
 
 const Logo = ({ className = "w-8 h-8" }) => (
-    <svg viewBox="0 0 32 32" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 15C4 10.6 9.4 7 16 7C22.6 7 28 10.6 28 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="12" cy="22" r="6" stroke="currentColor" strokeWidth="1.5" />
-        <circle cx="20" cy="22" r="6" fill="#bef264" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
+    <BrandLogo className={className} accentColor="#a3e635" />
 );
 
 const BrandXIcon = ({ className = "w-4 h-4" }) => (
@@ -102,7 +99,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
             {/* Cinematic Backdrop with Original Blur Style */}
             <div
                 className={`
-                    absolute inset-0 bg-obsidian/30 backdrop-blur-xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]
+                    absolute inset-0 bg-[#323242]/40 backdrop-blur-xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]
                     ${visible ? 'opacity-100' : 'opacity-0'}
                 `}
                 onClick={handleClose}
@@ -120,7 +117,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
                 <div className="relative w-full aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/10 group">
                     <button
                         onClick={handleClose}
-                        className="absolute top-6 right-6 z-20 p-3 rounded-full transition-all backdrop-blur-md border group bg-slate-200/50 hover:bg-slate-200/50 border-slate-200 text-obsidian dark:bg-black/50 dark:hover:bg-white/20 dark:border-white/10 dark:text-white"
+                        className="absolute top-6 right-6 z-20 p-3 rounded-full transition-all backdrop-blur-md border group bg-slate-200/50 hover:bg-slate-200/50 border-slate-200 text-obsidian dark:bg-[#323242]/60 dark:hover:bg-white/20 dark:border-white/10 dark:text-white"
                     >
                         <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
                     </button>
@@ -129,7 +126,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
                         width="100%"
                         height="100%"
                         src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=0&loop=1&playlist=${videoId}`}
-                        title="TrueHandover Film"
+                        title="HeartFlair Film"
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
@@ -146,7 +143,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
                 >
                     <button
                         onClick={() => { playClick(); handleClose(); setTimeout(onStart, 300); }}
-                        className="px-8 py-4 bg-brand text-black rounded-full font-bold text-sm uppercase tracking-widest hover:scale-105 hover:shadow-[0_0_30px_rgba(190,242,100,0.4)] transition-all shadow-lg flex items-center gap-3"
+                        className="px-8 py-4 bg-brand text-black rounded-full font-bold text-sm uppercase tracking-widest hover:scale-105 hover:shadow-[0_0_30px_rgba(163,230,53,0.4)] transition-all shadow-lg flex items-center gap-3"
                     >
                         Start for Free <ArrowRight className="w-4 h-4" />
                     </button>
@@ -184,7 +181,7 @@ const SectionHeading = ({ badge, title, subtitle, className = "" }: any) => (
 
 const BentoCard = ({ children, className = "", title, subtitle, icon: Icon }: { children?: React.ReactNode, className?: string, title?: string, subtitle?: string, icon?: any }) => (
     <div className={`
-        relative bg-white dark:bg-[#151519] border border-slate-200 dark:border-white/10 rounded-[2rem] overflow-hidden group flex flex-col
+        relative bg-white dark:bg-[#2D2E45] border border-slate-200 dark:border-white/10 rounded-[2rem] overflow-hidden group flex flex-col
         hover:border-slate-200 dark:hover:border-white/20 transition-all duration-500 shadow-xl dark:shadow-2xl dark:shadow-black/20
         ${className}
     `}>
@@ -211,11 +208,6 @@ const BentoCard = ({ children, className = "", title, subtitle, icon: Icon }: { 
 
 // --- SECTIONS ---
 
-// ... [Nav, Hero, ComparisonSection, BentoGrid Components remain unchanged] ...
-// Re-exporting unmodified components to keep file valid, but shortening for brevity in XML response where possible.
-// Assuming Nav, Hero, Comparison, BentoGrid are identical to previous version unless requested.
-// I will include them to ensure the file is complete and works.
-
 const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () => void, currentTheme: 'light' | 'dark' | 'system', onSetThemeMode: (mode: 'light' | 'dark' | 'system') => void, isHidden: boolean }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -230,10 +222,10 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
             className={`fixed top-0 left-0 right-0 z-50 px-6 pb-6 transition-all duration-500 ${isHidden ? 'opacity-0 -translate-y-full pointer-events-none' : 'opacity-100 translate-y-0'}`}
             style={{ paddingTop: 'max(32px, calc(env(safe-area-inset-top, 0px) + 18px))' }}
         >
-            <div className="max-w-[1200px] mx-auto bg-white/80 dark:bg-[#0E0E11]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
+            <div className="max-w-[1200px] mx-auto bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
                 <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                     <Logo className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
-                    <span className="font-serif text-lg sm:text-xl tracking-tight text-black dark:text-white">TrueHandover</span>
+                    <span className="font-serif text-lg sm:text-xl tracking-tight text-black dark:text-white">HeartFlair</span>
                 </div>
 
                 <div className="hidden md:flex items-center gap-8">
@@ -252,7 +244,7 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
 
                     <button
                         onClick={onStart}
-                        className="px-6 py-2.5 bg-black dark:bg-brand text-white dark:text-black rounded-full font-bold text-xs uppercase tracking-[0.15em] hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_20px_rgba(190,242,100,0.5)] transition-all shadow-lg border border-transparent dark:border-brand"
+                        className="px-6 py-2.5 bg-black dark:bg-brand text-white dark:text-black rounded-full font-bold text-xs uppercase tracking-[0.15em] hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_20px_rgba(163,230,53,0.5)] transition-all shadow-lg border border-transparent dark:border-brand"
                     >
                         Start for Free
                     </button>
@@ -278,7 +270,7 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
                 transition-all duration-300 ease-in-out origin-top transform
                 ${isMenuOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-95 -translate-y-4 pointer-events-none'}
             `}>
-                <div className="bg-white/95 dark:bg-[#1a1a20]/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-[2rem] p-6 shadow-2xl flex flex-col gap-6">
+                <div className="bg-white/95 dark:bg-[#2D2E45]/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-[2rem] p-6 shadow-2xl flex flex-col gap-6">
                     <div className="flex flex-col gap-4">
                         <button onClick={() => scrollTo('comparison')} className="text-lg font-serif text-obsidian dark:text-white text-left px-2">Why Us</button>
                         <button onClick={() => scrollTo('how-it-works')} className="text-lg font-serif text-obsidian dark:text-white text-left px-2">Process</button>
@@ -321,7 +313,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
     const [isHoveringCTA, setIsHoveringCTA] = useState(false);
 
     return (
-        <section className="relative min-h-[100vh] flex flex-col items-center px-6 pt-32 pb-12 overflow-hidden bg-[#fafbfc] dark:bg-[#08080B] text-black dark:text-white transition-colors duration-700">
+        <section className="relative min-h-[100vh] flex flex-col items-center px-6 pt-32 pb-12 overflow-hidden bg-editorial dark:bg-cosmic text-black dark:text-white transition-colors duration-700">
             {/* Film grain — light mode: subtle, dark mode: prominent */}
             <div
                 className="absolute inset-0 opacity-[0.06] dark:opacity-0 mix-blend-multiply pointer-events-none z-0"
@@ -343,8 +335,8 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
             <div className="flex-1 w-full flex flex-col items-center justify-center relative z-10 w-full">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1200px] h-full pointer-events-none overflow-hidden z-0">
                     <div className={`
-                    absolute top-[20%] right-[5%] md:right-[15%] w-48 h-64 bg-white dark:bg-[#1a1a1a] rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl rotate-12 transition-all duration-700 ease-out overflow-hidden
-                    ${isHoveringCTA ? 'translate-y-[-20px] scale-110 shadow-[0_20px_50px_rgba(190,242,100,0.2)]' : 'translate-y-0 opacity-40'}
+                    absolute top-[20%] right-[5%] md:right-[15%] w-48 h-64 bg-white dark:bg-[#2D2E45] rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl rotate-12 transition-all duration-700 ease-out overflow-hidden
+                    ${isHoveringCTA ? 'translate-y-[-20px] scale-110 shadow-[0_20px_50px_rgba(163,230,53,0.2)]' : 'translate-y-0 opacity-40'}
                 `}>
                         <div
                             className="absolute inset-0 opacity-0 dark:opacity-40 mix-blend-multiply dark:mix-blend-overlay pointer-events-none z-0"
@@ -381,7 +373,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                     </a>
 
                     <div className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-sm shadow-sm transition-all hover:bg-white dark:hover:bg-white/10 cursor-default">
-                        <div className="w-2 h-2 bg-brand rounded-full animate-pulse shadow-[0_0_8px_#bef264]"></div>
+                        <div className="w-2 h-2 bg-brand rounded-full animate-pulse shadow-[0_0_8px_#a3e635]"></div>
                         <span className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-none uppercase tracking-wider">
                             Now available in public beta
                         </span>
@@ -391,7 +383,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                 <div className="relative z-10 max-w-5xl mx-auto text-center mb-16">
                     <h1 className="font-serif text-5xl md:text-8xl lg:text-9xl font-medium tracking-tight leading-[0.95] mb-10 animate-slide-up">
                         <span className="text-red-600 dark:text-red-500 drop-shadow-sm">Stop Chasing.</span> <br />
-                        <span className="text-black dark:text-white">Start <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[#bef264] to-lime-600">Delivering.</span></span>
+                        <span className="text-black dark:text-white">Start <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[#a3e635] to-lime-600">Delivering.</span></span>
                     </h1>
 
                     <div className="max-w-4xl mx-auto leading-relaxed mb-12 animate-slide-up" style={{ animationDelay: '0.1s' }}>
@@ -399,7 +391,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                             The end of the "You send first" standoff.
                         </p>
                         <p className="text-lg md:text-2xl text-slate-600 dark:text-slate-200 font-light leading-relaxed">
-                            TrueHandover ensures your assets are <span className="border-b-2 border-brand text-black dark:text-white font-medium">securely handed over</span> only when payment clears.
+                            HeartFlair ensures your assets are <span className="border-b-2 border-brand text-black dark:text-white font-medium">securely handed over</span> only when payment clears.
                             We generate watermarked previews automatically, so your client reviews the excellence while you retain the master files.
                         </p>
                     </div>
@@ -409,7 +401,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                             onClick={() => { playClick(); onStart(); }}
                             onMouseEnter={() => setIsHoveringCTA(true)}
                             onMouseLeave={() => setIsHoveringCTA(false)}
-                            className="group relative h-16 px-10 bg-brand text-black rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(190,242,100,0.6)] shadow-xl"
+                            className="group relative h-16 px-10 bg-brand text-black rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(163,230,53,0.6)] shadow-xl"
                         >
                             <span className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-cta-sheen" />
@@ -479,10 +471,10 @@ const ComparisonSection = () => {
     }, [hoveredCard, oldWayItems.length]);
 
     return (
-        <section id="comparison" className="py-32 px-6 bg-white dark:bg-[#121215] transition-colors duration-700 relative overflow-hidden">
+        <section id="comparison" className="py-32 px-6 bg-white dark:bg-[#2D2E45] transition-colors duration-700 relative overflow-hidden">
             <div
                 className={`absolute top-1/2 left-0 w-[500px] h-[500px] bg-red-600 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all duration-700 ease-in-out
-                ${hoveredCard === 'old' ? 'opacity-25 scale-110' : 'opacity-10 scale-100'}
+                ${hoveredCard === 'old' ? 'opacity-25 scale-110' : 'opacity-8 scale-100'}
                 `}
             />
             <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-brand/5 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2 pointer-events-none" />
@@ -503,7 +495,7 @@ const ComparisonSection = () => {
                     <div
                         onMouseEnter={() => setHoveredCard('old')}
                         onMouseLeave={() => setHoveredCard(null)}
-                        className={`p-10 rounded-[2.5rem] bg-editorial dark:bg-[#18181c] border border-dashed border-slate-200 dark:border-white/10 relative group transition-all duration-500 hover:bg-slate-200 dark:hover:bg-[#1e1e23] ${hoveredCard !== 'old' ? 'animate-old-way-breathe' : ''}`}
+                        className={`p-10 rounded-[2.5rem] bg-editorial dark:bg-[#2D2E45] border border-dashed border-slate-200 dark:border-white/10 relative group transition-all duration-500 hover:bg-slate-200 dark:hover:bg-[#3a3a52] ${hoveredCard !== 'old' ? 'animate-old-way-breathe' : ''}`}
                     >
                         <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                             <X className="w-32 h-32 text-red-500 rotate-12" />
@@ -537,11 +529,11 @@ const ComparisonSection = () => {
                         </div>
                     </div>
 
-                    {/* The TrueHandover Way */}
+                    {/* The HeartFlair Way */}
                     <div
                         onMouseEnter={() => setHoveredCard('new')}
                         onMouseLeave={() => setHoveredCard(null)}
-                        className="relative p-10 rounded-[2.5rem] bg-brand text-black shadow-2xl shadow-lime-500/20 transform md:-translate-y-4 transition-transform hover:-translate-y-6 duration-500 overflow-hidden"
+                        className="relative p-10 rounded-[2.5rem] bg-brand text-black shadow-2xl shadow-black/25 transform md:-translate-y-4 transition-transform hover:-translate-y-6 duration-500 overflow-hidden"
                     >
                         <div className="absolute top-0 right-0 p-6 opacity-10">
                             <Check className="w-32 h-32 text-black -rotate-12" />
@@ -583,10 +575,10 @@ const ComparisonSection = () => {
 const BentoGrid = () => {
     // ... [Same implementation as before] ...
     const [isCustom, setIsCustom] = useState(false);
-    const [accentColor, setAccentColor] = useState('#bef264');
+    const [accentColor, setAccentColor] = useState('#a3e635');
 
     const brandConfigs = [
-        { name: 'Default', color: '#bef264', domain: 'portal.truehandover.com' },
+        { name: 'Default', color: '#a3e635', domain: 'portal.heartflair.com' },
         { name: 'Onyx', color: '#334155', domain: 'vault.agency.com' },
         { name: 'Cobalt', color: '#3b82f6', domain: 'files.studio.io' }
     ];
@@ -594,7 +586,7 @@ const BentoGrid = () => {
     const currentBrand = brandConfigs.find(b => b.color === accentColor) || brandConfigs[0];
 
     return (
-        <section id="how-it-works" className="py-32 px-6 bg-editorial dark:bg-[#0E0E11] text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
+        <section id="how-it-works" className="py-32 px-6 bg-editorial dark:bg-cosmic text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
             <div className="max-w-[1200px] mx-auto">
                 <SectionHeading
                     badge="The Mechanism"
@@ -612,11 +604,11 @@ const BentoGrid = () => {
                             </p>
                             <div className="flex-1 relative rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 group-hover:border-brand/30 transition-colors">
                                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600607686527-6fb886090705?w=500&q=50')] bg-cover bg-center opacity-40 blur-[2px]" />
-                                <div className="absolute inset-0 bg-black/10 dark:bg-black/30" />
+                                <div className="absolute inset-0 bg-black/10 dark:bg-[#323242]/40" />
                                 <div className="absolute inset-0 flex items-center justify-center">
                                     <div className="text-5xl font-black text-black/35 dark:text-white/30 -rotate-12 select-none pointer-events-none tracking-widest">PREVIEW</div>
                                 </div>
-                                <div className="absolute bottom-4 left-4 right-4 bg-white/95 dark:bg-black/85 backdrop-blur-md p-3 rounded-lg border border-slate-200/80 dark:border-white/20 shadow-lg">
+                                <div className="absolute bottom-4 left-4 right-4 bg-white/95 dark:bg-[#2D2E45]/85 backdrop-blur-md p-3 rounded-lg border border-slate-200/80 dark:border-white/20 shadow-lg">
                                     <div className="flex items-center gap-2 text-xs font-mono text-slate-700 dark:text-slate-100">
                                         <Lock className="w-3 h-3 text-amber-500" />
                                         <span>Download Locked</span>
@@ -633,8 +625,7 @@ const BentoGrid = () => {
                                 We designed this to stop arguments before they start. Since files only unlock after payment,
                                 you never have to chase a client. But just in case, we keep a tidy history log for you.
                             </p>
-                            <div className="flex-1 bg-obsidian dark:bg-[#050505] rounded-xl border border-slate-200 dark:border-white/10 p-4 font-mono text-[10px] text-slate-400 dark:text-slate-500 overflow-hidden relative shadow-inner">
-                                <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-slate-900 dark:from-[#050505] to-transparent z-10" />
+                            <div className="flex-1 bg-white dark:bg-[#3a3b56] rounded-xl border border-slate-200 dark:border-white/10 p-4 font-mono text-[10px] text-slate-500 dark:text-slate-300 overflow-hidden relative shadow-sm">
                                 <div className="space-y-3 opacity-80">
                                     <div className="flex gap-2">
                                         <span className="text-brand">GET</span>
@@ -642,14 +633,14 @@ const BentoGrid = () => {
                                         <span className="ml-auto text-slate-500 dark:text-slate-700">200 OK</span>
                                     </div>
                                     <div className="flex gap-2">
-                                        <span className="text-blue-400">LOG</span>
+                                        <span className="text-brand">LOG</span>
                                         <span className="text-slate-400 dark:text-slate-300">Client Viewing</span>
-                                        <span className="ml-auto text-slate-500 dark:text-slate-700">Active</span>
+                                        <span className="ml-auto text-slate-600 dark:text-slate-200">Active</span>
                                     </div>
                                     <div className="flex gap-2">
-                                        <span className="text-amber-500">LCK</span>
+                                        <span className="text-brand">LCK</span>
                                         <span className="text-slate-400 dark:text-slate-300">Asset Download</span>
-                                        <span className="ml-auto text-amber-900">Blocked</span>
+                                        <span className="ml-auto text-slate-600 dark:text-slate-200">Blocked</span>
                                     </div>
                                 </div>
                                 <div className="absolute bottom-4 right-4">
@@ -697,7 +688,7 @@ const BentoGrid = () => {
                     <BentoCard className="md:col-span-6 lg:col-span-8 !p-0 min-h-[540px]">
                         <div className="flex flex-col md:flex-row h-full w-full">
                             {/* LEFT: Control Panel */}
-                            <div className="w-full md:w-[340px] p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/10 flex flex-col bg-editorial dark:bg-[#0b0c15]">
+                            <div className="w-full md:w-[340px] p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/10 flex flex-col bg-editorial dark:bg-[#2D2E45]">
                                 <div>
                                     <div className="mb-8">
                                         <div className="flex items-start justify-between mb-4">
@@ -766,7 +757,7 @@ const BentoGrid = () => {
                             </div>
 
                             {/* RIGHT: Live Preview */}
-                            <div className="flex-1 relative bg-slate-200 dark:bg-[#0E0E11] p-8 flex items-center justify-center overflow-hidden">
+                            <div className="flex-1 relative bg-slate-200 dark:bg-[#323242] p-8 flex items-center justify-center overflow-hidden">
                                 <div
                                     className="absolute inset-0 opacity-[0.08] transition-all duration-1000"
                                     style={{ backgroundColor: accentColor }}
@@ -777,7 +768,7 @@ const BentoGrid = () => {
                                 }} />
 
                                 {/* Domain Badge */}
-                                <div className="absolute top-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 flex items-center gap-2 z-20 shadow-sm">
+                                <div className="absolute top-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/80 dark:bg-[#2D2E45]/85 backdrop-blur-xl border border-slate-200 dark:border-white/10 flex items-center gap-2 z-20 shadow-sm">
                                     <Globe className="w-3 h-3 text-slate-500" />
                                     <span className="text-xs font-mono text-slate-500 dark:text-slate-400 transition-all duration-500">
                                         {currentBrand.domain}
@@ -786,7 +777,7 @@ const BentoGrid = () => {
 
                                 {/* Portal Preview Card */}
                                 <div className="relative w-full max-w-[340px] transition-all duration-700 z-10">
-                                    <div className="bg-white dark:bg-[#1a1a20] rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden shadow-2xl">
+                                    <div className="bg-white dark:bg-[#2D2E45] rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden shadow-2xl">
                                         {/* Header */}
                                         <div className="p-6 border-b border-slate-200 dark:border-white/5 flex items-center justify-between">
                                             <div className="relative w-10 h-10">
@@ -852,7 +843,7 @@ const BentoGrid = () => {
                                         </div>
                                         <div className="w-full bg-slate-200 dark:bg-white/5 rounded-full h-1.5 overflow-hidden">
                                             <div
-                                                className="bg-brand h-full shadow-[0_0_10px_#bef264]"
+                                                className="bg-brand h-full shadow-[0_0_10px_#a3e635]"
                                                 style={{ width: '34%' }}
                                             />
                                         </div>
@@ -998,7 +989,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
     return (
-        <section id="pricing" className="py-32 px-6 bg-white dark:bg-[#0E0E11] text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
+        <section id="pricing" className="py-32 px-6 bg-white dark:bg-cosmic text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
             <div className="max-w-[1200px] mx-auto">
                 <div className="text-center mb-12">
                     <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-brand uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
@@ -1029,7 +1020,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
 
                     {/* Starter - Only visible in Monthly - ENHANCED BORDER */}
                     {billingCycle === 'monthly' && (
-                        <div className="p-8 rounded-[2rem] border-2 border-slate-200 hover:border-obsidian/30 dark:border-white/10 dark:hover:border-white/20 bg-white dark:bg-[#151519] transition-all flex flex-col shadow-lg dark:shadow-none h-full animate-fade-in">
+                        <div className="p-8 rounded-[2rem] border-2 border-slate-200 hover:border-obsidian/30 dark:border-white/10 dark:hover:border-white/20 bg-white dark:bg-[#2D2E45] transition-all flex flex-col shadow-lg dark:shadow-none h-full animate-fade-in">
                             <div className="font-mono text-xs uppercase tracking-widest text-slate-500 mb-6">Starter</div>
                             <div className="flex items-baseline gap-1 mb-2">
                                 <span className="text-4xl font-serif font-bold">$0</span>
@@ -1070,12 +1061,12 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                         bg-brand /* Default Solid Border */
                         transform transition-all duration-300 ease-out
                         lg:-translate-y-4 /* Default 'Sweet Spot' Lift only on desktop */
-                        group-hover:-translate-y-2 lg:group-hover:-translate-y-6 group-hover:shadow-[0_20px_40px_-10px_rgba(190,242,100,0.4)] /* Hover Lift + Glow */
+                        group-hover:-translate-y-2 lg:group-hover:-translate-y-6 group-hover:shadow-[0_20px_40px_-10px_rgba(163,230,53,0.4)] /* Hover Lift + Glow */
                     ">
                             {/* The Animated Gradient Border Layer - Only visible on hover */}
                             <div className="
                             absolute inset-0 rounded-[2rem]
-                            bg-gradient-to-r from-[#bef264] via-emerald-400 to-[#bef264]
+                            bg-gradient-to-r from-[#a3e635] via-emerald-400 to-[#a3e635]
                             bg-[length:200%_auto]
                             opacity-0 group-hover:opacity-100
                             group-hover:animate-border-flow
@@ -1083,7 +1074,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                         " />
 
                             {/* The Inner Content */}
-                            <div className="relative h-full bg-white dark:bg-[#1a1a1f] rounded-[1.9rem] p-8 flex flex-col overflow-hidden">
+                            <div className="relative h-full bg-white dark:bg-[#2D2E45] rounded-[1.9rem] p-8 flex flex-col overflow-hidden">
                                 <div className="absolute top-0 right-0 p-6">
                                     <div className="px-3 py-1 bg-brand text-black text-[10px] font-bold uppercase tracking-widest rounded-full">Sweet Spot</div>
                                 </div>
@@ -1223,7 +1214,7 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
 };
 
 const FAQSection = () => (
-    <section className="py-32 px-6 bg-editorial dark:bg-[#0E0E11] transition-colors duration-700">
+    <section className="py-32 px-6 bg-editorial dark:bg-cosmic transition-colors duration-700">
         <div className="max-w-[800px] mx-auto">
             <div className="text-center mb-16">
                 <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-brand uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
@@ -1232,14 +1223,14 @@ const FAQSection = () => (
                 <h2 className="font-serif text-4xl md:text-5xl text-obsidian dark:text-white mb-6 tracking-wide">Common Questions</h2>
             </div>
 
-            <div className="bg-white dark:bg-[#151519] rounded-[2.5rem] p-8 md:p-12 border border-slate-200 dark:border-white/5 shadow-sm">
+            <div className="bg-white dark:bg-[#2D2E45] rounded-[2.5rem] p-8 md:p-12 border border-slate-200 dark:border-white/5 shadow-sm">
                 <FAQItem
-                    question="What is TrueHandover?"
-                    answer="TrueHandover is a secure asset gateway designed for the creative economy. Think of it as a 'vending machine' for your business. It automates the final exchange of work for payment. You upload deliverables to a protected portal where clients can review watermarked previews. The high-resolution files are secured and instantly released only after payment is verified."
+                    question="What is HeartFlair?"
+                    answer="HeartFlair is a secure asset gateway designed for the creative economy. Think of it as a 'vending machine' for your business. It automates the final exchange of work for payment. You upload deliverables to a protected portal where clients can review watermarked previews. The high-resolution files are secured and instantly released only after payment is verified."
                 />
                 <FAQItem
-                    question="Is TrueHandover an escrow platform?"
-                    answer="No. TrueHandover is a technical delivery protocol, not a financial escrow service. We facilitate payments using Stripe Connect. We do not take custody of your funds. The payment is processed by Stripe and routed to your connected account immediately. This reduces liability and keeps you in control."
+                    question="Is HeartFlair an escrow platform?"
+                    answer="No. HeartFlair is a technical delivery protocol, not a financial escrow service. We facilitate payments using Stripe Connect. We do not take custody of your funds. The payment is processed by Stripe and routed to your connected account immediately. This reduces liability and keeps you in control."
                 />
                 <FAQItem
                     question="How do I get paid?"
@@ -1278,12 +1269,12 @@ type CookieConsentChoice = 'unknown' | 'essential' | 'all';
 
 const CookieConsentBanner = ({ onChoose }: { onChoose: (choice: Exclude<CookieConsentChoice, 'unknown'>) => void }) => (
     <div className="fixed bottom-4 left-4 right-4 z-[70] md:left-6 md:right-6">
-        <div className="max-w-[1200px] mx-auto rounded-2xl border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#111116]/95 backdrop-blur-xl shadow-2xl p-4 md:p-5">
+        <div className="max-w-[1200px] mx-auto rounded-2xl border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#2D2E45]/95 backdrop-blur-xl shadow-2xl p-4 md:p-5">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="pr-2">
                     <p className="text-sm font-bold text-obsidian dark:text-white">Cookie settings</p>
                     <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        We use essential cookies to keep TrueHandover secure and working. Optional cookies help us improve performance and product analytics.
+                        We use essential cookies to keep HeartFlair secure and working. Optional cookies help us improve performance and product analytics.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1306,23 +1297,23 @@ const CookieConsentBanner = ({ onChoose }: { onChoose: (choice: Exclude<CookieCo
 );
 
 const Footer = () => (
-    <footer className="bg-white dark:bg-[#0a0a0a] text-black dark:text-white py-20 px-6 border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
+    <footer className="bg-white dark:bg-cosmic text-black dark:text-white py-20 px-6 border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
         <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex flex-col items-start gap-4">
                 <div className="flex items-center gap-3 group cursor-pointer">
                     <Logo className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
-                    <span className="font-serif text-xl tracking-tight">TrueHandover</span>
+                    <span className="font-serif text-xl tracking-tight">HeartFlair</span>
                 </div>
                 <p className="text-slate-500 dark:text-slate-400 font-serif italic text-lg tracking-wide">Creative delivery, finally done right.</p>
 
                 <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
-                    <a href="https://youtube.com/@truehandover" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="YouTube">
+                    <a href="https://youtube.com/@heartflair" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="YouTube">
                         <Youtube className="w-4 h-4" />
                     </a>
-                    <a href="https://x.com/truehandover" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="X (Twitter)">
+                    <a href="https://x.com/heartflair" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="X (Twitter)">
                         <BrandXIcon className="w-4 h-4" />
                     </a>
-                    <a href="https://discord.gg/truehandover" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="Discord">
+                    <a href="https://discord.gg/heartflair" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="Discord">
                         <BrandDiscordIcon className="w-4 h-4" />
                     </a>
                 </div>
@@ -1335,16 +1326,19 @@ const Footer = () => (
             </div>
 
             <div className="text-[10px] text-slate-500 font-mono">
-                © 2026 TrueHandover Inc.
+                © 2026 HeartFlair Ltd.
             </div>
         </div>
     </footer>
 );
 
-export default function LandingPage({ onGetStarted, currentTheme, onSetThemeMode, toggleTheme }: { onGetStarted: () => void, currentTheme: 'light' | 'dark' | 'system', onSetThemeMode: (mode: 'light' | 'dark' | 'system') => void, toggleTheme?: () => void }) {
+export default function LandingPage({ onGetStarted, onQuickStartWithFiles, currentTheme, onSetThemeMode, toggleTheme }: { onGetStarted: () => void, onQuickStartWithFiles?: (files: File[]) => void, currentTheme: 'light' | 'dark' | 'system', onSetThemeMode: (mode: 'light' | 'dark' | 'system') => void, toggleTheme?: () => void }) {
 
     // Removed internal state management for theme to rely on parent App state
     const [isVideoOpen, setIsVideoOpen] = useState(false);
+    const [isDropActive, setIsDropActive] = useState(false);
+    const quickUploadInputRef = useRef<HTMLInputElement | null>(null);
+    const dragCounterRef = useRef(0);
     const [cookieConsent, setCookieConsent] = useState<CookieConsentChoice>(() => {
         if (typeof window === 'undefined') return 'unknown';
         const saved = window.localStorage.getItem('th_cookie_consent');
@@ -1360,8 +1354,82 @@ export default function LandingPage({ onGetStarted, currentTheme, onSetThemeMode
         }
     };
 
+    const handleQuickStartFiles = (incoming: FileList | File[] | null) => {
+        if (!onQuickStartWithFiles || !incoming || incoming.length === 0) return;
+        const files = Array.from(incoming);
+        onQuickStartWithFiles(files);
+    };
+
+    const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+        if (!onQuickStartWithFiles || !e.dataTransfer.types.includes('Files')) return;
+        e.preventDefault();
+        dragCounterRef.current += 1;
+        setIsDropActive(true);
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        if (!onQuickStartWithFiles || !e.dataTransfer.types.includes('Files')) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        setIsDropActive(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+        if (!onQuickStartWithFiles || !e.dataTransfer.types.includes('Files')) return;
+        e.preventDefault();
+        dragCounterRef.current = Math.max(0, dragCounterRef.current - 1);
+        if (dragCounterRef.current === 0) setIsDropActive(false);
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        if (!onQuickStartWithFiles) return;
+        e.preventDefault();
+        dragCounterRef.current = 0;
+        setIsDropActive(false);
+        handleQuickStartFiles(e.dataTransfer.files);
+    };
+
     return (
-        <div className="min-h-screen bg-editorial dark:bg-[#0E0E11] text-black dark:text-white font-sans selection:bg-brand selection:text-black transition-colors duration-700">
+        <div
+            className="min-h-screen bg-editorial dark:bg-cosmic text-black dark:text-white font-sans selection:bg-brand selection:text-black transition-colors duration-700"
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+        >
+            <input
+                ref={quickUploadInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                    handleQuickStartFiles(e.target.files);
+                    e.currentTarget.value = '';
+                }}
+            />
+
+            {isDropActive && (
+                <div className="fixed inset-0 z-[1200] pointer-events-none bg-black/40 dark:bg-[#323242]/60 backdrop-blur-[2px]">
+                    <div className="absolute inset-0 flex items-center justify-center px-6">
+                        <div className="rounded-3xl border border-white/20 bg-white/90 dark:bg-[#2D2E45]/90 shadow-2xl px-8 py-10 text-center max-w-xl w-full">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-4">Quick Start</p>
+                            <h3 className="font-serif text-4xl text-zinc-900 dark:text-white mb-3">Drop files to start</h3>
+                            <p className="text-sm text-zinc-600 dark:text-zinc-300">We will open a new handover draft with your files preloaded.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {onQuickStartWithFiles && (
+                <button
+                    type="button"
+                    onClick={() => { playClick(); quickUploadInputRef.current?.click(); }}
+                    className="fixed bottom-6 right-6 z-[1000] px-5 py-3 rounded-full bg-black text-white dark:bg-brand dark:text-black text-[11px] font-bold uppercase tracking-widest shadow-2xl border border-black/10 dark:border-brand hover:scale-105 transition-transform"
+                >
+                    Drop files or browse
+                </button>
+            )}
+
             {/* Floating Theme Toggle — desktop only, aligned to the right edge of the nav pill */}
             <div
                 className="fixed left-0 right-0 z-[999] hidden md:flex pointer-events-none px-6"
@@ -1374,7 +1442,7 @@ export default function LandingPage({ onGetStarted, currentTheme, onSetThemeMode
                             onChange={onSetThemeMode || (() => toggleTheme?.())}
                             isDarkMode={currentTheme === 'dark'}
                             align="right"
-                            buttonClassName="w-11 h-11 rounded-full flex items-center justify-center text-slate-500 hover:text-black dark:text-slate-300 dark:hover:text-white bg-white/80 dark:bg-[#0E0E11]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 shadow-2xl transition-all hover:scale-105"
+                            buttonClassName="w-11 h-11 rounded-full flex items-center justify-center text-slate-500 hover:text-black dark:text-slate-300 dark:hover:text-white bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 shadow-2xl transition-all hover:scale-105"
                         />
                     </div>
                 </div>
@@ -1394,3 +1462,6 @@ export default function LandingPage({ onGetStarted, currentTheme, onSetThemeMode
         </div>
     );
 }
+
+
+

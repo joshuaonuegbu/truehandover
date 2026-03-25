@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 
-// Lightweight client-side URL → human-friendly type label (for the import-link modal preview badge).
+// Lightweight client-side URL â†’ human-friendly type label (for the import-link modal preview badge).
 const detectTypeFromUrl = (raw: string): string | null => {
     try {
         const parsed = new URL(raw.trim());
@@ -38,7 +38,7 @@ import {
     Wallet, Smartphone, Mail, Coins, ShieldAlert,
     Infinity, Hourglass, Flame, Camera, Type,
     Target, Radio, Crosshair, Box, Play, Hash,
-    Monitor, AlertCircle, Loader2, Key, PanelLeftClose, PanelLeftOpen, EyeOff, Pencil
+    Monitor, AlertCircle, Loader2, Key, PanelLeftClose, PanelLeftOpen, EyeOff, Pencil, Settings
 } from 'lucide-react';
 import { Project, FileAsset, ProjectTheme, Milestone, UserProfile, CredentialBlock } from '../types';
 import { playClick, playSuccess } from '../utils/sound';
@@ -63,11 +63,12 @@ const createClientLinkToken = () => {
     return `cl_${hex}_${Date.now().toString(36)}`;
 };
 
-const GRADIENT_TEXT = "text-transparent bg-clip-text bg-gradient-to-br from-slate-900 via-slate-600 to-slate-400 dark:from-white dark:via-slate-200 dark:to-slate-500";
+const GRADIENT_TEXT = "text-transparent bg-clip-text bg-gradient-to-br from-zinc-900 via-zinc-600 to-zinc-400 dark:from-white dark:via-zinc-200 dark:to-zinc-500";
 
 // --- VISUAL CONSTANTS ---
 // High-visibility SVG Grain (Matching ClientPreviewPage)
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`;
+const HERO_NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.7' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
 
 // --- PREMIUM WALLPAPERS ---
 const WALLPAPER_PRESETS: ProjectTheme[] = [
@@ -228,7 +229,7 @@ const Toggle = ({ checked, onChange }: { checked: boolean, onChange: (v: boolean
         role="switch"
         aria-checked={checked}
         onClick={() => { playClick(); onChange(!checked); }}
-        className={`w-11 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-lime-500 ${checked ? 'bg-brand dark:bg-brand' : 'bg-slate-200 dark:bg-white/10'}`}
+        className={`w-11 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${checked ? 'bg-brand dark:bg-brand' : 'bg-zinc-200 dark:bg-white/10'}`}
     >
         <div className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow-sm transition-all duration-300 ${checked ? 'translate-x-5 bg-white dark:bg-black' : 'bg-white'}`} />
     </button>
@@ -319,7 +320,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
             showProtectedLabel: true,
             accessConfig: { mode: 'permanent' },
             paymentMethods: {
-                stripeEnabled: true,
+                stripeEnabled: Boolean(user?.stripeConnect?.connected || user?.stripeConnect?.accountId),
                 venmo: '',
                 cashapp: '',
                 paypal: '',
@@ -379,12 +380,14 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
     const [systemDark, setSystemDark] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches);
 
     const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+    const [showAdvanced, setShowAdvanced] = useState(false);  // ADDED: Simplification Toggle
     const [customWallpapers, setCustomWallpapers] = useState<ProjectTheme[]>([]);
     const [isEditorCollapsed, setIsEditorCollapsed] = useState(false);
     const [isPreviewDockedSidebarCollapsed, setIsPreviewDockedSidebarCollapsed] = useState(false);
     const [previewDeviceMode, setPreviewDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'foldable'>('desktop');
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const assetInputRef = React.useRef<HTMLInputElement>(null); // For asset uploads
+    const stripeConnected = Boolean(user?.stripeConnect?.connected || user?.stripeConnect?.accountId);
     const draftProjectIdRef = React.useRef<string>(existingProject?.id || crypto.randomUUID());
     const draftClientLinkRef = React.useRef<string>(existingProject?.clientLink && existingProject.clientLink !== '#'
         ? existingProject.clientLink
@@ -553,16 +556,22 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
             let previewKey: string | undefined;
 
             const isDemoUser = !user?.id || user.id === 'u1';
+
+            // Auto-fill project name if empty (Simple & Elegant!)
+            let resolvedName = formData.name?.trim() || '';
+            if (!resolvedName && file) {
+                resolvedName = file.name;
+                setFormData(prev => ({ ...prev, name: resolvedName }));
+            }
+            if (!resolvedName) resolvedName = 'Untitled Project';
+
             if (!isDemoUser) {
-                if (!formData.name?.trim() || !formData.amount || formData.amount <= 0) {
-                    throw new Error('Set a project name and amount before uploading files.');
-                }
                 // Ensure the project exists in Supabase before requesting presigned URLs.
                 // (Presign validates ownership via projects table + RLS.)
                 await DB.saveProject({
                     id: previewProject.id,
                     user_id: user.id,
-                    name: formData.name,
+                    name: resolvedName,
                     description: formData.description || null,
                     client: formData.client || {},
                     amount: formData.amount || 0,
@@ -838,7 +847,23 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
     };
 
     return (
-        <div className="flex h-screen overflow-hidden bg-[#F2F5F3] dark:bg-cosmic">
+        <div className="flex h-screen overflow-hidden bg-[#F2F5F3] dark:bg-cosmic relative">
+            <div
+                className="absolute inset-0 opacity-[0.06] dark:opacity-0 mix-blend-multiply pointer-events-none z-0"
+                style={{
+                    backgroundImage: HERO_NOISE_SVG,
+                    backgroundSize: '250px 250px',
+                    filter: 'contrast(2200%) brightness(102%)'
+                }}
+            />
+            <div
+                className="absolute inset-0 opacity-0 dark:opacity-[0.82] mix-blend-overlay pointer-events-none z-0"
+                style={{
+                    backgroundImage: HERO_NOISE_SVG,
+                    backgroundSize: '250px 250px',
+                    filter: 'contrast(2700%) brightness(102%)'
+                }}
+            />
             <style>{`
                 /* Ensure the native date picker icon stays visible in dark mode without forcing a light color-scheme. */
                 .dark .th-date-input::-webkit-calendar-picker-indicator {
@@ -867,7 +892,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
             />
 
             {/* LEFT PANEL: EDITOR (25%) */}
-            <div className={`${isEditorCollapsed ? 'w-0 min-w-0 opacity-0 pointer-events-none' : 'w-[25%] min-w-[340px] opacity-100'} flex flex-col border-r border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-[#181821]/90 backdrop-blur-xl relative z-20 overflow-hidden transition-all duration-300`}>
+            <div className={`${isEditorCollapsed ? 'w-0 min-w-0 opacity-0 pointer-events-none' : 'w-[25%] min-w-[340px] opacity-100'} flex flex-col border-r border-zinc-200/80 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl border border-white/20 dark:border-white/20 backdrop-blur-xl relative z-20 overflow-hidden transition-all duration-300`}>
                 {/* Film Grain Overlay - Switched to SVG with stronger opacity & mix-blend-multiply for light mode */}
                 <div
                     className="absolute inset-0 pointer-events-none z-0 mix-blend-multiply dark:mix-blend-overlay opacity-15 dark:opacity-30"
@@ -875,17 +900,17 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                 ></div>
 
                 {/* Editor Header */}
-                <div className="h-16 px-6 flex items-center justify-between border-b border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-[#181821]/70 backdrop-blur-md sticky top-0 z-30 relative">
+                <div className="h-16 px-6 flex items-center justify-between border-b border-zinc-200/80 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl border-b border-white/20 dark:border-white/20 backdrop-blur-md sticky top-0 z-30 relative">
                     <button
                         onClick={() => { playClick(); onBack(); }}
-                        className="flex items-center gap-2 text-slate-500 hover:text-obsidian dark:hover:text-white transition-colors text-xs font-bold uppercase tracking-wider"
+                        className="flex items-center gap-2 text-zinc-500 hover:text-obsidian dark:hover:text-white transition-colors text-xs font-bold uppercase tracking-wider"
                     >
                         <ChevronLeft className="w-4 h-4" /> Back to Vault
                     </button>
                     <div className="flex items-center gap-4">
                         <button
                             onClick={cyclePreviewTheme}
-                            className="p-2 rounded-full bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-brand dark:hover:text-brand transition-colors"
+                            className="p-2 rounded-full bg-zinc-200 dark:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-brand dark:hover:text-brand transition-colors"
                             title={`Preview Theme: ${previewTheme.charAt(0).toUpperCase() + previewTheme.slice(1)}`}
                         >
                             {previewTheme === 'light' && <Sun className="w-4 h-4" />}
@@ -894,12 +919,12 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                         </button>
                         <div className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-brand dark:bg-brand animate-pulse"></span>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Live Editor</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Live Editor</span>
                         </div>
                         <button
                             type="button"
                             onClick={() => { playClick(); setIsEditorCollapsed(true); }}
-                            className="p-2 rounded-xl bg-slate-200 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10 transition-all"
+                            className="p-2 rounded-xl bg-zinc-200 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 text-zinc-600 dark:text-zinc-300 border border-zinc-200/50 dark:border-white/10 transition-all"
                             title="Collapse Editor"
                             aria-label="Collapse Editor"
                         >
@@ -911,10 +936,10 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                 {/* Scrollable Form Area */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-5 scroll-smooth relative z-10">
                     <div>
-                        <h2 className={`text-3xl font-serif font-semibold tracking-tight mb-1 ${GRADIENT_TEXT}`}>
+                        <h2 className={`text-3xl font-sans tracking-tight font-semibold tracking-tight mb-1 ${GRADIENT_TEXT}`}>
                             Project Config
                         </h2>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm">Changes update the preview instantly.</p>
+                        <p className="text-zinc-500 dark:text-zinc-400 text-sm">Changes update the preview instantly.</p>
                     </div>
 
                     {draftRestoredNotice && (
@@ -926,10 +951,10 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     )}
 
                     {/* Basic Info Card */}
-                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
                         <div className="space-y-4">
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold uppercase text-slate-500 tracking-widest flex justify-between">
+                                <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest flex justify-between">
                                     Project Name
                                     {errors.name && <span className="text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Required</span>}
                                 </label>
@@ -937,13 +962,13 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     value={formData.name}
                                     onChange={e => { setFormData({ ...formData, name: e.target.value }); setErrors({ ...errors, name: false }); }}
                                     placeholder="e.g. Q4 Marketing Campaign"
-                                    className={`w-full p-3 bg-editorial dark:bg-black/20 border rounded-xl outline-none transition-colors text-sm font-bold text-obsidian dark:text-white ${errors.name ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-brand dark:focus:border-brand'}`}
+                                    className={`w-full p-3 bg-editorial dark:bg-black/20 border rounded-xl outline-none transition-colors text-sm font-bold text-obsidian dark:text-white ${errors.name ? 'border-red-500 focus:border-red-500' : 'border-zinc-200/50 dark:border-white/10 focus:border-brand dark:focus:border-brand'}`}
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold uppercase text-slate-500 tracking-widest flex items-center gap-1 justify-between">
+                                    <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest flex items-center gap-1 justify-between">
                                         <div className="flex items-center gap-1"><DollarSign className="w-3 h-3" /> Value</div>
                                         {errors.amount && <span className="text-red-500 text-[9px] font-bold">Required</span>}
                                     </label>
@@ -951,18 +976,18 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         type="number"
                                         value={formData.amount}
                                         onChange={e => { setFormData({ ...formData, amount: Number(e.target.value) }); setErrors({ ...errors, amount: false }); }}
-                                        className={`w-full p-3 bg-editorial dark:bg-black/20 border rounded-xl outline-none transition-colors font-mono text-sm text-obsidian dark:text-white ${errors.amount ? 'border-red-500 focus:border-red-500' : 'border-slate-200 dark:border-white/10 focus:border-brand dark:focus:border-brand'}`}
+                                        className={`w-full p-3 bg-editorial dark:bg-black/20 border rounded-xl outline-none transition-colors font-mono text-sm text-obsidian dark:text-white ${errors.amount ? 'border-red-500 focus:border-red-500' : 'border-zinc-200/50 dark:border-white/10 focus:border-brand dark:focus:border-brand'}`}
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold uppercase text-slate-500 tracking-widest flex items-center gap-1">
+                                    <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest flex items-center gap-1">
                                         <Calendar className="w-3 h-3" /> Due Date
                                     </label>
                                     <input
                                         type="date"
                                         value={formData.dueDate}
                                         onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                                        className="th-date-input w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
+                                        className="th-date-input w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
                                     />
                                 </div>
                             </div>
@@ -970,24 +995,24 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     </div>
 
                     {/* Client Card */}
-                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
                             <User className="w-3 h-3" /> Client Details
                         </h3>
 
                         {/* Avatar Selector */}
                         <div className="flex items-center gap-4 mb-6">
                             <button type="button" className="relative group cursor-pointer border-none bg-transparent p-0" onClick={() => { playClick(); setShowAvatarSelector(!showAvatarSelector); }}>
-                                <img src={formData.client?.avatar} className="w-14 h-14 rounded-full object-cover border-2 border-slate-200 dark:border-white/10" alt="Client Avatar" />
+                                <img src={formData.client?.avatar} className="w-14 h-14 rounded-full object-cover border-2 border-zinc-200/50 dark:border-white/10" alt="Client Avatar" />
                                 <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Camera className="w-5 h-5 text-white" />
                                 </div>
                             </button>
                             <div className="flex-1">
                                 <div className="flex justify-between items-center mb-1">
-                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Persona</p>
+                                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Persona</p>
                                     <div className="flex gap-2">
-                                        <button onClick={handleAutoGenerateAvatar} className="text-[10px] text-slate-500 hover:text-brand dark:hover:text-brand font-bold hover:underline flex items-center gap-1" title="Generate from Name">
+                                        <button onClick={handleAutoGenerateAvatar} className="text-[10px] text-zinc-500 hover:text-brand dark:hover:text-brand font-bold hover:underline flex items-center gap-1" title="Generate from Name">
                                             <Type className="w-3 h-3" /> Auto
                                         </button>
                                         <button onClick={() => { playClick(); setShowAvatarSelector(!showAvatarSelector); }} className="text-[10px] text-brand dark:text-brand font-bold hover:underline">
@@ -996,7 +1021,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     </div>
                                 </div>
                                 {showAvatarSelector && (
-                                    <div className="grid grid-cols-5 gap-2 p-2 bg-editorial dark:bg-black/20 rounded-xl border border-slate-200 dark:border-white/5 animate-fade-in mt-2">
+                                    <div className="grid grid-cols-5 gap-2 p-2 bg-editorial dark:bg-black/20 rounded-xl border border-zinc-200/50 dark:border-white/5 animate-fade-in mt-2">
                                         {AVATAR_PRESETS.map((url, i) => (
                                             <button
                                                 type="button"
@@ -1020,40 +1045,49 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 value={formData.client?.name}
                                 onChange={e => setFormData({ ...formData, client: { ...formData.client!, name: e.target.value } })}
                                 placeholder="Client Name"
-                                className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
+                                className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
                             />
                             <input
                                 value={formData.client?.company}
                                 onChange={e => setFormData({ ...formData, client: { ...formData.client!, company: e.target.value } })}
                                 placeholder="Company"
-                                className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
+                                className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
                             />
                             <div className="grid grid-cols-1 gap-3">
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-3.5 w-4 h-4 text-slate-400" />
+                                    <Mail className="absolute left-3 top-3.5 w-4 h-4 text-zinc-400" />
                                     <input
                                         value={formData.client?.email}
                                         onChange={e => setFormData({ ...formData, client: { ...formData.client!, email: e.target.value } })}
                                         placeholder="Email Address"
-                                        className="w-full p-3 pl-10 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
+                                        className="w-full p-3 pl-10 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
                                     />
                                 </div>
                                 <div className="relative">
-                                    <Smartphone className="absolute left-3 top-3.5 w-4 h-4 text-slate-400" />
+                                    <Smartphone className="absolute left-3 top-3.5 w-4 h-4 text-zinc-400" />
                                     <input
                                         value={formData.client?.phone}
                                         onChange={e => setFormData({ ...formData, client: { ...formData.client!, phone: e.target.value } })}
                                         placeholder="Phone (Optional)"
-                                        className="w-full p-3 pl-10 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
+                                        className="w-full p-3 pl-10 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
                                     />
                                 </div>
                             </div>
                         </div>
                     </div>
 
+                    <button 
+                        onClick={() => { playClick(); setShowAdvanced(!showAdvanced); }}
+                        className="w-full py-4 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-black dark:text-zinc-500 dark:hover:text-zinc-200 border border-dashed border-zinc-200/50 dark:border-white/10 rounded-2xl hover:border-zinc-300 dark:hover:border-white/20 transition-all group"
+                    >
+                         {showAdvanced ? 'Hide Advanced Options' : 'Show Advanced Options'} <Settings className="w-3.5 h-3.5 group-hover:rotate-45 transition-transform" />
+                    </button>
+
+                    {showAdvanced && (
+                    <>
                     {/* NEW LINK SECURITY SECTION */}
-                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none animate-fade-in">
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
                             <ShieldAlert className="w-3 h-3" /> Link Security
                         </h3>
                         <div className="grid grid-cols-3 gap-2">
@@ -1062,7 +1096,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     playClick();
                                     setFormData({ ...formData, accessConfig: { ...(formData.accessConfig || {}), mode: 'permanent' } });
                                 }}
-                                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === 'permanent' || !formData.accessConfig ? 'bg-brand/10 border-brand text-brand dark:bg-brand/10 dark:border-brand dark:text-brand' : 'bg-editorial dark:bg-white/5 border-transparent text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
+                                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === 'permanent' || !formData.accessConfig ? 'bg-brand/10 border-brand text-brand dark:bg-brand/10 dark:border-brand dark:text-brand' : 'bg-editorial dark:bg-white/5 border-transparent text-zinc-400 hover:bg-zinc-200 dark:hover:bg-white/10'}`}
                             >
                                 <Infinity className="w-5 h-5" />
                                 <span className="text-[9px] font-bold uppercase tracking-wider">Permanent</span>
@@ -1073,7 +1107,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     playClick();
                                     setFormData({ ...formData, accessConfig: { ...(formData.accessConfig || {}), mode: '7_day' } });
                                 }}
-                                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === '7_day' ? 'bg-amber-500/10 border-amber-500 text-amber-500' : 'bg-editorial dark:bg-white/5 border-transparent text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
+                                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === '7_day' ? 'bg-amber-500/10 border-amber-500 text-amber-500' : 'bg-editorial dark:bg-white/5 border-transparent text-zinc-400 hover:bg-zinc-200 dark:hover:bg-white/10'}`}
                             >
                                 <Hourglass className="w-5 h-5" />
                                 <span className="text-[9px] font-bold uppercase tracking-wider">7 Days</span>
@@ -1084,7 +1118,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     playClick();
                                     setFormData({ ...formData, accessConfig: { ...(formData.accessConfig || {}), mode: 'one_time' } });
                                 }}
-                                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === 'one_time' ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-editorial dark:bg-white/5 border-transparent text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
+                                className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === 'one_time' ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-editorial dark:bg-white/5 border-transparent text-zinc-400 hover:bg-zinc-200 dark:hover:bg-white/10'}`}
                             >
                                 <Flame className="w-5 h-5" />
                                 <span className="text-[9px] font-bold uppercase tracking-wider">Burn 1x</span>
@@ -1108,17 +1142,17 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     </div>
 
                     {/* Project Controls */}
-                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
                             <Activity className="w-3 h-3" /> Project Controls
                         </h3>
                         <div className="space-y-4">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="flex items-center gap-2">
-                                    <ShieldAlert className="w-4 h-4 text-slate-400" />
+                                    <ShieldAlert className="w-4 h-4 text-zinc-400" />
                                     <div>
                                         <span className="text-sm font-medium dark:text-white">Scope Creep Pause</span>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">Client sees a hard pause overlay until you resume.</p>
+                                        <p className="text-[10px] text-zinc-400 mt-0.5">Client sees a hard pause overlay until you resume.</p>
                                     </div>
                                 </div>
                                 <Toggle
@@ -1135,7 +1169,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             </div>
                             {formData.accessConfig?.scopeCreepPaused && (
                                 <div className="pl-6">
-                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pause Message</label>
+                                    <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Pause Message</label>
                                     <input
                                         value={formData.accessConfig?.pauseReason || 'Project Paused: Revision Limit Reached'}
                                         onChange={e => setFormData({
@@ -1146,50 +1180,50 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             }
                                         })}
                                         placeholder="Project Paused: Revision Limit Reached"
-                                        className="mt-2 w-full p-2 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg focus:border-brand dark:focus:border-brand outline-none transition-colors text-xs text-obsidian dark:text-white"
+                                        className="mt-2 w-full p-2 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-lg focus:border-brand dark:focus:border-brand outline-none transition-colors text-xs text-obsidian dark:text-white"
                                     />
                                 </div>
                             )}
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <PenTool className="w-4 h-4 text-slate-400" />
+                                    <PenTool className="w-4 h-4 text-zinc-400" />
                                     <span className="text-sm font-medium dark:text-white">Require Signature</span>
                                 </div>
                                 <Toggle checked={formData.requiresSignature || false} onChange={v => setFormData({ ...formData, requiresSignature: v })} />
                             </div>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <Coins className="w-4 h-4 text-slate-400" />
+                                    <Coins className="w-4 h-4 text-zinc-400" />
                                     <span className="text-sm font-medium dark:text-white">Enable Tipping</span>
                                 </div>
                                 <Toggle checked={formData.enableTips || false} onChange={v => setFormData({ ...formData, enableTips: v })} />
                             </div>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <Radio className="w-4 h-4 text-slate-400" />
+                                    <Radio className="w-4 h-4 text-zinc-400" />
                                     <div>
                                         <span className="text-sm font-medium dark:text-white">Client Library Mode</span>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">Off = one-off handoff · On = recurring client history</p>
+                                        <p className="text-[10px] text-zinc-400 mt-0.5">Off = one-off handoff · On = recurring client history</p>
                                     </div>
                                 </div>
                                 <Toggle checked={formData.enableClientLibrary !== false} onChange={v => setFormData({ ...formData, enableClientLibrary: v })} />
                             </div>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <EyeOff className="w-4 h-4 text-slate-400" />
+                                    <EyeOff className="w-4 h-4 text-zinc-400" />
                                     <div>
                                         <span className="text-sm font-medium dark:text-white">Tiled Watermark</span>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">Show faint TRUEHANDOVER text behind locked previews</p>
+                                        <p className="text-[10px] text-zinc-400 mt-0.5">Show faint Heartflair text behind locked previews</p>
                                     </div>
                                 </div>
                                 <Toggle checked={formData.showWatermark !== false} onChange={v => setFormData({ ...formData, showWatermark: v })} />
                             </div>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <ShieldAlert className="w-4 h-4 text-slate-400" />
+                                    <ShieldAlert className="w-4 h-4 text-zinc-400" />
                                     <div>
                                         <span className="text-sm font-medium dark:text-white">Protected Preview Label</span>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">Show the lock badge overlay on locked image previews</p>
+                                        <p className="text-[10px] text-zinc-400 mt-0.5">Show the lock badge overlay on locked image previews</p>
                                     </div>
                                 </div>
                                 <Toggle checked={formData.showProtectedLabel !== false} onChange={v => setFormData({ ...formData, showProtectedLabel: v })} />
@@ -1198,9 +1232,9 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     </div>
 
                     {/* Milestones */}
-                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                            <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                                 <Flag className="w-3 h-3" /> Project Milestones
                             </h3>
                             <Toggle checked={formData.useMilestones || false} onChange={v => setFormData({ ...formData, useMilestones: v })} />
@@ -1209,7 +1243,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                         {formData.useMilestones && (
                             <div className="space-y-3 animate-fade-in">
                                 {formData.milestones?.map((milestone, index) => (
-                                    <div key={milestone.id} className="p-3 bg-editorial dark:bg-black/20 rounded-xl border border-slate-200 dark:border-white/5 space-y-2">
+                                    <div key={milestone.id} className="p-3 bg-editorial dark:bg-black/20 rounded-xl border border-zinc-200/50 dark:border-white/5 space-y-2">
                                         <div className="flex gap-2">
                                             <input
                                                 value={milestone.title}
@@ -1217,7 +1251,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                 placeholder="Milestone Name"
                                                 className="flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white"
                                             />
-                                            <button onClick={() => removeMilestone(index)} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
+                                            <button onClick={() => removeMilestone(index)} className="p-2 text-zinc-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
                                         </div>
                                         <div className="flex gap-2">
                                             <input
@@ -1238,7 +1272,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 ))}
                                 <button
                                     onClick={addMilestone}
-                                    className="w-full py-2 border border-dashed border-slate-200 dark:border-white/20 rounded-lg text-xs font-bold uppercase text-slate-500 hover:text-brand dark:hover:text-brand hover:border-brand dark:hover:border-brand transition-colors"
+                                    className="w-full py-2 border border-dashed border-zinc-200/50 dark:border-white/20 rounded-lg text-xs font-bold uppercase text-zinc-500 hover:text-brand dark:hover:text-brand hover:border-brand dark:hover:border-brand transition-colors"
                                 >
                                     + Add Milestone
                                 </button>
@@ -1247,25 +1281,25 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     </div>
 
                     {/* NEW: CREDENTIAL VAULT SECTION */}
-                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                            <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                                 <Key className="w-3 h-3" /> Credential Vault
                             </h3>
                             <button
                                 onClick={() => setShowCredentialModal(true)}
-                                className="text-[10px] font-bold uppercase bg-slate-200 hover:bg-brand hover:text-white dark:bg-white/20 dark:text-white dark:hover:bg-brand dark:hover:text-black px-3 py-1.5 rounded-lg transition-colors border border-transparent dark:border-white/10"
+                                className="text-[10px] font-bold uppercase bg-zinc-200 hover:bg-brand hover:text-white dark:bg-white/20 dark:text-white dark:hover:bg-brand dark:hover:text-black px-3 py-1.5 rounded-lg transition-colors border border-transparent dark:border-white/10"
                             >
                                 + Add Keys
                             </button>
                         </div>
 
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-4">
+                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mb-4">
                             Stored locally on this device for now (not synced to the server). Don’t paste master passwords here.
                         </p>
 
                         {showCredentialModal && (
-                            <div className="mb-4 p-4 bg-editorial dark:bg-black/20 rounded-xl border border-dashed border-slate-200 dark:border-white/10 animate-fade-in">
+                            <div className="mb-4 p-4 bg-editorial dark:bg-black/20 rounded-xl border border-dashed border-zinc-200/50 dark:border-white/10 animate-fade-in">
                                 <div className="space-y-3">
                                     <input
                                         placeholder="Service Name (e.g. WP Admin)"
@@ -1302,30 +1336,49 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
 
                         <div className="space-y-2">
                             {formData.credentials?.map((cred) => (
-                                <div key={cred.id} className="flex items-center justify-between p-3 bg-editorial dark:bg-black/20 rounded-xl border border-slate-200 dark:border-white/5 group">
+                                <div key={cred.id} className="flex items-center justify-between p-3 bg-editorial dark:bg-black/20 rounded-xl border border-zinc-200/50 dark:border-white/5 group">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
                                             <Key className="w-4 h-4" />
                                         </div>
                                         <div>
                                             <div className="font-bold text-xs dark:text-white">{cred.serviceName}</div>
-                                            <div className="text-[10px] text-slate-500 font-mono">****</div>
+                                            <div className="text-[10px] text-zinc-500 font-mono">****</div>
                                         </div>
                                     </div>
-                                    <button onClick={() => removeCredential(cred.id)} className="p-2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
+                                    <button onClick={() => removeCredential(cred.id)} className="p-2 text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
                                 </div>
                             ))}
                             {(!formData.credentials || formData.credentials.length === 0) && !showCredentialModal && (
-                                <div className="text-center py-4 text-[10px] text-slate-400 italic">No credentials added.</div>
+                                <div className="text-center py-4 text-[10px] text-zinc-400 italic">No credentials added.</div>
                             )}
                         </div>
                     </div>
 
+                    </>
+                    )}
+
                     {/* Payment Methods */}
-                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
                             <Wallet className="w-3 h-3" /> Payment Methods
                         </h3>
+                        {!stripeConnected && (
+                            <div className="mb-4 p-3 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-900/10">
+                                <div className="flex items-center justify-between gap-3">
+                                    <p className="text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed">
+                                        Stripe is not connected yet. Enable manual methods below, or connect Stripe for instant auto-unlock payments.
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => { playClick(); window.location.assign('/settings'); }}
+                                        className="shrink-0 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-amber-500 text-white hover:bg-amber-600 transition-colors"
+                                    >
+                                        Connect Stripe
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between p-2 bg-editorial dark:bg-black/20 rounded-lg">
                                 <div className="flex items-center gap-2">
@@ -1338,52 +1391,52 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             <div className="pt-2">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div className="space-y-1.5">
-                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Venmo</div>
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Venmo</div>
                                         <input
                                             value={formData.paymentMethods?.venmo}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, venmo: e.target.value } })}
                                             placeholder="@username"
-                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
+                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Cash App</div>
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Cash App</div>
                                         <input
                                             value={formData.paymentMethods?.cashapp}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, cashapp: e.target.value } })}
                                             placeholder="$tag"
-                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
+                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">PayPal</div>
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">PayPal</div>
                                         <input
                                             value={formData.paymentMethods?.paypal}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, paypal: e.target.value } })}
                                             placeholder="paypal.me/you"
-                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
+                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Zelle</div>
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Zelle</div>
                                         <input
                                             value={formData.paymentMethods?.zelle}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, zelle: e.target.value } })}
                                             placeholder="Email or phone"
-                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
+                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-1.5">
-                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Bank / Wire</div>
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Bank / Wire</div>
                                         <textarea
                                             value={formData.paymentMethods?.bankInfo}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, bankInfo: e.target.value } })}
                                             placeholder="Routing / account / instructions"
-                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs h-24 resize-none text-obsidian dark:text-white"
+                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs h-24 resize-none text-obsidian dark:text-white"
                                         />
                                     </div>
                                 </div>
-                                <div className="mt-3 text-[10px] text-slate-400">
+                                <div className="mt-3 text-[10px] text-zinc-400">
                                     Tip: Stripe is best for instant unlock. Add manual methods only if you need them.
                                 </div>
                             </div>
@@ -1391,15 +1444,15 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     </div>
 
                     {/* Message Editor */}
-                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
                             <MessageSquare className="w-3 h-3" /> Personal Message
                         </h3>
                         <textarea
                             value={formData.message}
                             onChange={e => setFormData({ ...formData, message: e.target.value })}
                             placeholder="Enter a personal message for the client..."
-                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm min-h-[100px] resize-y mb-3 text-obsidian dark:text-white"
+                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm min-h-[100px] resize-y mb-3 text-obsidian dark:text-white"
                         />
                         <div className="flex flex-wrap gap-2">
                             {MESSAGE_PRESETS.map((preset) => (
@@ -1411,7 +1464,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         setFormData({ ...formData, message: text });
                                         playClick();
                                     }}
-                                    className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5 hover:text-obsidian dark:hover:text-white transition-colors"
+                                    className="px-3 py-1.5 rounded-lg border border-zinc-200/50 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-zinc-500 hover:bg-zinc-200 dark:hover:bg-white/5 hover:text-obsidian dark:hover:text-white transition-colors"
                                 >
                                     {preset.label}
                                 </button>
@@ -1420,9 +1473,9 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     </div>
 
                     {/* Theme Selector */}
-                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
                         {/* ... Theme selector content ... */}
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
                             <LayoutTemplate className="w-3 h-3" /> Wallpapers
                         </h3>
                         <div className="grid grid-cols-2 gap-2 mb-6">
@@ -1431,12 +1484,12 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 type="button"
                                 onClick={() => { playClick(); fileInputRef.current?.click(); }}
                                 className={`
-                                    relative aspect-video rounded-lg overflow-hidden cursor-pointer group border-2 transition-all bg-slate-200 dark:bg-white/5 border-dashed border-slate-200 dark:border-white/20 hover:border-brand hover:bg-lime-50 dark:hover:border-brand dark:hover:bg-brand/5 flex flex-col items-center justify-center gap-2 w-full p-0
+                                    relative aspect-video rounded-lg overflow-hidden cursor-pointer group border-2 transition-all bg-zinc-200 dark:bg-white/5 border-dashed border-zinc-200/50 dark:border-white/20 hover:border-brand hover:bg-blue-50 dark:hover:border-brand dark:hover:bg-brand/5 flex flex-col items-center justify-center gap-2 w-full p-0
                                     ${formData.theme?.name === 'Custom' ? 'border-brand ring-2 ring-brand/20 dark:border-brand dark:ring-brand/20' : ''}
                                 `}
                             >
-                                <Upload className="w-5 h-5 text-slate-400 group-hover:text-brand dark:group-hover:text-brand" />
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-brand dark:group-hover:text-brand">Upload</span>
+                                <Upload className="w-5 h-5 text-zinc-400 group-hover:text-brand dark:group-hover:text-brand" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 group-hover:text-brand dark:group-hover:text-brand">Upload</span>
                             </button>
 
                             {/* Custom Wallpapers List */}
@@ -1446,8 +1499,8 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     key={`custom-${i}`}
                                     onClick={() => { playClick(); setFormData({ ...formData, theme: { ...custom, pattern: formData.theme?.pattern || 'lines', showGrain: formData.theme?.showGrain ?? true } }); }}
                                     className={`
-                                        relative aspect-video rounded-lg overflow-hidden cursor-pointer group border-2 transition-all bg-slate-200 dark:bg-white/5 w-full p-0
-                                        ${formData.theme?.wallpaper === custom.wallpaper ? 'border-brand ring-2 ring-brand/20 dark:border-brand dark:ring-brand/20' : 'border-transparent hover:border-slate-200 dark:hover:border-white/20'}
+                                        relative aspect-video rounded-lg overflow-hidden cursor-pointer group border-2 transition-all bg-zinc-200 dark:bg-white/5 w-full p-0
+                                        ${formData.theme?.wallpaper === custom.wallpaper ? 'border-brand ring-2 ring-brand/20 dark:border-brand dark:ring-brand/20' : 'border-transparent hover:border-zinc-200/50 dark:hover:border-white/20'}
                                     `}
                                 >
                                     <img src={custom.wallpaper} className="w-full h-full object-cover" />
@@ -1476,15 +1529,15 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     key={i}
                                     onClick={() => { playClick(); setFormData({ ...formData, theme: { ...preset, pattern: formData.theme?.pattern || 'lines', showGrain: formData.theme?.showGrain ?? true } }); }}
                                     className={`
-                                        relative aspect-video rounded-lg overflow-hidden cursor-pointer group border-2 transition-all bg-slate-200 dark:bg-white/5 w-full p-0
-                                        ${formData.theme?.name === preset.name && !customWallpapers.find(c => c.wallpaper === formData.theme?.wallpaper) ? 'border-brand ring-2 ring-brand/20 dark:border-brand dark:ring-brand/20' : 'border-transparent hover:border-slate-200 dark:hover:border-white/20'}
+                                        relative aspect-video rounded-lg overflow-hidden cursor-pointer group border-2 transition-all bg-zinc-200 dark:bg-white/5 w-full p-0
+                                        ${formData.theme?.name === preset.name && !customWallpapers.find(c => c.wallpaper === formData.theme?.wallpaper) ? 'border-brand ring-2 ring-brand/20 dark:border-brand dark:ring-brand/20' : 'border-transparent hover:border-zinc-200/50 dark:hover:border-white/20'}
                                     `}
                                 >
                                     {preset.wallpaper ? (
                                         <img src={preset.wallpaper} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Solid Color</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Solid Color</span>
                                         </div>
                                     )}
                                     {formData.theme?.name === preset.name && !customWallpapers.find(c => c.wallpaper === formData.theme?.wallpaper) && (
@@ -1502,12 +1555,12 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                         {/* Textures & Grain */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                                     <Layers className="w-3 h-3" /> Pattern Style
                                 </h3>
                                 <button
                                     onClick={toggleGrain}
-                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors ${formData.theme?.showGrain ? 'bg-brand/20 text-brand border-brand/50 dark:bg-brand/20 dark:text-brand dark:border-brand/50 border' : 'bg-slate-200 dark:bg-white/10 text-slate-500'}`}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors ${formData.theme?.showGrain ? 'bg-brand/20 text-brand border-brand/50 dark:bg-brand/20 dark:text-brand dark:border-brand/50 border' : 'bg-zinc-200 dark:bg-white/10 text-zinc-500'}`}
                                 >
                                     {formData.theme?.showGrain ? 'Film Grain ON' : 'Film Grain OFF'}
                                 </button>
@@ -1532,7 +1585,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             aspect-square rounded-lg flex flex-col items-center justify-center gap-1 border transition-all hover:bg-editorial dark:hover:bg-white/5
                                             ${formData.theme?.pattern === p.id
                                                 ? 'border-brand bg-brand/10 text-brand dark:border-brand dark:bg-brand/10 dark:text-brand'
-                                                : 'border-slate-200 dark:border-white/10 text-slate-400'
+                                                : 'border-zinc-200/50 dark:border-white/10 text-zinc-400'
                                             }
                                         `}
                                         title={p.label}
@@ -1546,7 +1599,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     </div>
 
                     {/* Vault Assets */}
-                    <div className="bg-white/90 dark:bg-[#242430] border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none relative overflow-hidden">
+                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none relative overflow-hidden">
                         {/* ... Asset list logic ... */}
                         <div className="relative z-10">
                             {uploadError && (
@@ -1557,32 +1610,32 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 />
                             )}
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                                     <Cloud className="w-3 h-3" /> Vault Assets
                                     {errors.files && <span className="text-red-500 ml-2 text-[9px]">Required</span>}
                                 </h3>
                                 <button
                                     onClick={() => { setShowLinkModal(true); setLinkError(null); setLinkNameWarning(null); setLinkImportSuccess(null); }}
-                                    className="text-[10px] font-bold uppercase bg-slate-200 hover:bg-brand hover:text-white dark:bg-white/20 dark:text-white dark:hover:bg-brand dark:hover:text-black px-3 py-1.5 rounded-lg transition-colors border border-transparent dark:border-white/10"
+                                    className="text-[10px] font-bold uppercase bg-zinc-200 hover:bg-brand hover:text-white dark:bg-white/20 dark:text-white dark:hover:bg-brand dark:hover:text-black px-3 py-1.5 rounded-lg transition-colors border border-transparent dark:border-white/10"
                                 >
                                     + Add Link
                                 </button>
                             </div>
 
                             {showLinkModal && (
-                                <div className="mb-4 p-4 bg-editorial dark:bg-black/20 rounded-xl border border-dashed border-slate-200 dark:border-white/10 animate-fade-in">
+                                <div className="mb-4 p-4 bg-editorial dark:bg-black/20 rounded-xl border border-dashed border-zinc-200/50 dark:border-white/10 animate-fade-in">
                                     <div className="space-y-3">
                                         <div className="inline-flex items-center gap-2">
                                             <span className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border bg-brand text-white border-brand dark:bg-brand dark:text-black dark:border-brand">
                                                 Secure Link Import
                                             </span>
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                                                 (requires connected cloud drive)
                                             </span>
                                         </div>
 
                                         {linkImportSuccess && (
-                                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-lime-50 dark:bg-lime-900/20 border border-lime-200 dark:border-lime-700/40 text-brand-hover dark:text-lime-400 text-[10px] font-bold">
+                                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/40 text-brand-hover dark:text-blue-400 text-[10px] font-bold">
                                                 <CheckCircle className="w-3.5 h-3.5 shrink-0" />
                                                 {linkImportSuccess}
                                             </div>
@@ -1634,8 +1687,8 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         />
                                         {detectedLinkType && (
                                             <div className="flex items-center gap-1.5">
-                                                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Detected:</span>
-                                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-lime-50 text-brand-hover border border-lime-200 dark:bg-brand/15 dark:text-brand dark:border-brand/25">{detectedLinkType}</span>
+                                                <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Detected:</span>
+                                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-50 text-brand-hover border border-blue-200 dark:bg-brand/15 dark:text-brand dark:border-brand/25">{detectedLinkType}</span>
                                             </div>
                                         )}
 
@@ -1649,23 +1702,23 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             }}
                                         />
 
-                                        <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
                                             Folder links import all files inside. Single-file links import just that file. Connect your cloud account first in Settings -&gt; Storage -&gt; Cloud Drive.
                                         </p>
 
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Connected:</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Connected:</span>
                                             {connectedDriveProviders.length > 0 ? connectedDriveProviders.map((provider) => (
-                                                <span key={provider} className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-lime-50 text-brand-hover border border-lime-200 dark:bg-brand/15 dark:text-brand dark:border-brand/20">
+                                                <span key={provider} className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-brand-hover border border-blue-200 dark:bg-brand/15 dark:text-brand dark:border-brand/20">
                                                     {provider}
                                                 </span>
                                             )) : (
-                                                <span className="text-[10px] text-slate-500 dark:text-slate-400">None connected yet</span>
+                                                <span className="text-[10px] text-zinc-500 dark:text-zinc-400">None connected yet</span>
                                             )}
                                         </div>
 
                                         <div className="flex justify-end gap-2">
-                                            <button onClick={() => { setShowLinkModal(false); setLinkError(null); setLinkNameWarning(null); setLinkImportSuccess(null); }} className="px-3 py-1.5 text-[10px] font-bold uppercase text-slate-600 hover:text-obsidian hover:bg-slate-200 dark:text-slate-200 dark:hover:text-white dark:hover:bg-white/10 rounded transition-colors">Done</button>
+                                            <button onClick={() => { setShowLinkModal(false); setLinkError(null); setLinkNameWarning(null); setLinkImportSuccess(null); }} className="px-3 py-1.5 text-[10px] font-bold uppercase text-zinc-600 hover:text-obsidian hover:bg-zinc-200 dark:text-zinc-200 dark:hover:text-white dark:hover:bg-white/10 rounded transition-colors">Done</button>
                                             <button onClick={handleAddLink} disabled={isAddingLink} className="px-3 py-1.5 bg-brand text-white dark:bg-brand dark:text-black text-[10px] font-bold uppercase rounded shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">{isAddingLink ? 'Importing...' : 'Import Link'}</button>
                                         </div>
                                     </div>
@@ -1674,8 +1727,8 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
 
                             <div className={`space-y-2 ${errors.files ? 'p-2 border border-red-500/50 rounded-xl bg-red-500/5' : ''}`}>
                                 {files.map((file, i) => (
-                                    <div key={i} className="flex items-center gap-3 p-2 bg-editorial dark:bg-black/20 rounded-lg border border-slate-200 dark:border-white/5">
-                                        <div className="w-8 h-8 rounded bg-slate-200 dark:bg-white/10 flex items-center justify-center text-slate-500">
+                                    <div key={i} className="flex items-center gap-3 p-2 bg-editorial dark:bg-black/20 rounded-lg border border-zinc-200/50 dark:border-white/5">
+                                        <div className="w-8 h-8 rounded bg-zinc-200 dark:bg-white/10 flex items-center justify-center text-zinc-500">
                                             {file.type === 'image' ? <ImageIcon className="w-4 h-4" /> : <File className="w-4 h-4" />}
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -1705,7 +1758,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             {editingSize?.idx === i ? (
                                                 <input
                                                     autoFocus
-                                                    className="text-[10px] w-full bg-transparent border-b border-brand dark:border-brand outline-none text-slate-500 dark:text-slate-400"
+                                                    className="text-[10px] w-full bg-transparent border-b border-brand dark:border-brand outline-none text-zinc-500 dark:text-zinc-400"
                                                     value={editingSize.value}
                                                     placeholder="e.g. 24.5 MB"
                                                     onChange={(e) => setEditingSize({ idx: i, value: e.target.value })}
@@ -1718,7 +1771,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                 />
                                             ) : (
                                                 <div
-                                                    className={`text-[10px] text-slate-500 ${file.externalUrl ? 'cursor-pointer hover:text-brand dark:hover:text-brand transition-colors' : ''}`}
+                                                    className={`text-[10px] text-zinc-500 ${file.externalUrl ? 'cursor-pointer hover:text-brand dark:hover:text-brand transition-colors' : ''}`}
                                                     onClick={() => { if (file.externalUrl) setEditingSize({ idx: i, value: file.size }); }}
                                                     title={file.externalUrl ? 'Click to edit size' : undefined}
                                                 >{file.size}</div>
@@ -1730,7 +1783,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                 setFiles(files.map((f, idx) => idx === i ? { ...f, includeInLibrary: f.includeInLibrary === false ? true : false } : f));
                                                 playClick();
                                             }}
-                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border transition-colors ${file.includeInLibrary === false ? 'bg-slate-200 text-slate-500 border-slate-200 hover:bg-slate-200 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10' : 'bg-lime-50 text-brand-hover border-lime-200 hover:bg-lime-100 dark:bg-brand/10 dark:text-brand dark:border-brand/20 dark:hover:bg-brand/20'}`}
+                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border transition-colors ${file.includeInLibrary === false ? 'bg-zinc-200 text-zinc-500 border-zinc-200/50 hover:bg-zinc-200 dark:bg-white/5 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-white/10' : 'bg-blue-50 text-brand-hover border-blue-200 hover:bg-blue-100 dark:bg-brand/10 dark:text-brand dark:border-brand/20 dark:hover:bg-brand/20'}`}
                                             title="Include in client library"
                                         >
                                             {file.includeInLibrary === false ? (
@@ -1745,19 +1798,19 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                 </>
                                             )}
                                         </button>
-                                        <button onClick={() => setFiles(files.filter((_, idx) => idx !== i))} className="text-slate-400 hover:text-red-500"><X className="w-3 h-3" /></button>
+                                        <button onClick={() => setFiles(files.filter((_, idx) => idx !== i))} className="text-zinc-400 hover:text-red-500"><X className="w-3 h-3" /></button>
                                     </div>
                                 ))}
 
                                 {isUploading ? (
-                                    <div className="w-full py-4 bg-editorial dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/10 flex flex-col items-center justify-center gap-2">
+                                    <div className="w-full py-4 bg-editorial dark:bg-white/5 rounded-lg border border-zinc-200/50 dark:border-white/10 flex flex-col items-center justify-center gap-2">
                                         <div className="flex items-center gap-2">
                                             <Loader2 className="w-4 h-4 animate-spin text-brand dark:text-brand" />
-                                            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                                            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300">
                                                 {uploadProgress.status === 'uploading' ? 'Uploading to R2...' : 'Processing & Watermarking...'}
                                             </span>
                                         </div>
-                                        <div className="w-48 h-1 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                                        <div className="w-48 h-1 bg-zinc-200 dark:bg-white/10 rounded-full overflow-hidden">
                                             <div
                                                 className="h-full bg-brand dark:bg-brand transition-all duration-300"
                                                 style={{ width: `${uploadProgress.percent}%` }}
@@ -1767,7 +1820,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 ) : (
                                     <button
                                         onClick={() => assetInputRef.current?.click()}
-                                        className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-lg text-xs font-bold text-slate-400 hover:text-brand hover:border-brand dark:hover:text-brand dark:hover:border-brand transition-colors flex items-center justify-center gap-2"
+                                        className="w-full py-3 border-2 border-dashed border-zinc-200/50 dark:border-white/10 rounded-lg text-xs font-bold text-zinc-400 hover:text-brand hover:border-brand dark:hover:text-brand dark:hover:border-brand transition-colors flex items-center justify-center gap-2"
                                     >
                                         <Upload className="w-3 h-3" /> Upload Local File
                                     </button>
@@ -1778,10 +1831,10 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-6 border-t border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-[#181821]/90 backdrop-blur-md relative z-10">
+                <div className="p-6 border-t border-zinc-200/80 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl border border-white/20 dark:border-white/20 backdrop-blur-md relative z-10">
                     <button
                         onClick={handleSave}
-                        className="w-full py-4 rounded-2xl bg-brand hover:bg-brand-hover text-white dark:bg-brand dark:hover:bg-brand-hover dark:text-black font-bold text-sm uppercase tracking-widest shadow-[0_16px_40px_rgba(132,204,22,0.30)] hover:shadow-[0_20px_48px_rgba(132,204,22,0.35)] hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
+                        className="w-full py-4 rounded-2xl bg-brand hover:bg-brand-hover text-white dark:bg-brand dark:hover:bg-brand-hover dark:text-black font-bold text-sm uppercase tracking-widest shadow-[0_16px_40px_rgba(163,230,53,0.30)] hover:shadow-[0_20px_48px_rgba(163,230,53,0.35)] hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
                     >
                         <Save className="w-4 h-4" />
                         {existingProject ? 'Publish Changes' : 'Create & Publish'}
@@ -1790,7 +1843,29 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
             </div>
 
             {/* RIGHT PANEL: LIVE PREVIEW (75%) */}
-            <div className="flex-1 relative bg-black overflow-hidden shadow-2xl">
+            <div className="flex-1 relative bg-black overflow-hidden shadow-2xl group/preview-area">
+                
+                {/* Dynamic Ambient Background for Right Panel */}
+                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                    {/* 1. Base Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111] to-[#050505]" />
+                    
+                    {/* 2. Animated Orbs/Glows (Slow moving) */}
+                    <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-brand/5 rounded-full blur-[120px] animate-float-delayed" />
+                    <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-500/5 rounded-full blur-[150px] animate-float" />
+
+                    {/* 3. Subtle Grain */}
+                    <div className="absolute inset-0 opacity-[0.2]" style={{ backgroundImage: NOISE_SVG, filter: 'contrast(120%)' }} />
+
+                    {/* 4. Wallpaper Reflection (Blurred) - Gives a sense of environment if a wallpaper is set */}
+                    {!isCanvasPreviewMode && formData.theme?.wallpaper && (
+                        <div 
+                            className="absolute inset-0 bg-cover bg-center opacity-20 blur-3xl transition-all duration-1000 transform scale-125"
+                            style={{ backgroundImage: `url(${formData.theme.wallpaper})` }}
+                        />
+                    )}
+                </div>
+
                 {/* Collapsed editor restore control */}
                 {isEditorCollapsed && (
                     <div
@@ -1802,7 +1877,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 <button
                                     type="button"
                                     onClick={() => { playClick(); onBack(); }}
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${isPreviewDark ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-editorial text-slate-700 border border-slate-200 shadow-sm'}`}
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${isPreviewDark ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-editorial text-zinc-700 border border-zinc-200/50 shadow-sm'}`}
                                     aria-label="Back to Vault"
                                     title="Back to Vault"
                                 >
@@ -1825,7 +1900,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     <button
                                         type="button"
                                         onClick={() => { playClick(); onBack(); }}
-                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${isPreviewDark ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-editorial text-slate-700 border border-slate-200 shadow-sm'}`}
+                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${isPreviewDark ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-editorial text-zinc-700 border border-zinc-200/50 shadow-sm'}`}
                                         aria-label="Back to Vault"
                                         title="Back to Vault"
                                     >
@@ -1883,20 +1958,20 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
 
             {/* Upload Progress Toast Overlay */}
             {isUploading && (
-                <div className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-[300] bg-white dark:bg-[#1a1a23] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-4 w-72 animate-slide-up ring-1 ring-black/5">
+                <div className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-[300] bg-white dark:bg-[#1a1a23] border border-zinc-200/50 dark:border-white/10 rounded-2xl shadow-2xl p-4 w-72 animate-slide-up ring-1 ring-black/5">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-8 h-8 rounded-full bg-lime-100 dark:bg-[#bef264]/20 flex items-center justify-center shrink-0">
-                            <Upload className="w-4 h-4 text-lime-600 dark:text-[#bef264] animate-bounce" />
+                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center shrink-0">
+                            <Upload className="w-4 h-4 text-blue-600 dark:text-blue-400 animate-bounce" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">Uploading Asset...</h4>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 capitalize">{uploadProgress.status}</p>
+                            <h4 className="text-xs font-bold text-zinc-900 dark:text-white truncate">Uploading Asset...</h4>
+                            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 capitalize">{uploadProgress.status}</p>
                         </div>
-                        <span className="text-xs font-mono font-bold text-lime-600 dark:text-[#bef264]">{Math.round(uploadProgress.percent)}%</span>
+                        <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">{Math.round(uploadProgress.percent)}%</span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-lime-600 dark:bg-[#bef264] transition-all duration-300 ease-out rounded-full"
+                            className="h-full bg-blue-600 dark:bg-blue-500 transition-all duration-300 ease-out rounded-full"
                             style={{ width: `${uploadProgress.percent}%` }}
                         />
                     </div>
@@ -1907,3 +1982,4 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
 };
 
 export default CreatorPage;
+

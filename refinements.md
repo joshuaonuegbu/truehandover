@@ -1,5 +1,5 @@
 
-# 🛠️ TrueHandover: Frontend Refinement & Patch Roadmap
+# 🛠️ Heartflair: Frontend Refinement & Patch Roadmap
 
 > **Status:** Alpha / Prototype
 > **Priority:** Stabilization & Architecture before Feature Expansion.

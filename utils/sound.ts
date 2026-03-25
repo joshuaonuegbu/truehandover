@@ -9,7 +9,11 @@ const initAudio = () => {
   return audioCtx;
 };
 
+export const isSoundEnabled = (): boolean =>
+  localStorage.getItem('th_sound_effects') !== 'false';
+
 export const playClick = () => {
+  if (!isSoundEnabled()) return;
   const ctx = initAudio();
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -23,6 +27,7 @@ export const playClick = () => {
 };
 
 export const playSuccess = () => {
+  if (!isSoundEnabled()) return;
   const ctx = initAudio();
   // Deep Vault Opening Sound
   [100, 150, 200, 250].forEach((freq, i) => {
@@ -41,5 +46,6 @@ export const playSuccess = () => {
 };
 
 export const triggerHaptic = () => {
+  if (!isSoundEnabled()) return;
   if (navigator.vibrate) navigator.vibrate(10);
 };

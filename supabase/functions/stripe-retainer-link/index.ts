@@ -64,7 +64,7 @@ serve(async (req) => {
             recurring: { interval },
             product_data: {
               name: `${clientName} Retainer`,
-              description: `Recurring ${interval} retainer payment secured by TrueHandover`,
+              description: `Recurring ${interval} retainer payment secured by Heartflair`,
             },
           },
           quantity: 1,
@@ -79,7 +79,7 @@ serve(async (req) => {
       after_completion: {
         type: "redirect",
         redirect: {
-          url: `${baseUrl}/#/clients`,
+          url: `${baseUrl}/dashboard?view=clients`,
         },
       },
       allow_promotion_codes: true,

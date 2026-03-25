@@ -103,6 +103,7 @@ export interface Project {
     clientViewedAt?: string; // ISO String — set when client first opens link
     showWatermark?: boolean;       // default true — toggle the tiled watermark text overlay on protected previews
     showProtectedLabel?: boolean;  // default true — toggle the "Protected Preview" card on locked images
+    revisionRequests?: RevisionRequest[];
 }
 
 export interface AgencySettings {
@@ -134,11 +135,24 @@ export interface StorageSettings {
     byosDriveAccountLabel?: string;
 }
 
+export interface RevisionRequest {
+    id: string;
+    fileId?: string;
+    fileName?: string;
+    message: string;
+    authorName: string;
+    createdAt: string;
+    status: 'open' | 'resolved';
+    x?: number; // Pin X coordinate (percentage 0-1)
+    y?: number; // Pin Y coordinate (percentage 0-1)
+}
+
 export interface ProfilePreferences {
     emailAlerts: boolean;
     pushNotifs: boolean;
     twoFactor: boolean;
     biometric: boolean;
+    soundEffects?: boolean;
 }
 
 export interface UserProfile {

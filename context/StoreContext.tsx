@@ -1,14 +1,24 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Project, UserProfile, ProjectTheme } from '../types';
+import { Project, UserProfile, ProjectTheme, RevisionRequest } from '../types';
 import { DB, supabase } from '../services/supabaseClient';
 import { isMockMode } from '../config/mockMode';
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  body: string;
+  ts: string;
+  read: boolean;
+  projectId?: string;
+}
 
 const DEFAULT_PROFILE_PREFERENCES = {
   emailAlerts: true,
   pushNotifs: false,
   twoFactor: true,
   biometric: true,
+  soundEffects: true,
 };
 
 // --- MOCK DATA CONSTANTS (Moved from App.tsx for Fallback) ---
@@ -285,7 +295,18 @@ const INITIAL_PROJECTS: Project[] = [
         previewUrl: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=900&q=70',
         metadata: { duration: '00:07', hash: 'aud_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6' }
       }
-    ]
+    ],
+    revisionRequests: [
+      {
+        id: 'rr1',
+        fileId: 'f2',
+        fileName: 'brand_guide.pdf',
+        message: 'The typography system feels incredibly balanced now. Could you check the mobile spacing on pages 4–6?',
+        authorName: 'John Smith',
+        createdAt: new Date(Date.now() - 1000 * 60 * 27).toISOString(),
+        status: 'open' as const,
+      },
+    ],
   },
   {
     id: 'p2',
@@ -330,7 +351,18 @@ const INITIAL_PROJECTS: Project[] = [
         previewUrl: 'https://images.unsplash.com/photo-1536514498073-50e69d39c6cf?auto=format&fit=crop&w=900&q=70',
         metadata: { duration: '00:45', resolution: '1080p', hash: '5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u' }
       },
-    ]
+    ],
+    revisionRequests: [
+      {
+        id: 'rr2',
+        fileId: 'f4',
+        fileName: 'homepage.fig',
+        message: 'Hero section CTA button feels a bit buried — can we make it more prominent? The contrast ratio might need a bump.',
+        authorName: 'Sarah Chen',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+        status: 'open' as const,
+      },
+    ],
   },
   {
     id: 'p4',
@@ -372,16 +404,20 @@ interface StoreContextType {
   projects: Project[];
   user: UserProfile;
   authResolved: boolean;
+  notifications: AppNotification[];
   saveProject: (project: Project) => void;
   updateUser: (updates: Partial<UserProfile>) => void;
   deleteProject: (id: string) => void;
   resetStore: () => void;
+  markNotificationRead: (id: string) => void;
+  clearNotifications: () => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [authResolved, setAuthResolved] = useState(() => !supabase || isMockMode());
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   // Lazy initialization — demo data in mock mode, empty state in production
   const [projects, setProjects] = useState<Project[]>(() => {
     if (!isMockMode()) return [];
@@ -495,7 +531,31 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Supabase Realtime — subscribe to project changes when logged in (live mode only)
+    let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
+    if (!isMockMode()) {
+      realtimeChannel = supabase
+        .channel('projects-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, (payload) => {
+          const record = payload.new as any;
+          if (!record) return;
+          const notif: AppNotification = {
+            id: crypto.randomUUID(),
+            title: payload.eventType === 'INSERT' ? 'New project created' : 'Project updated',
+            body: record.name || 'A project was changed',
+            ts: new Date().toISOString(),
+            read: false,
+            projectId: record.id,
+          };
+          setNotifications(prev => [notif, ...prev].slice(0, 50));
+        })
+        .subscribe();
+    }
+
+    return () => {
+      subscription.unsubscribe();
+      realtimeChannel?.unsubscribe();
+    };
   }, []);
 
   // Actions
@@ -642,8 +702,13 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     localStorage.removeItem('th_user');
   };
 
+  const markNotificationRead = (id: string) =>
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+
+  const clearNotifications = () => setNotifications([]);
+
   return (
-    <StoreContext.Provider value={{ projects, user, authResolved, saveProject, updateUser, deleteProject, resetStore }}>
+    <StoreContext.Provider value={{ projects, user, authResolved, notifications, saveProject, updateUser, deleteProject, resetStore, markNotificationRead, clearNotifications }}>
       {children}
     </StoreContext.Provider>
   );

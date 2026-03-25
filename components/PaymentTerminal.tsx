@@ -56,13 +56,13 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
 
     // --- STYLES ---
     const textPrimary = isDarkMode ? 'text-white' : 'text-obsidian';
-    const textSecondary = isDarkMode ? 'text-slate-400' : 'text-slate-500';
-    const borderColor = isDarkMode ? 'border-white/5' : 'border-slate-200';
+    const textSecondary = isDarkMode ? 'text-zinc-400' : 'text-zinc-500';
+    const borderColor = isDarkMode ? 'border-white/5' : 'border-zinc-200';
     
     // Brand colors - Consistent with App
     const brandGreenBg = isDarkMode ? 'bg-brand' : 'bg-brand';
     const brandGreenText = isDarkMode ? 'text-brand' : 'text-brand';
-    const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#bef264]' : 'shadow-[0_0_10px_rgba(101,163,13,0.5)]';
+    const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#a3e635]' : 'shadow-[0_0_10px_rgba(163,230,53,0.5)]';
 
     // --- EFFECTS ---
     
@@ -192,7 +192,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
     if (!isLocked && !isPendingVerification) {
         return (
             <div className={`
-                ${isDarkMode ? 'bg-brand/10 border-brand/20' : 'bg-lime-50 border-lime-200'} 
+                ${isDarkMode ? 'bg-brand/10 border-brand/20' : 'bg-blue-50 border-blue-200'} 
                 border rounded-2xl ${isLandscapeCompact ? 'p-3.5' : 'p-5'} flex flex-col items-center justify-center text-center animate-fade-in
             `}>
                 <div className={`${isLandscapeCompact ? 'w-10 h-10 mb-2' : 'w-11 h-11 mb-2.5'} ${brandGreenBg} rounded-full flex items-center justify-center ${brandGreenShadow}`}>
@@ -201,7 +201,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                 <h4 className={`font-bold ${brandGreenText} ${isLandscapeCompact ? 'text-base' : 'text-lg'} tracking-tight`}>Payment Complete</h4>
                 <p className={`${isLandscapeCompact ? 'text-[9px] mt-1' : 'text-[10px] mt-1.5'} font-bold ${isDarkMode ? 'text-brand/70' : 'text-brand-hover/70'} uppercase tracking-widest`}>Vault Unlocked</p>
                 <div className={`${isLandscapeCompact ? 'mt-2.5' : 'mt-3.5'} flex gap-3`}>
-                    <button className={`${isLandscapeCompact ? 'px-2.5 py-1 text-[9px]' : 'px-3 py-1.5 text-[10px]'} rounded-lg font-bold uppercase tracking-wider flex items-center gap-1.5 ${isDarkMode ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white hover:bg-editorial text-slate-700 border border-slate-200'}`}>
+                    <button className={`${isLandscapeCompact ? 'px-2.5 py-1 text-[9px]' : 'px-3 py-1.5 text-[10px]'} rounded-lg font-bold uppercase tracking-wider flex items-center gap-1.5 ${isDarkMode ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white hover:bg-editorial text-zinc-700 border border-zinc-200'}`}>
                         <Receipt className={`${isLandscapeCompact ? 'w-2.5 h-2.5' : 'w-3 h-3'}`} /> Receipt
                     </button>
                 </div>
@@ -249,7 +249,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                     aria-labelledby="manual-transfer-title"
                 >
                     <div 
-                        className={`w-full max-w-sm ${isDarkMode ? 'bg-[#23232e]' : 'bg-white'} flex flex-col rounded-[2rem] overflow-hidden shadow-2xl border ${borderColor}`} 
+                        className={`w-full max-w-sm ${isDarkMode ? 'bg-zinc-800' : 'bg-white'} flex flex-col rounded-[2rem] overflow-hidden shadow-2xl border ${borderColor}`} 
                         onClick={e => e.stopPropagation()}
                     >
                         <div className={`p-5 ${brandGreenBg} ${isDarkMode ? 'text-black' : 'text-white'} flex justify-between items-center`}>
@@ -297,15 +297,15 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                     <div className="animate-slide-up">
                         {!showSignaturePad ? (
                             <div className="flex flex-col gap-4">
-                                <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-editorial border-slate-200'} flex flex-col items-center justify-center text-center`}>
+                                <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-editorial border-zinc-200'} flex flex-col items-center justify-center text-center`}>
                                     <span className={`text-[10px] font-bold uppercase tracking-widest ${textSecondary} mb-1`}>Total Amount Due</span>
-                                    <div className={`text-4xl font-serif font-bold ${textPrimary} tracking-tight`}>
+                                    <div className={`text-4xl font-sans tracking-tight font-bold ${textPrimary} tracking-tight`}>
                                         ${totalDue.toLocaleString()}
                                     </div>
                                 </div>
                                 <button 
                                     onClick={() => { playClick(); setShowSignaturePad(true); }}
-                                    className={`w-full py-4 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-white text-black hover:bg-slate-200' : 'bg-obsidian text-white hover:bg-obsidian/90'}`}
+                                    className={`w-full py-4 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-obsidian text-white hover:bg-obsidian/90'}`}
                                 >
                                     <PenTool className="w-4 h-4" /> Sign Contract
                                 </button>
@@ -319,7 +319,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                                         <button aria-label="Cancel Signature" onClick={() => setShowSignaturePad(false)} className={`text-[10px] font-bold uppercase ${textSecondary} hover:text-red-500`}><X className="w-4 h-4" /></button>
                                     </div>
                                 </div>
-                                <div className={`relative w-full h-40 rounded-xl border-2 border-dashed overflow-hidden ${isDarkMode ? 'bg-[#18181b] border-white/20' : 'bg-editorial border-slate-200'}`}>
+                                <div className={`relative w-full h-40 rounded-xl border-2 border-dashed overflow-hidden ${isDarkMode ? 'bg-zinc-900 border-white/20' : 'bg-editorial border-zinc-200'}`}>
                                     <canvas
                                         ref={canvasRef}
                                         role="img"
@@ -329,13 +329,13 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                                         onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing}
                                     />
                                     {!hasSignature && !isDrawing && (
-                                        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 font-serif italic text-2xl ${textPrimary}`}>Sign Here</div>
+                                        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 font-sans tracking-tight italic text-2xl ${textPrimary}`}>Sign Here</div>
                                     )}
                                 </div>
                                 <button 
                                     onClick={handleSignContract}
                                     disabled={!hasSignature}
-                                    className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-md ${hasSignature ? (isDarkMode ? 'bg-white text-black hover:bg-slate-200' : 'bg-obsidian text-white hover:bg-obsidian/90') : 'bg-slate-200 text-slate-400 cursor-not-allowed dark:bg-white/5 dark:text-white/20'}`}
+                                    className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-md ${hasSignature ? (isDarkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-obsidian text-white hover:bg-obsidian/90') : 'bg-zinc-200 text-zinc-400 cursor-not-allowed dark:bg-white/5 dark:text-white/20'}`}
                                 >
                                     Accept & Continue
                                 </button>
@@ -350,12 +350,12 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                         
                         {/* Amount & Tipping */}
                         <div className="space-y-4">
-                            <div className="flex justify-between items-end border-b pb-4 border-dashed border-slate-200 dark:border-white/10">
+                            <div className="flex justify-between items-end border-b pb-4 border-dashed border-zinc-200/50 dark:border-white/10">
                                 <div>
                                     <span className={`text-[10px] font-bold uppercase tracking-widest ${textSecondary}`}>Total Due</span>
-                                    <div className={`text-3xl font-serif font-bold ${textPrimary} leading-none mt-1`}>${totalDue.toLocaleString()}</div>
+                                    <div className={`text-3xl font-sans tracking-tight font-bold ${textPrimary} leading-none mt-1`}>${totalDue.toLocaleString()}</div>
                                 </div>
-                                {tipAmount > 0 && <span className={`text-xs font-bold ${isDarkMode ? 'text-brand' : 'text-brand'} uppercase bg-lime-500/10 px-2 py-1 rounded`}>+${tipAmount.toLocaleString()} Tip</span>}
+                                {tipAmount > 0 && <span className={`text-xs font-bold ${isDarkMode ? 'text-brand' : 'text-brand'} uppercase bg-blue-500/10 px-2 py-1 rounded`}>+${tipAmount.toLocaleString()} Tip</span>}
                             </div>
 
                             {project.enableTips && (
@@ -366,14 +366,14 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                                             <button 
                                                 key={pct}
                                                 onClick={() => handleTipSelect(pct)}
-                                                className={`flex-1 py-2 rounded-lg text-[10px] font-bold transition-all border ${activeTip === pct ? `${brandGreenBg} text-white border-transparent` : `${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-200 hover:bg-editorial text-slate-500'}`}`}
+                                                className={`flex-1 py-2 rounded-lg text-[10px] font-bold transition-all border ${activeTip === pct ? `${brandGreenBg} text-white border-transparent` : `${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'glass-panel hover:bg-editorial text-zinc-500'}`}`}
                                             >
                                                 {pct}%
                                             </button>
                                         ))}
                                         <button 
                                             onClick={() => handleTipSelect(0)}
-                                            className={`px-4 py-2 rounded-lg text-[10px] font-bold transition-all border ${activeTip === null ? (isDarkMode ? 'bg-white/10 border-white/20 text-white' : 'bg-obsidian/90 border-obsidian text-white') : (isDarkMode ? 'bg-white/5 border-white/10 text-slate-500' : 'bg-white border-slate-200 text-slate-500')}`}
+                                            className={`px-4 py-2 rounded-lg text-[10px] font-bold transition-all border ${activeTip === null ? (isDarkMode ? 'bg-white/10 border-white/20 text-white' : 'bg-obsidian/90 border-obsidian text-white') : (isDarkMode ? 'bg-white/5 border-white/10 text-zinc-500' : 'glass-panel text-zinc-500')}`}
                                         >
                                             No
                                         </button>
@@ -388,7 +388,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                                 <button 
                                     onClick={handleStripePayment}
                                     disabled={isStripeProcessing || isEmbedded}
-                                    className={`w-full h-14 ${isDarkMode ? 'bg-white text-black hover:bg-slate-200' : 'bg-obsidian text-white hover:bg-obsidian/90'} rounded-xl font-bold text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95 ${isEmbedded ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    className={`w-full h-14 ${isDarkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-obsidian text-white hover:bg-obsidian/90'} rounded-xl font-bold text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95 ${isEmbedded ? 'opacity-70 cursor-not-allowed' : ''}`}
                                 >
                                     {isStripeProcessing ? <RefreshCw className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
                                     <span>Pay ${totalDue.toLocaleString()}</span>
@@ -401,8 +401,8 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                                     disabled={isEmbedded}
                                     className={`w-full h-14 flex items-center justify-center gap-2 rounded-xl border text-xs font-bold uppercase tracking-widest transition-all 
                                     ${isDarkMode 
-                                        ? 'bg-transparent border-white/5 text-slate-400 hover:bg-brand/10 hover:text-brand hover:border-brand' 
-                                        : 'bg-white border-slate-200 text-slate-600 hover:text-brand hover:border-brand shadow-sm'
+                                        ? 'bg-transparent border-white/5 text-zinc-400 hover:bg-brand/10 hover:text-brand hover:border-brand' 
+                                        : 'glass-panel text-zinc-600 hover:text-brand hover:border-brand shadow-sm'
                                     }`}
                                 >
                                     <QrCode className="w-4 h-4" /> Manual Transfer
@@ -410,7 +410,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                             )}
 
                             {!hasStripe && !hasManual && (
-                                <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-editorial border-slate-200'} text-center`}>
+                                <div className={`p-4 rounded-xl border ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-editorial border-zinc-200'} text-center`}>
                                     <div className="flex items-center justify-center gap-2 text-amber-500 mb-3">
                                         <AlertTriangle className="w-5 h-5" />
                                         <span className="text-[10px] font-bold uppercase tracking-widest">No Payment Method</span>
@@ -419,7 +419,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                                     {!messageSent ? (
                                         <button 
                                             onClick={() => { playClick(); setMessageSent(true); }}
-                                            className={`w-full py-2.5 rounded-lg text-[10px] font-bold uppercase bg-slate-200 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 transition-colors ${textPrimary}`}
+                                            className={`w-full py-2.5 rounded-lg text-[10px] font-bold uppercase bg-zinc-200 hover:bg-zinc-200 dark:bg-white/10 dark:hover:bg-white/20 transition-colors ${textPrimary}`}
                                         >
                                             Notify Creator
                                         </button>

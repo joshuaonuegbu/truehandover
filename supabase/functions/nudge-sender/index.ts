@@ -46,7 +46,7 @@ function buildNudgeEmailHtml(opts: {
           <!-- Header -->
           <tr>
             <td style="background:#0e0e12;padding:28px 36px;">
-              <span style="font-size:20px;font-weight:700;color:#fff;letter-spacing:-0.3px;">TrueHandover</span>
+              <span style="font-size:20px;font-weight:700;color:#fff;letter-spacing:-0.3px;">Heartflair</span>
               <span style="display:block;font-size:11px;color:#84ab26;margin-top:2px;letter-spacing:0.5px;text-transform:uppercase;">Secure Delivery Platform</span>
             </td>
           </tr>
@@ -61,7 +61,7 @@ function buildNudgeEmailHtml(opts: {
                 Hi ${clientName || "there"},
               </p>
               <p style="color:#333;font-size:15px;line-height:1.6;margin:0 0 14px 0;">
-                ${creatorName} has completed the work on <strong>"${projectName}"</strong> and it's ready for your review. The files are securely held in your TrueHandover vault, awaiting your payment to unlock access.
+                ${creatorName} has completed the work on <strong>"${projectName}"</strong> and it's ready for your review. The files are securely held in your Heartflair vault, awaiting your payment to unlock access.
               </p>
               ${dueLine}
               <p style="color:#333;font-size:15px;line-height:1.6;margin:0 0 28px 0;">
@@ -95,7 +95,7 @@ function buildNudgeEmailHtml(opts: {
           <tr>
             <td style="padding:20px 36px 24px 36px;background:#fafafa;">
               <p style="color:#aaa;font-size:12px;margin:0;line-height:1.5;">
-                This reminder was sent securely via <a href="https://truehandover.com" style="color:#84ab26;text-decoration:none;">TrueHandover</a>.
+                This reminder was sent securely via <a href="https://heartflair.com" style="color:#84ab26;text-decoration:none;">Heartflair</a>.
                 To stop receiving reminders, please complete your payment or contact ${creatorName} directly.
               </p>
             </td>
@@ -132,7 +132,7 @@ ${previewUrl}
 
 Your files are securely held and will be unlocked immediately upon payment confirmation.
 
-— TrueHandover`;
+— Heartflair`;
 }
 
 async function sendNudgeEmail(opts: {
@@ -149,7 +149,7 @@ async function sendNudgeEmail(opts: {
   const { resendApiKey, fromEmail, to, ...emailOpts } = opts;
 
   const payload = {
-    from: `${opts.creatorName} via TrueHandover <${fromEmail}>`,
+    from: `${opts.creatorName} via Heartflair <${fromEmail}>`,
     to: [to],
     subject: `Payment reminder: "${opts.projectName}" is ready for review`,
     html: buildNudgeEmailHtml(emailOpts),
@@ -194,8 +194,8 @@ serve(async (req) => {
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) throw new Error("RESEND_API_KEY not configured");
 
-    const fromEmail = Deno.env.get("NUDGE_FROM_EMAIL") ?? "reminders@truehandover.com";
-    const appBaseUrl = Deno.env.get("APP_BASE_URL") ?? "https://truehandover.com";
+    const fromEmail = Deno.env.get("NUDGE_FROM_EMAIL") ?? "reminders@heartflair.com";
+    const appBaseUrl = Deno.env.get("APP_BASE_URL") ?? "https://heartflair.com";
     const cronSecret = Deno.env.get("CRON_SECRET");
 
     const body: { projectId?: string } = await req.json().catch(() => ({}));
@@ -325,7 +325,7 @@ serve(async (req) => {
         .single();
 
       const creatorName = creatorProfile?.name || "Your service provider";
-      const previewUrl = `${appBaseUrl}/preview/${project.id}`;
+      const previewUrl = `${appBaseUrl}/c/${project.client_link}`;
 
       const emailResult = await sendNudgeEmail({
         to: clientEmail,

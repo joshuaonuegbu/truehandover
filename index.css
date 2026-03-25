@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Aktiv Grotesk";
+  src: local("Aktiv Grotesk"), local("AktivGrotesk-Regular");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Text Pro";
+  src: local("Neue Haas Grotesk Text Pro"), local("NeueHaasGroteskTextPro-Roman");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Neue Haas Grotesk Display Pro";
+  src: local("Neue Haas Grotesk Display Pro"), local("NeueHaasGroteskDispPro-Roman");
+  font-display: swap;
+}
+
 /* ── Custom Theme (migrated from inline Tailwind CDN config) ── */
 @theme {
   --color-cosmic: #323242;
@@ -8,12 +26,12 @@
   --color-surface: #2D2E45;
   --color-editorial: #F8FAFC;
 
-  --color-brand: #bef264;
-  --color-brand-hover: #a3e635;
-  --color-brand-glow: rgba(190, 242, 100, 0.5);
+  --color-brand: #a3e635;
+  --color-brand-hover: #84cc16;
+  --color-brand-glow: rgba(163, 230, 53, 0.5);
 
-  --font-sans: "Space Grotesk", sans-serif;
-  --font-serif: "Playfair Display", "Times New Roman", serif;
+  --font-sans: "Aktiv Grotesk", "Neue Haas Grotesk Text Pro", "Space Grotesk", "Neue Haas Grotesk Display Pro", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Fraunces", "Times New Roman", serif;
   --font-mono: "JetBrains Mono", monospace;
 
   --animate-fade-in: fadeIn 0.6s ease-out;
@@ -74,7 +92,7 @@ html {
 }
 
 body {
-  background: #F5F5F0;
+  background: var(--color-editorial);
   color: #0f172a;
   -webkit-font-smoothing: antialiased;
   font-size: 15px;
@@ -88,17 +106,17 @@ body {
   min-height: 100vh;
   height: 100%;
   width: 100%;
-  background: #F5F5F0;
+  background: var(--color-editorial);
   position: relative;
 }
 
 .dark body {
-  background-color: #323242;
+  background-color: var(--color-cosmic);
   color: #ffffff;
 }
 
 .dark #root {
-  background: #323242;
+  background: var(--color-cosmic);
 }
 
 @media (max-width: 768px) {
@@ -165,6 +183,40 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+.briefing-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.briefing-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.briefing-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.briefing-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.briefing-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark .briefing-scroll {
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+
+.dark .briefing-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.dark .briefing-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.55);
 }
 
 /* ── Glass Panel ── */

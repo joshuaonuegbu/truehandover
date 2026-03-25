@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TrueHandover OAuth</title>
+  <title>Heartflair OAuth</title>
   <style>
     body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; display: grid; place-items: center; min-height: 100vh; }
     .card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(148,163,184,0.2); border-radius: 14px; padding: 18px 20px; text-align: center; max-width: 360px; }
@@ -32,7 +32,7 @@
       if (payload.error) {
         statusEl.textContent = 'Authorization failed. You can close this window.';
       } else {
-        statusEl.textContent = 'Authorization complete. Returning to TrueHandover...';
+        statusEl.textContent = 'Authorization complete. Returning to Heartflair...';
       }
 
       if (window.opener && !window.opener.closed) {

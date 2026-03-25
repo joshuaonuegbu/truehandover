@@ -2,7 +2,7 @@
 import { supabase } from './supabaseClient';
 
 /**
- * Cloudflare R2 uploads for TrueHandover (production posture)
+ * Cloudflare R2 uploads for Heartflair (production posture)
  *
  * - Never put R2 secret keys in the browser (no `VITE_*_SECRET_KEY` patterns).
  * - Uploads must be performed via server-issued presigned URLs (Supabase Edge Functions).

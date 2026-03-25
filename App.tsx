@@ -6,7 +6,7 @@ import {
     CreditCard, Wallet, ShieldCheck,
     Plus, Download, ExternalLink, Briefcase,
     PieChart as PieChartIcon, Activity as ActivityIcon,
-    X, Upload, ChevronRight,
+    X, Upload, ChevronRight, ChevronLeft,
     MessageSquare,
     Image as ImageIcon, Film, File,
     Sun, Moon,
@@ -29,12 +29,14 @@ import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid, Li
 import { QRCodeSVG } from 'qrcode.react';
 import { playClick, playSuccess } from './utils/sound';
 import { canToggleMockMode, isMockMode, setMockMode, setMockModeAndNavigate } from './config/mockMode';
+import { createAuditTrailPdf, createRightsCertificatePdf } from './utils/reportPdfGenerator';
 // Critical path — loaded eagerly (needed before auth resolves)
 import LandingPage from './components/LandingPage';
 import SignInPage from './components/SignInPage';
 import { Card, Badge, GRADIENT_TEXT } from './components/Shared';
 import ThemeModeDropdown from './components/ThemeModeDropdown';
 import { ClientRolodexContent } from './components/ClientsPage';
+import BrandLogo from './components/BrandLogo';
 
 // Route-level code-splitting — only loaded when the user navigates to that route
 const _importCreator = () => import('./components/CreatorPage');
@@ -69,7 +71,7 @@ import { DB, supabase } from './services/supabaseClient';
 import { Project, UserProfile, ViewState, FileAsset } from './types';
 import { StoreProvider, useStore } from './context/StoreContext';
 
-// ─── Toast system ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Toast system â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type ToastKind = 'success' | 'error' | 'info' | 'warning';
 interface Toast { id: number; message: string; kind: ToastKind; }
 type ToastFn = (message: string, kind?: ToastKind) => void;
@@ -85,13 +87,13 @@ const useStripOffset = () => React.useContext(StripOffsetContext);
 const ToastContainer = ({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: number) => void }) => {
     if (toasts.length === 0) return null;
     const kindStyles: Record<ToastKind, string> = {
-        success: 'bg-white dark:bg-[#1e2420] border-lime-300 dark:border-lime-700/40 text-slate-800 dark:text-white',
-        error:   'bg-white dark:bg-[#201e1e] border-red-300   dark:border-red-700/40   text-slate-800 dark:text-white',
-        info:    'bg-white dark:bg-[#1e2028] border-blue-300  dark:border-blue-700/40  text-slate-800 dark:text-white',
-        warning: 'bg-white dark:bg-[#201f1e] border-amber-300 dark:border-amber-700/40 text-slate-800 dark:text-white',
+        success: 'bg-white dark:bg-[#1e2420] border-blue-300 dark:border-blue-700/40 text-zinc-800 dark:text-white',
+        error:   'bg-white dark:bg-[#201e1e] border-red-300   dark:border-red-700/40   text-zinc-800 dark:text-white',
+        info:    'bg-white dark:bg-[#1e2028] border-blue-300  dark:border-blue-700/40  text-zinc-800 dark:text-white',
+        warning: 'bg-white dark:bg-[#201f1e] border-amber-300 dark:border-amber-700/40 text-zinc-800 dark:text-white',
     };
     const iconStyles: Record<ToastKind, string> = {
-        success: 'text-lime-600 dark:text-lime-400',
+        success: 'text-blue-600 dark:text-blue-400',
         error:   'text-red-500',
         info:    'text-blue-500',
         warning: 'text-amber-500',
@@ -110,7 +112,7 @@ const ToastContainer = ({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: nu
                     >
                         <Icon className={`w-4 h-4 shrink-0 ${iconStyles[t.kind]}`} />
                         <span className="text-sm font-medium flex-1 leading-snug">{t.message}</span>
-                        <button onClick={() => dismiss(t.id)} className="ml-1 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors text-slate-400">
+                        <button onClick={() => dismiss(t.id)} className="ml-1 p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors text-zinc-400">
                             <X className="w-3.5 h-3.5" />
                         </button>
                     </div>
@@ -119,15 +121,111 @@ const ToastContainer = ({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: nu
         </div>
     );
 };
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // --- CONSTANTS ---
 // OPTIMIZED: High-Fidelity Fine Grain SVG
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
+// Match the Landing hero dark-mode grain treatment for app shell backgrounds.
+const HERO_NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.7' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
+const QUICK_DELIVERY_DRAFT_KEY = 'th_creator_draft_new';
+const QUICK_DELIVERY_EVENT = 'hf-quick-delivery-files';
+const QUICK_MESSAGE_PRESETS = [
+    {
+        label: 'Standard',
+        text: "Hi {{name}}, your files are ready for review. Once payment is settled, the full delivery unlocks instantly."
+    },
+    {
+        label: 'Warm',
+        text: "Hi {{name}}, everything is ready on HeartFlair. Review the previews and unlock the final files whenever you're ready."
+    },
+    {
+        label: 'Short',
+        text: "Final assets are ready. Review the previews and unlock the full files after payment."
+    }
+];
+const QUICK_RETENTION_OPTIONS = [
+    { id: 'forever', label: 'Keep forever' },
+    { id: '30_days', label: '30 days' },
+    { id: '7_days', label: '7 days' },
+    { id: '3_days', label: '3 days' },
+    { id: '1_day', label: '1 day' },
+];
+
+const createQuickClientLink = () => {
+    const rand = crypto.getRandomValues(new Uint8Array(16));
+    const hex = Array.from(rand).map((b) => b.toString(16).padStart(2, '0')).join('');
+    return `cl_${hex}_${Date.now().toString(36)}`;
+};
+
+const readQuickDeliveryDraft = (): { formData?: Partial<Project>; files?: FileAsset[] } | null => {
+    try {
+        const raw = localStorage.getItem(QUICK_DELIVERY_DRAFT_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+};
+
+const detectQuickFileType = (file: Pick<File, 'name' | 'type'>): FileAsset['type'] => {
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (file.type.startsWith('image/')) return 'image';
+    if (file.type.startsWith('video/')) return 'video';
+    if (file.type.startsWith('audio/')) return 'audio';
+    if (file.type.includes('pdf') || ext === 'pdf') return 'pdf';
+    if (['fig', 'psd', 'ai', 'sketch', 'xd'].includes(ext)) return 'design';
+    if (['doc', 'docx', 'txt', 'md', 'rtf', 'pages'].includes(ext) || file.type.startsWith('text/')) return 'doc';
+    if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return 'archive';
+    return 'archive';
+};
+
+const formatQuickFileSize = (bytes: number): string => {
+    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+};
+
+const buildQuickDraftAsset = (file: File): FileAsset => ({
+    id: crypto.randomUUID(),
+    name: file.name,
+    size: formatQuickFileSize(file.size),
+    type: detectQuickFileType(file),
+    locked: true,
+    version: 1,
+    uploadDate: new Date().toISOString(),
+});
+
+const appendFilesToQuickDraft = (incomingFiles: File[]) => {
+    const existing = readQuickDeliveryDraft();
+    const existingFiles = existing?.files || [];
+    const nextFiles = [...existingFiles, ...incomingFiles.map(buildQuickDraftAsset)];
+    try {
+        localStorage.setItem(QUICK_DELIVERY_DRAFT_KEY, JSON.stringify({
+            formData: existing?.formData || {},
+            files: nextFiles
+        }));
+    } catch {
+        // Ignore storage failures; widget state still updates in memory.
+    }
+    return nextFiles;
+};
+
+const computeQuickDueDate = (retention: string) => {
+    const now = new Date();
+    if (retention === 'forever') return '';
+    const days = retention === '1_day' ? 1 : retention === '3_days' ? 3 : retention === '7_days' ? 7 : 30;
+    now.setDate(now.getDate() + days);
+    return now.toISOString().split('T')[0];
+};
+
+const mapQuickRetentionToAccessMode = (retention: string): Project['accessConfig'] => {
+    if (retention === '1_day') return { mode: 'one_time', viewCount: 1 };
+    if (retention === '7_days' || retention === '3_days' || retention === '30_days') return { mode: '7_day' };
+    return { mode: 'permanent' };
+};
 
 // Shimmer base used by all skeleton blocks
 const Shimmer = ({ className = '' }: { className?: string }) => (
-    <div className={`bg-slate-200 dark:bg-white/[0.07] rounded-xl relative overflow-hidden ${className}`}>
+    <div className={`bg-zinc-200 dark:bg-white/[0.07] rounded-xl relative overflow-hidden ${className}`}>
         <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/40 dark:via-white/5 to-transparent" />
     </div>
 );
@@ -135,7 +233,7 @@ const Shimmer = ({ className = '' }: { className?: string }) => (
 // Dashboard skeleton — mirrors the greeting + stats + project list shape
 const DashboardSkeleton = () => (
     <div className="space-y-6 pb-12 animate-fade-in absolute inset-0 w-full z-10 bg-[#f0f2f5] dark:bg-cosmic">
-        <div className="flex flex-col gap-3 border-b border-slate-200 dark:border-white/5 pb-8">
+        <div className="flex flex-col gap-3 border-b border-zinc-200/50 dark:border-white/5 pb-8">
             <Shimmer className="h-10 w-64" />
             <Shimmer className="h-4 w-48" />
             <Shimmer className="h-7 w-72 rounded-full" />
@@ -151,7 +249,7 @@ const DashboardSkeleton = () => (
                     </div>
                 </div>
                 {[1,2,3].map(i => (
-                    <div key={i} className="flex items-center gap-4 py-5 border-b border-slate-100 dark:border-white/5">
+                    <div key={i} className="flex items-center gap-4 py-5 border-b border-zinc-100 dark:border-white/5">
                         <Shimmer className="w-12 h-12 rounded-lg shrink-0" />
                         <div className="flex-1 space-y-2">
                             <Shimmer className="h-4 w-48" />
@@ -172,7 +270,7 @@ const DashboardSkeleton = () => (
 // Vault skeleton — mirrors the search bar + card rows shape
 const VaultSkeleton = () => (
     <div className="space-y-6 pb-12 animate-fade-in absolute inset-0 w-full z-10 bg-[#f0f2f5] dark:bg-cosmic">
-        <div className="flex justify-between items-end border-b border-slate-200 dark:border-white/5 pb-8">
+        <div className="flex justify-between items-end border-b border-zinc-200/50 dark:border-white/5 pb-8">
             <div className="space-y-2">
                 <Shimmer className="h-9 w-48" />
                 <Shimmer className="h-4 w-72" />
@@ -188,8 +286,8 @@ const VaultSkeleton = () => (
 const PageLoader = () => (
     <div className="flex items-center justify-center h-64 w-full">
         <div className="flex flex-col items-center gap-3 opacity-40">
-            <div className="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-white/20 border-t-lime-600 dark:border-t-[#bef264] animate-spin" />
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Loading</span>
+            <div className="w-8 h-8 rounded-full border-2 border-zinc-200/50 dark:border-white/20 border-t-blue-600 dark:border-t-blue-500 animate-spin" />
+            <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Loading</span>
         </div>
     </div>
 );
@@ -220,7 +318,7 @@ const PrivacyBlur = ({ children, className = "", strength = 'normal' }: { childr
     }, [children, isScrambling, isBlurred]);
 
     useEffect(() => {
-        const chars = '0123456789$£€%&@#';
+        const chars = '0123456789$Â£â‚¬%&@#';
         const maxIterations = 12;
         let iteration = 0;
 
@@ -280,7 +378,7 @@ const PrivacyBlur = ({ children, className = "", strength = 'normal' }: { childr
 
     return (
         <span
-            className={`inline-block font-serif ${className}`}
+            className={`inline-block font-sans tracking-tight ${className}`}
             style={{
                 filter: isBlurred ? `blur(${strength === 'strong' ? '16px' : '8px'})` : 'none',
                 transition: 'none',
@@ -296,51 +394,10 @@ const PrivacyBlur = ({ children, className = "", strength = 'normal' }: { childr
 // --- VISUAL FX COMPONENTS ---
 
 const EditorialIcon = ({ className }: { className?: string }) => (
-    <svg viewBox="0 0 32 32" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 15C4 10.6 9.4 7 16 7C22.6 7 28 10.6 28 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="12" cy="22" r="6" stroke="currentColor" strokeWidth="1.5" />
-        <circle cx="20" cy="22" r="6" fill="#bef264" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-);
-
-const BackgroundOrbs = () => (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 dark:hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-slate-300/20 rounded-full blur-[100px] animate-blob mix-blend-multiply" />
-        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-gray-300/20 rounded-full blur-[100px] animate-blob animation-delay-2000 mix-blend-multiply" />
-        <div className="absolute bottom-[-20%] left-[20%] w-[600px] h-[600px] bg-slate-200/20 rounded-full blur-[100px] animate-blob animation-delay-4000 mix-blend-multiply" />
-    </div>
+    <BrandLogo className={className} accentColor="#84cc16" />
 );
 
 // --- CUSTOM WIDGETS ---
-
-const HeaderClock = () => {
-    const [time, setTime] = useState(new Date());
-
-    useEffect(() => {
-        const timer = setInterval(() => setTime(new Date()), 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-    const formatTime = (date: Date) => {
-        let hours = date.getHours();
-        const minutes = date.getMinutes();
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-        const strMinutes = minutes < 10 ? '0' + minutes : minutes;
-        return { time: `${hours}:${strMinutes}`, period: ampm };
-    };
-
-    const { time: timeStr, period } = formatTime(time);
-
-    return (
-        // Adjusted: Reduced font size to roughly 28px (~5% smaller than text-3xl)
-        <div className="hidden xl:flex items-baseline gap-1.5 font-serif text-[1.75rem] font-medium tracking-widest tabular-nums text-slate-900 dark:text-white transition-colors duration-300">
-            <span>{timeStr}</span>
-            <span className="text-sm font-bold text-lime-600 dark:text-[#bef264] -translate-y-1 ml-1">{period}</span>
-        </div>
-    );
-};
 
 const parseSizeToBytes = (size?: string): number => {
     if (!size) return 0;
@@ -383,34 +440,34 @@ const StatusRibbon = ({ projects, user }: { projects: Project[]; user: UserProfi
     const usagePct = Math.max(0, Math.min(100, Math.round((usedNativeStorageBytes / nativeStorageCapacityBytes) * 100)));
 
     return (
-        <div className="flex flex-wrap items-center gap-4 md:gap-8 p-4 bg-white/50 dark:bg-[#23232e] border border-slate-200 dark:border-white/5 rounded-2xl mb-8 backdrop-blur-md shadow-sm">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <div className="flex flex-wrap items-center gap-4 md:gap-8 p-4 bg-white/50 dark:bg-charcoal border border-zinc-200/50 dark:border-white/5 rounded-2xl mb-8 backdrop-blur-md shadow-sm">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                 <CreditCard className="w-3.5 h-3.5" />
-                <span>Stripe Connect: <span className={stripeConnected ? 'text-lime-600 dark:text-[#bef264]' : 'text-slate-500 dark:text-slate-400'}>{stripeConnected ? 'Connected' : 'Not connected'}</span></span>
+                <span>Stripe Connect: <span className={stripeConnected ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-400'}>{stripeConnected ? 'Connected' : 'Not connected'}</span></span>
             </div>
 
-            <div className="hidden md:block w-px h-4 bg-slate-200 dark:bg-white/10" />
+            <div className="hidden md:block w-px h-4 bg-zinc-200 dark:bg-white/10" />
 
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                 <Banknote className="w-3.5 h-3.5" />
-                <span>Next Payout: <span className="text-slate-900 dark:text-white">{stripeConnected && payoutsEnabled ? 'Managed in Stripe' : 'Unavailable'}</span></span>
+                <span>Next Payout: <span className="text-zinc-900 dark:text-white">{stripeConnected && payoutsEnabled ? 'Managed in Stripe' : 'Unavailable'}</span></span>
             </div>
 
             <div className="ml-auto flex items-center gap-4">
                 {/* REVAMPED STORAGE WIDGET: Bigger, bolder, new design */}
-                <div className="flex items-center gap-4 pl-2 pr-6 py-2 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 shadow-sm transition-all hover:shadow-md group">
-                    <div className="p-2.5 rounded-xl bg-lime-50 dark:bg-[#bef264]/10 text-lime-600 dark:text-[#bef264] group-hover:scale-105 transition-transform">
+                <div className="flex items-center gap-4 pl-2 pr-6 py-2 rounded-2xl bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/5 shadow-sm transition-all hover:shadow-md group">
+                    <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">
                         <HardDrive className="w-5 h-5" />
                     </div>
                     <div className="flex flex-col gap-1.5 min-w-[180px]">
                         <div className="flex justify-between items-center leading-none">
-                            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{demoMode ? 'Native Storage' : 'Storage Usage'}</span>
-                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                            <span className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest">{demoMode ? 'Native Storage' : 'Storage Usage'}</span>
+                            <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-300">
                                 {demoMode ? `${formatBytes(demoRemainingNativeStorageBytes)} left` : <><span>{formatBytes(totalBytes)}</span> <span className="opacity-50">({totalFiles} files)</span></>}
                             </span>
                         </div>
-                        <div className="w-full h-2 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
-                            <div className="h-full bg-lime-600 dark:bg-[#bef264] rounded-full shadow-[0_0_12px_rgba(132,204,22,0.6)] transition-all" style={{ width: `${usagePct}%` }} />
+                        <div className="w-full h-2 bg-zinc-100 dark:bg-white/10 rounded-full overflow-hidden">
+                            <div className="h-full bg-blue-500 text-zinc-900 shadow-sm dark:bg-blue-500 rounded-full shadow-[0_0_12px_rgba(132,204,22,0.6)] transition-all" style={{ width: `${usagePct}%` }} />
                         </div>
                     </div>
                 </div>
@@ -420,6 +477,8 @@ const StatusRibbon = ({ projects, user }: { projects: Project[]; user: UserProfi
 };
 
 const Timeline = ({ projects }: { projects: Project[] }) => {
+    const demoMode = isMockMode();
+
     const formatLabel = (iso?: string) => {
         if (!iso) return 'Today';
         const d = new Date(iso);
@@ -434,7 +493,7 @@ const Timeline = ({ projects }: { projects: Project[] }) => {
 
     const activities = projects
         .flatMap((p) => {
-            const list: Array<{ date: string; dateSort: string; title: string; subtitle: string; icon: React.ElementType; color: 'lime' | 'orange' | 'white'; }> = [];
+            const list: Array<{ date: string; dateSort: string; title: string; subtitle: string; icon: React.ElementType; color: 'lime' | 'white'; }> = [];
             const baseIso = p.createdAt || new Date().toISOString();
             list.push({
                 date: formatLabel(baseIso),
@@ -461,7 +520,7 @@ const Timeline = ({ projects }: { projects: Project[] }) => {
                     title: 'Client Viewed',
                     subtitle: p.name,
                     icon: Eye,
-                    color: 'orange',
+                    color: 'lime',
                 });
             }
             if (p.status === 'paid' || p.status === 'completed') {
@@ -482,44 +541,77 @@ const Timeline = ({ projects }: { projects: Project[] }) => {
                     title: 'Awaiting Signature',
                     subtitle: p.client?.company || p.client?.name || 'Client',
                     icon: FileText,
-                    color: 'orange',
+                    color: 'lime',
                 });
             }
             return list;
         })
-        .sort((a, b) => new Date(b.dateSort).getTime() - new Date(a.dateSort).getTime())
-        .slice(0, 12);
+        .sort((a, b) => new Date(b.dateSort).getTime() - new Date(a.dateSort).getTime());
 
-    if (activities.length === 0) {
+    const demoSeedActivities = demoMode
+        ? [
+            { hoursAgo: 1, title: 'Client Comment Added', subtitle: 'Northline Studio', icon: MessageSquare, color: 'lime' as const },
+            { hoursAgo: 2, title: 'Preview Link Opened', subtitle: 'Campaign Cutdowns', icon: Eye, color: 'lime' as const },
+            { hoursAgo: 3, title: 'Files Uploaded', subtitle: '4 assets', icon: Upload, color: 'white' as const },
+            { hoursAgo: 4, title: 'Project Created', subtitle: 'Launch Sequence', icon: Plus, color: 'white' as const },
+            { hoursAgo: 5, title: 'Awaiting Signature', subtitle: 'Westbridge Labs', icon: FileText, color: 'lime' as const },
+            { hoursAgo: 6, title: 'Payment Received', subtitle: 'Brand Motion Toolkit', icon: CreditCardIcon, color: 'lime' as const },
+            { hoursAgo: 7, title: 'Preview Link Opened', subtitle: 'Editorial Retainer', icon: Eye, color: 'lime' as const },
+            { hoursAgo: 8, title: 'Files Uploaded', subtitle: '7 assets', icon: Upload, color: 'white' as const },
+            { hoursAgo: 9, title: 'Project Created', subtitle: 'Quarterly Deliverables', icon: Plus, color: 'white' as const },
+            { hoursAgo: 10, title: 'Payment Received', subtitle: 'Founder Deck System', icon: CreditCardIcon, color: 'lime' as const },
+            { hoursAgo: 11, title: 'Client Comment Added', subtitle: 'Mason & Vale', icon: MessageSquare, color: 'lime' as const },
+            { hoursAgo: 12, title: 'Awaiting Signature', subtitle: 'Halden Group', icon: FileText, color: 'lime' as const },
+            { hoursAgo: 14, title: 'Preview Link Opened', subtitle: 'Product Refresh', icon: Eye, color: 'lime' as const },
+            { hoursAgo: 16, title: 'Payment Received', subtitle: 'Spring Identity', icon: CreditCardIcon, color: 'lime' as const },
+            { hoursAgo: 18, title: 'Files Uploaded', subtitle: '2 assets', icon: Upload, color: 'white' as const },
+            { hoursAgo: 20, title: 'Project Created', subtitle: 'Studio Retainer', icon: Plus, color: 'white' as const },
+        ].map((item) => {
+            const iso = new Date(Date.now() - item.hoursAgo * 60 * 60 * 1000).toISOString();
+            return {
+                date: formatLabel(iso),
+                dateSort: iso,
+                title: item.title,
+                subtitle: item.subtitle,
+                icon: item.icon,
+                color: item.color,
+            };
+        })
+        : [];
+
+    const briefingActivities = [...activities, ...demoSeedActivities]
+        .sort((a, b) => new Date(b.dateSort).getTime() - new Date(a.dateSort).getTime())
+        .slice(0, demoMode ? 28 : 12);
+
+    if (briefingActivities.length === 0) {
         return (
-            <div className="h-full min-h-[220px] flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 dark:border-white/15 bg-slate-50/70 dark:bg-white/[0.02] px-6 text-center">
-                <Clock className="w-7 h-7 text-slate-400 mb-3" />
-                <p className="font-serif text-lg italic text-slate-600 dark:text-slate-300">No briefing activity yet.</p>
-                <p className="text-xs text-slate-400 mt-1 max-w-xs">Events will appear here as projects are created, viewed, signed, and paid.</p>
+            <div className="h-full min-h-[220px] flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-200/50 dark:border-white/15 bg-zinc-50/70 dark:bg-white/[0.02] px-6 text-center">
+                <Clock className="w-7 h-7 text-zinc-400 mb-3" />
+                <p className="font-sans tracking-tight text-lg italic text-zinc-600 dark:text-zinc-300">No briefing activity yet.</p>
+                <p className="text-xs text-zinc-400 mt-1 max-w-xs">Events will appear here as projects are created, viewed, signed, and paid.</p>
             </div>
         );
     }
 
     return (
         <div className="relative flex flex-col gap-6 py-2 pb-12">
-            <div className="absolute left-[88px] top-4 bottom-4 w-px bg-slate-200 dark:bg-white/10" />
-            {activities.map((item, i) => {
+            <div className="absolute left-[88px] top-4 bottom-4 w-px bg-zinc-200 dark:bg-white/10" />
+            {briefingActivities.map((item, i) => {
                 const iconColor = {
-                    lime: 'text-lime-600 dark:text-[#bef264]',
-                    orange: 'text-[#fb923c]',
-                    white: 'text-slate-500 dark:text-slate-400'
+                    lime: 'text-blue-600 dark:text-blue-400',
+                    white: 'text-zinc-500 dark:text-zinc-400'
                 }[item.color];
 
                 return (
                     <div key={i} className="flex items-center gap-6 relative z-10 group pl-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 w-16 text-right font-mono">{item.date}</span>
-                        <div className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-lime-600 dark:bg-[#bef264] animate-pulse' : 'bg-slate-300 dark:bg-slate-700'} ring-4 ring-[#f0f2f5] dark:ring-cosmic relative z-20`} />
-                        <div className="flex-1 flex items-center justify-between p-3 rounded-lg hover:bg-white hover:shadow-sm dark:hover:bg-white/5 transition-all cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-white/5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 w-16 text-right font-mono">{item.date}</span>
+                        <div className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-blue-500 text-zinc-900 shadow-sm dark:bg-blue-500 animate-pulse' : 'bg-zinc-300 dark:bg-zinc-700'} ring-4 ring-[#f0f2f5] dark:ring-cosmic relative z-20`} />
+                        <div className="flex-1 flex items-center justify-between p-3 rounded-lg hover:bg-white hover:shadow-sm dark:hover:bg-white/5 transition-all cursor-pointer border border-transparent hover:border-zinc-100 dark:hover:border-white/5">
                             <div className="flex items-center gap-3">
                                 <item.icon className={`w-4 h-4 ${iconColor}`} />
-                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{item.title}</span>
+                                <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200">{item.title}</span>
                             </div>
-                            <span className="text-[10px] font-mono text-slate-400 hidden sm:block uppercase tracking-wider">{item.subtitle}</span>
+                            <span className="text-[10px] font-mono text-zinc-400 hidden sm:block uppercase tracking-wider">{item.subtitle}</span>
                         </div>
                     </div>
                 );
@@ -567,7 +659,7 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
         ? [
             { label: 'Video', bytes: 10 * 1024 * 1024 * 1024, color: 'bg-indigo-500' },
             { label: 'Images', bytes: 6 * 1024 * 1024 * 1024, color: 'bg-sky-400' },
-            { label: 'Docs', bytes: 4 * 1024 * 1024 * 1024, color: 'bg-lime-400' },
+            { label: 'Docs', bytes: 4 * 1024 * 1024 * 1024, color: 'bg-blue-400' },
         ]
         : (() => {
             const bytesByType = projects.reduce<Record<string, number>>((acc, project) => {
@@ -585,7 +677,7 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
             return [
                 { label: 'Video', bytes: bytesByType.Video || 0, color: 'bg-indigo-500' },
                 { label: 'Images', bytes: bytesByType.Images || 0, color: 'bg-sky-400' },
-                { label: 'Docs', bytes: bytesByType.Docs || 0, color: 'bg-lime-400' },
+                { label: 'Docs', bytes: bytesByType.Docs || 0, color: 'bg-blue-400' },
             ].filter((item) => item.bytes > 0);
         })();
     const storageTotal = storageBreakdown.reduce((sum, item) => sum + item.bytes, 0);
@@ -598,6 +690,20 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
         })[0];
     const recentProjectTime = recentProject ? new Date(recentProject.clientViewedAt || recentProject.createdAt || recentProject.dueDate) : null;
     const msPerDay = 1000 * 60 * 60 * 24;
+
+    // Derive the most recent open revision request from any project
+    const latestRevision = projects
+        .flatMap(p => (p.revisionRequests || [])
+            .filter(r => r.status === 'open')
+            .map(r => ({
+                ...r,
+                projectName: p.name,
+                clientName: p.client?.name || 'Client',
+                clientAvatar: p.client?.avatar,
+                company: p.client?.company || '',
+            }))
+        )
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] ?? null;
     const recentProjectLabel = recentProjectTime
         ? (() => {
             const dayDiff = Math.floor((Date.now() - recentProjectTime.getTime()) / msPerDay);
@@ -612,21 +718,21 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
         {
             id: 'revenue',
             render: () => (
-                <div className="absolute inset-0 p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-[#23232e] rounded-3xl transition-all duration-700 ease-in-out">
+                <div className="absolute inset-0 p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-charcoal rounded-3xl transition-all duration-700 ease-in-out">
                     <div>
                         <div className="flex justify-between items-start mb-4">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Net Revenue</span>
-                            <div className="flex items-center gap-1 text-lime-600 dark:text-[#bef264] font-bold text-[10px] bg-lime-50 dark:bg-[#bef264]/10 px-2 py-1 rounded-full border border-lime-100 dark:border-[#bef264]/20">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Net Revenue</span>
+                            <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[10px] bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded-full border border-blue-500/30 dark:border-blue-500/20">
                                 <ArrowUpRight className="w-3 h-3" /> {demoMode ? '12.5%' : 'Active'}
                             </div>
                         </div>
                         <div className="flex items-baseline gap-1 mb-6">
-                            <PrivacyBlur strength="strong" className={`font-serif text-5xl md:text-6xl tracking-tighter ${GRADIENT_TEXT}`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
+                            <PrivacyBlur strength="strong" className={`font-sans tracking-tight text-5xl md:text-6xl tracking-tighter ${GRADIENT_TEXT}`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5">
                                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300"><PrivacyBlur>${pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur> Pending</span>
+                                <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300"><PrivacyBlur>${pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur> Pending</span>
                             </div>
                         </div>
                     </div>
@@ -635,14 +741,14 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
                             <AreaChart data={[{ v: 10 }, { v: 25 }, { v: 18 }, { v: 30 }, { v: 25 }, { v: 40 }, { v: 35 }, { v: 50 }]}>
                                 <defs>
                                     <linearGradient id="colorHeroMini" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#bef264" stopOpacity={1} />
-                                        <stop offset="95%" stopColor="#bef264" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#84cc16" stopOpacity={1} />
+                                        <stop offset="95%" stopColor="#84cc16" stopOpacity={0} />
                                     </linearGradient>
                                     <filter id="shadow" height="200%">
-                                        <feDropShadow dx="0" dy="5" stdDeviation="6" floodColor="#bef264" floodOpacity="0.8" />
+                                        <feDropShadow dx="0" dy="5" stdDeviation="6" floodColor="#84cc16" floodOpacity="0.8" />
                                     </filter>
                                 </defs>
-                                <Area type="monotone" dataKey="v" stroke="#bef264" strokeWidth={3} fill="url(#colorHeroMini)" filter="url(#shadow)" />
+                                <Area type="monotone" dataKey="v" stroke="#84cc16" strokeWidth={3} fill="url(#colorHeroMini)" filter="url(#shadow)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -652,31 +758,31 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
         {
             id: 'storage',
             render: () => (
-                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-[#1e293b] rounded-3xl transition-all duration-700 ease-in-out">
+                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-[#23232e] rounded-3xl transition-all duration-700 ease-in-out">
                     <div className="flex justify-between items-start">
                         <div className="flex items-center gap-2">
-                            <HardDrive className="w-4 h-4 text-slate-400" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Vault Storage</span>
+                            <HardDrive className="w-4 h-4 text-zinc-400" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Vault Storage</span>
                         </div>
-                        <span className="text-[10px] font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-white/10 px-2 py-1 rounded-md">{formatBytes(demoRemainingNativeStorageBytes)} left</span>
+                        <span className="text-[10px] font-bold text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/10 px-2 py-1 rounded-md">{formatBytes(demoRemainingNativeStorageBytes)} left</span>
                     </div>
 
                     <div className="flex-1 flex flex-col justify-center gap-4">
                         <div className="flex items-baseline gap-2">
-                            <span className="font-serif text-4xl md:text-5xl text-slate-900 dark:text-white tracking-tight">{Math.round(demoUsedNativeStorageBytes / (1024 ** 3))}</span>
-                            <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">GB / 30 GB</span>
+                            <span className="font-sans tracking-tight text-4xl md:text-5xl text-zinc-900 dark:text-white tracking-tight">{Math.round(demoUsedNativeStorageBytes / (1024 ** 3))}</span>
+                            <span className="text-sm font-bold text-zinc-400 uppercase tracking-widest">GB / 30 GB</span>
                         </div>
                         
                         <div className="space-y-2">
-                            <div className="w-full h-2.5 flex rounded-full overflow-hidden gap-0.5 bg-slate-100 dark:bg-white/5">
+                            <div className="w-full h-2.5 flex rounded-full overflow-hidden gap-0.5 bg-zinc-100 dark:bg-white/5">
                                 <div className="h-full bg-indigo-500 w-[50%]" />
                                 <div className="h-full bg-sky-400 w-[30%]" />
-                                <div className="h-full bg-lime-400 w-[20%]" />
+                                <div className="h-full bg-blue-400 w-[20%]" />
                             </div>
-                            <div className="flex justify-between text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                            <div className="flex justify-between text-[9px] font-bold uppercase tracking-wider text-zinc-500">
                                 <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Video (10GB)</span>
                                 <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> Images (6GB)</span>
-                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-lime-400" /> Docs (4GB)</span>
+                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-400" /> Docs (4GB)</span>
                             </div>
                         </div>
                     </div>
@@ -691,45 +797,64 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
         },
         {
             id: 'reviews',
-            render: () => (
-                <div className="absolute inset-0 flex h-full bg-slate-50 dark:bg-[#1e293b] rounded-3xl transition-all duration-700 ease-in-out overflow-hidden">
+            render: () => {
+                const rev = latestRevision;
+                const fmtTime = (iso: string) => {
+                    const d = new Date(iso);
+                    return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                };
+                return (
+                <div className="absolute inset-0 flex h-full bg-zinc-50 dark:bg-charcoal rounded-3xl transition-all duration-700 ease-in-out overflow-hidden">
                     
                     {/* Left Side: Original Feedback */}
-                    <div className={`flex flex-col justify-between p-6 sm:p-8 transition-all duration-500 ${isReplying ? 'w-1/2 border-r border-slate-200 dark:border-white/5' : 'w-full'}`}>
+                    <div className={`flex flex-col justify-between p-6 sm:p-8 transition-all duration-500 ${isReplying ? 'w-1/2 border-r border-zinc-200/50 dark:border-white/5' : 'w-full'}`}>
                         {/* Header: Type + Time */}
                         <div className="flex justify-between items-start">
                             <div className="flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">New Feedback</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">New Feedback</span>
                             </div>
-                            <span className="text-[10px] font-mono text-slate-400">09:42 AM</span>
+                            <span className="text-[10px] font-mono text-zinc-400">{rev ? fmtTime(rev.createdAt) : '—'}</span>
                         </div>
 
                         {/* Body: Quote */}
                         <div className="flex-1 flex flex-col justify-center py-2">
-                            <h3 className={`font-serif leading-snug text-slate-900 dark:text-white transition-all duration-500 ${isReplying ? 'text-lg md:text-xl' : 'text-xl md:text-2xl'}`}>
-                                "The typography system feels incredibly balanced now. Check the mobile spacing?"
-                            </h3>
+                            {rev ? (
+                                <h3 className={`font-sans tracking-tight leading-snug text-zinc-900 dark:text-white transition-all duration-500 ${isReplying ? 'text-lg md:text-xl' : 'text-xl md:text-2xl'}`}>
+                                    "{rev.message}"
+                                </h3>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center gap-2 opacity-50">
+                                    <span className="text-sm font-bold text-zinc-500 dark:text-zinc-400">No open feedback</span>
+                                    <span className="text-xs text-zinc-400">Client revision requests will appear here</span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Footer: User + Actions */}
-                        <div className="flex items-end justify-between pb-2">
+                        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-10 sm:pb-7">
                             <div className="flex items-center gap-3">
-                                <img src="https://api.dicebear.com/9.x/shapes/svg?seed=SarahChen" alt="Client" className="w-8 h-8 rounded-full bg-white border border-slate-200 dark:border-white/10" />
+                                {rev?.clientAvatar ? (
+                                    <img src={rev.clientAvatar} alt={rev.clientName} className="w-8 h-8 rounded-full bg-white border border-zinc-200/50 dark:border-white/10" />
+                                ) : (
+                                    <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-white/10 border border-zinc-200/50 dark:border-white/10 flex items-center justify-center text-[10px] font-bold text-zinc-500">
+                                        {rev ? rev.clientName.charAt(0) : '?'}
+                                    </div>
+                                )}
                                 <div className="flex flex-col">
-                                    <span className="text-xs font-bold text-slate-900 dark:text-white">Sarah Chen</span>
-                                    <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">Brand Identity</span>
+                                    <span className="text-xs font-bold text-zinc-900 dark:text-white">{rev?.clientName ?? 'No requests'}</span>
+                                    <span className="text-[9px] font-mono text-zinc-400 uppercase tracking-wider">{rev?.projectName ?? '—'}</span>
                                 </div>
                             </div>
                             
-                            {!isReplying && (
-                                <div className="flex items-center gap-2 pr-16">
-                                    <button className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white dark:hover:bg-white/5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 transition-all">
+                            {!isReplying && rev && (
+                                <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+                                    <button className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-white dark:hover:bg-white/5 border border-transparent hover:border-zinc-200/50 dark:hover:border-white/10 transition-all">
                                         Mark Resolved
                                     </button>
                                     <button 
                                         onClick={() => setIsReplying(true)}
-                                        className="px-4 py-2 rounded-lg bg-slate-900 text-white dark:bg-white dark:text-black text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2"
+                                        className="px-4 py-2 rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-black text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2"
                                     >
                                         Reply <ArrowRight className="w-3 h-3" />
                                     </button>
@@ -739,13 +864,13 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
                     </div>
 
                     {/* Right Side: Reply Box */}
-                    <div className={`flex flex-col p-6 sm:p-8 bg-white dark:bg-[#23232e] transition-all duration-500 ${isReplying ? 'w-1/2 opacity-100 translate-x-0' : 'w-0 opacity-0 translate-x-full p-0 overflow-hidden'}`}>
+                    <div className={`flex flex-col p-6 sm:p-8 bg-white dark:bg-charcoal transition-all duration-500 ${isReplying ? 'w-1/2 opacity-100 translate-x-0' : 'w-0 opacity-0 translate-x-full p-0 overflow-hidden'}`}>
                         <div className="flex justify-between items-center mb-4">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Reply to Sarah</span>
-                            <button onClick={() => setIsReplying(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white"><X className="w-4 h-4" /></button>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Reply to {rev?.clientName ?? 'Client'}</span>
+                            <button onClick={() => setIsReplying(false)} className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white"><X className="w-4 h-4" /></button>
                         </div>
                         <textarea 
-                            className="flex-1 w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-3 text-sm text-slate-900 dark:text-white resize-none focus:outline-none focus:border-lime-500 dark:focus:border-[#bef264] transition-colors"
+                            className="flex-1 w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 rounded-xl p-3 text-sm text-zinc-900 dark:text-white resize-none focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 transition-colors"
                             placeholder="Type your reply..."
                             value={replyText}
                             onChange={(e) => setReplyText(e.target.value)}
@@ -753,30 +878,31 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
                         <div className="flex justify-start mt-4">
                             <button 
                                 onClick={() => { setIsReplying(false); setReplyText(''); playSuccess(); }}
-                                className="px-4 py-2 rounded-lg bg-lime-600 text-white dark:bg-[#bef264] dark:text-black text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2"
+                                className="px-4 py-2 rounded-lg bg-blue-500 text-zinc-900 shadow-sm text-white  text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2"
                             >
                                 Send <Send className="w-3 h-3" />
                             </button>
                         </div>
                     </div>
                 </div>
-            )
+                );
+            }
         },
         {
             id: 'upgrade',
             render: () => (
-                <div className="absolute inset-0 p-8 z-10 flex flex-col justify-between h-full bg-slate-900 text-white dark:bg-white/5 dark:text-slate-900 rounded-3xl animate-fade-in relative overflow-hidden transition-all duration-700 ease-in-out">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 dark:bg-black/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
+                <div className="absolute inset-0 p-8 z-10 flex flex-col justify-between h-full bg-gradient-to-br from-zinc-900 flex-col via-zinc-800 to-black text-white rounded-3xl animate-fade-in relative overflow-hidden transition-all duration-700 ease-in-out border border-white/10 shadow-2xl shadow-black/20">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 dark:bg-[#323242]/30 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
                     <div className="relative h-full flex flex-col justify-between z-10">
                         <div>
                             <div className="flex items-center gap-2 mb-4">
-                                <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-lime-500 text-white dark:bg-[#bef264] dark:text-black">Upgrade</span>
+                                <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-blue-500 text-zinc-900 shadow-sm text-white ">Upgrade</span>
                                 <span className="text-[10px] font-bold uppercase tracking-widest opacity-60 text-white dark:text-white/60">Business Tier</span>
                             </div>
-                            <h3 className="font-serif text-3xl md:text-4xl leading-tight mb-2 text-white dark:text-white">Unlock unlimited project history.</h3>
-                            <p className="text-sm opacity-80 max-w-[80%] text-slate-300 dark:text-slate-400">Get advanced reporting and client portals.</p>
+                            <h3 className="font-sans tracking-tight text-3xl md:text-4xl leading-tight mb-2 text-white dark:text-white">Unlock unlimited project history.</h3>
+                            <p className="text-sm opacity-80 max-w-[80%] text-zinc-300 dark:text-zinc-400">Get advanced reporting and client portals.</p>
                         </div>
-                        <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:gap-4 transition-all mt-4 text-lime-400 dark:text-[#bef264]">
+                        <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:gap-4 transition-all mt-4 text-blue-400 dark:text-blue-400">
                             View Plans <ArrowRight className="w-4 h-4" />
                         </button>
                     </div>
@@ -786,15 +912,15 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
         {
             id: 'live_activity',
             render: () => (
-                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-slate-900 dark:bg-black rounded-3xl transition-all duration-700 ease-in-out relative overflow-hidden">
+                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-zinc-900 dark:bg-[#23232e] rounded-3xl transition-all duration-700 ease-in-out relative overflow-hidden">
                     {/* Subtle grid background */}
                     <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
                     
                     <div className="relative z-10 flex justify-between items-start">
                         <div className="flex items-center gap-2 px-2 py-1 rounded bg-white/10 border border-white/10 backdrop-blur-md">
                             <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-lime-500"></span>
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500 text-zinc-900 shadow-sm"></span>
                             </span>
                             <span className="text-[9px] font-bold uppercase tracking-widest text-white">Live Session</span>
                         </div>
@@ -804,9 +930,9 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
                     <div className="relative z-10 flex-1 flex flex-col justify-center">
                         <div className="flex items-center gap-4 mb-3">
                             <div className="relative">
-                                <img src="https://api.dicebear.com/9.x/shapes/svg?seed=MikeRoss" alt="Client" className="w-12 h-12 rounded-full border-2 border-slate-800" />
-                                <div className="absolute -bottom-1 -right-1 bg-slate-800 p-1 rounded-full border border-slate-700">
-                                    <Monitor className="w-3 h-3 text-lime-400" />
+                                <img src="https://api.dicebear.com/9.x/shapes/svg?seed=MikeRoss" alt="Client" className="w-12 h-12 rounded-full border-2 border-zinc-800" />
+                                <div className="absolute -bottom-1 -right-1 bg-zinc-800 p-1 rounded-full border border-zinc-700">
+                                    <Monitor className="w-3 h-3 text-blue-400" />
                                 </div>
                             </div>
                             <div>
@@ -814,8 +940,8 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
                                 <p className="text-xs text-white/60">Vertex Corp</p>
                             </div>
                         </div>
-                        <p className="font-serif text-xl text-white/90 leading-snug">
-                            Currently viewing <span className="text-lime-400 font-sans font-medium">Q4_Financial_Report.pdf</span>
+                        <p className="font-sans tracking-tight text-xl text-white/90 leading-snug">
+                            Currently viewing <span className="text-blue-400 font-sans font-medium">Q4_Financial_Report.pdf</span>
                         </p>
                     </div>
 
@@ -833,25 +959,25 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
         {
             id: 'revenue',
             render: () => (
-                <div className="absolute inset-0 p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-[#23232e] rounded-3xl transition-all duration-700 ease-in-out">
+                <div className="absolute inset-0 p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-charcoal rounded-3xl transition-all duration-700 ease-in-out">
                     <div>
                         <div className="flex justify-between items-start mb-4 gap-3">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Net Revenue</span>
-                            <div className="flex items-center gap-1 text-lime-600 dark:text-[#bef264] font-bold text-[10px] bg-lime-50 dark:bg-[#bef264]/10 px-2 py-1 rounded-full border border-lime-100 dark:border-[#bef264]/20 shrink-0">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Net Revenue</span>
+                            <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[10px] bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded-full border border-blue-500/30 dark:border-blue-500/20 shrink-0">
                                 <ArrowUpRight className="w-3 h-3" /> {paidProjects.length} closed
                             </div>
                         </div>
                         <div className="flex items-baseline gap-1 mb-6">
-                            <PrivacyBlur strength="strong" className={`font-serif text-5xl md:text-6xl tracking-tighter ${GRADIENT_TEXT}`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
+                            <PrivacyBlur strength="strong" className={`font-sans tracking-tight text-5xl md:text-6xl tracking-tighter ${GRADIENT_TEXT}`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
                         </div>
                         <div className="flex items-center gap-3 flex-wrap">
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5">
                                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300"><PrivacyBlur>${pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur> Pending</span>
+                                <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300"><PrivacyBlur>${pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur> Pending</span>
                             </div>
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                                <CheckCircle className="w-3 h-3 text-lime-500" />
-                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{paidProjects.length} paid or completed</span>
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5">
+                                <CheckCircle className="w-3 h-3 text-blue-500" />
+                                <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300">{paidProjects.length} paid or completed</span>
                             </div>
                         </div>
                     </div>
@@ -869,14 +995,14 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
                             >
                                 <defs>
                                     <linearGradient id="colorHeroMiniLive" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#bef264" stopOpacity={1} />
-                                        <stop offset="95%" stopColor="#bef264" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#84cc16" stopOpacity={1} />
+                                        <stop offset="95%" stopColor="#84cc16" stopOpacity={0} />
                                     </linearGradient>
                                     <filter id="shadowLive" height="200%">
-                                        <feDropShadow dx="0" dy="5" stdDeviation="6" floodColor="#bef264" floodOpacity="0.8" />
+                                        <feDropShadow dx="0" dy="5" stdDeviation="6" floodColor="#84cc16" floodOpacity="0.8" />
                                     </filter>
                                 </defs>
-                                <Area type="monotone" dataKey="v" stroke="#bef264" strokeWidth={3} fill="url(#colorHeroMiniLive)" filter="url(#shadowLive)" />
+                                <Area type="monotone" dataKey="v" stroke="#84cc16" strokeWidth={3} fill="url(#colorHeroMiniLive)" filter="url(#shadowLive)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -886,24 +1012,24 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
         {
             id: 'storage',
             render: () => (
-                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-[#1e293b] rounded-3xl transition-all duration-700 ease-in-out">
+                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-[#23232e] rounded-3xl transition-all duration-700 ease-in-out">
                     <div className="flex justify-between items-start gap-3">
                         <div className="flex items-center gap-2">
-                            <HardDrive className="w-4 h-4 text-slate-400" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Project Storage</span>
+                            <HardDrive className="w-4 h-4 text-zinc-400" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Project Storage</span>
                         </div>
-                        <span className="text-[10px] font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-white/10 px-2 py-1 rounded-md">{totalFiles} files</span>
+                        <span className="text-[10px] font-bold text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/10 px-2 py-1 rounded-md">{totalFiles} files</span>
                     </div>
 
                     <div className="flex-1 flex flex-col justify-center gap-4">
                         <div className="flex items-baseline gap-2 flex-wrap">
-                            <span className="font-serif text-4xl md:text-5xl text-slate-900 dark:text-white tracking-tight">{formatBytes(totalBytes)}</span>
-                            <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Across {projects.length} project{projects.length === 1 ? '' : 's'}</span>
+                            <span className="font-sans tracking-tight text-4xl md:text-5xl text-zinc-900 dark:text-white tracking-tight">{formatBytes(totalBytes)}</span>
+                            <span className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Across {projects.length} project{projects.length === 1 ? '' : 's'}</span>
                         </div>
 
                         <div className="space-y-2">
-                            <div className="w-full h-2.5 flex rounded-full overflow-hidden gap-0.5 bg-slate-100 dark:bg-white/5">
-                                {(storageBreakdown.length > 0 ? storageBreakdown : [{ label: 'Empty', bytes: 1, color: 'bg-slate-300 dark:bg-white/10' }]).map((item) => (
+                            <div className="w-full h-2.5 flex rounded-full overflow-hidden gap-0.5 bg-zinc-100 dark:bg-white/5">
+                                {(storageBreakdown.length > 0 ? storageBreakdown : [{ label: 'Empty', bytes: 1, color: 'bg-zinc-300 dark:bg-white/10' }]).map((item) => (
                                     <div
                                         key={item.label}
                                         className={`h-full ${item.color}`}
@@ -911,8 +1037,8 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
                                     />
                                 ))}
                             </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                                {(storageBreakdown.length > 0 ? storageBreakdown : [{ label: 'No files', bytes: 0, color: 'bg-slate-300' }]).map((item) => (
+                            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[9px] font-bold uppercase tracking-wider text-zinc-500">
+                                {(storageBreakdown.length > 0 ? storageBreakdown : [{ label: 'No files', bytes: 0, color: 'bg-zinc-300' }]).map((item) => (
                                     <span key={item.label} className="flex items-center gap-1">
                                         <span className={`w-1.5 h-1.5 rounded-full ${item.color}`} /> {item.label} ({item.bytes > 0 ? formatBytes(item.bytes) : '0 B'})
                                     </span>
@@ -921,7 +1047,7 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                    <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
                         <span>{activeClients} active client{activeClients === 1 ? '' : 's'}</span>
                         <button onClick={() => { playClick(); navigate('/vault'); }} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1.5 transition-colors">
                             Manage Files <ArrowRight className="w-3 h-3" />
@@ -933,14 +1059,14 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
         {
             id: 'activity',
             render: () => (
-                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-slate-900 dark:bg-black rounded-3xl transition-all duration-700 ease-in-out relative overflow-hidden">
+                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-zinc-900 dark:bg-[#23232e] rounded-3xl transition-all duration-700 ease-in-out relative overflow-hidden">
                     <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
 
                     <div className="relative z-10 flex justify-between items-start gap-3">
                         <div className="flex items-center gap-2 px-2 py-1 rounded bg-white/10 border border-white/10 backdrop-blur-md">
                             <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-lime-500"></span>
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500 text-zinc-900 shadow-sm"></span>
                             </span>
                             <span className="text-[9px] font-bold uppercase tracking-widest text-white">Recent Activity</span>
                         </div>
@@ -953,14 +1079,14 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
                                 <div className="flex items-center gap-4 mb-3">
                                     <div className="relative">
                                         {recentProject.client.avatar ? (
-                                            <img src={recentProject.client.avatar} alt={recentProject.client.name || 'Client'} className="w-12 h-12 rounded-full border-2 border-slate-800 object-cover" />
+                                            <img src={recentProject.client.avatar} alt={recentProject.client.name || 'Client'} className="w-12 h-12 rounded-full border-2 border-zinc-800 object-cover" />
                                         ) : (
-                                            <div className="w-12 h-12 rounded-full border-2 border-slate-800 bg-white/10 flex items-center justify-center">
+                                            <div className="w-12 h-12 rounded-full border-2 border-zinc-800 bg-white/10 flex items-center justify-center">
                                                 <User className="w-5 h-5 text-white/70" />
                                             </div>
                                         )}
-                                        <div className="absolute -bottom-1 -right-1 bg-slate-800 p-1 rounded-full border border-slate-700">
-                                            <Monitor className="w-3 h-3 text-lime-400" />
+                                        <div className="absolute -bottom-1 -right-1 bg-zinc-800 p-1 rounded-full border border-zinc-700">
+                                            <Monitor className="w-3 h-3 text-blue-400" />
                                         </div>
                                     </div>
                                     <div>
@@ -968,8 +1094,8 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
                                         <p className="text-xs text-white/60">{recentProject.client.company || recentProject.name}</p>
                                     </div>
                                 </div>
-                                <p className="font-serif text-xl text-white/90 leading-snug">
-                                    {recentProject.clientViewedAt ? 'Last viewed' : 'Most recent project'} <span className="text-lime-400 font-sans font-medium">{recentProject.name}</span>
+                                <p className="font-sans tracking-tight text-xl text-white/90 leading-snug">
+                                    {recentProject.clientViewedAt ? 'Last viewed' : 'Most recent project'} <span className="text-blue-400 font-sans font-medium">{recentProject.name}</span>
                                 </p>
                                 <p className="text-xs uppercase tracking-widest text-white/50 mt-3">
                                     {recentProject.status.replace(/_/g, ' ')} • ${recentProject.amount.toLocaleString()}
@@ -977,7 +1103,7 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
                             </>
                         ) : (
                             <div>
-                                <h3 className="font-serif text-3xl text-white mb-2">No project activity yet.</h3>
+                                <h3 className="font-sans tracking-tight text-3xl text-white mb-2">No project activity yet.</h3>
                                 <p className="text-sm text-white/70 max-w-sm">Create your first project to start tracking client views, payments, and delivery activity here.</p>
                             </div>
                         )}
@@ -990,7 +1116,12 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
                     </div>
                 </div>
             )
-        }
+        },
+        // Reviews slide — shows the most recent open revision request from any project
+        ...(latestRevision ? [{
+            id: 'reviews',
+            render: demoSlides.find(s => s.id === 'reviews')!.render,
+        }] : []),
     ];
     const slides = demoMode ? demoSlides : realSlides;
 
@@ -1023,16 +1154,16 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
 
     if (!demoMode && projects.length === 0) {
         return (
-            <div className="w-full bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm relative h-[280px] p-6 sm:p-8">
+            <div className="w-full bg-white dark:bg-zinc-800 border border-zinc-200/50 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm relative h-[280px] p-6 sm:p-8">
                 <div className="h-full flex flex-col items-center justify-center text-center opacity-90 p-4">
-                    <div className="w-16 h-16 rounded-[1.5rem] bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4 shadow-sm">
-                        <Database className="w-8 h-8 text-slate-400 stroke-[1.5]" />
+                    <div className="w-16 h-16 rounded-[1.5rem] bg-zinc-50 dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 flex items-center justify-center mb-4 shadow-sm">
+                        <Database className="w-8 h-8 text-zinc-400 stroke-[1.5]" />
                     </div>
-                    <h3 className="font-serif text-xl text-slate-900 dark:text-white mb-2">Unlock Your Analytics</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[280px] leading-relaxed mb-6">
+                    <h3 className="font-sans tracking-tight text-xl text-zinc-900 dark:text-white mb-2">Unlock Your Analytics</h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-[280px] leading-relaxed mb-6">
                         Create your first project to start tracking revenue, storage usage, and client engagement.
                     </p>
-                    <button onClick={() => { playClick(); navigate('/create'); }} className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-bold uppercase tracking-wider transition-all">
+                    <button onClick={() => { playClick(); navigate('/create'); }} className="px-5 py-2.5 rounded-xl border border-zinc-200/50 dark:border-white/10 hover:border-zinc-200/50 dark:hover:border-white/20 bg-white dark:bg-white/5 hover:bg-zinc-50 dark:hover:bg-white/10 text-zinc-700 dark:text-zinc-200 text-[11px] font-bold uppercase tracking-wider transition-all">
                         Initialize Analytics
                     </button>
                 </div>
@@ -1042,14 +1173,14 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
 
     return (
         <div 
-            className="w-full bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm relative group hover:shadow-md transition-all h-[280px]"
+            className="w-full bg-white dark:bg-zinc-800 border border-zinc-200/50 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm relative group hover:shadow-md transition-all h-[280px]"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
         >
             {/* Progress Bar */}
-            <div className="absolute top-0 left-4 right-4 h-0.5 bg-slate-100 dark:bg-white/5 z-30 rounded-b-full overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            <div className="absolute top-0 left-4 right-4 h-0.5 bg-zinc-100 dark:bg-white/5 z-30 rounded-b-full overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                 <div 
-                    className="h-full bg-lime-500 dark:bg-[#bef264] transition-all duration-100 ease-linear shadow-[0_0_8px_rgba(132,204,22,0.5)]"
+                    className="h-full bg-blue-500 text-zinc-900 shadow-sm dark:bg-blue-500 transition-all duration-100 ease-linear shadow-[0_0_8px_rgba(132,204,22,0.5)]"
                     style={{ width: `${progress}%`, opacity: isPaused ? 0.2 : 1 }}
                 />
             </div>
@@ -1073,7 +1204,7 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
                     <button 
                         key={i} 
                         onClick={() => manualChange(i)}
-                        className={`h-1.5 rounded-full transition-all duration-500 shadow-sm ${i === cycleIndex ? 'w-8 bg-slate-900 dark:bg-white' : 'w-1.5 bg-slate-300 dark:bg-white/20 hover:bg-slate-400'}`} 
+                        className={`h-1.5 rounded-full transition-all duration-500 shadow-sm ${i === cycleIndex ? 'w-8 bg-zinc-900 dark:bg-white' : 'w-1.5 bg-zinc-300 dark:bg-white/20 hover:bg-zinc-400'}`} 
                     />
                 ))}
             </div>
@@ -1087,6 +1218,8 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
     const location = useLocation();
     const { openSearch } = useOutletContext<{ privacyMode: boolean; openSearch?: () => void }>();
     const [projectTab, setProjectTab] = useState<'pending' | 'draft' | 'paid'>('pending');
+    const [briefingPulse, setBriefingPulse] = useState(false);
+    const briefingPulseLocationKeyRef = useRef<string | null>(null);
 
     // Projects / Clients toggle — reads ?view=clients from URL so command palette can deep-link
     const [dashView, setDashView] = useState<'projects' | 'clients'>(() => {
@@ -1094,19 +1227,22 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
         return params.get('view') === 'clients' ? 'clients' : 'projects';
     });
 
+    useEffect(() => {
+        const highlight = (location.state as { widgetPanelHighlight?: string } | null)?.widgetPanelHighlight;
+        if (highlight !== 'briefing') return;
+        if (briefingPulseLocationKeyRef.current === location.key) return;
+        briefingPulseLocationKeyRef.current = location.key;
+        setBriefingPulse(true);
+        const timer = window.setTimeout(() => setBriefingPulse(false), 2400);
+        return () => window.clearTimeout(timer);
+    }, [location.key, location.state]);
+
     const filteredProjects = projects.filter(p => {
         if (projectTab === 'pending') return p.status === 'awaiting_payment';
         if (projectTab === 'draft') return p.status === 'draft' || p.status === 'awaiting_signature';
         if (projectTab === 'paid') return p.status === 'paid' || p.status === 'completed';
         return false;
     });
-
-    const getGreeting = () => {
-        const hour = new Date().getHours();
-        if (hour < 12) return "Good Morning";
-        if (hour < 18) return "Good Afternoon";
-        return "Good Evening";
-    };
 
     const demoMode = isMockMode();
     const liveClients = demoMode
@@ -1140,14 +1276,14 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
     ].filter(Boolean) as Array<{ id: number; type: 'critical' | 'warning' | 'info'; message: string; icon: React.ElementType }>;
 
     return (
-        <div className="space-y-6 animate-slide-up relative z-10 pb-12">
-            <div className="flex flex-col gap-6 border-b border-slate-200 dark:border-white/5 pb-8">
+        <div className="space-y-6 animate-slide-up relative z-10 pb-12 bg-[#f0f2f5] dark:bg-cosmic">
+            <div className="flex flex-col gap-6 border-b border-zinc-200/50 dark:border-white/5 pb-8">
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                     <div>
-                        <h1 className="font-serif text-3xl md:text-5xl text-slate-900 dark:text-white leading-tight mb-2">
-                            <span className={GRADIENT_TEXT}>{getGreeting()}</span>, <span className="italic text-lime-600 dark:text-[#bef264]">{(user.name || 'there').split(' ')[0]}.</span>
+                        <h1 className="font-sans tracking-tight text-3xl md:text-5xl text-zinc-900 dark:text-white leading-tight mb-2">
+                            <span>Dash</span><span className="text-[#84cc16] dark:text-[#a3e635]">board</span>
                         </h1>
-                        <p className="text-slate-500 dark:text-slate-400 text-lg">Here's your project overview for today.</p>
+                        <p className="text-zinc-500 dark:text-zinc-400 text-lg">Here's your project overview for today.</p>
                         {/* At-a-Glance strip — live stats derived from store */}
                         {(() => {
                             const pendingPayment = projects.filter(p => p.status === 'awaiting_payment');
@@ -1177,15 +1313,15 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
                                 },
                             ].filter(Boolean) as { label: string; value: string | null; color: 'amber' | 'blue' | 'lime' | 'slate'; icon: React.ElementType; action: () => void }[];
                             if (chips.length === 0) return (
-                                <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-lime-50 dark:bg-lime-900/20 border border-lime-200 dark:border-lime-700/30 text-[11px] font-bold text-lime-700 dark:text-lime-400">
+                                <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/30 text-[11px] font-bold text-blue-700 dark:text-blue-400">
                                     <CheckCircle className="w-3 h-3" /> All caught up — nothing pending.
-                                </div>
+                    </div>
                             );
                             const colorMap = {
                                 amber: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/30 text-amber-700 dark:text-amber-400',
                                 blue: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700/30 text-blue-700 dark:text-blue-400',
-                                lime: 'bg-lime-50 dark:bg-lime-900/20 border-lime-200 dark:border-lime-700/30 text-lime-700 dark:text-lime-400',
-                                slate: 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400',
+                                lime: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700/30 text-blue-700 dark:text-blue-400',
+                                slate: 'bg-zinc-100 dark:bg-white/5 border-zinc-200/50 dark:border-white/10 text-zinc-500 dark:text-zinc-400',
                             };
                             return (
                                 <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
@@ -1199,29 +1335,29 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
                             );
                         })()}
                     </div>
-                    <div className="flex items-center gap-2 p-1.5 bg-white dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm overflow-x-auto no-scrollbar max-w-full">
-                        <button onClick={() => navigate('/create')} className="px-5 py-3 rounded-xl bg-lime-600 text-white dark:bg-[#bef264] dark:text-black font-bold text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform flex items-center gap-2 whitespace-nowrap">
+                    <div className="flex items-center gap-2 p-1.5 bg-white dark:bg-white/5 rounded-2xl border border-zinc-200/50 dark:border-white/5 shadow-sm overflow-x-auto no-scrollbar max-w-full">
+                        <button onClick={() => navigate('/create')} className="px-5 py-3 rounded-xl bg-blue-500 text-zinc-900 shadow-sm text-white  font-bold text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform flex items-center gap-2 whitespace-nowrap">
                             <Plus className="w-4 h-4" /> New Project
                         </button>
-                        <div className="w-px h-6 bg-slate-200 dark:bg-white/10 mx-1" />
-                        <button onClick={() => navigate('/vault')} className="px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 font-sans font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap">Vault</button>
-                        <button onClick={() => navigate('/activity')} className="px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 font-sans font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap">Activity</button>
-                        <button onClick={() => navigate('/reports')} className="px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 font-sans font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap">Reports</button>
+                        <div className="w-px h-6 bg-zinc-200 dark:bg-white/10 mx-1" />
+                        <button onClick={() => navigate('/vault')} className="px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5 text-zinc-500 dark:text-zinc-400 font-sans font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap">Vault</button>
+                        <button onClick={() => navigate('/activity')} className="px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5 text-zinc-500 dark:text-zinc-400 font-sans font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap">Activity</button>
+                        <button onClick={() => navigate('/reports')} className="px-4 py-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5 text-zinc-500 dark:text-zinc-400 font-sans font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap">Reports</button>
                     </div>
                 </div>
             </div>
 
             {/* Projects / Clients toggle */}
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 rounded-2xl p-1 w-fit border border-slate-200 dark:border-white/10 shadow-sm">
+            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-white/5 rounded-2xl p-1 w-fit border border-zinc-200/50 dark:border-white/10 shadow-sm">
                 <button
                     onClick={() => { playClick(); setDashView('projects'); }}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${dashView === 'projects' ? 'bg-white dark:bg-white/10 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${dashView === 'projects' ? 'bg-white dark:bg-white/10 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'}`}
                 >
                     <FolderLock className="w-3.5 h-3.5" /> Projects
                 </button>
                 <button
                     onClick={() => { playClick(); setDashView('clients'); }}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${dashView === 'clients' ? 'bg-white dark:bg-white/10 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${dashView === 'clients' ? 'bg-white dark:bg-white/10 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'}`}
                 >
                     <Users className="w-3.5 h-3.5" /> Clients
                 </button>
@@ -1234,7 +1370,7 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
             {/* Status Ribbon - Now part of dashboard logic */}
             <StatusRibbon projects={projects} user={user} />
 
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 md:gap-12">
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-8">
                 <div className="xl:col-span-8 flex flex-col gap-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
@@ -1243,22 +1379,22 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
 
                         <div className="flex flex-col gap-4">
                             <div className="flex items-center justify-between px-1 pt-1">
-                                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
                                     <Siren className="w-3.5 h-3.5 text-red-500" /> Today's Priorities
                                 </h3>
                                 <span className="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full shadow-lg shadow-red-500/30 animate-pulse">{alerts.length} Actions</span>
                             </div>
                             <div className="flex-1 flex flex-col gap-3">
                                 {alerts.length === 0 ? (
-                                    <div className="bg-slate-50 dark:bg-black/20 border-2 border-dashed border-slate-200 dark:border-white/10 p-6 rounded-3xl flex flex-col items-center justify-center text-center flex-1 min-h-[220px]">
-                                        <div className="w-14 h-14 rounded-2xl bg-white dark:bg-white/5 flex items-center justify-center mb-4 shadow-sm border border-slate-100 dark:border-white/10">
-                                            <CheckCircle className="w-6 h-6 text-lime-600 dark:text-[#bef264]" strokeWidth={1.5} />
+                                    <div className="bg-zinc-50 dark:bg-[#23232e]/45 border-2 border-dashed border-zinc-200/50 dark:border-white/10 p-6 rounded-3xl flex flex-col items-center justify-center text-center flex-1 min-h-[220px]">
+                                        <div className="w-14 h-14 rounded-2xl bg-white dark:bg-white/5 flex items-center justify-center mb-4 shadow-sm border border-zinc-100 dark:border-white/10">
+                                            <CheckCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" strokeWidth={1.5} />
                                         </div>
-                                        <p className="font-serif text-xl text-slate-900 dark:text-white mb-1">Clear Horizon</p>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[200px] mb-5">
+                                        <p className="font-sans tracking-tight text-xl text-zinc-900 dark:text-white mb-1">Clear Horizon</p>
+                                        <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-[200px] mb-5">
                                             Everything is up to date. Ready for new incoming clients?
                                         </p>
-                                        <button onClick={() => { playClick(); navigate('/create'); }} className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-[#bef264] text-white dark:text-black text-[11px] font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-2 group shadow-lg shadow-black/5">
+                                        <button onClick={() => { playClick(); navigate('/create'); }} className="px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-blue-500 text-white dark:text-white text-[11px] font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-2 group shadow-lg shadow-black/5">
                                             <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform" /> Create Project
                                         </button>
                                     </div>
@@ -1268,16 +1404,16 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
                                         role="button"
                                         tabIndex={0}
                                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
-                                        className="bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/5 p-4 rounded-2xl flex items-center gap-3 hover:border-slate-300 dark:hover:border-white/20 transition-all cursor-pointer group shadow-sm"
+                                        className="bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/5 p-4 rounded-2xl flex items-center gap-3 hover:border-zinc-200/50 dark:hover:border-white/20 transition-all cursor-pointer group shadow-sm"
                                     >
                                         <div className={`p-2.5 rounded-xl shrink-0 ${alert.type === 'critical' ? 'bg-red-500/10 text-red-500' : alert.type === 'warning' ? 'bg-amber-500/10 text-amber-500' : 'bg-blue-500/10 text-blue-500'}`}>
                                             <alert.icon className="w-5 h-5" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{alert.type === 'critical' ? 'Urgent' : alert.type === 'warning' ? 'Warning' : 'Info'}</p>
-                                            <p className="text-sm font-bold text-slate-900 dark:text-white truncate leading-tight">{alert.message}</p>
-                                        </div>
-                                        <ArrowRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-lime-600 dark:group-hover:text-[#bef264] group-hover:translate-x-1 transition-all" />
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-0.5">{alert.type === 'critical' ? 'Urgent' : alert.type === 'warning' ? 'Warning' : 'Info'}</p>
+                                            <p className="text-sm font-bold text-zinc-900 dark:text-white truncate leading-tight">{alert.message}</p>
+                                            </div>
+                                        <ArrowRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
                                     </div>
                                 ))}
                             </div>
@@ -1286,81 +1422,81 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
 
                     {/* ... Rest of dashboard ... */}
                     <div>
-                        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
-                            <ActivityIcon className="w-3.5 h-3.5 text-lime-600 dark:text-[#bef264]" /> Live Client Pulse
+                        <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-4 flex items-center gap-2">
+                            <ActivityIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> Live Client Pulse
                         </h2>
                         {liveClients.length === 0 ? (
-                            <div className="rounded-2xl border border-dashed border-slate-300 dark:border-white/15 p-6 text-center bg-white/70 dark:bg-white/[0.02]">
-                                <Monitor className="w-5 h-5 text-slate-400 mx-auto mb-2" />
-                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">No active client sessions.</p>
-                                <p className="text-xs text-slate-400 mt-1">Recent client activity appears here once someone opens a project link.</p>
+                            <div className="rounded-2xl border border-dashed border-zinc-200/50 dark:border-white/15 p-6 text-center bg-white/70 dark:bg-white/[0.02]">
+                                <Monitor className="w-5 h-5 text-zinc-400 mx-auto mb-2" />
+                                <p className="text-sm font-bold text-zinc-700 dark:text-zinc-200">No active client sessions.</p>
+                                <p className="text-xs text-zinc-400 mt-1">Recent client activity appears here once someone opens a project link.</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {liveClients.map((client) => (
-                                    <Card key={client.id} className="p-4 flex items-center gap-4 hover:border-lime-500/50 dark:hover:border-[#bef264]/50 cursor-pointer group" noPadding>
-                                        <div className="relative">
-                                            <img src={client.avatar} className="w-10 h-10 rounded-full object-cover" />
-                                            {client.status === 'viewing' && (
-                                                <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
-                                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-lime-500"></span>
-                                                </span>
-                                            )}
-                                            {client.status === 'idle' && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white dark:border-[#23232e]" />}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {liveClients.map((client) => (
+                                    <Card key={client.id} className="p-4 flex items-center gap-4 hover:border-blue-500/50 dark:hover:border-blue-500/50 cursor-pointer group" noPadding>
+                                    <div className="relative">
+                                        <img src={client.avatar} className="w-10 h-10 rounded-full object-cover" />
+                                        {client.status === 'viewing' && (
+                                            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500 text-zinc-900 shadow-sm"></span>
+                                            </span>
+                                        )}
+                                        {client.status === 'idle' && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white dark:border-[#23232e]" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-center mb-0.5">
+                                                <h4 className="text-sm font-bold text-zinc-900 dark:text-white truncate">{client.name}</h4>
+                                                {client.status === 'viewing' && <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider animate-pulse">Live</span>}
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between items-center mb-0.5">
-                                                <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">{client.name}</h4>
-                                                {client.status === 'viewing' && <span className="text-[9px] font-bold text-lime-600 dark:text-[#bef264] uppercase tracking-wider animate-pulse">Live</span>}
-                                            </div>
-                                            <p className="text-xs text-slate-500 truncate">{client.project}</p>
-                                        </div>
-                                        <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-lime-600 dark:group-hover:text-[#bef264] transition-colors" />
-                                    </Card>
-                                ))}
-                            </div>
+                                            <p className="text-xs text-zinc-500 truncate">{client.project}</p>
+                                    </div>
+                                        <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                                </Card>
+                            ))}
+                        </div>
                         )}
                     </div>
 
                     <div>
                         <div className="flex items-end justify-between mb-6">
-                            <h2 className={`font-serif text-3xl tracking-tight ${GRADIENT_TEXT}`}>Active Projects</h2>
+                            <h2 className={`font-sans tracking-tight text-3xl tracking-tight ${GRADIENT_TEXT}`}>Active Projects</h2>
                             <div className="flex gap-4">
                                 {['pending', 'draft', 'paid'].map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setProjectTab(tab as any)}
-                                        className={`pb-1 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${projectTab === tab ? 'border-lime-600 text-slate-900 dark:text-white dark:border-[#bef264]' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                                        className={`pb-1 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${projectTab === tab ? 'border-blue-600 text-zinc-900 dark:text-white dark:border-blue-500' : 'border-transparent text-zinc-400 hover:text-zinc-600'}`}
                                     >
                                         {tab}
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        <div className="flex flex-col border-t border-slate-200 dark:border-white/5">
+                        <div className="flex flex-col border-t border-zinc-200/50 dark:border-white/5">
                             {filteredProjects.length === 0 ? (
-                                <div className="py-24 flex flex-col items-center justify-center opacity-80 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-3xl m-4 bg-slate-50 dark:bg-black/20">
-                                    <div className="w-20 h-20 rounded-[2rem] bg-white dark:bg-white/5 flex items-center justify-center mb-6 shadow-sm border border-slate-100 dark:border-white/10 relative">
-                                        <Briefcase className="w-10 h-10 stroke-[1.5] text-slate-400" />
-                                        <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-lime-100 dark:bg-[#bef264]/20 rounded-xl flex items-center justify-center border-2 border-white dark:border-[#23232e]">
-                                            <Plus className="w-4 h-4 text-lime-600 dark:text-[#bef264]" />
+                                <div className="py-24 flex flex-col items-center justify-center opacity-80 border-2 border-dashed border-zinc-200/50 dark:border-white/10 rounded-3xl m-4 bg-zinc-50 dark:bg-[#23232e]/45">
+                                    <div className="w-20 h-20 rounded-[2rem] bg-white dark:bg-white/5 flex items-center justify-center mb-6 shadow-sm border border-zinc-100 dark:border-white/10 relative">
+                                        <Briefcase className="w-10 h-10 stroke-[1.5] text-zinc-400" />
+                                        <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-100 dark:bg-blue-500/20 rounded-xl flex items-center justify-center border-2 border-white dark:border-[#23232e]">
+                                            <Plus className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                         </div>
                                     </div>
-                                    <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">Start Your First Project</h3>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400 max-w-[320px] text-center mb-8 leading-relaxed">
+                                    <h3 className="font-sans tracking-tight text-2xl text-zinc-900 dark:text-white mb-2">Start Your First Project</h3>
+                                    <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-[320px] text-center mb-8 leading-relaxed">
                                         Securely share files, collect payments, and manage client handovers in one professional workspace.
                                     </p>
                                     
                                     <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                                        <button onClick={() => { playClick(); navigate('/create'); }} className="px-6 py-3.5 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-black/5">
+                                        <button onClick={() => { playClick(); navigate('/create'); }} className="px-6 py-3.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-black/5">
                                             <Plus className="w-4 h-4" /> Create Project
                                         </button>
-                                        <button onClick={() => { playClick(); document.getElementById('vault-tab-draft')?.click(); }} className="px-6 py-3.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-white/10 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
+                                        <button onClick={() => { playClick(); document.getElementById('vault-tab-draft')?.click(); }} className="px-6 py-3.5 rounded-xl bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 text-zinc-600 dark:text-zinc-300 text-xs font-bold uppercase tracking-wider hover:bg-zinc-50 dark:hover:bg-white/10 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
                                             Start with a Draft
                                         </button>
                                     </div>
-                                    <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Takes less than 30 seconds</p>
+                                    <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-400">Takes less than 30 seconds</p>
                                 </div>
                             ) : (
                                 filteredProjects.map((p, i) => (
@@ -1370,33 +1506,33 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
                                         tabIndex={0}
                                         onClick={() => navigate(`/preview/${p.id}`, { state: { from: location.pathname } })}
                                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/preview/${p.id}`, { state: { from: location.pathname } }); }}
-                                        className="group flex flex-col md:flex-row md:items-center justify-between py-6 border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 px-4 -mx-4 rounded-xl transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-lime-500/50"
+                                        className="group flex flex-col md:flex-row md:items-center justify-between py-6 border-b border-zinc-100 dark:border-white/5 hover:bg-zinc-50 dark:hover:bg-white/5 px-4 -mx-4 rounded-xl transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-blue-500/50"
                                     >
                                         <div className="flex items-center gap-6">
-                                            <span className="font-mono text-xs text-slate-300 dark:text-slate-600 w-8">{(i + 1).toString().padStart(2, '0')}</span>
+                                            <span className="font-mono text-xs text-zinc-300 dark:text-zinc-600 w-8">{(i + 1).toString().padStart(2, '0')}</span>
                                             <div className="relative">
                                                 <img src={p.client.avatar} loading="lazy" className="w-12 h-12 rounded-lg object-cover grayscale group-hover:grayscale-0 transition-all" />
-                                                <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-[#23232e] ${p.status === 'paid' ? 'bg-lime-500' : 'bg-amber-500'}`} />
+                                                <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-[#23232e] ${p.status === 'paid' ? 'bg-blue-500 text-zinc-900 shadow-sm' : 'bg-amber-500'}`} />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-lime-700 dark:group-hover:text-[#bef264] transition-colors">{p.name}</h3>
-                                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{p.client.company || p.client.name}</p>
+                                                <h3 className="font-bold text-lg text-zinc-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{p.name}</h3>
+                                                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">{p.client.company || p.client.name}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-8 mt-4 md:mt-0 ml-14 md:ml-0">
                                             <div className="text-right">
-                                                <div className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-0.5">Value</div>
-                                                <div className="font-serif text-lg text-slate-900 dark:text-white">
+                                                <div className="text-xs font-bold uppercase text-zinc-400 tracking-wider mb-0.5">Value</div>
+                                                <div className="font-sans tracking-tight text-lg text-zinc-900 dark:text-white">
                                                     <PrivacyBlur>${p.amount.toLocaleString()}</PrivacyBlur>
                                                 </div>
                                             </div>
                                             <div className="text-right hidden sm:block">
-                                                <div className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-0.5">Due</div>
-                                                <div className="font-mono text-sm text-slate-600 dark:text-slate-300">
+                                                <div className="text-xs font-bold uppercase text-zinc-400 tracking-wider mb-0.5">Due</div>
+                                                <div className="font-mono text-sm text-zinc-600 dark:text-zinc-300">
                                                     {new Date(p.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                                 </div>
                                             </div>
-                                            <div className="w-8 h-8 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 group-hover:bg-lime-600 group-hover:border-lime-600 group-hover:text-white dark:group-hover:bg-[#bef264] dark:group-hover:text-black transition-all">
+                                            <div className="w-8 h-8 rounded-full border border-zinc-200/50 dark:border-white/10 flex items-center justify-center text-zinc-400 group-hover:bg-blue-500 text-zinc-900 shadow-sm group-hover:border-blue-600 group-hover:text-white dark:group-hover:bg-blue-500 dark:group-hover:text-black transition-all">
                                                 <ArrowUpRight className="w-4 h-4" />
                                             </div>
                                         </div>
@@ -1404,26 +1540,28 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
                                 ))
                             )}
                         </div>
-                        <button onClick={() => navigate('/reports?focus=audit')} className="mt-8 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 group transition-colors">
+                        <button onClick={() => navigate('/reports?focus=audit')} className="mt-8 text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-2 group transition-colors">
                             View Full Ledger <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                         </button>
                     </div>
                 </div>
                 {/* ... Sidebar preserved ... */}
-                <div className="xl:col-span-4 pl-0 xl:pl-10 border-l border-transparent xl:border-slate-200 dark:xl:border-white/5">
-                    <div className="h-[calc(100vh-140px)] sticky top-24 flex flex-col pt-2">
+                <div className="xl:col-span-4 p-2 md:p-3 flex flex-col h-[calc(100vh-140px)] sticky top-24">
+                    <div className={`relative flex-1 h-full overflow-visible ${briefingPulse ? 'widget-highlight-shell widget-highlight-double' : ''}`}>
+                    <div className="flex flex-col flex-1 pb-2 h-full overflow-hidden rounded-2xl border border-transparent transition-[box-shadow,border-color] duration-700">
                         <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h3 className={`font-serif text-3xl tracking-tight ${GRADIENT_TEXT}`}>The Briefing</h3>
-                                <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider font-bold">Daily Timeline</p>
+                                <h3 className={`font-serif text-3xl ${GRADIENT_TEXT}`}>The Briefing</h3>
+                                <p className="text-xs text-zinc-500 mt-1 uppercase tracking-wider font-bold">Daily Timeline</p>
                             </div>
-                            <button className="p-3 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors border border-slate-200 dark:border-white/10">
-                                <Filter className="w-4 h-4 text-slate-400" />
+                            <button className="p-3 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-full transition-colors border border-zinc-200/50 dark:border-white/10">
+                                <Filter className="w-4 h-4 text-zinc-400" />
                             </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto relative pr-2 briefing-scroll">
+                        <div className="flex-1 min-h-0 overflow-y-auto relative pr-2 custom-scrollbar briefing-scroll">
                             <Timeline projects={projects} />
                         </div>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -1441,6 +1579,62 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
     const [vaultFilter, setVaultFilter] = useState<'all' | 'active' | 'paid' | 'archived'>('all');
     const [vaultLayout, setVaultLayout] = useState<'grid' | 'list'>('grid');
     const [qrProjectId, setQrProjectId] = useState<string | null>(null);
+    const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
+
+    const downloadBlob = (filename: string, blob: Blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+    };
+
+    const handleVaultInvoicePdf = async (project: Project) => {
+        if (downloadingPdf) return;
+        playClick();
+        setDownloadingPdf(project.id + '_inv');
+        try {
+            const blob = await createAuditTrailPdf({
+                projectName: project.name,
+                projectId: project.id,
+                evidenceId: `ev_${project.id}`,
+                creatorName: '',
+                creatorEmail: '',
+                clientName: project.client?.name || 'Client',
+                clientEmail: project.client?.email,
+                status: project.status,
+                amountUsd: project.amount,
+                createdAt: project.createdAt,
+                dueDate: project.dueDate,
+                viewedAt: project.clientViewedAt,
+                files: (project.files || []).map(f => ({ name: f.name, type: f.type, size: f.size, hash: f.metadata?.hash, locked: f.locked })),
+                timeline: [],
+            });
+            downloadBlob(`Heartflair_Invoice_${project.name.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
+        } catch { } finally { setDownloadingPdf(null); }
+    };
+
+    const handleVaultReceiptPdf = async (project: Project) => {
+        if (downloadingPdf) return;
+        playClick();
+        setDownloadingPdf(project.id + '_rec');
+        try {
+            const blob = await createRightsCertificatePdf({
+                certificateId: `cert_${project.id}`,
+                projectName: project.name,
+                projectId: project.id,
+                creatorName: '',
+                creatorEmail: '',
+                clientName: project.client?.name || 'Client',
+                clientEmail: project.client?.email,
+                amountUsd: project.amount,
+                issuedAt: new Date().toISOString(),
+                effectiveAt: project.dueDate || new Date().toISOString(),
+                status: project.status,
+                scope: (project.files || []).map(f => f.name),
+            });
+            downloadBlob(`Heartflair_Receipt_${project.name.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
+        } catch { } finally { setDownloadingPdf(null); }
+    };
 
     const qrProject = qrProjectId ? projects.find(p => p.id === qrProjectId) : null;
     const qrUrl = qrProject ? `${window.location.origin}/c/${qrProject.clientLink}` : '';
@@ -1493,14 +1687,14 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
     };
 
     return (
-        <div className="space-y-6 animate-slide-up relative z-10">
+        <div className="space-y-6 animate-slide-up relative z-10 bg-[#f0f2f5] dark:bg-cosmic">
             {/* ... Content same as previously provided, preserving logic ... */}
             <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-5">
                 <div>
-                    <h2 className={`text-4xl font-serif font-medium tracking-tight ${GRADIENT_TEXT}`}>
-                        Project <span className="px-2 py-0.5 rounded-lg bg-transparent text-lime-600 dark:text-[#bef264]">Vault</span>
+                    <h2 className={`text-4xl font-sans tracking-tight font-medium tracking-tight ${GRADIENT_TEXT}`}>
+                        Project <span className="px-2 py-0.5 rounded-lg bg-transparent text-blue-600 dark:text-blue-400">Vault</span>
                     </h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-base mt-1">
+                    <p className="text-zinc-500 dark:text-zinc-400 text-base mt-1">
                         Secure delivery pipeline and asset management.
                     </p>
                 </div>
@@ -1509,22 +1703,22 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                         <Trash2 className="w-4 h-4" />
                         <span className="hidden sm:inline">Trash</span>
                     </button>
-                    <button onClick={() => navigate('/create')} className="h-12 px-8 rounded-xl bg-lime-600 text-white dark:bg-[#bef264] dark:text-black font-bold text-sm uppercase tracking-widest flex items-center gap-2 shadow-[0_0_20px_rgba(101,163,13,0.3)] dark:shadow-[0_0_20px_rgba(190,242,100,0.3)] hover:shadow-[0_0_30px_rgba(101,163,13,0.5)] dark:hover:shadow-[0_0_30px_rgba(190,242,100,0.5)] transition-all hover:scale-105">
+                    <button onClick={() => navigate('/create')} className="h-12 px-8 rounded-xl bg-blue-500 text-zinc-900 shadow-sm text-white  font-bold text-sm uppercase tracking-widest flex items-center gap-2 shadow-[0_0_20px_rgba(132,204,22,0.3)] dark:shadow-[0_0_20px_rgba(132,204,22,0.3)] hover:shadow-[0_0_30px_rgba(132,204,22,0.5)] dark:hover:shadow-[0_0_30px_rgba(132,204,22,0.5)] transition-all hover:scale-105">
                         <Plus className="w-4 h-4" />
                         New Project
                     </button>
                 </div>
             </div>
             {/* ... Rest of Vault View ... */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/50 dark:bg-[#23232e] backdrop-blur-md p-2 rounded-2xl border border-slate-200 dark:border-white/5">
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/50 dark:bg-charcoal backdrop-blur-md p-2 rounded-2xl border border-zinc-200/50 dark:border-white/5">
                 <div className="relative w-full sm:flex-1 group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-lime-600 dark:group-focus-within:text-[#bef264] transition-colors" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search projects, clients, or files..."
-                        className="w-full h-12 pl-12 pr-4 rounded-xl bg-transparent text-sm focus:bg-white dark:focus:bg-white/5 outline-none transition-all placeholder:text-slate-500"
+                        className="w-full h-12 pl-12 pr-4 rounded-xl bg-transparent text-sm focus:bg-white dark:focus:bg-white/5 outline-none transition-all placeholder:text-zinc-500"
                     />
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto no-scrollbar">
@@ -1537,40 +1731,40 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                         <button
                             key={filter.key}
                             onClick={() => setVaultFilter(filter.key as 'all' | 'active' | 'paid' | 'archived')}
-                            className={`px-6 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-colors ${vaultFilter === filter.key ? 'bg-white dark:bg-white/10 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white/5'}`}
+                            className={`px-6 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-colors ${vaultFilter === filter.key ? 'bg-white dark:bg-white/10 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`}
                         >
                             {filter.label}
                         </button>
                     ))}
-                    <div className="w-px h-6 bg-slate-300 dark:bg-white/10 mx-2" />
-                    <button onClick={() => { playClick(); setVaultLayout('grid'); }} className={`p-2.5 rounded-lg transition-colors ${vaultLayout === 'grid' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/5'}`} title="Card view"><LayoutGrid className="w-5 h-5" /></button>
-                    <button onClick={() => { playClick(); setVaultLayout('list'); }} className={`p-2.5 rounded-lg transition-colors ${vaultLayout === 'list' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/5'}`} title="List view"><ListIcon className="w-5 h-5" /></button>
+                    <div className="w-px h-6 bg-zinc-300 dark:bg-white/10 mx-2" />
+                    <button onClick={() => { playClick(); setVaultLayout('grid'); }} className={`p-2.5 rounded-lg transition-colors ${vaultLayout === 'grid' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`} title="Card view"><LayoutGrid className="w-5 h-5" /></button>
+                    <button onClick={() => { playClick(); setVaultLayout('list'); }} className={`p-2.5 rounded-lg transition-colors ${vaultLayout === 'list' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`} title="List view"><ListIcon className="w-5 h-5" /></button>
                 </div>
             </div>
             {/* Empty state */}
             {visibleProjects.length === 0 && (
-                <div className="py-24 flex flex-col items-center justify-center opacity-80 border border-dashed border-slate-200 dark:border-white/10 rounded-3xl bg-slate-50 dark:bg-black/20 m-6">
-                    <div className="w-20 h-20 rounded-[2rem] bg-white dark:bg-white/5 flex items-center justify-center mb-6 shadow-sm border border-slate-100 dark:border-white/10">
-                        {searchQuery ? <Search className="w-10 h-10 stroke-[1.5] text-slate-400" /> : <LockKeyhole className="w-10 h-10 stroke-[1.5] text-slate-400" />}
+                <div className="py-24 flex flex-col items-center justify-center opacity-80 border border-dashed border-zinc-200/50 dark:border-white/10 rounded-3xl bg-zinc-50 dark:bg-[#23232e]/45 m-6">
+                    <div className="w-20 h-20 rounded-[2rem] bg-white dark:bg-white/5 flex items-center justify-center mb-6 shadow-sm border border-zinc-100 dark:border-white/10">
+                        {searchQuery ? <Search className="w-10 h-10 stroke-[1.5] text-zinc-400" /> : <LockKeyhole className="w-10 h-10 stroke-[1.5] text-zinc-400" />}
                     </div>
                     
                     {searchQuery ? (
                         <>
-                            <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">No results found</h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 text-center mb-8 max-w-[300px]">
+                            <h3 className="font-sans tracking-tight text-2xl text-zinc-900 dark:text-white mb-2">No results found</h3>
+                            <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center mb-8 max-w-[300px]">
                                 We couldn't find any projects matching "{searchQuery}". Try adjusting your filters or search terms.
                             </p>
-                            <button onClick={() => { playClick(); setSearchQuery(''); }} className="px-6 py-3 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-white/10 transition-colors">
+                            <button onClick={() => { playClick(); setSearchQuery(''); }} className="px-6 py-3 rounded-xl bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 text-zinc-700 dark:text-zinc-200 text-xs font-bold uppercase tracking-wider hover:bg-zinc-50 dark:hover:bg-white/10 transition-colors">
                                 Clear Search
                             </button>
                         </>
                     ) : (
                         <>
-                            <h3 className="font-serif text-2xl text-slate-900 dark:text-white mb-2">No Projects Yet</h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 text-center mb-8 max-w-[320px] leading-relaxed">
+                            <h3 className="font-sans tracking-tight text-2xl text-zinc-900 dark:text-white mb-2">No Projects Yet</h3>
+                            <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center mb-8 max-w-[320px] leading-relaxed">
                                 Create your first project to organize deliverables, share files, and track payments in one place.
                             </p>
-                            <button onClick={() => { playClick(); navigate('/create'); }} className="px-8 py-4 rounded-2xl bg-slate-900 dark:bg-[#bef264] text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-3 shadow-xl shadow-slate-900/10 dark:shadow-[#bef264]/10">
+                            <button onClick={() => { playClick(); navigate('/create'); }} className="px-8 py-4 rounded-2xl bg-zinc-900 dark:bg-blue-500 text-white dark:text-white text-xs font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-3 shadow-xl shadow-zinc-900/10 dark:shadow-blue-500/10">
                                 <Plus className="w-5 h-5" /> Create First Project
                             </button>
                         </>
@@ -1578,55 +1772,55 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                 </div>
             )}
 
-            {/* ── List view ── */}
+            {/* â”€â”€ List view â”€â”€ */}
             {vaultLayout === 'list' && visibleProjects.length > 0 && (
-                <div className="bg-white dark:bg-charcoal border border-slate-200 dark:border-white/5 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden">
+                <div className="bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/5 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b border-slate-100 dark:border-white/5">
-                                <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Project</th>
-                                <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hidden md:table-cell">Client</th>
-                                <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hidden sm:table-cell">Status</th>
-                                <th className="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Value</th>
-                                <th className="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hidden lg:table-cell">Files</th>
+                            <tr className="border-b border-zinc-100 dark:border-white/5">
+                                <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Project</th>
+                                <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hidden md:table-cell">Client</th>
+                                <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hidden sm:table-cell">Status</th>
+                                <th className="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Value</th>
+                                <th className="text-right px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hidden lg:table-cell">Files</th>
                                 <th className="w-10" />
                             </tr>
                         </thead>
                         <tbody>
                             {visibleProjects.map(project => {
                                 const statusColors: Record<string, string> = {
-                                    draft: 'text-slate-500 bg-slate-100 dark:bg-white/5',
+                                    draft: 'text-zinc-500 bg-zinc-100 dark:bg-white/5',
                                     awaiting_signature: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:text-indigo-400',
                                     awaiting_payment: 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400',
                                     payment_verification: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400',
-                                    paid: 'text-lime-700 bg-lime-50 dark:bg-lime-900/20 dark:text-lime-400',
-                                    completed: 'text-lime-700 bg-lime-50 dark:bg-lime-900/20 dark:text-lime-400',
+                                    paid: 'text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400',
+                                    completed: 'text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400',
                                 };
                                 return (
                                     <tr
                                         key={project.id}
                                         onClick={() => navigate(`/preview/${project.id}`, { state: { from: location.pathname } })}
-                                        className="border-b border-slate-50 dark:border-white/[0.03] hover:bg-slate-50 dark:hover:bg-white/[0.03] cursor-pointer group transition-colors last:border-0"
+                                        className="border-b border-zinc-50 dark:border-white/[0.03] hover:bg-zinc-50 dark:hover:bg-white/[0.03] cursor-pointer group transition-colors last:border-0"
                                     >
                                         <td className="px-5 py-4">
                                             <div className="flex items-center gap-3">
                                                 <img src={project.client.avatar} className="w-8 h-8 rounded-lg object-cover grayscale group-hover:grayscale-0 transition-all shrink-0" />
                                                 <div>
-                                                    <div className="font-bold text-slate-900 dark:text-white group-hover:text-lime-700 dark:group-hover:text-[#bef264] transition-colors">{project.name}</div>
-                                                    <div className="text-[10px] font-mono text-slate-400">#{project.id.toUpperCase()}</div>
+                                                    <div className="font-bold text-zinc-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{project.name}</div>
+                                                    <div className="text-[10px] font-mono text-zinc-400">#{project.id.toUpperCase()}</div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-5 py-4 text-slate-600 dark:text-slate-300 hidden md:table-cell">{project.client.company || project.client.name}</td>
+                                        <td className="px-5 py-4 text-zinc-600 dark:text-zinc-300 hidden md:table-cell">{project.client.company || project.client.name}</td>
                                         <td className="px-5 py-4 hidden sm:table-cell">
                                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusColors[project.status] || statusColors.draft}`}>
                                                 {project.status.replace(/_/g, ' ')}
                                             </span>
                                         </td>
-                                        <td className="px-5 py-4 text-right font-serif text-slate-900 dark:text-white">${project.amount.toLocaleString()}</td>
-                                        <td className="px-5 py-4 text-right font-mono text-slate-500 hidden lg:table-cell">{project.files.length}</td>
+                                        <td className="px-5 py-4 text-right font-sans tracking-tight text-zinc-900 dark:text-white">${project.amount.toLocaleString()}</td>
+                                        <td className="px-5 py-4 text-right font-mono text-zinc-500 hidden lg:table-cell">{project.files.length}</td>
                                         <td className="px-3 py-4">
-                                            <ArrowUpRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-lime-600 dark:group-hover:text-[#bef264] transition-colors" />
+                                            <ArrowUpRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
                                         </td>
                                     </tr>
                                 );
@@ -1636,48 +1830,48 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                 </div>
             )}
 
-            {/* ── Grid / card view ── */}
+            {/* â”€â”€ Grid / card view â”€â”€ */}
             <div className={`grid grid-cols-1 gap-6 lg:gap-12 ${vaultLayout === 'list' ? 'hidden' : ''}`}>
                 {visibleProjects.map(project => (
-                    <div key={project.id} className="group relative w-full bg-white dark:bg-[#0f0f15] rounded-2xl lg:rounded-[2.5rem] overflow-hidden border border-slate-200 dark:border-white/5 transition-all duration-300 hover:scale-[1.01] hover:-translate-y-1 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.08)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)]">
+                    <div key={project.id} className="group relative w-full bg-white dark:bg-[#23232e] rounded-2xl lg:rounded-[2.5rem] overflow-hidden border border-zinc-200/50 dark:border-white/5 transition-all duration-300 hover:scale-[1.01] hover:-translate-y-1 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.08)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)]">
                         <div className="flex flex-col lg:flex-row h-full min-h-[280px] lg:min-h-[340px]">
-                            <div className="lg:w-[35%] bg-slate-50 dark:bg-[#18181b] flex flex-col justify-between relative border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-white/10 transition-colors overflow-hidden">
+                            <div className="lg:w-[35%] bg-zinc-50 dark:bg-[#18181b] flex flex-col justify-between relative border-b lg:border-b-0 lg:border-r border-zinc-200/50 dark:border-white/10 transition-colors overflow-hidden">
                                 {/* CRANKED GRAIN: Adjusted for better visibility in light mode and subtlety in dark mode */}
                                 <div className="absolute inset-0 opacity-[0.25] dark:opacity-[0.55] pointer-events-none mix-blend-multiply dark:mix-blend-overlay" style={{ backgroundImage: NOISE_SVG, filter: 'contrast(150%)' }} />
                                 <div className="relative z-10 p-5 sm:p-6 lg:p-8 flex flex-col justify-between h-full">
                                     <div>
                                         <div className="flex items-center justify-between mb-6">
-                                            <div className={`px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 ${project.status === 'paid' ? 'bg-lime-100 border-lime-200 text-lime-700 dark:bg-white/10 dark:border-white/20 dark:text-lime-400' : 'bg-amber-100 border-amber-200 text-amber-700 dark:bg-white/10 dark:border-white/20 dark:text-amber-400'}`}>
-                                                <div className={`w-1.5 h-1.5 rounded-full ${project.status === 'paid' ? 'bg-lime-600 dark:bg-lime-400' : 'bg-amber-600 dark:bg-amber-400'} animate-pulse`} />
+                                            <div className={`px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 ${project.status === 'paid' ? 'bg-blue-100 border-blue-200 text-blue-700 dark:bg-white/10 dark:border-white/20 dark:text-blue-400' : 'bg-amber-100 border-amber-200 text-amber-700 dark:bg-white/10 dark:border-white/20 dark:text-amber-400'}`}>
+                                                <div className={`w-1.5 h-1.5 rounded-full ${project.status === 'paid' ? 'bg-blue-500 text-zinc-900 shadow-sm dark:bg-blue-400' : 'bg-amber-600 dark:bg-amber-400'} animate-pulse`} />
                                                 {project.status === 'paid' ? 'Secured' : 'Locked'}
                                             </div>
-                                            <span className="font-mono text-xs text-slate-400 dark:text-slate-400 opacity-70">#{project.id.toUpperCase()}</span>
+                                            <span className="font-mono text-xs text-zinc-400 dark:text-zinc-400 opacity-70">#{project.id.toUpperCase()}</span>
                                         </div>
-                                        <h3 className="text-3xl font-serif font-medium text-slate-900 dark:text-white leading-tight mb-2 group-hover:font-bold transition-all cursor-pointer" onClick={() => navigate(`/preview/${project.id}`, { state: { from: location.pathname } })}>{project.name}</h3>
+                                        <h3 className="text-3xl font-sans tracking-tight font-medium text-zinc-900 dark:text-white leading-tight mb-2 group-hover:font-bold transition-all cursor-pointer" onClick={() => navigate(`/preview/${project.id}`, { state: { from: location.pathname } })}>{project.name}</h3>
                                         <div className="flex items-center gap-3 mt-4">
-                                            <img src={project.client.avatar} className="w-8 h-8 rounded-full grayscale opacity-80 border border-slate-200 dark:border-white/10" />
+                                            <img src={project.client.avatar} className="w-8 h-8 rounded-full grayscale opacity-80 border border-zinc-200/50 dark:border-white/10" />
                                             <div>
-                                                <div className="text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Client</div>
-                                                <div className="text-xs font-bold text-slate-900 dark:text-slate-300">{project.client.name}</div>
+                                                <div className="text-[9px] font-bold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">Client</div>
+                                                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-300">{project.client.name}</div>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="py-5 lg:py-8">
-                                        <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-widest mb-1">Contract Value</div>
-                                        <PrivacyBlur className="text-3xl sm:text-4xl lg:text-5xl font-serif font-medium tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-slate-900 via-slate-700 to-slate-500 dark:from-white dark:via-slate-200 dark:to-slate-500">${project.amount.toLocaleString()}</PrivacyBlur>
+                                        <div className="text-[10px] font-bold uppercase text-zinc-500 dark:text-zinc-400 tracking-widest mb-1">Contract Value</div>
+                                        <PrivacyBlur className="text-3xl sm:text-4xl lg:text-5xl font-sans tracking-tight font-medium tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-zinc-900 via-zinc-700 to-zinc-500 dark:from-white dark:via-zinc-200 dark:to-zinc-500">${project.amount.toLocaleString()}</PrivacyBlur>
                                     </div>
-                                    <div className="grid grid-cols-3 gap-4 border-t border-slate-200 dark:border-white/10 pt-6">
+                                    <div className="grid grid-cols-3 gap-4 border-t border-zinc-200/50 dark:border-white/10 pt-6">
                                         <div>
-                                            <div className="text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Files</div>
-                                            <div className="text-lg font-bold text-slate-900 dark:text-white font-mono">{project.files.length}</div>
+                                            <div className="text-[9px] font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Files</div>
+                                            <div className="text-lg font-bold text-zinc-900 dark:text-white font-mono">{project.files.length}</div>
                                         </div>
                                         <div>
-                                            <div className="text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Size</div>
-                                            <div className="text-lg font-bold text-slate-900 dark:text-white font-mono">2.4<span className="text-xs opacity-50">GB</span></div>
+                                            <div className="text-[9px] font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Size</div>
+                                            <div className="text-lg font-bold text-zinc-900 dark:text-white font-mono">2.4<span className="text-xs opacity-50">GB</span></div>
                                         </div>
                                         <div>
-                                            <div className="text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">Views</div>
-                                            <div className="text-lg font-bold text-slate-900 dark:text-white font-mono">24</div>
+                                            <div className="text-[9px] font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">Views</div>
+                                            <div className="text-lg font-bold text-zinc-900 dark:text-white font-mono">24</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1685,74 +1879,82 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                             <div className="lg:w-[65%] bg-white dark:bg-[#23232e] flex flex-col relative">
                                 <div className="flex-1 p-8 overflow-x-auto no-scrollbar flex items-center">
                                     <div className="flex gap-5">
-                                        <button onClick={() => { playClick(); navigate(`/editor/${project.id}`); }} className="shrink-0 w-40 h-48 rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-lime-600 dark:hover:border-[#bef264] hover:bg-lime-50 dark:hover:bg-[#bef264]/5 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all group/add">
-                                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center group-hover/add:bg-lime-600 dark:group-hover/add:bg-[#bef264] transition-colors">
-                                                <Plus className="w-5 h-5 text-slate-400 group-hover/add:text-white dark:group-hover/add:text-black" />
+                                        <button onClick={() => { playClick(); navigate(`/editor/${project.id}`); }} className="shrink-0 w-40 h-48 rounded-2xl border-2 border-dashed border-zinc-200/50 dark:border-white/10 hover:border-blue-600 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/5 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all group/add">
+                                            <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-white/5 flex items-center justify-center group-hover/add:bg-blue-500 text-zinc-900 shadow-sm dark:group-hover/add:bg-blue-500 transition-colors">
+                                                <Plus className="w-5 h-5 text-zinc-400 group-hover/add:text-white dark:group-hover/add:text-black" />
                                             </div>
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover/add:text-lime-700 dark:group-hover/add:text-[#bef264]">Add Asset</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 group-hover/add:text-blue-700 dark:group-hover/add:text-blue-400">Add Asset</span>
                                         </button>
                                         {project.files.map(f => (
-                                            <div key={f.id} className="shrink-0 w-28 h-36 sm:w-32 sm:h-40 lg:w-40 lg:h-48 bg-slate-50 dark:bg-[#1c1c21] rounded-xl lg:rounded-2xl border border-slate-100 dark:border-white/5 overflow-hidden group/file relative hover:scale-110 hover:z-50 hover:shadow-2xl transition-all duration-300 ease-out origin-center">
-                                                <div className="h-20 sm:h-24 lg:h-32 w-full bg-slate-200 dark:bg-white/5 relative overflow-hidden">
-                                                    {f.previewUrl ? <img src={f.previewUrl} loading="lazy" className="w-full h-full object-cover transition-opacity" /> : <div className="w-full h-full flex items-center justify-center text-slate-400">{getFileIcon(f.type)}</div>}
+                                            <div key={f.id} className="shrink-0 w-28 h-36 sm:w-32 sm:h-40 lg:w-40 lg:h-48 bg-zinc-50 dark:bg-[#1c1c21] rounded-xl lg:rounded-2xl border border-zinc-100 dark:border-white/5 overflow-hidden group/file relative hover:scale-110 hover:z-50 hover:shadow-2xl transition-all duration-300 ease-out origin-center">
+                                                <div className="h-20 sm:h-24 lg:h-32 w-full bg-zinc-200 dark:bg-white/5 relative overflow-hidden">
+                                                    {f.previewUrl ? <img src={f.previewUrl} loading="lazy" className="w-full h-full object-cover transition-opacity" /> : <div className="w-full h-full flex items-center justify-center text-zinc-400">{getFileIcon(f.type)}</div>}
                                                 </div>
                                                 <div className="p-2 lg:p-3">
-                                                    <div className="text-[10px] lg:text-xs font-bold text-slate-900 dark:text-white truncate mb-0.5 lg:mb-1">{f.name}</div>
+                                                    <div className="text-[10px] lg:text-xs font-bold text-zinc-900 dark:text-white truncate mb-0.5 lg:mb-1">{f.name}</div>
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-[8px] lg:text-[9px] font-mono text-slate-400">{f.size}</span>
-                                                        <div className={`flex items-center gap-1 text-[7px] lg:text-[8px] font-bold uppercase ${f.locked ? 'text-amber-500' : 'text-lime-600 dark:text-[#bef264]'}`}>{f.locked ? 'Locked' : 'Open'}</div>
+                                                        <span className="text-[8px] lg:text-[9px] font-mono text-zinc-400">{f.size}</span>
+                                                        <div className={`flex items-center gap-1 text-[7px] lg:text-[8px] font-bold uppercase ${f.locked ? 'text-amber-500' : 'text-blue-600 dark:text-blue-400'}`}>{f.locked ? 'Locked' : 'Open'}</div>
                                                     </div>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-                                <div className="h-16 lg:h-20 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#18181b]/50 backdrop-blur-md flex items-center justify-between px-3 sm:px-4 md:px-8 overflow-x-auto no-scrollbar gap-3">
+                                <div className="h-16 lg:h-20 border-t border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-[#18181b]/50 backdrop-blur-md flex items-center justify-between px-3 sm:px-4 md:px-8 overflow-x-auto no-scrollbar gap-3">
                                     <div className="flex items-center gap-2 lg:gap-3 shrink-0">
-                                        {/* Launch Preview — primary CTA: gradient bg in dark, rich solid in light */}
+                                        {/* Launch Preview — stable style across themes */}
                                         <button
                                             onClick={() => { playClick(); navigate(`/preview/${project.id}`, { state: { from: location.pathname } }); }}
-                                            className="h-10 lg:h-12 px-4 lg:px-6 rounded-xl font-bold text-[10px] lg:text-xs uppercase tracking-widest flex items-center gap-2 lg:gap-3 transition-all hover:scale-105 shadow-xl group/preview shrink-0 relative overflow-hidden
-                                                bg-slate-900 text-white shadow-black/20
-                                                dark:bg-transparent dark:text-[#111] dark:shadow-[#bef264]/20"
-                                            style={{} as React.CSSProperties}
+                                            className="h-10 lg:h-12 px-4 lg:px-6 rounded-xl font-bold text-[10px] lg:text-xs uppercase tracking-widest flex items-center gap-2 lg:gap-3 transition-all hover:scale-105 shadow-xl group/preview shrink-0
+                                                bg-zinc-900 text-white shadow-black/20
+                                                dark:bg-[#a3e635] dark:text-zinc-900 dark:shadow-[0_0_20px_rgba(163,230,53,0.35)]"
                                         >
-                                            {/* Dark mode: lime gradient bg layer (no reflection) */}
-                                            <span className="hidden dark:block absolute inset-0 bg-gradient-to-br from-[#d9f99d] via-[#bef264] to-[#a3e635] rounded-xl" />
-                                            {/* Light mode: subtle gradient sheen */}
-                                            <span className="dark:hidden absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-600 rounded-xl" />
-                                            <span className="relative z-10 flex items-center gap-2 lg:gap-3">
-                                                <span className="w-5 h-5 lg:w-6 lg:h-6 rounded-full bg-white/20 dark:bg-black/15 flex items-center justify-center shrink-0">
+                                            <span className="flex items-center gap-2 lg:gap-3">
+                                                <span className="w-5 h-5 lg:w-6 lg:h-6 rounded-full bg-white/20 dark:bg-black/20 flex items-center justify-center shrink-0">
                                                     <Eye className="w-3 h-3 group-hover/preview:scale-110 transition-transform" />
                                                 </span>
-                                                <span className="shrink-0 hidden sm:inline">Launch Preview</span>
-                                                <span className="shrink-0 sm:hidden">Preview</span>
+                                            <span className="shrink-0 hidden sm:inline">Launch Preview</span>
+                                            <span className="shrink-0 sm:hidden">Preview</span>
                                             </span>
                                         </button>
 
                                         {/* Copy Client Link — gradient text, frosted border */}
                                         <button className="h-10 lg:h-12 px-3 lg:px-6 rounded-xl border font-bold text-[10px] lg:text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-sm shrink-0 group/copy
-                                            bg-white/60 border-slate-200 hover:bg-white hover:border-slate-300 hover:shadow-md
-                                            dark:bg-white/[0.04] dark:border-[#bef264]/20 dark:hover:bg-[#bef264]/10 dark:hover:border-[#bef264]/40">
-                                            <Copy className="w-3.5 h-3.5 text-slate-500 dark:text-[#bef264] group-hover/copy:scale-110 transition-transform" />
-                                            <span className="shrink-0 hidden md:inline bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500 dark:from-[#bef264] dark:to-white">Copy Client Link</span>
-                                            <span className="shrink-0 md:hidden hidden sm:inline bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500 dark:from-[#bef264] dark:to-white">Copy</span>
+                                            bg-white/60 border-zinc-200/50 hover:bg-white hover:border-zinc-200/50 hover:shadow-md
+                                            dark:bg-white/[0.04] dark:border-blue-500/20 dark:hover:bg-blue-500/10 dark:hover:border-blue-500/40">
+                                            <Copy className="w-3.5 h-3.5 text-zinc-500 dark:text-blue-400 group-hover/copy:scale-110 transition-transform" />
+                                            <span className="shrink-0 hidden md:inline bg-clip-text text-transparent bg-gradient-to-r from-zinc-800 to-zinc-500 dark:from-blue-500 dark:to-white">Copy Client Link</span>
+                                            <span className="shrink-0 md:hidden hidden sm:inline bg-clip-text text-transparent bg-gradient-to-r from-zinc-800 to-zinc-500 dark:from-blue-500 dark:to-white">Copy</span>
                                         </button>
 
                                         {/* Send to Client — gradient text, frosted border */}
-                                        <button className="hidden md:flex h-10 lg:h-12 px-6 rounded-xl border font-bold text-xs uppercase tracking-wider items-center gap-2 transition-all shadow-sm shrink-0 group/send
-                                            bg-white/60 border-slate-200 hover:bg-white hover:border-slate-300 hover:shadow-md
+                                        <button
+                                            onClick={() => {
+                                                playClick();
+                                                const email = project.client?.email;
+                                                if (!email) return;
+                                                const name = project.client?.name || 'there';
+                                                const link = project.clientLink && project.clientLink !== '#'
+                                                    ? `${window.location.origin}/c/${project.clientLink}`
+                                                    : window.location.href;
+                                                const subject = encodeURIComponent(`Your files are ready — ${project.name}`);
+                                                const body = encodeURIComponent(`Hi ${name},\n\nYour project files are ready for review.\n\nAccess your secure vault here:\n${link}\n\nLet me know if you have any questions.`);
+                                                window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
+                                            }}
+                                            className="hidden md:flex h-10 lg:h-12 px-6 rounded-xl border font-bold text-xs uppercase tracking-wider items-center gap-2 transition-all shadow-sm shrink-0 group/send
+                                            bg-white/60 border-zinc-200/50 hover:bg-white hover:border-zinc-200/50 hover:shadow-md
                                             dark:bg-white/[0.04] dark:border-[#c4b5fd]/20 dark:hover:bg-[#c4b5fd]/10 dark:hover:border-[#c4b5fd]/40">
-                                            <Send className="w-3.5 h-3.5 text-slate-500 dark:text-[#c4b5fd] group-hover/send:scale-110 transition-transform" />
-                                            <span className="shrink-0 bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500 dark:from-[#c4b5fd] dark:to-white">Send to Client</span>
+                                            <Send className="w-3.5 h-3.5 text-zinc-500 dark:text-[#c4b5fd] group-hover/send:scale-110 transition-transform" />
+                                            <span className="shrink-0 bg-clip-text text-transparent bg-gradient-to-r from-zinc-800 to-zinc-500 dark:from-[#c4b5fd] dark:to-white">Send to Client</span>
                                         </button>
                                     </div>
                                     <div className="flex items-center gap-1.5 lg:gap-2 shrink-0">
-                                        <button className="hidden lg:flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-white/5 hover:text-lime-600 dark:hover:text-[#bef264] transition-all" title="Invoice"><FileText className="w-4 h-4" /></button>
-                                        <button className="hidden lg:flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-white/5 hover:text-lime-600 dark:hover:text-[#bef264] transition-all" title="Receipt"><CheckCircle className="w-4 h-4" /></button>
-                                        <button onClick={() => { playClick(); setQrProjectId(project.id); }} className="hidden lg:flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-white/5 hover:text-lime-600 dark:hover:text-[#bef264] transition-all" title="Generate QR Code"><QrCode className="w-4 h-4" /></button>
-                                        <div className="hidden lg:block h-6 w-px bg-slate-300 dark:bg-white/10 mx-1" />
-                                        <button onClick={() => navigate(`/editor/${project.id}`)} className="h-9 lg:h-10 w-9 lg:w-auto lg:px-4 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-lime-50 dark:hover:bg-[#bef264]/10 hover:border-lime-200 dark:hover:border-[#bef264]/30 transition-all flex items-center justify-center gap-2"><Pencil className="w-3.5 h-3.5" /><span className="hidden lg:inline"> Edit</span></button>
+                                        <button onClick={() => handleVaultInvoicePdf(project)} disabled={downloadingPdf === project.id + '_inv'} className="hidden lg:flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200/50 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:bg-white dark:hover:bg-white/5 hover:text-blue-600 dark:hover:text-blue-400 transition-all disabled:opacity-40" title="Download Invoice PDF">{downloadingPdf === project.id + '_inv' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}</button>
+                                        <button onClick={() => handleVaultReceiptPdf(project)} disabled={downloadingPdf === project.id + '_rec'} className="hidden lg:flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200/50 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:bg-white dark:hover:bg-white/5 hover:text-blue-600 dark:hover:text-blue-400 transition-all disabled:opacity-40" title="Download Rights Receipt">{downloadingPdf === project.id + '_rec' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}</button>
+                                        <button onClick={() => { playClick(); setQrProjectId(project.id); }} className="hidden lg:flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200/50 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:bg-white dark:hover:bg-white/5 hover:text-blue-600 dark:hover:text-blue-400 transition-all" title="Generate QR Code"><QrCode className="w-4 h-4" /></button>
+                                        <div className="hidden lg:block h-6 w-px bg-zinc-300 dark:bg-white/10 mx-1" />
+                                        <button onClick={() => navigate(`/editor/${project.id}`)} className="h-9 lg:h-10 w-9 lg:w-auto lg:px-4 rounded-lg bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 text-zinc-600 dark:text-zinc-300 text-xs font-bold uppercase tracking-wider hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:border-blue-200 dark:hover:border-blue-500/30 transition-all flex items-center justify-center gap-2"><Pencil className="w-3.5 h-3.5" /><span className="hidden lg:inline"> Edit</span></button>
                                         <button className="h-9 lg:h-10 w-9 lg:w-10 flex items-center justify-center rounded-lg border border-red-200 dark:border-red-500/20 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all" title="Delete"><Trash2 className="w-4 h-4" /></button>
                                     </div>
                                 </div>
@@ -1765,26 +1967,26 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
             {/* QR Code Modal / Bottom Sheet */}
             {qrProjectId && qrProject && (
                 <div
-                    className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4 animate-in fade-in duration-300"
+                    className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 dark:bg-[#323242]/80 backdrop-blur-sm sm:p-4 animate-in fade-in duration-300"
                     onClick={() => setQrProjectId(null)}
                 >
                     <div
-                        className="bg-white dark:bg-charcoal rounded-t-3xl sm:rounded-[2rem] p-8 max-w-sm w-full mx-auto shadow-2xl border border-slate-200 dark:border-white/10 mt-auto sm:mt-0 animate-slide-up"
+                        className="bg-white dark:bg-charcoal rounded-t-3xl sm:rounded-[2rem] p-8 max-w-sm w-full mx-auto shadow-2xl border border-zinc-200/50 dark:border-white/10 mt-auto sm:mt-0 animate-slide-up"
                         onClick={e => e.stopPropagation()}
                     >
                         {/* Mobile handle */}
-                        <div className="w-12 h-1.5 bg-slate-200 dark:bg-white/10 rounded-full mx-auto mb-6 sm:hidden" />
+                        <div className="w-12 h-1.5 bg-zinc-200 dark:bg-white/10 rounded-full mx-auto mb-6 sm:hidden" />
                         <div className="flex items-start justify-between mb-6">
                             <div>
-                                <h3 className="font-serif text-xl font-bold text-slate-900 dark:text-white">Vault QR Code</h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Scan to open the client vault</p>
-                            </div>
-                            <button onClick={() => setQrProjectId(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors">
-                                <X className="w-4 h-4 text-slate-400" />
+                                <h3 className="font-sans tracking-tight text-xl font-bold text-zinc-900 dark:text-white">Vault QR Code</h3>
+                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Scan to open the client vault</p>
+            </div>
+                            <button onClick={() => setQrProjectId(null)} className="p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl transition-colors">
+                                <X className="w-4 h-4 text-zinc-400" />
                             </button>
                         </div>
                         <div className="flex flex-col items-center gap-5">
-                            <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                            <div className="p-4 bg-white rounded-2xl border border-zinc-200/50 shadow-sm">
                                 <QRCodeSVG
                                     id="vault-qr-svg"
                                     value={qrUrl}
@@ -1796,20 +1998,20 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                 />
                             </div>
                             <div className="w-full text-center">
-                                <p className="font-bold text-sm text-slate-900 dark:text-white truncate">{qrProject.name}</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{qrProject.client.name}</p>
-                                <p className="text-[10px] font-mono text-slate-400 mt-1 break-all">{qrUrl}</p>
+                                <p className="font-bold text-sm text-zinc-900 dark:text-white truncate">{qrProject.name}</p>
+                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{qrProject.client.name}</p>
+                                <p className="text-[10px] font-mono text-zinc-400 mt-1 break-all">{qrUrl}</p>
                             </div>
                             <div className="flex gap-3 w-full">
                                 <button
                                     onClick={() => { navigator.clipboard.writeText(qrUrl); }}
-                                    className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors flex items-center justify-center gap-2"
+                                    className="flex-1 py-3 rounded-xl border border-zinc-200/50 dark:border-white/10 text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors flex items-center justify-center gap-2"
                                 >
                                     <Copy className="w-3.5 h-3.5" /> Copy URL
                                 </button>
                                 <button
                                     onClick={() => navigate(`/preview/${qrProject.id}`)}
-                                    className="flex-1 py-3 rounded-xl bg-slate-900 dark:bg-[#bef264] text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                                    className="flex-1 py-3 rounded-xl bg-zinc-900 dark:bg-blue-500 text-white dark:text-white text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                                 >
                                     <Eye className="w-3.5 h-3.5" /> Open Vault
                                 </button>
@@ -1823,7 +2025,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
 };
 
 const MobileNavBar = ({ navItems, currentPath, onNavigate }: { navItems: any[], currentPath: string, onNavigate: (id: string) => void }) => (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[49] bg-white/90 dark:bg-[#1a1a23]/90 backdrop-blur-xl border-t border-slate-200 dark:border-white/10">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[49] bg-white/90 dark:bg-[#1a1a23]/90 backdrop-blur-xl border-t border-zinc-200/50 dark:border-white/10">
         <div className="flex justify-around items-center h-16 sm:h-20 max-w-lg mx-auto">
             {navItems.map((item) => {
                 const isActive = currentPath === item.id;
@@ -1833,9 +2035,9 @@ const MobileNavBar = ({ navItems, currentPath, onNavigate }: { navItems: any[], 
                         onClick={() => onNavigate(item.id)}
                         onMouseEnter={() => routePreloadMap[item.id]?.()}
                         onTouchStart={() => routePreloadMap[item.id]?.()}
-                        className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-300 ${isActive ? 'text-lime-600 dark:text-[#bef264]' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300'}`}
+                        className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-300 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300'}`}
                     >
-                        <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-lime-100/50 dark:bg-[#bef264]/10 -translate-y-1' : ''}`}>
+                        <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-blue-100/50 dark:bg-blue-500/10 -translate-y-1' : ''}`}>
                             <item.icon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={isActive ? 2.5 : 2} />
                         </div>
                         <span className={`text-[9px] font-bold uppercase tracking-wider transition-all ${isActive ? 'opacity-100' : 'opacity-0 scale-0 hidden sm:block'}`}>
@@ -1848,14 +2050,900 @@ const MobileNavBar = ({ navItems, currentPath, onNavigate }: { navItems: any[], 
     </div>
 );
 
+/** Full-bleed stage background */
+const StageBackground = ({ isDarkMode }: { isDarkMode: boolean }) => (
+    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden>
+        {isDarkMode ? (
+            <>
+                <div className="absolute inset-0 bg-cosmic" />
+                <div className="absolute bottom-[10%] right-[2%] w-[44vw] h-[46vh] rounded-full bg-indigo-400/5 blur-[190px]" />
+                <div className="absolute bottom-[2%] right-[12%] w-[32vw] h-[34vh] rounded-full bg-teal-300/4 blur-[180px]" />
+                <div className="absolute bottom-[18%] right-[22%] w-[20vw] h-[22vh] rounded-full bg-sky-300/3 blur-[170px]" />
+                <div
+                    className="absolute inset-0 opacity-[0.06] mix-blend-multiply"
+                    style={{
+                        backgroundImage: HERO_NOISE_SVG,
+                        backgroundSize: '250px 250px',
+                        filter: 'contrast(2200%) brightness(102%)'
+                    }}
+                />
+                <div
+                    className="absolute inset-0 opacity-[0.82] mix-blend-overlay"
+                    style={{
+                        backgroundImage: HERO_NOISE_SVG,
+                        backgroundSize: '250px 250px',
+                        filter: 'contrast(2700%) brightness(102%)'
+                    }}
+                />
+            </>
+        ) : (
+            <>
+                <div className="absolute inset-0 bg-gradient-to-br from-stone-50 via-zinc-100 to-slate-100" />
+                <div className="absolute top-[8%] right-[4%] w-[52vw] h-[58vh] rounded-full bg-sky-200/55 blur-[110px]" />
+                <div className="absolute bottom-[4%] right-[14%] w-[42vw] h-[44vh] rounded-full bg-amber-100/75 blur-[100px]" />
+                <div className="absolute top-[38%] right-[28%] w-[32vw] h-[32vh] rounded-full bg-rose-100/40 blur-[80px]" />
+            </>
+        )}
+    </div>
+);
+
+/** Self-contained delivery widget — the "star" of the main surface */
+const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPublish: (project: Project) => Promise<void> | void }) => {
+    const navigate = useNavigate();
+    const { projects } = useStore();
+    const initialDraft = useMemo(() => readQuickDeliveryDraft(), []);
+    const widgetShellRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const folderInputRef = useRef<HTMLInputElement>(null);
+    const [sendMode, setSendMode] = useState<'email' | 'link'>((initialDraft?.formData?.client?.email || '').trim() ? 'email' : 'link');
+    const [files, setFiles] = useState<FileAsset[]>(initialDraft?.files || []);
+    const [projectName, setProjectName] = useState(initialDraft?.formData?.name || '');
+    const [linkLabel, setLinkLabel] = useState(initialDraft?.formData?.description || '');
+    const [clientName, setClientName] = useState(initialDraft?.formData?.client?.name || '');
+    const [clientEmail, setClientEmail] = useState(initialDraft?.formData?.client?.email || '');
+    const [enablePayment, setEnablePayment] = useState((initialDraft?.formData?.amount || 0) > 0);
+    const [amount, setAmount] = useState(initialDraft?.formData?.amount ? String(initialDraft.formData.amount) : '');
+    const [retention, setRetention] = useState<'forever' | '30_days' | '7_days' | '3_days' | '1_day'>('3_days');
+    const [showRetentionMenu, setShowRetentionMenu] = useState(false);
+    const [showMoreMenu, setShowMoreMenu] = useState(false);
+    const [showAdvancedOptions, setShowAdvancedOptions] = useState(true);
+    const [showMessageEditor, setShowMessageEditor] = useState(false);
+    const [showWatermark, setShowWatermark] = useState(initialDraft?.formData?.showWatermark !== false);
+    const [requiresSignature, setRequiresSignature] = useState(Boolean(initialDraft?.formData?.requiresSignature));
+    const [enableClientLibrary, setEnableClientLibrary] = useState(initialDraft?.formData?.enableClientLibrary !== false);
+    const [enableTips, setEnableTips] = useState(Boolean(initialDraft?.formData?.enableTips));
+    const [message, setMessage] = useState(initialDraft?.formData?.message || '');
+    const [publishState, setPublishState] = useState<'idle' | 'publishing' | 'success' | 'error'>('idle');
+    const [publishMessage, setPublishMessage] = useState('');
+    const [widgetView, setWidgetView] = useState<'create' | 'projects' | 'briefing'>('create');
+
+    const formatWidgetTime = (iso: string) => {
+        const ms = Date.now() - new Date(iso).getTime();
+        if (Number.isNaN(ms) || ms < 0) return '';
+        const minutes = Math.floor(ms / 60000);
+        if (minutes < 1) return 'now';
+        if (minutes < 60) return `${minutes}m`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h`;
+        const days = Math.floor(hours / 24);
+        if (days < 7) return `${days}d`;
+        return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    };
+
+    const briefingItems = useMemo(() => {
+        const events: Array<{
+            id: string;
+            ts: string;
+            title: string;
+            subtitle: string;
+            icon: React.ElementType;
+            tone: 'neutral' | 'warning' | 'success';
+        }> = [];
+
+        projects.forEach((project) => {
+            const createdTs = project.createdAt || new Date().toISOString();
+            events.push({
+                id: `created-${project.id}`,
+                ts: createdTs,
+                title: 'Project Created',
+                subtitle: project.name,
+                icon: Plus,
+                tone: 'neutral',
+            });
+
+            if (project.clientViewedAt) {
+                events.push({
+                    id: `viewed-${project.id}`,
+                    ts: project.clientViewedAt,
+                    title: 'Client Viewed',
+                    subtitle: project.name,
+                    icon: Eye,
+                    tone: 'neutral',
+                });
+            }
+
+            if (project.status === 'paid' || project.status === 'completed') {
+                events.push({
+                    id: `paid-${project.id}`,
+                    ts: project.clientViewedAt || project.dueDate || createdTs,
+                    title: 'Payment Received',
+                    subtitle: project.name,
+                    icon: CreditCardIcon,
+                    tone: 'success',
+                });
+            } else if (project.status === 'awaiting_signature') {
+                events.push({
+                    id: `signature-${project.id}`,
+                    ts: project.dueDate || createdTs,
+                    title: 'Awaiting Signature',
+                    subtitle: project.client?.name || 'Client',
+                    icon: FileText,
+                    tone: 'warning',
+                });
+            }
+        });
+
+        return events
+            .sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime())
+            .slice(0, 12);
+    }, [projects]);
+
+    const handleWidgetNavigate = (path: string, highlight: 'create' | 'projects' | 'briefing' = 'create') => {
+        playClick();
+        navigate(path, { state: { widgetPanelHighlight: highlight } });
+    };
+
+    const currentProjects = useMemo(
+        () => projects.slice(0, 8),
+        [projects]
+    );
+
+    const handleContinue = () => {
+        handleWidgetNavigate('/create', 'create');
+    };
+
+    const canPublish = files.length > 0 && projectName.trim().length > 0 && (sendMode === 'link' || clientEmail.trim().length > 0);
+
+    const handlePublish = async () => {
+        if (!canPublish || publishState === 'publishing') {
+            playClick();
+            return;
+        }
+
+        setPublishState('publishing');
+        setPublishMessage('');
+
+        const projectId = crypto.randomUUID();
+        const resolvedAmount = enablePayment ? Number(amount || 0) : 0;
+        const status: Project['status'] =
+            resolvedAmount > 0
+                ? 'awaiting_payment'
+                : requiresSignature
+                    ? 'awaiting_signature'
+                    : 'draft';
+
+        const project: Project = {
+            id: projectId,
+            name: projectName.trim(),
+            description: linkLabel.trim(),
+            client: {
+                name: clientName.trim() || 'Client',
+                email: sendMode === 'email' ? clientEmail.trim() : '',
+                phone: '',
+                company: '',
+                avatar: ''
+            },
+            amount: resolvedAmount,
+            status,
+            createdAt: new Date().toISOString().split('T')[0],
+            dueDate: computeQuickDueDate(retention) || new Date().toISOString().split('T')[0],
+            files,
+            milestones: [],
+            credentials: [],
+            requiresSignature,
+            enableTips,
+            paymentMethods: {
+                stripeEnabled: resolvedAmount > 0,
+                venmo: '',
+                cashapp: '',
+                paypal: '',
+                zelle: '',
+                bankInfo: ''
+            },
+            useMilestones: false,
+            clientLink: createQuickClientLink(),
+            type: 'web',
+            message,
+            enableClientLibrary,
+            accessConfig: mapQuickRetentionToAccessMode(retention),
+            showWatermark,
+            showProtectedLabel: true,
+            theme: {
+                name: 'Dashboard Quick Create',
+                wallpaper: '',
+                brightness: isDarkMode ? 'dark' : 'light',
+                showGrain: false
+            }
+        };
+
+        try {
+            await onPublish(project);
+            clearDraft();
+            setPublishState('success');
+            setPublishMessage(`Published "${project.name}"`);
+            playSuccess();
+        } catch (error) {
+            setPublishState('error');
+            setPublishMessage(error instanceof Error ? error.message : 'Failed to publish project.');
+            playClick();
+        }
+    };
+
+    const ingestFiles = (incoming: FileList | File[] | null) => {
+        if (!incoming || incoming.length === 0) return;
+        setFiles((prev) => [...prev, ...Array.from(incoming).map(buildQuickDraftAsset)]);
+    };
+
+    const clearDraft = () => {
+        playClick();
+        setFiles([]);
+        setProjectName('');
+        setLinkLabel('');
+        setClientName('');
+        setClientEmail('');
+        setEnablePayment(false);
+        setAmount('');
+        setRetention('3_days');
+        setShowWatermark(true);
+        setRequiresSignature(false);
+        setEnableClientLibrary(true);
+        setEnableTips(false);
+        setMessage('');
+        setSendMode('link');
+        try {
+            localStorage.removeItem(QUICK_DELIVERY_DRAFT_KEY);
+        } catch {
+            // Ignore storage failures.
+        }
+    };
+
+    useEffect(() => {
+        const handleQuickFiles = (event: Event) => {
+            const customEvent = event as CustomEvent<File[]>;
+            if (!customEvent.detail?.length) return;
+            setFiles((prev) => [...prev, ...customEvent.detail.map(buildQuickDraftAsset)]);
+        };
+        window.addEventListener(QUICK_DELIVERY_EVENT, handleQuickFiles as EventListener);
+        return () => window.removeEventListener(QUICK_DELIVERY_EVENT, handleQuickFiles as EventListener);
+    }, []);
+
+    useEffect(() => {
+        if (!showMoreMenu && !showRetentionMenu) return;
+
+        const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+            const target = event.target as Node | null;
+            if (!target) return;
+            if (widgetShellRef.current && !widgetShellRef.current.contains(target)) {
+                setShowMoreMenu(false);
+                setShowRetentionMenu(false);
+            }
+        };
+
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setShowMoreMenu(false);
+                setShowRetentionMenu(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handlePointerDown);
+        document.addEventListener('touchstart', handlePointerDown);
+        document.addEventListener('keydown', handleEscape);
+
+        return () => {
+            document.removeEventListener('mousedown', handlePointerDown);
+            document.removeEventListener('touchstart', handlePointerDown);
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [showMoreMenu, showRetentionMenu]);
+
+    useEffect(() => {
+        const draft = {
+            formData: {
+                name: projectName,
+                description: linkLabel,
+                client: { name: clientName, email: sendMode === 'email' ? clientEmail : '', phone: '', company: '', avatar: '' },
+                amount: enablePayment ? Number(amount || 0) : 0,
+                status: 'draft' as const,
+                dueDate: computeQuickDueDate(retention),
+                files,
+                milestones: [],
+                credentials: [],
+                message,
+                enableClientLibrary,
+                requiresSignature,
+                enableTips,
+                useMilestones: false,
+                showWatermark,
+                showProtectedLabel: true,
+                accessConfig: mapQuickRetentionToAccessMode(retention),
+                paymentMethods: {
+                    stripeEnabled: enablePayment,
+                    venmo: '',
+                    cashapp: '',
+                    paypal: '',
+                    zelle: '',
+                    bankInfo: ''
+                },
+                type: 'web' as const
+            },
+            files
+        };
+        try {
+            localStorage.setItem(QUICK_DELIVERY_DRAFT_KEY, JSON.stringify(draft));
+        } catch {
+            // Ignore storage failures.
+        }
+    }, [amount, clientEmail, clientName, enableClientLibrary, enablePayment, enableTips, files, linkLabel, message, projectName, requiresSignature, retention, sendMode, showWatermark]);
+
+    const inputCls = `w-full h-10 px-3.5 rounded-xl text-sm border outline-none transition-colors ${
+        isDarkMode
+            ? 'bg-white/8 border-white/10 text-white placeholder:text-zinc-400 focus:border-white/25'
+            : 'bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-300'
+    }`;
+    const sectionLineCls = isDarkMode ? 'border-white/10' : 'border-zinc-200';
+    const panelSurfaceCls = isDarkMode ? 'bg-cosmic' : 'bg-[#f0f2f5]';
+    const retentionLabel = QUICK_RETENTION_OPTIONS.find((option) => option.id === retention)?.label || '3 days';
+
+    return (
+        <div ref={widgetShellRef} className={`w-full sm:w-[372px] h-full rounded-[1.75rem] shadow-2xl overflow-hidden backdrop-blur-2xl flex flex-col ${
+            isDarkMode
+                ? 'bg-cosmic border border-white/[0.09]'
+                : 'bg-[#f0f2f5] border border-zinc-200/80'
+        }`}
+        style={{
+            '--color-brand': '#84cc16',
+            '--color-brand-hover': '#65a30d',
+            '--color-brand-glow': 'rgba(132, 204, 22, 0.5)',
+            '--color-blue-400': '#a3e635',
+            '--color-blue-500': '#84cc16',
+            '--color-blue-600': '#65a30d',
+            '--color-green-400': '#a3e635',
+            '--color-green-500': '#84cc16',
+            '--color-green-600': '#65a30d',
+        } as React.CSSProperties}>
+            <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                    ingestFiles(e.target.files);
+                    e.currentTarget.value = '';
+                }}
+            />
+            <input
+                ref={folderInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                    ingestFiles(e.target.files);
+                    e.currentTarget.value = '';
+                }}
+                {...({ webkitdirectory: '', directory: '' } as any)}
+            />
+
+            <div className="px-6 pt-4 pb-3 border-b border-zinc-200/70 dark:border-white/10">
+                <div className="flex items-center justify-center relative">
+                    <div className="absolute left-0 flex items-center gap-2">
+                        <EditorialIcon className="w-4 h-4 text-black dark:text-white shrink-0" />
+                    </div>
+                    <span className="text-sm font-semibold text-zinc-900 dark:text-white">
+                        {widgetView === 'create' ? 'Create project' : widgetView === 'projects' ? 'Current projects' : 'The Briefing'}
+                    </span>
+                    {widgetView === 'create' ? (
+                        <>
+                            <button
+                                onClick={() => {
+                                    playClick();
+                                    setShowMoreMenu((open) => !open);
+                                    setShowRetentionMenu(false);
+                                }}
+                                className="absolute right-0 w-9 h-9 rounded-xl border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                                title="Widget options"
+                            >
+                                <MoreHorizontal className="w-4 h-4" />
+                            </button>
+                            {showMoreMenu && (
+                        <div className={`absolute right-0 top-11 w-48 rounded-2xl border shadow-xl z-20 p-2 ${isDarkMode ? 'bg-[#151521] border-white/10' : 'bg-white border-zinc-200'}`}>
+                            <button
+                                onClick={() => {
+                                    setShowMoreMenu(false);
+                                    setShowAdvancedOptions((open) => !open);
+                                    playClick();
+                                }}
+                                className="w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                            >
+                                {showAdvancedOptions ? 'Hide advanced options' : 'Show advanced options'}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowMoreMenu(false);
+                                    setShowMessageEditor((open) => !open);
+                                    playClick();
+                                }}
+                                className="w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                            >
+                                {showMessageEditor ? 'Hide client message' : 'Edit client message'}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowMoreMenu(false);
+                                    handleContinue();
+                                }}
+                                className="w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                            >
+                                Open full studio
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowMoreMenu(false);
+                                    clearDraft();
+                                }}
+                                className="w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors cursor-pointer"
+                            >
+                                Clear draft
+                            </button>
+                        </div>
+                            )}
+                        </>
+                    ) : (
+                        <button
+                            onClick={() => { playClick(); setWidgetView('create'); }}
+                            className="absolute right-0 w-9 h-9 rounded-xl border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                            title="Back to create"
+                        >
+                            <Plus className="w-4 h-4" />
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <div className="flex-1 min-h-0 px-4 pb-4 pt-3 flex flex-col">
+                <div className={`grid grid-cols-3 gap-1 p-1 rounded-2xl border ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-zinc-200 bg-white/70'}`}>
+                    <button
+                        onClick={() => { playClick(); setWidgetView('create'); }}
+                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${widgetView === 'create' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-white/5'}`}
+                    >
+                        Create
+                    </button>
+                    <button
+                        onClick={() => {
+                            playClick();
+                            setWidgetView('projects');
+                        }}
+                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${widgetView === 'projects' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-white/5'}`}
+                    >
+                        Current
+                    </button>
+                    <button
+                        onClick={() => { playClick(); setWidgetView('briefing'); }}
+                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${widgetView === 'briefing' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-white/5'}`}
+                    >
+                        Briefing
+                    </button>
+                </div>
+
+                <div className="mt-4 flex-1 min-h-0">
+                {widgetView === 'create' && (
+                <div className="h-full overflow-y-auto pr-1 briefing-scroll">
+                <div className="grid grid-cols-2 gap-2">
+                    <button
+                        onClick={() => { playClick(); fileInputRef.current?.click(); }}
+                        className={`rounded-2xl py-4 px-3 flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer ${panelSurfaceCls}`}
+                    >
+                        <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                            <Plus className="w-4 h-4" />
+                        </div>
+                        <span className="text-sm text-zinc-800 dark:text-zinc-100">Add files</span>
+                    </button>
+                    <button
+                        onClick={() => { playClick(); folderInputRef.current?.click(); }}
+                        className={`rounded-2xl py-4 px-3 flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer ${panelSurfaceCls}`}
+                    >
+                        <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                            <Box className="w-4 h-4" />
+                        </div>
+                        <span className="text-sm text-zinc-800 dark:text-zinc-100">Add folders</span>
+                    </button>
+                </div>
+
+                <div className="mt-4 space-y-1.5">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                        <button
+                            onClick={() => { playClick(); setSendMode('link'); }}
+                            className={`w-7 h-7 rounded-full border flex items-center justify-center transition-colors ${sendMode === 'link' ? 'border-blue-500' : 'border-zinc-300 dark:border-white/15'}`}
+                            type="button"
+                        >
+                            <span className={`w-3.5 h-3.5 rounded-full ${sendMode === 'link' ? 'bg-blue-500' : 'bg-transparent'}`} />
+                        </button>
+                        <span className="text-sm text-zinc-900 dark:text-white">Create link</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                        <button
+                            onClick={() => { playClick(); setSendMode('email'); }}
+                            className={`w-7 h-7 rounded-full border flex items-center justify-center transition-colors ${sendMode === 'email' ? 'border-blue-500' : 'border-zinc-300 dark:border-white/15'}`}
+                            type="button"
+                        >
+                            <span className={`w-3.5 h-3.5 rounded-full ${sendMode === 'email' ? 'bg-blue-500' : 'bg-transparent'}`} />
+                        </button>
+                        <span className="text-sm text-zinc-900 dark:text-white">Send email</span>
+                    </label>
+                </div>
+
+                <div className={`mt-4 pt-3 border-t ${sectionLineCls}`}>
+                    <div className="space-y-2.5">
+                        <div>
+                            <div className="flex items-center justify-between mb-1.5">
+                                <label className="text-sm text-zinc-500 dark:text-zinc-400">{sendMode === 'email' ? 'Email to' : 'Link label'}</label>
+                                {sendMode === 'email' && <span className="text-xs text-zinc-400">0 of 10</span>}
+                            </div>
+                            {sendMode === 'email' ? (
+                                <input
+                                    type="email"
+                                    value={clientEmail}
+                                    onChange={(e) => setClientEmail(e.target.value)}
+                                    placeholder="client@company.com"
+                                    className={inputCls}
+                                />
+                            ) : (
+                                <input
+                                    type="text"
+                                    value={linkLabel}
+                                    onChange={(e) => setLinkLabel(e.target.value)}
+                                    placeholder="Campaign review link"
+                                    className={inputCls}
+                                />
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm text-zinc-500 dark:text-zinc-400 mb-1.5">Client name</label>
+                            <input
+                                type="text"
+                                value={clientName}
+                                onChange={(e) => setClientName(e.target.value)}
+                                placeholder="Client or team"
+                                className={inputCls}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm text-zinc-500 dark:text-zinc-400 mb-1.5">Title</label>
+                            <input
+                                type="text"
+                                value={projectName}
+                                onChange={(e) => setProjectName(e.target.value)}
+                                placeholder="Q1 delivery package"
+                                className={inputCls}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {files.length > 0 && (
+                    <div className={`mt-4 pt-3 border-t ${sectionLineCls}`}>
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Files</span>
+                            <span className="text-xs text-zinc-400">{files.length} added</span>
+                        </div>
+                        <div className="space-y-1.5 max-h-28 overflow-y-auto">
+                            {files.slice(0, 6).map((file) => (
+                                <div key={file.id} className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-xs ${panelSurfaceCls}`}>
+                                    <div className="min-w-0">
+                                        <p className="truncate text-zinc-800 dark:text-zinc-100">{file.name}</p>
+                                        <p className="text-zinc-400">{file.type.toUpperCase()}</p>
+                                    </div>
+                                    <span className="text-zinc-400 shrink-0">{file.size}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <div className={`mt-4 pt-3 border-t ${sectionLineCls} space-y-3`}>
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm text-zinc-500 dark:text-zinc-400">Access control</span>
+                        <span className="text-sm text-zinc-900 dark:text-white">{retention === 'forever' ? 'Public' : 'Timed'}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                        {[
+                            { id: 'forever', label: 'Public' },
+                            { id: '7_days', label: '7 days' },
+                            { id: '1_day', label: 'Open once' },
+                        ].map((option) => (
+                            <button
+                                key={option.id}
+                                onClick={() => { playClick(); setRetention(option.id as typeof retention); }}
+                                className={`rounded-xl px-2 py-2 text-[11px] font-semibold border transition-colors cursor-pointer ${retention === option.id
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-500/10 dark:text-blue-300'
+                                    : `${panelSurfaceCls} ${isDarkMode ? 'border-white/10 text-zinc-300' : 'border-zinc-200 text-zinc-600'}`
+                                }`}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className={`mt-4 pt-3 border-t ${sectionLineCls}`}>
+                    <button
+                        onClick={() => { playClick(); setShowAdvancedOptions((open) => !open); }}
+                        className="w-full flex items-center justify-between text-left cursor-pointer"
+                    >
+                        <span className="text-sm text-zinc-500 dark:text-zinc-400">View options</span>
+                        <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${showAdvancedOptions ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showAdvancedOptions && (
+                        <div className="mt-3 space-y-2.5">
+                            {[
+                                { key: 'watermark', label: 'Preview with watermark', checked: showWatermark, onToggle: () => setShowWatermark((v) => !v) },
+                                { key: 'signature', label: 'Require signature', checked: requiresSignature, onToggle: () => setRequiresSignature((v) => !v) },
+                                { key: 'library', label: 'Client library enabled', checked: enableClientLibrary, onToggle: () => setEnableClientLibrary((v) => !v) },
+                                { key: 'tips', label: 'Allow tips', checked: enableTips, onToggle: () => setEnableTips((v) => !v) },
+                            ].map((option) => (
+                                <button
+                                    key={option.key}
+                                    onClick={() => { playClick(); option.onToggle(); }}
+                                    className={`w-full rounded-xl px-3.5 py-2.5 border flex items-center justify-between text-left cursor-pointer ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}
+                                >
+                                    <span className="text-sm text-zinc-800 dark:text-zinc-100">{option.label}</span>
+                                    <div className={`w-9 h-5 rounded-full flex items-center transition-colors ${option.checked ? 'bg-blue-500' : isDarkMode ? 'bg-white/10' : 'bg-zinc-200'}`}>
+                                        <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform mx-0.5 ${option.checked ? 'translate-x-4' : ''}`} />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <div className={`mt-4 pt-3 border-t ${sectionLineCls}`}>
+                    <button
+                        onClick={() => {
+                            playClick();
+                            setEnablePayment((value) => !value);
+                            if (!amount) setAmount('250');
+                        }}
+                        className={`w-full h-11 rounded-xl flex items-center gap-3 px-3.5 border transition-all cursor-pointer ${enablePayment
+                            ? (isDarkMode ? 'bg-blue-900/20 border-blue-700/40 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-700')
+                            : `${panelSurfaceCls} ${isDarkMode ? 'border-white/10 text-zinc-400' : 'border-zinc-200 text-zinc-500'}`
+                        }`}
+                    >
+                        <DollarSign className="w-4 h-4 shrink-0" />
+                        <span className="text-sm font-medium flex-1 text-left">
+                            {enablePayment ? 'Request payment' : 'No payment gate'}
+                        </span>
+                        <div className={`w-8 h-4 rounded-full flex items-center transition-all ${enablePayment ? 'bg-blue-500' : (isDarkMode ? 'bg-white/10' : 'bg-zinc-200')}`}>
+                            <div className={`w-3 h-3 rounded-full bg-white shadow-sm transition-all mx-0.5 ${enablePayment ? 'translate-x-4' : 'translate-x-0'}`} />
+                        </div>
+                    </button>
+                    {enablePayment && (
+                        <div className="mt-2">
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                placeholder="250.00"
+                                className={inputCls}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                <div className={`mt-4 pt-3 border-t ${sectionLineCls}`}>
+                    <button
+                        onClick={() => { playClick(); setShowMessageEditor((open) => !open); }}
+                        className="w-full flex items-center justify-between text-left cursor-pointer"
+                    >
+                        <span className="text-sm text-zinc-500 dark:text-zinc-400">Client message</span>
+                        <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${showMessageEditor ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showMessageEditor && (
+                        <div className="mt-3 space-y-2">
+                            <textarea
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                placeholder="Leave a message for your client..."
+                                className={`w-full min-h-[96px] p-3 rounded-xl text-sm border outline-none transition-colors resize-y ${isDarkMode ? 'bg-white/8 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/25' : 'bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-300'}`}
+                            />
+                            <div className="flex flex-wrap gap-2">
+                                {QUICK_MESSAGE_PRESETS.map((preset) => (
+                                    <button
+                                        key={preset.label}
+                                        onClick={() => {
+                                            playClick();
+                                            const name = clientName.trim().split(' ')[0] || 'Client';
+                                            setMessage(preset.text.replace('{{name}}', name));
+                                        }}
+                                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-colors cursor-pointer ${panelSurfaceCls} ${isDarkMode ? 'border-white/10 text-zinc-300' : 'border-zinc-200 text-zinc-600'}`}
+                                    >
+                                        {preset.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className={`mt-4 pt-3 border-t ${sectionLineCls}`}>
+                    <div className="flex gap-2 relative">
+                        <button
+                            onClick={() => {
+                                playClick();
+                                setShowRetentionMenu((open) => !open);
+                                setShowMoreMenu(false);
+                            }}
+                            className={`flex-1 h-12 rounded-2xl px-4 border flex items-center justify-between cursor-pointer ${panelSurfaceCls} ${isDarkMode ? 'border-white/10 text-zinc-200' : 'border-zinc-200 text-zinc-700'}`}
+                        >
+                            <span className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4" />
+                                <span className="text-sm">{retentionLabel}</span>
+                            </span>
+                            <ChevronDown className={`w-4 h-4 transition-transform ${showRetentionMenu ? 'rotate-180' : ''}`} />
+                        </button>
+                        <button
+                            onClick={() => {
+                                playClick();
+                                setShowMoreMenu((open) => !open);
+                                setShowRetentionMenu(false);
+                            }}
+                            className="w-12 h-12 rounded-2xl border border-blue-500 text-blue-500 flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors cursor-pointer"
+                        >
+                            <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                        {showRetentionMenu && (
+                            <div className={`absolute left-0 right-14 bottom-16 rounded-[1.5rem] border shadow-xl z-20 p-2 ${isDarkMode ? 'bg-[#151521] border-white/10' : 'bg-white border-zinc-200'}`}>
+                                {QUICK_RETENTION_OPTIONS.map((option) => (
+                                    <button
+                                        key={option.id}
+                                        onClick={() => {
+                                            playClick();
+                                            setRetention(option.id as typeof retention);
+                                            setShowRetentionMenu(false);
+                                        }}
+                                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm text-zinc-800 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                                    >
+                                        <span>{option.label}</span>
+                                        {retention === option.id && <Check className="w-4 h-4 text-blue-500" />}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button
+                        onClick={handleContinue}
+                        className={`h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm ${isDarkMode ? 'bg-white/8 text-white hover:bg-white/12 border border-white/10' : 'bg-white text-zinc-900 hover:bg-zinc-50 border border-zinc-200'}`}
+                    >
+                        Studio
+                        <ArrowRight className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={handlePublish}
+                        disabled={!canPublish || publishState === 'publishing'}
+                        className={`h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm ${!canPublish || publishState === 'publishing' ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} bg-blue-600 hover:bg-blue-700 text-white`}
+                    >
+                        {publishState === 'publishing' ? 'Publishing...' : 'Publish'}
+                    </button>
+                </div>
+
+                <p className={`mt-3 text-center text-[10px] ${publishState === 'error' ? 'text-red-500' : publishState === 'success' ? 'text-emerald-500' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                    {publishMessage || 'Draft auto-saves while you work in the widget.'}
+                </p>
+                </div>
+                )}
+
+                {widgetView === 'briefing' && (
+                    <div className={`pt-3 border-t ${sectionLineCls} h-full flex flex-col`}>
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Recent Briefing</span>
+                            <button
+                                onClick={() => { handleWidgetNavigate('/dashboard', 'briefing'); }}
+                                className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                            >
+                                Open full
+                            </button>
+                        </div>
+                        {briefingItems.length === 0 ? (
+                            <div className={`rounded-2xl border border-dashed px-4 py-6 text-center ${isDarkMode ? 'border-white/10 text-zinc-400' : 'border-zinc-200 text-zinc-500'}`}>
+                                <Clock className="w-5 h-5 mx-auto mb-2 opacity-70" />
+                                <p className="text-sm font-medium">No briefing activity yet.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1 briefing-scroll">
+                                {briefingItems.map((item) => {
+                                    const toneClass = item.tone === 'success'
+                                        ? 'text-blue-600 dark:text-blue-400'
+                                        : item.tone === 'warning'
+                                            ? 'text-amber-600 dark:text-amber-400'
+                                            : 'text-zinc-500 dark:text-zinc-300';
+
+                                    return (
+                                        <div key={item.id} className={`rounded-xl border px-3 py-2.5 flex items-start gap-3 ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}>
+                                            <item.icon className={`w-4 h-4 mt-0.5 shrink-0 ${toneClass}`} />
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">{item.title}</p>
+                                                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">{item.subtitle}</p>
+                                            </div>
+                                            <span className="text-[10px] font-mono text-zinc-400 shrink-0">{formatWidgetTime(item.ts)}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {widgetView === 'projects' && (
+                    <div className={`pt-3 border-t ${sectionLineCls} h-full flex flex-col`}>
+                        <div className="flex items-center justify-between mb-3 gap-2">
+                            <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Current Projects</span>
+                            <button
+                                onClick={() => { handleWidgetNavigate('/dashboard', 'projects'); }}
+                                className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                            >
+                                Open full
+                            </button>
+                        </div>
+                        {currentProjects.length === 0 ? (
+                            <div className={`rounded-2xl border border-dashed px-4 py-6 text-center ${isDarkMode ? 'border-white/10 text-zinc-400' : 'border-zinc-200 text-zinc-500'}`}>
+                                <Briefcase className="w-5 h-5 mx-auto mb-2 opacity-70" />
+                                <p className="text-sm font-medium">No projects yet.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1 briefing-scroll">
+                                {currentProjects.map((project) => (
+                                    <button
+                                        key={project.id}
+                                        onClick={() => {
+                                            playClick();
+                                            navigate(`/preview/${project.id}`, { state: { widgetPanelHighlight: 'projects' } });
+                                        }}
+                                        className={`w-full rounded-xl border px-3 py-2.5 text-left transition-colors cursor-pointer ${panelSurfaceCls} ${isDarkMode ? 'border-white/10 hover:bg-white/10' : 'border-zinc-200 hover:bg-white'}`}
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">{project.name}</p>
+                                                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">{project.client?.name || 'Client'} · {project.status.replace(/_/g, ' ')}</p>
+                                            </div>
+                                            <span className="text-[10px] font-mono text-zinc-400 shrink-0">{formatWidgetTime(project.createdAt)}</span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+        </div>
+    );
+};
+
 const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togglePrivacyMode, privacyMode, onSignOut }: any) => {
     const navigate = useNavigate();
     const location = useLocation();
     const stripOffset = useStripOffset();
+    const { notifications, markNotificationRead, clearNotifications, saveProject } = useStore();
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false); // NEW State
+    const [isNotifOpen, setIsNotifOpen] = useState(false);
     const [demoMode, setDemoMode] = useState(isMockMode());
-    const mainContentTopGapPx = 10;
 
     const handleDemoModeToggle = (next: boolean) => {
         setDemoMode(next);
@@ -1870,7 +2958,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
     };
 
     // Determine current view state based on pathname for active highlighting
-    const currentPath = location.pathname.split('/')[1] || 'dashboard';
+    const currentPath = location.pathname.split('/')[1] || 'app';
 
     const [isDraggingGlobal, setIsDraggingGlobal] = useState(false);
 
@@ -1895,8 +2983,10 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
             if (location.pathname.includes('/create') || location.pathname.includes('/editor')) return;
             
             if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-                // Navigate to create with some global state (in a real app, pass files via context/state)
-                navigate('/create', { state: { autoDrop: true } });
+                const droppedFiles = Array.from(e.dataTransfer.files);
+                appendFilesToQuickDraft(droppedFiles);
+                window.dispatchEvent(new CustomEvent(QUICK_DELIVERY_EVENT, { detail: droppedFiles }));
+                if (!location.pathname.includes('/workspace')) navigate('/workspace');
             }
         };
 
@@ -1956,7 +3046,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
             if (gChordRef.current) {
                 gChordRef.current = false;
                 if (gChordTimer.current) clearTimeout(gChordTimer.current);
-                const map: Record<string, string> = { d: '/dashboard', v: '/vault', a: '/activity', r: '/reports', s: '/settings', c: '/create' };
+                const map: Record<string, string> = { d: '/dashboard', v: '/vault', a: '/activity', r: '/reports', s: '/settings', c: '/create', h: '/workspace' };
                 const dest = map[e.key];
                 if (dest) { e.preventDefault(); navigate(dest); }
             }
@@ -1974,10 +3064,13 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
             if (isProfileOpen && !(event.target as Element).closest('.profile-menu-container')) {
                 setIsProfileOpen(false);
             }
+            if (isNotifOpen && !(event.target as Element).closest('.notif-menu-container')) {
+                setIsNotifOpen(false);
+            }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isProfileOpen]);
+    }, [isProfileOpen, isNotifOpen]);
 
     const SearchCommandPalette = ({ onClose }: { onClose: () => void }) => {
         const [query, setQuery] = useState('');
@@ -1986,6 +3079,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
         const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
         const routeItems = useMemo(() => ([
+            { id: 'route-home', title: 'Home', subtitle: 'Return to the create-project surface', icon: EditorialIcon, action: () => navigate('/workspace') },
             { id: 'route-dashboard', title: 'Dashboard', subtitle: 'View your overview', icon: LayoutDashboard, action: () => navigate('/dashboard') },
             { id: 'route-vault', title: 'Vault', subtitle: 'Project and file ledger', icon: LockKeyhole, action: () => navigate('/vault') },
             { id: 'route-activity', title: 'Activity', subtitle: 'Recent actions and logs', icon: ActivityIcon, action: () => navigate('/activity') },
@@ -2094,26 +3188,26 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
 
         return (
             <div className="fixed inset-0 z-[100] flex items-end sm:items-start justify-center sm:pt-32 sm:px-4" onKeyDown={handleKeyDown}>
-                <div className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-colors duration-300" onClick={onClose} />
-                <div className="relative w-full sm:max-w-2xl bg-white dark:bg-[#1a1a23] rounded-t-3xl sm:rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden animate-slide-up ring-1 ring-black/5 pb-8 sm:pb-0">
-                    <div className="w-12 h-1.5 bg-slate-200 dark:bg-white/10 rounded-full mx-auto mt-4 mb-2 sm:hidden" />
-                    <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-white/5">
-                        <Search className="w-5 h-5 text-slate-400" />
-                        <input
-                            autoFocus
+                <div className="absolute inset-0 bg-zinc-900/40 dark:bg-transparent backdrop-blur-[3px] transition-colors duration-300" onClick={onClose} />
+                <div className="relative w-full sm:max-w-2xl bg-white dark:bg-[#1a1a23] rounded-t-3xl sm:rounded-2xl shadow-2xl border border-zinc-200/50 dark:border-white/10 overflow-hidden animate-slide-up ring-1 ring-black/5 pb-8 sm:pb-0">
+                    <div className="w-12 h-1.5 bg-zinc-200 dark:bg-white/10 rounded-full mx-auto mt-4 mb-2 sm:hidden" />
+                    <div className="flex items-center gap-3 p-4 border-b border-zinc-100 dark:border-white/5">
+                        <Search className="w-5 h-5 text-zinc-400" />
+                    <input
+                        autoFocus
                             value={query}
                             onChange={(e) => { setQuery(e.target.value); }}
                             placeholder="Search projects, files, clients, or routes..."
-                            className="flex-1 bg-transparent outline-none text-lg text-slate-900 dark:text-white placeholder:text-slate-400 font-medium"
+                            className="flex-1 bg-transparent outline-none text-lg text-zinc-900 dark:text-white placeholder:text-zinc-400 font-medium"
                         />
-                        <kbd className="px-2 py-1 rounded bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-400 tracking-wider border border-slate-200 dark:border-white/10">ESC</kbd>
-                    </div>
+                        <kbd className="px-2 py-1 rounded bg-zinc-100 dark:bg-white/5 text-[10px] font-bold text-zinc-400 tracking-wider border border-zinc-200/50 dark:border-white/10">ESC</kbd>
+                </div>
                     <div ref={listRef} className="p-2 max-h-[420px] overflow-y-auto">
-                        <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
                             {query.trim() ? 'Results' : 'Quick Access'}
                         </div>
                         {results.length === 0 && (
-                            <div className="px-4 py-8 text-sm text-slate-500 dark:text-slate-400">No matches found. Try another keyword.</div>
+                            <div className="px-4 py-8 text-sm text-zinc-500 dark:text-zinc-400">No matches found. Try another keyword.</div>
                         )}
                         {results.map((result, idx) => (
                             <button
@@ -2121,34 +3215,34 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
                                 ref={el => { itemRefs.current[idx] = el; }}
                                 onClick={() => executeResult(result.action)}
                                 onMouseEnter={() => setSelectedIndex(idx)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left group ${idx === selectedIndex ? 'bg-slate-100 dark:bg-white/10' : 'hover:bg-slate-50 dark:hover:bg-white/5'}`}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left group ${idx === selectedIndex ? 'bg-zinc-100 dark:bg-white/10' : 'hover:bg-zinc-50 dark:hover:bg-white/5'}`}
                             >
-                                <result.icon className={`w-4 h-4 transition-colors ${idx === selectedIndex ? 'text-lime-600 dark:text-[#bef264]' : 'text-slate-400 group-hover:text-lime-600 dark:group-hover:text-[#bef264]'}`} />
+                                <result.icon className={`w-4 h-4 transition-colors ${idx === selectedIndex ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'}`} />
                                 <div className="min-w-0 flex-1">
-                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200 block truncate">{result.title}</span>
-                                    <span className="text-xs text-slate-400 block truncate">{result.subtitle}</span>
+                                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200 block truncate">{result.title}</span>
+                                    <span className="text-xs text-zinc-400 block truncate">{result.subtitle}</span>
                                 </div>
-                                <span className={`ml-auto text-xs transition-colors ${idx === selectedIndex ? 'text-lime-600 dark:text-[#bef264]' : 'text-slate-400'}`}>{result.kind}</span>
-                            </button>
+                                <span className={`ml-auto text-xs transition-colors ${idx === selectedIndex ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-400'}`}>{result.kind}</span>
+                    </button>
                         ))}
                     </div>
-                    <div className="px-4 py-2.5 bg-slate-50 dark:bg-black/20 border-t border-slate-100 dark:border-white/5 flex flex-wrap gap-x-4 gap-y-1.5 items-center text-[10px] text-slate-400">
-                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-slate-500 dark:text-slate-300">↑↓</kbd> navigate</span>
-                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-slate-500 dark:text-slate-300">↵</kbd> open</span>
-                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-slate-500 dark:text-slate-300">Esc</kbd> close</span>
-                        <span className="w-px h-3 bg-slate-200 dark:bg-white/10 mx-1" />
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-300 dark:text-slate-600">Jump to —</span>
+                    <div className="px-4 py-2.5 bg-zinc-50 dark:bg-[#1a1a23]/50 border-t border-zinc-100 dark:border-white/5 flex flex-wrap gap-x-4 gap-y-1.5 items-center text-[10px] text-zinc-400">
+                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded border border-zinc-200/50 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-500 dark:text-zinc-300">↑↓</kbd> navigate</span>
+                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded border border-zinc-200/50 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-500 dark:text-zinc-300">↵</kbd> open</span>
+                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded border border-zinc-200/50 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-500 dark:text-zinc-300">Esc</kbd> close</span>
+                        <span className="w-px h-3 bg-zinc-200 dark:bg-white/10 mx-1" />
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-300 dark:text-zinc-600">Jump to —</span>
                         {([['d','Dashboard'],['v','Vault'],['r','Reports'],['a','Activity'],['s','Settings'],['c','Create']] as [string, string][]).map(([key, label]) => (
-                            <button key={key} onClick={() => { navigate(label === 'Create' ? '/create' : `/${label.toLowerCase()}`); onClose(); }} className="flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
-                                <kbd className="px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-slate-500 dark:text-slate-300">g</kbd>
-                                <kbd className="px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-slate-500 dark:text-slate-300">{key}</kbd>
+                            <button key={key} onClick={() => { navigate(label === 'Create' ? '/create' : `/${label.toLowerCase()}`); onClose(); }} className="flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
+                                <kbd className="px-1.5 py-0.5 rounded border border-zinc-200/50 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-500 dark:text-zinc-300">g</kbd>
+                                <kbd className="px-1.5 py-0.5 rounded border border-zinc-200/50 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-500 dark:text-zinc-300">{key}</kbd>
                                 {label}
-                            </button>
+                    </button>
                         ))}
-                    </div>
                 </div>
             </div>
-        );
+        </div>
+    );
     };
 
     const recentProfileEvents = projects
@@ -2194,246 +3288,425 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, togg
     };
 
     const ProfileMenu = () => (
-        <div className="absolute top-16 right-0 w-80 bg-white/90 dark:bg-[#1a1a23]/90 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-4 animate-fade-in z-50 origin-top-right">
+        <div className="absolute top-16 right-0 w-80 bg-white/90 dark:bg-[#1a1a23]/90 backdrop-blur-xl border border-zinc-200/50 dark:border-white/10 rounded-2xl shadow-2xl p-4 animate-fade-in z-50 origin-top-right">
             {/* Header */}
-            <div className="flex items-center gap-4 pb-4 border-b border-slate-100 dark:border-white/5 mb-4">
+            <div className="flex items-center gap-4 pb-4 border-b border-zinc-100 dark:border-white/5 mb-4">
                 <div className="relative">
                     {user?.avatar ? (
                         <img src={user.avatar} className="w-12 h-12 rounded-xl object-cover shadow-sm" alt="Profile" />
                     ) : (
-                        <div className="w-12 h-12 rounded-xl bg-slate-800 dark:bg-slate-900 text-white flex items-center justify-center font-semibold shadow-sm">
+                        <div className="w-12 h-12 rounded-xl bg-zinc-800 dark:bg-[#1a1a23] text-white flex items-center justify-center font-semibold shadow-sm">
                             {getInitials(user?.name)}
                         </div>
                     )}
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-lime-500 rounded-full border-2 border-white dark:border-[#1a1a23] flex items-center justify-center">
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 text-zinc-900 shadow-sm rounded-full border-2 border-white dark:border-[#1a1a23] flex items-center justify-center">
                         <Check className="w-2 h-2 text-white" />
                     </div>
                 </div>
                 <div>
-                    <h4 className="font-bold text-slate-900 dark:text-white leading-tight">{user.name || 'Your Account'}</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[140px]">{user.email || 'No email on file'}</p>
-                    <span className="text-[10px] font-bold uppercase text-lime-600 dark:text-[#bef264] tracking-wider mt-1 block">Pro Plan</span>
+                    <h4 className="font-bold text-zinc-900 dark:text-white leading-tight">{user.name || 'Your Account'}</h4>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-[140px]">{user.email || 'No email on file'}</p>
+                    <span className="text-[10px] font-bold uppercase text-blue-600 dark:text-blue-400 tracking-wider mt-1 block">Pro Plan</span>
                 </div>
             </div>
 
             {/* Notifications */}
             <div className="mb-4">
                 <div className="flex justify-between items-center mb-2 px-1">
-                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Recent Activity</span>
-                    <button className="text-[10px] font-bold text-lime-600 dark:text-[#bef264] hover:underline">Mark all read</button>
+                    <span className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest">Recent Activity</span>
+                    <button className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline">Mark all read</button>
                 </div>
                 {recentProfileEvents.length === 0 ? (
-                    <div className="rounded-lg border border-dashed border-slate-300 dark:border-white/15 p-3 text-center">
-                        <p className="text-xs font-bold text-slate-600 dark:text-slate-300">No recent events yet.</p>
+                    <div className="rounded-lg border border-dashed border-zinc-200/50 dark:border-white/15 p-3 text-center">
+                        <p className="text-xs font-bold text-zinc-600 dark:text-zinc-300">No recent events yet.</p>
                     </div>
                 ) : (
-                    <div className="space-y-1">
+                <div className="space-y-1">
                         {recentProfileEvents.map((evt) => (
-                            <div key={evt.id} className="flex gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group">
-                                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${evt.isHot ? 'bg-red-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`} />
-                                <div>
-                                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight group-hover:text-lime-600 dark:group-hover:text-[#bef264] transition-colors">{evt.title}</p>
-                                    <p className="text-[10px] text-slate-500 dark:text-slate-400">{evt.detail}</p>
-                                </div>
-                            </div>
-                        ))}
+                            <div key={evt.id} className="flex gap-3 p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors cursor-pointer group">
+                                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${evt.isHot ? 'bg-red-500 animate-pulse' : 'bg-zinc-300 dark:bg-zinc-600'}`} />
+                        <div>
+                                    <p className="text-xs font-bold text-zinc-900 dark:text-white leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{evt.title}</p>
+                                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400">{evt.detail}</p>
+                        </div>
                     </div>
+                        ))}
+                        </div>
                 )}
             </div>
 
             {/* Quick Actions */}
             <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => { setIsProfileOpen(false); navigate('/settings'); }} className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-transparent hover:border-slate-200 dark:hover:border-white/10 transition-all text-center group">
-                    <Settings className="w-5 h-5 mx-auto mb-1 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white">Settings</span>
+                <button onClick={() => { setIsProfileOpen(false); navigate('/settings'); }} className="p-3 rounded-xl bg-zinc-50 dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10 border border-transparent hover:border-zinc-200/50 dark:hover:border-white/10 transition-all text-center group">
+                    <Settings className="w-5 h-5 mx-auto mb-1 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white">Settings</span>
                 </button>
-                <button onClick={() => { setIsProfileOpen(false); navigate('/help'); }} className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-transparent hover:border-slate-200 dark:hover:border-white/10 transition-all text-center group">
-                    <HelpCircle className="w-5 h-5 mx-auto mb-1 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white">Support</span>
+                <button onClick={() => { setIsProfileOpen(false); routePreloadMap.help?.().finally(() => navigate('/help')); }} className="p-3 rounded-xl bg-zinc-50 dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10 border border-transparent hover:border-zinc-200/50 dark:hover:border-white/10 transition-all text-center group">
+                    <HelpCircle className="w-5 h-5 mx-auto mb-1 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white">Support</span>
                 </button>
             </div>
 
-            <button onClick={async () => { setIsProfileOpen(false); await onSignOut(); navigate('/signin'); }} className="w-full mt-4 py-2 text-[10px] font-bold uppercase text-slate-400 hover:text-red-500 transition-colors flex items-center justify-center gap-2">
+            <button onClick={async () => { setIsProfileOpen(false); await onSignOut(); navigate('/signin'); }} className="w-full mt-4 py-2 text-[10px] font-bold uppercase text-zinc-400 hover:text-red-500 transition-colors flex items-center justify-center gap-2">
                 <LogOut className="w-3 h-3" /> Sign Out
             </button>
         </div>
     );
 
-    const headerHeightPx = 80; // h-20
+    const headerHeightPx = 64;
+    const isPanelOpen = currentPath !== 'workspace';
+    const topbarGlassCls = 'bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-zinc-200/60 dark:border-white/10 shadow-lg';
+    const topbarGlassHoverCls = 'hover:bg-slate-200/70 dark:hover:bg-white/10';
+    const greetingName = useMemo(() => {
+        const fullName = (user?.name || '').trim();
+        return fullName ? fullName.split(/\s+/)[0] : 'there';
+    }, [user?.name]);
+    const heroGreetingTemplate = useMemo(() => {
+        const hour = new Date().getHours();
+        const timeBasedTemplate = hour < 12
+            ? 'Good Morning, {{name}}.'
+            : hour < 18
+                ? 'Good Afternoon, {{name}}.'
+                : 'Good Evening, {{name}}.';
+        const templates = [
+            timeBasedTemplate,
+            'Nice seeing you again, {{name}}.',
+            'Hey there, {{name}}.',
+            'Hi {{name}}, how are you?',
+            'Great to have you here, {{name}}.',
+        ];
+        return templates[Math.floor(Math.random() * templates.length)];
+    }, []);
+    const heroTips = [
+        'Drop files or folders to auto-build a draft instantly.',
+        'Use Create Link when you want review without email friction.',
+        'Enable watermark for previews, then unlock originals after payment.',
+        'Set retention to 3 days for quick handovers and less clutter.',
+        'Keep signatures on for approvals tied to each delivery.',
+        'Use message presets to send polished client updates in seconds.',
+        'Turn on client library for repeat buyers and returning teams.',
+        'Toggle payment gate only when assets are fully final.',
+        'Open Studio to add milestones when a project grows complex.',
+        'Use Briefing to catch signatures, views, and payment status fast.',
+        'Switch Alerts on before sending if you need real-time updates.',
+        'Name projects by outcome, not file type, for cleaner search.',
+        'Batch upload from folders to preserve structure on day one.',
+        'Use one-time access for sensitive decks and legal documents.',
+        'Pin high-value deliveries in Vault so they stay front and center.',
+    ];
+    const [heroTipIndex, setHeroTipIndex] = useState(0);
+    const [showHeroGreeting, setShowHeroGreeting] = useState(false);
+    const [heroGreetingPlayed, setHeroGreetingPlayed] = useState(false);
+    const [heroGreetingPrefix, heroGreetingSuffix] = (heroGreetingTemplate || 'Hello, {{name}}.').split('{{name}}');
+
+    useEffect(() => {
+        if (isPanelOpen) return;
+        const timer = window.setInterval(() => {
+            setHeroTipIndex((index) => (index + 1) % heroTips.length);
+        }, 9000);
+        return () => window.clearInterval(timer);
+    }, [isPanelOpen, heroTips.length]);
+
+    useEffect(() => {
+        if (heroGreetingPlayed || isPanelOpen) return;
+        setShowHeroGreeting(true);
+        const timer = window.setTimeout(() => {
+            setShowHeroGreeting(false);
+            setHeroGreetingPlayed(true);
+        }, 9000);
+        return () => window.clearTimeout(timer);
+    }, [heroGreetingPlayed, isPanelOpen]);
+
+    useEffect(() => {
+        if (!isPanelOpen || !showHeroGreeting) return;
+        setShowHeroGreeting(false);
+        setHeroGreetingPlayed(true);
+    }, [isPanelOpen, showHeroGreeting]);
+
+    const handleTopLevelNavigate = (id: string) => {
+        if (currentPath === id) {
+            navigate('/workspace');
+            return;
+        }
+
+        const preloader = routePreloadMap[id];
+        const targetPath = `/${id}`;
+
+        if (preloader) {
+            preloader().finally(() => {
+                navigate(targetPath);
+            });
+            return;
+        }
+
+        navigate(targetPath);
+    };
 
     return (
-        <div className="flex-1 font-sans bg-[#f0f2f5] dark:bg-cosmic text-slate-900 dark:text-slate-100 transition-colors duration-500 overflow-x-hidden relative">
-            {/* GLOBAL DRAG DROP OVERLAY */}
+        <>
+            {/* In-flow min-height so #root establishes document height while StageBackground/header/widget use position:fixed */}
+            <div
+                aria-hidden
+                className={`min-h-screen w-full ${isDarkMode ? 'bg-cosmic' : 'bg-gradient-to-br from-stone-50 via-zinc-100 to-slate-100'}`}
+            />
+            {/* ── Stage background: full-bleed ambient canvas ── */}
+            <StageBackground isDarkMode={isDarkMode} />
+
+            {/* Global drag-drop overlay */}
             {isDraggingGlobal && (
-                <div className="fixed inset-0 z-[999] bg-slate-900/60 dark:bg-black/80 backdrop-blur-md flex items-center justify-center pointer-events-none animate-in fade-in duration-200">
-                    <div className="w-full max-w-lg mx-4 rounded-[2rem] border-2 border-dashed border-lime-500 dark:border-[#bef264] bg-white/10 dark:bg-[#1a1a23]/50 flex flex-col items-center justify-center p-16 text-center shadow-2xl scale-105 animate-pulse">
-                        <div className="w-24 h-24 rounded-full bg-lime-600 dark:bg-[#bef264] flex items-center justify-center mb-6 shadow-xl shadow-lime-900/20 dark:shadow-[#bef264]/20">
-                            <Plus className="w-12 h-12 text-white dark:text-black" strokeWidth={3} />
+                <div className="fixed inset-0 z-[999] bg-zinc-900/60 dark:bg-[#323242]/80 backdrop-blur-md flex items-center justify-center pointer-events-none animate-in fade-in duration-200">
+                    <div className="w-full max-w-lg mx-4 rounded-[2rem] border-2 border-dashed border-blue-500 bg-white/10 dark:bg-[#1a1a23]/50 flex flex-col items-center justify-center p-16 text-center shadow-2xl scale-105 animate-pulse">
+                        <div className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center mb-6 shadow-xl shadow-blue-900/20">
+                            <Plus className="w-10 h-10 text-white" strokeWidth={3} />
                         </div>
-                        <h2 className="text-3xl font-serif font-bold text-white mb-2">Drop to Create Project</h2>
-                        <p className="text-slate-200">Release files anywhere to start a new handover instantly.</p>
+                        <h2 className="text-2xl font-bold text-white mb-2">Drop to Create Project</h2>
+                        <p className="text-zinc-300 text-sm">Release files anywhere to start a new handover instantly.</p>
                     </div>
                 </div>
             )}
 
-            {/* AMBIENT BACKGROUND EFFECTS */}
-            <BackgroundOrbs />
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03] bg-grain mix-blend-overlay dark:block hidden"></div>
-
-            {/* FIXED HEADER — sticks below strip when strip is visible, at top when not; never scrolls away */}
+            {/* ── Top bar ── */}
             <header
-                className="fixed left-0 right-0 z-50 bg-[#f0f2f5]/90 dark:bg-cosmic/90 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5 transition-[top] duration-200"
-                style={{ top: stripOffset }}
+                className="fixed left-0 right-0 z-[85] flex items-center justify-between px-4 sm:px-6 lg:px-8 transition-[top] duration-200 pointer-events-none"
+                style={{ top: stripOffset, height: headerHeightPx }}
             >
-                <div className="w-full max-w-[98%] mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Header Content */}
-                    <div className="flex flex-row items-center justify-between h-20 gap-4">
+                {/* Logo */}
+                <button
+                    className="flex items-center gap-2 cursor-pointer group shrink-0 pointer-events-auto"
+                    onClick={() => { playClick(); navigate('/workspace'); }}
+                    title="Home"
+                >
+                    <EditorialIcon className="w-5 h-5 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
+                    <span className="font-serif font-medium text-zinc-900 dark:text-white hidden sm:block">HeartFlair</span>
+                </button>
 
-                        {/* Left: Brand — always returns to dashboard home */}
-                        <div className="flex items-center gap-3 cursor-pointer group shrink-0 scale-[1.05] origin-left" title="Go to Dashboard" onClick={() => { playClick(); navigate('/dashboard'); }}>
-                            <div className="flex items-center gap-2 px-2 py-2 transition-all">
-                                <EditorialIcon className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
-                                <span className={`font-serif font-medium tracking-tight text-lg text-slate-900 dark:text-white hidden sm:block`}>TrueHandover</span>
-                            </div>
-                        </div>
-
-                        {/* Center: Navigation Links (Text Only) */}
-                        <nav className="hidden lg:flex items-center gap-6 xl:gap-12 absolute left-1/2 -translate-x-1/2">
-                            {navItems.map(item => {
-                                const isActive = currentPath === item.id;
-                                return (
-                                    <button
-                                        key={item.id}
-                                        onClick={() => { playClick(); navigate(`/${item.id}`); }}
-                                        onMouseEnter={() => routePreloadMap[item.id]?.()}
-                                        className={`
-                                            relative text-base font-medium transition-colors duration-200 py-1
-                                            ${isActive ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}
-                                        `}
-                                    >
-                                        {item.label}
-                                        {isActive && (
-                                            <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-slate-900 dark:bg-[#bef264] rounded-full animate-fade-in" />
-                                        )}
-                                    </button>
-                                );
-                            })}
-                        </nav>
-
-                        {/* Right: User Profile & Controls */}
-                        <div className="flex items-center justify-end gap-3 shrink-0">
-
-                            {/* Search Trigger Button - REDESIGNED: Compact Pill with Hover Reveal */}
+                {/* Nav pill + controls cluster */}
+                <div className="flex items-center gap-1.5 pointer-events-auto">
+                    {/* Desktop nav pill */}
+                    <nav className={`hidden lg:flex items-center gap-0.5 rounded-full px-2 py-1.5 mr-1 ${topbarGlassCls}`}>
+                        {navItems.map((item) => (
                             <button
-                                onClick={() => { playClick(); setIsSearchOpen(true); }}
-                                className="hidden lg:flex items-center gap-2.5 px-3 min-[1792px]:px-5 py-2.5 bg-slate-100 dark:bg-white/5 border border-transparent dark:border-white/10 rounded-full shadow-sm hover:shadow-md transition-all duration-300 group text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                                key={item.id}
+                                onClick={() => { playClick(); handleTopLevelNavigate(item.id); }}
+                                onMouseEnter={() => routePreloadMap[item.id]?.()}
+                                className={`px-4 py-1.5 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${currentPath === item.id ? 'bg-white/70 text-zinc-900 shadow-sm dark:bg-white/10 dark:text-white' : 'text-zinc-600 dark:text-zinc-200 hover:bg-white/50 dark:hover:bg-white/5'}`}
                             >
-                                <Search className="w-4 h-4" strokeWidth={2.5} />
-                                <span className="hidden min-[1792px]:inline text-xs font-bold uppercase tracking-widest">Search</span>
-                                <span className="hidden min-[1792px]:inline w-0 overflow-hidden group-hover:w-20 transition-all duration-300 opacity-0 group-hover:opacity-50 text-[10px] whitespace-nowrap text-right font-mono ml-2">
-                                    ⌘K / Ctrl K
-                                </span>
+                                {item.label}
                             </button>
+                        ))}
+                    </nav>
 
-                            <button onClick={() => { playClick(); setIsSearchOpen(true); }} className="lg:hidden p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"><Search className="w-5 h-5" /></button>
+                    {/* Search */}
+                    <button
+                        onClick={() => { playClick(); setIsSearchOpen(true); }}
+                        className={`p-2.5 rounded-xl text-zinc-500 dark:text-zinc-300 transition-all cursor-pointer ${topbarGlassCls} ${topbarGlassHoverCls}`}
+                        title="Search (Ctrl K)"
+                    >
+                        <Search className="w-4 h-4" />
+                    </button>
 
-                            {/* Utility Buttons - Moved to group with Search */}
-                            <button onClick={togglePrivacyMode} className={`p-2.5 rounded-xl transition-all hover:scale-105 ${privacyMode ? 'bg-lime-700/15 text-lime-700 dark:bg-[#bef264] dark:text-black' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`} title="Privacy Mode">
-                                {privacyMode ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                            </button>
+                    {/* Privacy toggle */}
+                    <button
+                        onClick={togglePrivacyMode}
+                        className={`p-2.5 rounded-xl transition-all cursor-pointer ${topbarGlassCls} ${privacyMode ? 'border-blue-700/30 dark:border-blue-400/30 text-blue-700 dark:text-blue-400' : `text-zinc-500 dark:text-zinc-300 ${topbarGlassHoverCls}`}`}
+                        title="Privacy Mode"
+                    >
+                        {privacyMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
 
-                            <ThemeModeDropdown
-                                themeMode={themeMode}
-                                onChange={(mode) => { playClick(); onSetThemeMode(mode); }}
-                                isDarkMode={isDarkMode}
-                                compact
-                                buttonClassName="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 transition-all flex items-center"
-                            />
-
-                            {/* Data source toggle (Mock <-> Real) */}
-                            {canToggleMockMode() && (
-                                <button
-                                    onClick={() => {
-                                        playClick();
-                                        handleDemoModeToggle(!demoMode);
-                                    }}
-                                    className={`px-3 py-2.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all ${demoMode
-                                        ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-700/30 dark:text-amber-300'
-                                        : 'bg-lime-50 border-lime-200 text-lime-700 dark:bg-lime-900/20 dark:border-lime-700/30 dark:text-lime-300'
-                                        }`}
-                                    title={demoMode ? 'Switch to real backend data' : 'Switch to mock demo data'}
-                                >
-                                    {demoMode ? 'Mock Data' : 'Real Data'}
-                                </button>
+                    {/* Notifications */}
+                    <div className="relative notif-menu-container">
+                        <button
+                            onClick={() => { playClick(); setIsNotifOpen(v => !v); if (!isNotifOpen) notifications.filter(n => !n.read).forEach(n => markNotificationRead(n.id)); }}
+                            className={`relative p-2.5 rounded-xl text-zinc-500 dark:text-zinc-300 transition-all cursor-pointer ${topbarGlassCls} ${topbarGlassHoverCls}`}
+                            title="Notifications"
+                        >
+                            <Bell className="w-4 h-4" />
+                            {notifications.some(n => !n.read) && (
+                                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0e0e17]" />
                             )}
-
-                            <div className="h-6 w-px bg-slate-300 dark:bg-white/10 mx-1 hidden sm:block" />
-
-                            {/* LIVE CLOCK - Moved next to Profile */}
-                            <HeaderClock />
-
-                            {/* Profile with Popover Menu */}
-                            <div className="relative profile-menu-container">
-                                <button
-                                    onClick={() => { playClick(); setIsProfileOpen(!isProfileOpen); }}
-                                    className="flex items-center gap-2 pl-1 cursor-pointer group/profile bg-transparent border-none"
-                                    aria-label="Open User Menu"
-                                >
-                                    <div className="relative group-hover/profile:scale-105 transition-transform">
-                                        {user?.avatar ? (
-                                            <img src={user.avatar} className="w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 shadow-sm object-cover" alt="Profile" />
-                                        ) : (
-                                            <div className="w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 shadow-sm bg-slate-800 dark:bg-slate-900 text-white flex items-center justify-center text-xs font-semibold">
-                                                {getInitials(user?.name)}
-                                            </div>
-                                        )}
-                                        <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#f0f2f5] dark:border-cosmic animate-pulse" />
-
-                                        {/* Refined Hover Tooltip */}
-                                        <div className="absolute top-full right-0 mt-3 hidden group-hover/profile:flex flex-col items-end w-max pointer-events-none transition-all duration-300 opacity-0 group-hover/profile:opacity-100 translate-y-1 group-hover/profile:translate-y-0">
-                                            <div className="px-3 py-1.5 bg-white/90 dark:bg-black/90 backdrop-blur-md rounded-lg shadow-xl border border-slate-200 dark:border-white/10 text-right">
-                                                <span className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Pro Account</span>
-                                                <span className="block text-xs font-bold text-slate-900 dark:text-white truncate max-w-[120px]">{user.name}</span>
-                                            </div>
+                        </button>
+                        {isNotifOpen && (
+                            <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-[#1a1a23] border border-zinc-200/50 dark:border-white/10 rounded-2xl shadow-xl z-50 overflow-hidden animate-fade-in">
+                                <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-white/5">
+                                    <span className="text-xs font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-300">Notifications</span>
+                                    {notifications.length > 0 && (
+                                        <button onClick={() => { clearNotifications(); setIsNotifOpen(false); }} className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-red-500 transition-colors cursor-pointer">Clear all</button>
+                                    )}
+                                </div>
+                                <div className="max-h-72 overflow-y-auto">
+                                    {notifications.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center py-10 px-4 gap-2 text-center">
+                                            <Bell className="w-8 h-8 text-zinc-300 dark:text-white/20" />
+                                            <span className="text-xs text-zinc-400 dark:text-zinc-500">No notifications yet</span>
+                                            <span className="text-[10px] text-zinc-300 dark:text-zinc-600">Project updates will appear here</span>
                                         </div>
-                                    </div>
-                                </button>
-                                {isProfileOpen && <ProfileMenu />}
+                                    ) : (
+                                        notifications.map(n => (
+                                            <div key={n.id} className={`flex items-start gap-3 px-4 py-3 border-b border-zinc-50 dark:border-white/[0.04] last:border-0 transition-colors ${n.read ? 'opacity-60' : 'bg-indigo-50/50 dark:bg-indigo-900/10'}`}>
+                                                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-zinc-300' : 'bg-indigo-500'}`} />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs font-bold text-zinc-800 dark:text-white">{n.title}</p>
+                                                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">{n.body}</p>
+                                                    <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5 font-mono">{new Date(n.ts).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                        )}
+                    </div>
+
+                    {/* Theme */}
+                    <ThemeModeDropdown
+                        themeMode={themeMode}
+                        onChange={(mode) => { playClick(); onSetThemeMode(mode); }}
+                        isDarkMode={isDarkMode}
+                        compact
+                        buttonClassName={`p-2.5 rounded-xl text-zinc-500 dark:text-zinc-300 transition-all flex items-center cursor-pointer ${topbarGlassCls} ${topbarGlassHoverCls}`}
+                    />
+
+                    {/* Mock / Real data toggle */}
+                    {canToggleMockMode() && (
+                        <button
+                            onClick={() => { playClick(); handleDemoModeToggle(!demoMode); }}
+                            className={`px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${topbarGlassCls} ${demoMode
+                                ? 'border-amber-300/70 dark:border-amber-700/30 text-amber-700 dark:text-amber-300'
+                                : 'border-blue-300/70 dark:border-blue-700/30 text-blue-700 dark:text-blue-300'
+                            }`}
+                            title={demoMode ? 'Switch to real backend data' : 'Switch to mock demo data'}
+                        >
+                            {demoMode ? 'Mock' : 'Real'}
+                        </button>
+                    )}
+
+                    {/* Profile */}
+                    <div className="relative profile-menu-container">
+                        <button
+                            onClick={() => { playClick(); setIsProfileOpen(!isProfileOpen); }}
+                            className="flex items-center gap-2 pl-1 cursor-pointer group/profile bg-transparent border-none"
+                            aria-label="Open User Menu"
+                        >
+                            <div className="relative group-hover/profile:scale-105 transition-transform">
+                                {user?.avatar ? (
+                                    <img src={user.avatar} className="w-9 h-9 rounded-full border border-zinc-200/50 dark:border-white/10 shadow-sm object-cover" alt="Profile" />
+                                ) : (
+                                    <div className="w-9 h-9 rounded-full border border-zinc-200/50 dark:border-white/10 shadow-sm bg-zinc-800 dark:bg-[#1a1a23] text-white flex items-center justify-center text-xs font-semibold">
+                                        {getInitials(user?.name)}
+                                    </div>
+                                )}
+                                <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-[#1a1a23] animate-pulse" />
+                                <div className="absolute top-full right-0 mt-3 hidden group-hover/profile:flex flex-col items-end w-max pointer-events-none opacity-0 group-hover/profile:opacity-100 translate-y-1 group-hover/profile:translate-y-0 transition-all duration-200">
+                                    <div className="px-3 py-1.5 bg-white/90 dark:bg-[#1a1a23]/90 backdrop-blur-md rounded-lg shadow-xl border border-zinc-200/50 dark:border-white/10 text-right">
+                                        <span className="block text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Pro Account</span>
+                                        <span className="block text-xs font-bold text-zinc-900 dark:text-white truncate max-w-[120px]">{user.name}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </button>
+                        {isProfileOpen && <ProfileMenu />}
                     </div>
                 </div>
             </header>
 
-            {/* MAIN CONTENT — dynamic padding so it shifts smoothly with the header when strips appear/disappear. */}
-            <main
-                className="w-full max-w-[99%] mx-auto px-3 md:px-5 lg:px-7 pb-24 lg:pb-16 min-h-[500px] relative z-10 transition-[padding-top] duration-200 font-sans"
-                style={{ paddingTop: headerHeightPx + stripOffset + mainContentTopGapPx }}
+            {/* ── Delivery Widget: floats left, vertically centered below header ── */}
+            <div
+                className="fixed left-4 right-4 sm:left-8 sm:right-auto z-20 flex items-center transition-[opacity,transform] duration-500"
+                style={{ top: stripOffset + headerHeightPx, bottom: 72 }}
             >
-                {/* key on pathname triggers the CSS route-in animation on every navigation */}
-                <div key={location.pathname} className="animate-route-in">
-                    <Outlet context={{ privacyMode, openSearch: () => setIsSearchOpen(true) }} />
-                </div>
-            </main>
-
-            {/* Floating Action Button (Mapped to Help Page) */}
-            <div className="fixed bottom-24 right-4 lg:bottom-8 lg:right-8 z-40">
-                <Link
-                    to="/help"
-                    onClick={() => { playSuccess(); }}
-                    className="w-16 h-16 bg-lime-600 hover:bg-lime-700 text-white dark:bg-[#bef264] dark:hover:bg-[#a3e635] dark:text-black border dark:border-[#333] border-transparent rounded-[24px] flex items-center justify-center shadow-[0_0_20px_rgba(101,163,13,0.5)] dark:shadow-[0_0_20px_rgba(190,242,100,0.5)] transition-all hover:scale-110 hover:rotate-12 duration-300"
-                >
-                    <HelpCircle className="w-8 h-8" />
-                </Link>
+                <DeliveryWidget isDarkMode={isDarkMode} onPublish={saveProject} />
             </div>
 
-            {/* Mobile Bottom Navigation */}
-            <MobileNavBar navItems={navItems} currentPath={currentPath} onNavigate={(id) => { playClick(); navigate(`/${id}`); }} />
+            {/* ── Main Page Greeting (Hero) ── */}
+            {!isPanelOpen && (
+                <div className="fixed left-[430px] right-6 top-1/2 -translate-y-1/2 hidden xl:flex flex-col items-center justify-center text-center pointer-events-none z-0 px-10 animate-fade-in duration-1000" style={{ top: `calc(50% + ${stripOffset/2}px)` }}>
+                    <div className="relative w-full max-w-[1040px] min-h-[340px]">
+                        <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-700 ${showHeroGreeting ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                            <h1 className="font-serif text-7xl 2xl:text-[8.2rem] text-zinc-900 dark:text-white tracking-tight leading-[0.98] max-w-[1040px]">
+                                <span className="block animate-fade-in">
+                                    {heroGreetingPrefix}
+                                    <span className="italic text-[#84cc16] dark:text-[#a3e635]">{greetingName}</span>
+                                    {heroGreetingSuffix}
+                                </span>
+                            </h1>
+                        </div>
+                        <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-700 ${showHeroGreeting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                            <div className="max-w-lg space-y-1">
+                                <p key={heroTipIndex} className="text-xl text-zinc-500 dark:text-zinc-200 leading-relaxed font-medium animate-fade-in">
+                                    {heroTips[heroTipIndex]}
+                                </p>
+                                <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-400 dark:text-zinc-300 font-bold">
+                                    Quick tip {heroTipIndex + 1} of {heroTips.length}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            {/* Search Overlay */}
+            {/* ── Panel backdrop ── */}
+            <div
+                className={`fixed inset-0 z-[60] transition-opacity duration-300 ${isPanelOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                style={{ top: stripOffset, background: 'rgba(0,0,0,0.22)' }}
+                onClick={() => { playClick(); navigate('/workspace'); }}
+            />
+
+            {/* ── Side panel ── */}
+            <aside
+                className={`fixed right-0 bottom-0 z-[70] w-full max-w-[960px] lg:w-auto lg:max-w-none lg:left-[420px] xl:left-[440px] bg-[#f0f2f5] dark:bg-cosmic transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                style={{ top: stripOffset }}
+                aria-hidden={!isPanelOpen}
+            >
+                <div className="h-full bg-[#f0f2f5] dark:bg-cosmic border-l border-zinc-200/60 dark:border-white/[0.09] shadow-2xl overflow-hidden flex flex-col transition-[box-shadow,border-color] duration-700" style={{ paddingTop: 12 }}>
+                    <div className="shrink-0 h-14 px-5 flex items-center border-b border-zinc-100 dark:border-white/10 bg-[#f0f2f5] dark:bg-cosmic">
+                        <button
+                            onClick={() => { playClick(); navigate('/workspace'); }}
+                            className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white transition-colors cursor-pointer"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                            Close
+                        </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                        <div className="h-full px-3 sm:px-5 lg:px-6 xl:px-7 py-3 sm:py-4 bg-[#f0f2f5] dark:bg-cosmic">
+                            <div key={location.pathname} className="h-full animate-route-in">
+                                <Outlet context={{ privacyMode, openSearch: () => setIsSearchOpen(true) }} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            {/* ── Help FAB ── */}
+            <div className="fixed bottom-24 right-4 lg:bottom-8 lg:right-8 z-40">
+                {currentPath === 'help' ? (
+                    <button
+                        onClick={() => { playClick(); navigate('/workspace'); }}
+                        className="w-12 h-12 bg-zinc-900 dark:bg-white/10 hover:bg-zinc-800 dark:hover:bg-white/20 text-white rounded-2xl flex items-center justify-center shadow-lg transition-all hover:scale-110 duration-300 cursor-pointer"
+                        aria-label="Close help"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                ) : (
+                    <Link
+                        to="/help"
+                        onClick={() => playSuccess()}
+                        onMouseEnter={() => routePreloadMap.help?.()}
+                        onTouchStart={() => routePreloadMap.help?.()}
+                        className="w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg transition-all hover:scale-110 hover:rotate-6 duration-300 cursor-pointer"
+                    >
+                        <HelpCircle className="w-5 h-5" />
+                    </Link>
+                )}
+            </div>
+
+            {/* ── Mobile bottom navigation ── */}
+            <MobileNavBar navItems={navItems} currentPath={currentPath} onNavigate={(id) => { playClick(); handleTopLevelNavigate(id); }} />
+
+            {/* ── Search overlay (above everything including strip) ── */}
             {isSearchOpen && <SearchCommandPalette onClose={() => setIsSearchOpen(false)} />}
-
-        </div>
+        </>
     );
 }
 
@@ -2554,7 +3827,7 @@ const ClientLinkWrapper = ({ isDarkMode, themeMode, onToggleTheme, onSetThemeMod
 
     if (loading) {
         return (
-            <div className={`min-h-screen w-full flex items-center justify-center ${isDarkMode ? 'bg-[#0f0f12] text-white' : 'bg-white text-slate-900'}`}>
+            <div className={`min-h-screen w-full flex items-center justify-center ${isDarkMode ? 'bg-cosmic text-white' : 'bg-white text-zinc-900'}`}>
                 <div className="text-sm font-bold tracking-wide opacity-80">Loading secure preview…</div>
             </div>
         );
@@ -2562,15 +3835,15 @@ const ClientLinkWrapper = ({ isDarkMode, themeMode, onToggleTheme, onSetThemeMod
 
     if (error || !project) {
         return (
-            <div className={`min-h-screen w-full flex items-center justify-center ${isDarkMode ? 'bg-[#0f0f12] text-white' : 'bg-white text-slate-900'}`}>
+            <div className={`min-h-screen w-full flex items-center justify-center ${isDarkMode ? 'bg-cosmic text-white' : 'bg-white text-zinc-900'}`}>
                 <div className="max-w-md w-full px-6">
-                    <div className={`rounded-2xl border p-5 ${isDarkMode ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'}`}>
+                    <div className={`rounded-2xl border p-5 ${isDarkMode ? 'border-white/10 bg-white/5' : 'border-zinc-200/50 bg-zinc-50'}`}>
                         <div className="font-black tracking-wide mb-2">Preview unavailable</div>
                         <div className="text-sm opacity-80">{error || 'This link may be invalid or expired.'}</div>
                         <button
                             type="button"
                             onClick={() => navigate('/')}
-                            className={`mt-4 w-full h-11 rounded-xl font-bold text-xs uppercase tracking-widest ${isDarkMode ? 'bg-[#bef264] text-black hover:bg-[#a3e635]' : 'bg-lime-600 text-white hover:bg-lime-700'}`}
+                            className={`mt-4 w-full h-11 rounded-xl font-bold text-xs uppercase tracking-widest ${isDarkMode ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-blue-500 text-zinc-900 shadow-sm text-white hover:bg-blue-700'}`}
                         >
                             Back to home
                         </button>
@@ -2630,8 +3903,8 @@ const AppContent = () => {
     const getInitialTheme = (): 'light' | 'dark' | 'system' => {
         try {
             const params = new URLSearchParams(window.location.search);
-            const t = params.get('theme');
-            if (t === 'light' || t === 'dark' || t === 'system') return t;
+                const t = params.get('theme');
+                if (t === 'light' || t === 'dark' || t === 'system') return t;
         } catch { }
         return 'system';
     };
@@ -2639,7 +3912,7 @@ const AppContent = () => {
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [firstVisitThemeNotice, setFirstVisitThemeNotice] = useState<string | null>(null);
 
-    // ── Offline / SW-update awareness ────────────────────────────────────────
+    // â”€â”€ Offline / SW-update awareness â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
     const [offlineDismissed, setOfflineDismissed] = useState(false);
     const [swUpdateReady, setSwUpdateReady] = useState(false);
@@ -2678,21 +3951,80 @@ const AppContent = () => {
         });
     }, []);
 
+    useEffect(() => {
+        let cancelled = false;
+
+        const preloadAllLazyScreens = () => {
+            if (cancelled) return;
+            Promise.allSettled([
+                _importCreator(),
+                _importPreviewBiz(),
+                _importPortal(),
+                _importActivity(),
+                _importReports(),
+                _importSettings(),
+                _importHelp(),
+                _importTrash(),
+            ]).catch(() => {
+                // Preload failures are non-fatal; route-level loading still works.
+            });
+        };
+
+        const ric = (window as any).requestIdleCallback as undefined | ((cb: () => void, opts?: { timeout: number }) => number);
+        const cic = (window as any).cancelIdleCallback as undefined | ((id: number) => void);
+
+        if (typeof ric === 'function') {
+            const idleId = ric(() => preloadAllLazyScreens(), { timeout: 1800 });
+            return () => {
+                cancelled = true;
+                if (typeof cic === 'function') cic(idleId);
+            };
+        }
+
+        const timer = window.setTimeout(() => preloadAllLazyScreens(), 600);
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timer);
+        };
+    }, []);
+
     // -- STATE MANAGEMENT via Store --
-    const { projects, user, authResolved, saveProject, updateUser, resetStore } = useStore();
+    const { projects, user, authResolved, saveProject, updateUser, resetStore, notifications, markNotificationRead, clearNotifications } = useStore();
     const isLiveMode = !isMockMode();
     const handleGetStarted = () => {
         if (user.id) {
-            window.location.assign('/dashboard');
+            window.location.assign('/workspace');
             return;
         }
 
         if (isLiveMode) {
-            setMockModeAndNavigate(true, '/dashboard');
+            setMockModeAndNavigate(true, '/workspace');
             return;
         }
 
-        window.location.assign('/dashboard');
+        window.location.assign('/workspace');
+    };
+
+    const handleLandingQuickStartWithFiles = (files: File[]) => {
+        if (!files || files.length === 0) {
+            handleGetStarted();
+            return;
+        }
+
+        appendFilesToQuickDraft(files);
+
+        const destination = '/create?source=landing-drop';
+        if (user.id) {
+            window.location.assign(destination);
+            return;
+        }
+
+        if (isLiveMode) {
+            window.location.assign(`/signin?from=landing&returnTo=${encodeURIComponent(destination)}`);
+            return;
+        }
+
+        window.location.assign(destination);
     };
 
     const protectLiveRoute = (element: React.ReactNode) => {
@@ -2756,7 +4088,7 @@ const AppContent = () => {
         setPrivacyMode(!privacyMode);
     };
 
-    // ── Toast queue ────────────────────────────────────────────────────────────
+    // â”€â”€ Toast queue â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [toasts, setToasts] = useState<Toast[]>([]);
     const toastCounter = useRef(0);
     const showToast: ToastFn = React.useCallback((message, kind = 'success') => {
@@ -2765,7 +4097,7 @@ const AppContent = () => {
         setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
     }, []);
     const dismissToast = (id: number) => setToasts(prev => prev.filter(t => t.id !== id));
-    // ──────────────────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     // Connection state: show "back online" briefly after reconnecting
     const [backOnline, setBackOnline] = useState(false);
@@ -2820,11 +4152,11 @@ const AppContent = () => {
             <div className={`${isDarkMode ? 'dark' : ''} flex flex-col min-h-screen font-sans`}>
                 <ToastContainer toasts={toasts} dismiss={dismissToast} />
 
-                {/* ── Connection / update strips — fixed to viewport top so they're
+                {/* â”€â”€ Connection / update strips — fixed to viewport top so they're
                     always visible regardless of scroll position. The header and
-                    main content read stripOffset via context to shift down. ── */}
+                    main content read stripOffset via context to shift down. â”€â”€ */}
                 {showOfflineStrip && (
-                    <div className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 bg-slate-800 dark:bg-[#0f0f15] border-b border-slate-700 dark:border-white/10 text-slate-100 text-[11px] font-bold h-7 z-[200]">
+                    <div className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 bg-zinc-800 dark:bg-[#0f0f15] border-b border-zinc-700 dark:border-white/10 text-zinc-100 text-[11px] font-bold h-7 z-[200]">
                         <div className="flex items-center gap-2 min-w-0">
                             <Wifi className="w-3 h-3 shrink-0 opacity-60" />
                             <span className="truncate">You're working offline — the app remains fully available.</span>
@@ -2839,7 +4171,7 @@ const AppContent = () => {
                     </div>
                 )}
                 {showBackOnlineStrip && (
-                    <div className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 bg-lime-600 dark:bg-lime-600 text-white text-[11px] font-bold h-7 z-[200]">
+                    <div className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 bg-blue-500 text-zinc-900 shadow-sm dark:bg-blue-500 text-zinc-900 shadow-sm text-white text-[11px] font-bold h-7 z-[200]">
                         <div className="flex items-center gap-2">
                             <CheckCircle className="w-3 h-3 shrink-0" />
                             <span>Back online — connection restored.</span>
@@ -2847,9 +4179,9 @@ const AppContent = () => {
                     </div>
                 )}
 
-                {/* ── SW update available strip ── */}
+                {/* â”€â”€ SW update available strip â”€â”€ */}
                 {showUpdateStrip && (
-                    <div className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 bg-lime-600 text-white text-[11px] font-bold h-7 z-[200]">
+                    <div className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 bg-blue-500 text-zinc-900 shadow-sm text-white text-[11px] font-bold h-7 z-[200]">
                         <div className="flex items-center gap-2 min-w-0">
                             <RefreshCw className="w-3 h-3 shrink-0" />
                             <span className="truncate">A new version is ready.</span>
@@ -2874,13 +4206,13 @@ const AppContent = () => {
                     {/* First-visit theme notice — floats above content */}
                     {firstVisitThemeNotice && (
                         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[120] px-4">
-                            <div className="flex items-center gap-2 rounded-full border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-[#18181b]/90 backdrop-blur-md shadow-lg px-4 py-2 text-[11px] font-bold tracking-wide text-slate-700 dark:text-slate-200">
-                                <CheckCircle className="w-4 h-4 text-lime-600 dark:text-[#bef264]" />
+                            <div className="flex items-center gap-2 rounded-full border border-zinc-200/50 dark:border-white/10 bg-white/90 dark:bg-[#18181b]/90 backdrop-blur-md shadow-lg px-4 py-2 text-[11px] font-bold tracking-wide text-zinc-700 dark:text-zinc-200">
+                                <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                 <span>{firstVisitThemeNotice}</span>
                                 <button
                                     type="button"
                                     onClick={() => setFirstVisitThemeNotice(null)}
-                                    className="ml-1 p-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+                                    className="ml-1 p-0.5 rounded-full hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors"
                                     aria-label="Dismiss theme notice"
                                 >
                                     <X className="w-3 h-3" />
@@ -2895,6 +4227,7 @@ const AppContent = () => {
                             element={
                                 <LandingPage
                                     onGetStarted={handleGetStarted}
+                                    onQuickStartWithFiles={handleLandingQuickStartWithFiles}
                                     currentTheme={themeMode}
                                     onSetThemeMode={setThemeMode}
                                     toggleTheme={cycleTheme}
@@ -2904,6 +4237,7 @@ const AppContent = () => {
                         <Route path="/signin" element={<SignInPage themeMode={themeMode} toggleTheme={cycleTheme} />} />
                         <Route path="/c/:token" element={<ClientLinkWrapper isDarkMode={isDarkMode} themeMode={themeMode} onToggleTheme={cycleTheme} onSetThemeMode={setThemeMode} />} />
                         <Route path="/portal/:token" element={<ClientPortalWrapper />} />
+                        <Route path="/app" element={<Navigate to="/workspace" replace />} />
                         <Route element={protectLiveRoute(<AppLayout
                             user={user}
                             projects={projects}
@@ -2915,13 +4249,29 @@ const AppContent = () => {
                             privacyMode={privacyMode}
                             onSignOut={resetStore}
                         />)}>
+                            {/* Home surface is DeliveryWidget in AppLayout; null outlet so /workspace stays a valid parent match for nested routes */}
+                            <Route path="/workspace" element={null} />
                             <Route path="/dashboard" element={<Suspense fallback={<DashboardSkeleton />}><DashboardView projects={projects} user={user} /></Suspense>} />
                             <Route path="/activity" element={<Suspense fallback={<PageLoader />}><ActivityView /></Suspense>} />
                             <Route path="/vault" element={<Suspense fallback={<VaultSkeleton />}><VaultView projects={projects} /></Suspense>} />
                             <Route path="/reports" element={<Suspense fallback={<PageLoader />}><ReportsView /></Suspense>} />
-                            <Route path="/settings" element={<SettingsPage user={user} onUpdateUser={updateUser} onSignOut={resetStore} />} />
+                            <Route
+                                path="/settings"
+                                element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <SettingsPage user={user} onUpdateUser={updateUser} onSignOut={resetStore} />
+                                    </Suspense>
+                                }
+                            />
                             <Route path="/trash" element={<TrashPage onBack={() => window.history.back()} />} />
-                            <Route path="/help" element={<HelpPage onBack={() => window.history.back()} />} />
+                            <Route
+                                path="/help"
+                                element={
+                                    <Suspense fallback={<PageLoader />}>
+                                        <HelpPage onBack={() => window.history.back()} />
+                                    </Suspense>
+                                }
+                            />
                         </Route>
                         <Route path="/create" element={protectLiveRoute(<CreatorWrapper projects={projects} onSave={saveProject} user={user} />)} />
                         <Route path="/editor/:id" element={protectLiveRoute(<EditorWrapper projects={projects} onSave={saveProject} user={user} />)} />

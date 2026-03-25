@@ -1,6 +1,6 @@
 {
-  "name": "TrueHandover",
-  "short_name": "TrueHandover",
+  "name": "HeartFlair",
+  "short_name": "HeartFlair",
   "description": "Professional delivery standard for creatives.",
   "start_url": "/",
   "display": "standalone",
@@ -9,7 +9,7 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "/icon.svg?v=heartmark-20260324",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

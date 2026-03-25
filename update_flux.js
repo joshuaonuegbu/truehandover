@@ -53,7 +53,7 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                         <div className={\`w-10 h-10 rounded-xl flex items-center justify-center \${isDark ? "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]" : "bg-slate-900 text-white shadow-lg"}\`}>
                             <Zap className="w-6 h-6 fill-current" />
                         </div>
-                        <span className={\`\${textMain} text-xl font-bold tracking-tight\`}>TrueHandover</span>
+                        <span className={\`\${textMain} text-xl font-bold tracking-tight\`}>Heartflair</span>
                     </div>
                 </div>
 
@@ -297,7 +297,7 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                                     <p className="text-sm text-gray-400 mb-5">{p.client?.name || "Unknown Client"}</p>
                                     <div className="flex justify-between items-center">
                                         <span className="text-2xl font-bold" style={{ color: col }}>\${(p.amount || 0).toLocaleString()}</span>
-                                        <span className="text-[10px] text-gray-400 font-mono">{p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", year: "2-digit" }) : "—"}</span>
+                                        <span className="text-[10px] text-gray-400 font-mono">{p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", year: "2-digit" }) : "ï¿½"}</span>
                                     </div>
                                 </div>
                             );
@@ -341,7 +341,7 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                                      </div>
                                      <div>
                                          <h4 className={\`font-bold \${textMain}\`}>{d.name}</h4>
-                                         <p className="text-xs text-gray-400">{d.linked ? "Connected • 54% used" : "Not connected"}</p>
+                                         <p className="text-xs text-gray-400">{d.linked ? "Connected ï¿½ 54% used" : "Not connected"}</p>
                                      </div>
                                 </div>
                                 <button className={\`text-xs font-bold px-4 py-2 rounded-full \${d.linked ? (isDark ? "bg-[#333] text-white" : "bg-slate-200 text-slate-700") : "bg-blue-50 text-blue-600"}\`}>{d.linked ? "Manage" : "Connect"}</button>
@@ -360,8 +360,8 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                     </div>
                     <div className={\`\${bgCard} rounded-[40px] border \${borderMuted} overflow-hidden\`}>
                         {projects.length > 0 ? projects.slice(0, 8).flatMap((p, i) => [
-                            { icon: Eye, label: "Client Viewed", detail: \`\${p.client?.name || "Client"} · \${p.name}\`, time: "Just now", col: isDark ? accentLime : "#65a30d" },
-                            { icon: CreditCard, label: "Payment Update", detail: \`\${p.name} · \$\${(p.amount || 0).toLocaleString()}\`, time: "1h ago", col: isDark ? accentPurple : "#7c3aed" },
+                            { icon: Eye, label: "Client Viewed", detail: \`\${p.client?.name || "Client"} ï¿½ \${p.name}\`, time: "Just now", col: isDark ? accentLime : "#65a30d" },
+                            { icon: CreditCard, label: "Payment Update", detail: \`\${p.name} ï¿½ \$\${(p.amount || 0).toLocaleString()}\`, time: "1h ago", col: isDark ? accentPurple : "#7c3aed" },
                         ]).slice(0, 10).map((a, i) => (
                             <div key={i} className={\`flex items-center gap-5 p-5 border-b \${borderMuted} last:border-0 \${isDark ? "hover:bg-white/[0.03]" : "hover:bg-slate-50"} cursor-pointer transition-colors\`}>
                                 <div className="w-11 h-11 rounded-[18px] flex items-center justify-center shrink-0" style={{ background: a.col + "22" }}>
@@ -376,7 +376,7 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                             </div>
                         )) : (
                             <div className="p-16 text-center">
-                                <p className="text-gray-400 text-sm">No activity yet — events will appear here</p>
+                                <p className="text-gray-400 text-sm">No activity yet ï¿½ events will appear here</p>
                             </div>
                         )}
                     </div>

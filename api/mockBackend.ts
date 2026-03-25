@@ -61,7 +61,7 @@ export const AuditService = {
 
         // Create a text-based "PDF" representation
         const content = [
-            `TRUEHANDOVER SECURE AUDIT RECORD`,
+            `Heartflair SECURE AUDIT RECORD`,
             `================================================`,
             `Generated: ${new Date().toUTCString()}`,
             `Project ID: ${projectId}`,
@@ -77,7 +77,7 @@ export const AuditService = {
             ``,
             `END OF RECORD.`,
             `Cryptographic Signature: ${Math.random().toString(36).substr(2, 20).toUpperCase()}`,
-            `Verify at: https://truehandover.com/verify`
+            `Verify at: https://heartflair.com/verify`
         ].join('\n');
 
         const blob = new Blob([content], { type: 'text/plain' });
@@ -129,7 +129,7 @@ export const StorageService = {
 
         // 2. Fallback for Mock Data
         AuditService.logEvent('unknown_project', 'DOWNLOAD_GENERATED_MOCK', { fileKey });
-        return `https://cdn.truehandover.com/mock-download/${fileKey}`;
+        return `https://cdn.heartflair.com/mock-download/${fileKey}`;
     }
 };
 
@@ -166,7 +166,7 @@ export const ProcessingService = {
     createSecureZip: async (fileKeys: string[]): Promise<string> => {
 
         await new Promise(resolve => setTimeout(resolve, 3000));
-        return `https://cdn.truehandover.com/downloads/package_${Date.now()}.zip`;
+        return `https://cdn.heartflair.com/downloads/package_${Date.now()}.zip`;
     }
 };
 

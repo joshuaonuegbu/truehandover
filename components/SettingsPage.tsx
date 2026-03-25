@@ -7,7 +7,7 @@ import {
     Box, Key, ExternalLink, AlertTriangle, Unlink,
     Smartphone, Camera, ChevronRight, LogOut,
     User, Layers, Bell, Shield, Zap, CircleDollarSign, Eye,
-    FlaskConical, RefreshCw
+    FlaskConical, RefreshCw, Volume2
 } from 'lucide-react';
 import { canToggleMockMode, isMockMode, setMockMode } from '../config/mockMode';
 import { UserProfile, StorageSettings } from '../types';
@@ -28,13 +28,13 @@ const InputField = ({ label, value, onChange, placeholder, type = "text", icon: 
     <div className={`group space-y-1.5 ${className}`}>
         {label && <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">{label}</label>}
         <div className="relative flex items-center">
-            {Icon && <Icon className="absolute left-4 w-4 h-4 text-slate-400 group-focus-within:text-lime-600 dark:group-focus-within:text-[#bef264] transition-colors" />}
+            {Icon && <Icon className="absolute left-4 w-4 h-4 text-slate-400 group-focus-within:text-lime-600 dark:group-focus-within:text-[#a3e635] transition-colors" />}
             <input
                 type={type}
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
-                className={`w-full h-12 ${Icon ? 'pl-11 pr-4' : 'px-4'} bg-white dark:bg-[#18181b] border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 hover:border-slate-300 dark:hover:border-white/20`}
+                className={`w-full h-12 ${Icon ? 'pl-11 pr-4' : 'px-4'} bg-white dark:bg-[#18181b] border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#a3e635] outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 hover:border-slate-300 dark:hover:border-white/20`}
             />
         </div>
     </div>
@@ -54,7 +54,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
         emailAlerts: user.profilePreferences?.emailAlerts ?? true,
         pushNotifs: user.profilePreferences?.pushNotifs ?? false,
         twoFactor: user.profilePreferences?.twoFactor ?? true,
-        biometric: user.profilePreferences?.biometric ?? true
+        biometric: user.profilePreferences?.biometric ?? true,
+        soundEffects: user.profilePreferences?.soundEffects ?? true,
     });
 
     // Avatar Upload State
@@ -127,6 +128,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                 pushNotifs: formData.pushNotifs,
                 twoFactor: formData.twoFactor,
                 biometric: formData.biometric,
+                soundEffects: formData.soundEffects,
             },
             paymentMethods: {
                 venmo: formData.venmo,
@@ -154,7 +156,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
             aria-checked={checked}
             aria-label={label}
             onClick={() => { playClick(); onChange(!checked); }}
-            className={`w-10 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-lime-500 ${checked ? 'bg-lime-600 dark:bg-[#bef264]' : 'bg-slate-200 dark:bg-white/10'}`}
+            className={`w-10 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-lime-500 ${checked ? 'bg-lime-600 dark:bg-[#a3e635]' : 'bg-slate-200 dark:bg-white/10'}`}
         >
             <div className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow-sm transition-all duration-300 bg-white dark:bg-black ${checked ? 'translate-x-4' : ''}`} />
         </button>
@@ -174,7 +176,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
             <div className={`
                 w-10 h-10 rounded-lg flex items-center justify-center transition-colors
                 ${activeTab === id
-                    ? 'bg-lime-600 dark:bg-[#bef264] text-white dark:text-black'
+                    ? 'bg-lime-600 dark:bg-[#a3e635] text-white dark:text-black'
                     : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'
                 }
             `}>
@@ -201,8 +203,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
             <div className="flex flex-col gap-6 border-b border-slate-200 dark:border-white/5 pb-8">
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                     <div>
-                        <h2 className={`text-4xl font-serif font-medium tracking-tight ${GRADIENT_TEXT}`}>
-                            Your <span className="text-lime-600 dark:text-[#bef264]">Settings</span>
+                        <h2 className={`text-4xl font-sans tracking-tight font-medium tracking-tight ${GRADIENT_TEXT}`}>
+                            Your <span className="text-lime-600 dark:text-[#a3e635]">Settings</span>
                         </h2>
                         <p className="text-slate-500 dark:text-slate-400 text-base mt-1">
                             Manage your profile, billing, and system preferences.
@@ -263,9 +265,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                     onChange={handleAvatarUpload}
                                 />
                             </div>
-                            <h3 className="font-serif text-xl font-bold text-slate-900 dark:text-white">{formData.name}</h3>
+                            <h3 className="font-sans tracking-tight text-xl font-bold text-slate-900 dark:text-white">{formData.name}</h3>
                             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-4">{user.email}</p>
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-lime-50 dark:bg-[#bef264]/10 border border-lime-100 dark:border-[#bef264]/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-lime-700 dark:text-[#bef264]">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-lime-50 dark:bg-[#a3e635]/10 border border-lime-100 dark:border-[#a3e635]/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-lime-700 dark:text-[#a3e635]">
                                 <Crown className="w-3 h-3" /> Pro Plan
                             </div>
                         </div>
@@ -323,6 +325,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                             </div>
                             <Toggle checked={formData.emailAlerts} onChange={(v) => handleChange('emailAlerts', v)} />
                         </div>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+                                <Volume2 className="w-4 h-4" />
+                                <span className="text-xs font-bold">Sound Effects</span>
+                            </div>
+                            <Toggle checked={formData.soundEffects} onChange={(v) => { handleChange('soundEffects', v); localStorage.setItem('th_sound_effects', v ? 'true' : 'false'); }} />
+                        </div>
                     </div>
 
                     <button
@@ -338,7 +347,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
 
                     {/* Inner Header Title - Updates based on Tab */}
                     <div className="mb-8">
-                        <h3 className={`text-2xl font-serif font-medium tracking-tight ${GRADIENT_TEXT}`}>
+                        <h3 className={`text-2xl font-sans tracking-tight font-medium tracking-tight ${GRADIENT_TEXT}`}>
                             {activeTab === 'profile' && 'Profile Settings'}
                             {activeTab === 'payments' && 'Financial Stack'}
                             {activeTab === 'agency' && 'Agency Configuration'}
@@ -362,8 +371,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                             <>
                                 <Card>
                                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-white/5">
-                                        <User className="w-5 h-5 text-lime-600 dark:text-[#bef264]" />
-                                        <h3 className="font-serif text-lg text-slate-900 dark:text-white">Basic Information</h3>
+                                        <User className="w-5 h-5 text-lime-600 dark:text-[#a3e635]" />
+                                        <h3 className="font-sans tracking-tight text-lg text-slate-900 dark:text-white">Basic Information</h3>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <InputField
@@ -399,7 +408,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                     <Globe className="w-4 h-4 text-lime-400" />
                                                     <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-lime-400">Public Portal</span>
                                                 </div>
-                                                <h3 className="font-serif text-xl text-white">Client Gateway</h3>
+                                                <h3 className="font-sans tracking-tight text-xl text-white">Client Gateway</h3>
                                                 <p className="text-[11px] text-slate-400 mt-1 leading-relaxed max-w-lg">
                                                     This is the link your clients visit to view their project vault, preview deliverables, and complete payment. Share this URL after creating a project.
                                                 </p>
@@ -421,7 +430,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                         placeholder="brand"
                                                     />
                                                     <div className="pl-2 text-xs font-mono text-slate-500 border-l border-white/10 ml-2 py-1">
-                                                        .truehandover.com
+                                                        .heartflair.com
                                                     </div>
                                                 </div>
                                                 <p className="text-[10px] text-slate-500 pl-1">Your clients will access deliverables at this address</p>
@@ -476,12 +485,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                     <CreditCard className="w-5 h-5 text-white" />
                                                 </div>
                                                 <div>
-                                                    <h3 className="font-serif text-lg font-bold">Stripe Connect</h3>
+                                                    <h3 className="font-sans tracking-tight text-lg font-bold">Stripe Connect</h3>
                                                     <p className="text-[11px] text-white/60 mt-0.5">Clients pay you directly — we just route the funds.</p>
                                                 </div>
                                             </div>
                                             {stripeConnected && (
-                                                <div className="px-3 py-1 bg-lime-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-lime-600 dark:text-[#bef264] border border-lime-400/20 flex items-center gap-1.5">
+                                                <div className="px-3 py-1 bg-lime-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-lime-600 dark:text-[#a3e635] border border-lime-400/20 flex items-center gap-1.5">
                                                     <div className="w-2 h-2 bg-lime-500 rounded-full animate-pulse" />
                                                     Connected
                                                 </div>
@@ -664,7 +673,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
 
                                     <Card>
                                         <div className="flex items-center gap-3 mb-6">
-                                            <div className="p-2 rounded-lg bg-lime-500/10 text-lime-600 dark:text-[#bef264]"><Banknote className="w-5 h-5" /></div>
+                                            <div className="p-2 rounded-lg bg-lime-500/10 text-lime-600 dark:text-[#a3e635]"><Banknote className="w-5 h-5" /></div>
                                             <h3 className="font-bold text-slate-900 dark:text-white">Bank Wire</h3>
                                         </div>
                                         <div className="space-y-2">
@@ -673,7 +682,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                 value={formData.bankInfo}
                                                 onChange={(e) => handleChange('bankInfo', e.target.value)}
                                                 placeholder="Bank Name, SWIFT, IBAN..."
-                                                className="w-full p-4 bg-white dark:bg-[#18181b] border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 min-h-[140px] resize-none hover:border-slate-300 dark:hover:border-white/20"
+                                                className="w-full p-4 bg-white dark:bg-[#18181b] border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#a3e635] outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 min-h-[140px] resize-none hover:border-slate-300 dark:hover:border-white/20"
                                             />
                                         </div>
                                     </Card>
@@ -691,10 +700,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                             <div>
                                                 <div className="flex items-center gap-2.5 mb-1">
                                                     <div className="p-1.5 bg-slate-100 dark:bg-white/5 rounded-lg"><Crown className="w-4 h-4 text-slate-500" /></div>
-                                                    <h3 className="font-serif text-lg text-slate-900 dark:text-white">Whitelabel Domain</h3>
+                                                    <h3 className="font-sans tracking-tight text-lg text-slate-900 dark:text-white">Whitelabel Domain</h3>
                                                 </div>
                                                 <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-1 pl-[34px]">
-                                                    Replace the default TrueHandover URL with your own custom domain. Clients will see your brand only.
+                                                    Replace the default Heartflair URL with your own custom domain. Clients will see your brand only.
                                                 </p>
                                             </div>
                                             <Badge color="lime">Agency</Badge>
@@ -730,7 +739,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Host</span>
                                                     <span className="text-slate-900 dark:text-white font-bold">portal</span>
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Value</span>
-                                                    <span className="text-lime-600 dark:text-[#bef264]">cname.truehandover.com</span>
+                                                    <span className="text-lime-600 dark:text-[#a3e635]">cname.heartflair.com</span>
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Type</span>
                                                     <span>CNAME</span>
                                                 </div>
@@ -740,7 +749,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         {/* What this does — visual hint */}
                                         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5 flex items-center gap-3 text-[10px] text-slate-400 dark:text-slate-500">
                                             <Shield className="w-4 h-4 shrink-0" />
-                                            <span className="leading-relaxed">Instead of <span className="font-mono text-slate-500 dark:text-slate-400">brand.truehandover.com</span>, your clients see <span className="font-mono font-bold text-slate-700 dark:text-white">{agencySettings.cname || 'portal.youragency.com'}</span></span>
+                                            <span className="leading-relaxed">Instead of <span className="font-mono text-slate-500 dark:text-slate-400">brand.heartflair.com</span>, your clients see <span className="font-mono font-bold text-slate-700 dark:text-white">{agencySettings.cname || 'portal.youragency.com'}</span></span>
                                         </div>
                                     </div>
                                 </Card>
@@ -766,7 +775,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-lime-600/10 text-lime-600 dark:bg-[#bef264]/10 dark:text-[#bef264] flex items-center justify-center"><Verified className="w-4 h-4" /></div>
+                                                    <div className="w-8 h-8 rounded-lg bg-lime-600/10 text-lime-600 dark:bg-[#a3e635]/10 dark:text-[#a3e635] flex items-center justify-center"><Verified className="w-4 h-4" /></div>
                                                     <div>
                                                         <p className="font-bold text-sm text-slate-900 dark:text-white">Remove Logo</p>
                                                         <p className="text-[10px] text-slate-500">Hide "Powered By"</p>
@@ -790,7 +799,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                 <FlaskConical className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                                             </div>
                                             <div>
-                                                <h3 className="font-serif text-xl text-slate-900 dark:text-white">Demo Mode</h3>
+                                                <h3 className="font-sans tracking-tight text-xl text-slate-900 dark:text-white">Demo Mode</h3>
                                                 <p className="text-xs text-slate-500">Controls whether the app uses pre-populated mock data or your real Supabase backend.</p>
                                             </div>
                                         </div>
@@ -815,7 +824,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                             </div>
 
                                             <div className={`p-3 rounded-xl flex items-start gap-3 border ${demoMode ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' : 'bg-lime-50 dark:bg-lime-500/10 border-lime-200 dark:border-lime-500/20'}`}>
-                                                <FlaskConical className={`w-4 h-4 mt-0.5 shrink-0 ${demoMode ? 'text-amber-600 dark:text-amber-400' : 'text-lime-600 dark:text-[#bef264]'}`} />
+                                                <FlaskConical className={`w-4 h-4 mt-0.5 shrink-0 ${demoMode ? 'text-amber-600 dark:text-amber-400' : 'text-lime-600 dark:text-[#a3e635]'}`} />
                                                 <p className={`text-[11px] leading-relaxed font-medium ${demoMode ? 'text-amber-800 dark:text-amber-200' : 'text-lime-800 dark:text-lime-200'}`}>
                                                     {demoMode
                                                         ? 'Demo mode is active. Pre-populated mock data and mock backend services are in use. File uploads and payments are simulated.'
@@ -827,7 +836,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         <div className="mt-6 p-4 bg-slate-50 dark:bg-[#18181b] rounded-2xl border border-slate-100 dark:border-white/5">
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Runtime Info</p>
                                             <div className="space-y-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                                                <div className="flex justify-between"><span>Mode</span><span className={demoMode ? 'text-amber-500' : 'text-lime-600 dark:text-[#bef264]'}>{demoMode ? 'DEMO' : 'LIVE'}</span></div>
+                                                <div className="flex justify-between"><span>Mode</span><span className={demoMode ? 'text-amber-500' : 'text-lime-600 dark:text-[#a3e635]'}>{demoMode ? 'DEMO' : 'LIVE'}</span></div>
                                                 <div className="flex justify-between"><span>VITE_DEMO_MODE</span><span>{import.meta.env.VITE_DEMO_MODE ?? '(not set)'}</span></div>
                                                 <div className="flex justify-between"><span>Environment</span><span>{import.meta.env.MODE}</span></div>
                                                 <div className="flex justify-between"><span>Supabase</span><span>{import.meta.env.VITE_SUPABASE_URL ? '✓ configured' : '✗ missing'}</span></div>
@@ -850,9 +859,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                 <Card className="!p-8 relative overflow-hidden">
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-white/5">
-                                            <HardDrive className="w-5 h-5 text-lime-600 dark:text-[#bef264]" />
+                                            <HardDrive className="w-5 h-5 text-lime-600 dark:text-[#a3e635]" />
                                             <div>
-                                                <h3 className="font-serif text-xl text-slate-900 dark:text-white">Storage</h3>
+                                                <h3 className="font-sans tracking-tight text-xl text-slate-900 dark:text-white">Storage</h3>
                                                 <p className="text-xs text-slate-500">Uploads and deliveries are platform-managed in production.</p>
                                             </div>
                                         </div>
@@ -864,7 +873,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                     <div>
                                                         <p className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Platform Vault</p>
                                                         <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
-                                                            TrueHandover uses server-issued presigned URLs for uploads and downloads. No S3/R2 secret keys or cloud OAuth tokens are stored in the browser or in your profile.
+                                                            Heartflair uses server-issued presigned URLs for uploads and downloads. No S3/R2 secret keys or cloud OAuth tokens are stored in the browser or in your profile.
                                                         </p>
                                                         <div className="mt-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                                             <span className="px-2 py-1 rounded bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10">Mode</span>

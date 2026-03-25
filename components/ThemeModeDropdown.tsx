@@ -108,7 +108,7 @@ const ThemeModeDropdown: React.FC<ThemeModeDropdownProps> = ({
                 <div
                     ref={menuRef}
                     role="menu"
-                    className={`fixed z-[210] rounded-xl border shadow-2xl p-1.5 ${isDarkMode ? 'bg-[#161622] border-white/10' : 'bg-white border-slate-200'} ${menuClassName}`}
+                    className={`fixed z-[210] rounded-xl border shadow-2xl p-1.5 ${isDarkMode ? 'bg-[#161622] border-white/10' : 'glass-panel'} ${menuClassName}`}
                     style={{ top: position.top, left: position.left, width: position.width }}
                 >
                     {options.map((option) => {
@@ -126,8 +126,8 @@ const ThemeModeDropdown: React.FC<ThemeModeDropdownProps> = ({
                                     setOpen(false);
                                 }}
                                 className={`w-full h-10 px-3 rounded-lg flex items-center gap-2.5 text-left transition-all ${isActive
-                                    ? (isDarkMode ? 'bg-white/12 text-white ring-1 ring-white/15' : 'bg-slate-100 text-slate-900 ring-1 ring-slate-200')
-                                    : (isDarkMode ? 'text-slate-300 hover:bg-white/8 hover:text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900')
+                                    ? (isDarkMode ? 'bg-white/12 text-white ring-1 ring-white/15' : 'bg-zinc-100 text-zinc-900 ring-1 ring-zinc-200')
+                                    : (isDarkMode ? 'text-zinc-300 hover:bg-white/8 hover:text-white' : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900')
                                     }`}
                             >
                                 <Icon className="w-4 h-4 shrink-0" />

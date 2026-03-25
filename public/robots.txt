@@ -18,4 +18,4 @@ Disallow: /portal/
 # Public-facing client links are indexable
 Allow: /c/
 
-Sitemap: https://truehandover.com/sitemap.xml
+Sitemap: https://heartflair.com/sitemap.xml

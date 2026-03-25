@@ -29,13 +29,13 @@ class AppErrorBoundary extends React.Component<React.PropsWithChildren, AppError
         }
 
         return (
-            <div className="min-h-screen w-full bg-[#0f0f15] text-white flex items-center justify-center p-6">
+            <div className="min-h-screen w-full bg-black text-white flex items-center justify-center p-6">
                 <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md p-8 text-center">
                     <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-red-500/15 text-red-400 flex items-center justify-center">
                         <AlertTriangle className="w-7 h-7" />
                     </div>
-                    <h1 className="font-serif text-2xl mb-2">Something went wrong</h1>
-                    <p className="text-sm text-slate-300 mb-6">
+                    <h1 className="font-sans tracking-tight text-2xl mb-2">Something went wrong</h1>
+                    <p className="text-sm text-zinc-300 mb-6">
                         An unexpected error has occurred. You can dismiss the error and try to continue, or reload the page to fully reset the application.
                     </p>
                     <div className="flex items-center justify-center gap-3">

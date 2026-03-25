@@ -61,7 +61,7 @@ serve(async (req) => {
                     currency: 'usd',
                     product_data: {
                         name: project.name,
-                        description: "Secure delivery via TrueHandover",
+                        description: "Secure delivery via Heartflair",
                     },
                     unit_amount: Math.round(project.amount * 100), // convert to cents
                 },
@@ -74,8 +74,8 @@ serve(async (req) => {
                     creatorId: project.user_id,
                 },
             },
-            success_url: `${baseUrl}/#/c/${project.client_link}?payment=success`,
-            cancel_url: `${baseUrl}/#/c/${project.client_link}?payment=cancelled`,
+            success_url: `${baseUrl}/c/${project.client_link}?payment=success`,
+            cancel_url: `${baseUrl}/c/${project.client_link}?payment=cancelled`,
             metadata: {
                 projectId: project.id,
                 creatorId: project.user_id,

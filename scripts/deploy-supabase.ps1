@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "TrueHandover: Supabase deploy (Edge Functions + Secrets)" -ForegroundColor Cyan
+Write-Host "Heartflair: Supabase deploy (Edge Functions + Secrets)" -ForegroundColor Cyan
 Write-Host ""
 
 $repoRoot = Split-Path -Parent $PSScriptRoot

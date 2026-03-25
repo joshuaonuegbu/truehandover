@@ -165,21 +165,21 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
             if (!data || typeof data.type !== 'string') return;
 
             // Child (iframe) -> parent: keep mock status bar in sync with the preview theme.
-            if (data.type === 'TRUEHANDOVER_PREVIEW_THEME') {
+            if (data.type === 'Heartflair_PREVIEW_THEME') {
                 if (typeof data.isDarkMode !== 'boolean') return;
                 setIframeThemeIsDark(data.isDarkMode);
                 return;
             }
 
             // Child (iframe) -> parent: tweak mock status bar background based on preview layout state.
-            if (data.type === 'TRUEHANDOVER_PREVIEW_STATUSBAR') {
+            if (data.type === 'Heartflair_PREVIEW_STATUSBAR') {
                 if (data.mode !== 'solid' && data.mode !== 'transparent') return;
                 setIframeStatusBarLightModeStyle(data.mode);
                 return;
             }
 
             // Child (iframe) -> parent: keep track of docked sidebar collapse state so overlays can avoid collisions.
-            if (data.type === 'TRUEHANDOVER_PREVIEW_SIDEBAR_STATE') {
+            if (data.type === 'Heartflair_PREVIEW_SIDEBAR_STATE') {
                 if (typeof data.collapsed !== 'boolean') return;
                 setIframeDockedSidebarCollapsed(data.collapsed);
                 onDockedSidebarCollapseChange?.(data.collapsed);
@@ -187,7 +187,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
             }
 
             // Parent (creator/editor) -> child: push live project edits into the canvas iframe so it stays in sync.
-            if (data.type === 'TRUEHANDOVER_PREVIEW_SET_PROJECT') {
+            if (data.type === 'Heartflair_PREVIEW_SET_PROJECT') {
                 if (!data.project) return;
                 setProject(data.project as Project);
                 return;
@@ -237,10 +237,15 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         }
     };
 
-    const handleSubmitRevision = (text: string) => {
+    const handleSubmitRevision = (text: string, pin?: {x: number, y: number}) => {
         if (lightboxIndex === null) return;
         const fileId = filteredFiles[lightboxIndex].id;
-        setRevisions(prev => ({ ...prev, [fileId]: [...(prev[fileId] || []), { text, timestamp: new Date() }] }));
+        const newRev: any = { text, timestamp: new Date() };
+        if (pin) {
+            newRev.x = pin.x;
+            newRev.y = pin.y;
+        }
+        setRevisions(prev => ({ ...prev, [fileId]: [...(prev[fileId] || []), newRev] }));
         playSuccess();
     };
 
@@ -287,7 +292,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         setPaymentError(null);
         setProject(prev => ({
             ...prev, status: 'paid',
-            files: prev.files.map(f => ({ ...f, locked: false, downloadUrl: f.externalUrl ? f.externalUrl : `https://vault-cdn.truehandover.com/secure/${f.id}?sig=${Math.random().toString(36).substring(7)}&exp=${Date.now() + 3600000}` }))
+            files: prev.files.map(f => ({ ...f, locked: false, downloadUrl: f.externalUrl ? f.externalUrl : `https://vault-cdn.heartflair.com/secure/${f.id}?sig=${Math.random().toString(36).substring(7)}&exp=${Date.now() + 3600000}` }))
         }));
         playSuccess();
     }
@@ -353,7 +358,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         const onMessage = (event: MessageEvent) => {
             if (event.origin !== window.location.origin) return;
             const data = event.data as any;
-            if (!data || data.type !== 'TRUEHANDOVER_SIM_EXIT') return;
+            if (!data || data.type !== 'Heartflair_SIM_EXIT') return;
             if (deviceMode !== 'desktop') switchDevice('desktop');
         };
         window.addEventListener('message', onMessage);
@@ -400,7 +405,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         if (deviceMode === 'desktop' || isRawMode || viewportClass === 'mobile') return;
         const target = iframeRef.current?.contentWindow;
         if (!target) return;
-        target.postMessage({ type: 'TRUEHANDOVER_PREVIEW_SET_PROJECT', project }, window.location.origin);
+        target.postMessage({ type: 'Heartflair_PREVIEW_SET_PROJECT', project }, window.location.origin);
     }, [deviceMode, orientation, iframeRefreshKey, iframeLoadedTick, project, isRawMode, viewportClass]);
 
     // --- RENDER: ClientPreviewPage (props bundle) ---
@@ -409,7 +414,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         // This prevents creators from accidentally landing in /vault or other admin routes in the iframe.
         if (isRawMode) {
             try {
-                window.parent.postMessage({ type: 'TRUEHANDOVER_SIM_EXIT' }, window.location.origin);
+                window.parent.postMessage({ type: 'Heartflair_SIM_EXIT' }, window.location.origin);
             } catch { }
             return;
         }
@@ -467,12 +472,12 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
 
         return (
             // Match the preview page background immediately to avoid a white flash between mode switches.
-            <div className={`relative w-full h-full ${isDarkMode ? 'bg-[#0f0f15]' : 'bg-[#FDFDFD]'}`}>
+            <div className={`relative w-full h-full ${isDarkMode ? 'bg-black' : 'bg-[#FDFDFD]'}`}>
                 <ClientPreviewPage {...previewProps} />
                 {/* Fade-out dark overlay to prevent a bright flash when returning from the simulator */}
                 {isDesktopFadingIn && (
                     <div
-                        className="absolute inset-0 z-[70] pointer-events-none bg-[#0f0f15] animate-fade-in"
+                        className="absolute inset-0 z-[70] pointer-events-none bg-black animate-fade-in"
                         style={{ animationDirection: 'reverse', animationDuration: '0.45s' }}
                     />
                 )}
@@ -529,14 +534,18 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
 
     return (
         <div className={`w-full ${isEmbedded ? 'h-full' : 'h-[100dvh]'} flex flex-col relative overflow-hidden select-none`}
-            style={{ background: 'linear-gradient(145deg, #1a1a24 0%, #141420 30%, #0f0f1a 60%, #1a1a26 100%)' }}
+            style={{ background: isEmbedded ? 'transparent' : 'linear-gradient(145deg, #1a1a24 0%, #141420 30%, #0f0f1a 60%, #1a1a26 100%)' }}
         >
             {/* === CANVAS BACKGROUND TEXTURE === */}
-            <div className="absolute inset-0 opacity-[0.35] pointer-events-none mix-blend-soft-light"
-                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")` }}
-            />
-            <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_50%_45%,_rgba(190,242,100,0.04)_0%,_transparent_70%)] pointer-events-none" />
+            {!isEmbedded && (
+                <>
+                    <div className="absolute inset-0 opacity-[0.35] pointer-events-none mix-blend-soft-light"
+                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")` }}
+                    />
+                    <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+                </>
+            )}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_50%_45%,_rgba(163,230,53,0.04)_0%,_transparent_70%)] pointer-events-none" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_40%,_rgba(0,0,0,0.5)_100%)] pointer-events-none" />
 
             {/* Fade only the foreground UI during transitions to avoid flashing the page background */}
@@ -737,3 +746,4 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
 };
 
 export default ClientPreviewBiz;
+
