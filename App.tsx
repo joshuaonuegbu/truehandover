@@ -1212,11 +1212,21 @@ const CyclingWidget = ({ projects }: { projects: Project[] }) => {
     );
 };
 
-const DashboardView = ({ projects, user }: { projects: Project[], user: UserProfile }) => {
+const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects: Project[], user: UserProfile, headerVariant?: 'default' | 'greeting' }) => {
     // ... same as before
     const navigate = useNavigate();
     const location = useLocation();
     const { openSearch } = useOutletContext<{ privacyMode: boolean; openSearch?: () => void }>();
+    const greetingName = useMemo(() => {
+        const fullName = (user?.name || '').trim();
+        return fullName ? fullName.split(/\s+/)[0] : 'there';
+    }, [user?.name]);
+    const greetingLine = useMemo(() => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good morning,';
+        if (hour < 18) return 'Good afternoon,';
+        return 'Good evening,';
+    }, []);
     const [projectTab, setProjectTab] = useState<'pending' | 'draft' | 'paid'>('pending');
     const [briefingPulse, setBriefingPulse] = useState(false);
     const briefingPulseLocationKeyRef = useRef<string | null>(null);
@@ -1280,10 +1290,21 @@ const DashboardView = ({ projects, user }: { projects: Project[], user: UserProf
             <div className="flex flex-col gap-6 border-b border-zinc-200/50 dark:border-white/5 pb-8">
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                     <div>
-                        <h1 className="font-sans tracking-tight text-3xl md:text-5xl text-zinc-900 dark:text-white leading-tight mb-2">
-                            <span>Dash</span><span className="text-[#84cc16] dark:text-[#a3e635]">board</span>
-                        </h1>
-                        <p className="text-zinc-500 dark:text-zinc-400 text-lg">Here's your project overview for today.</p>
+                        {headerVariant === 'greeting' ? (
+                            <>
+                                <h1 className="font-serif tracking-tight text-3xl md:text-5xl text-zinc-900 dark:text-white leading-tight mb-2">
+                                    {greetingLine} <span className="text-[#84cc16] dark:text-[#a3e635] italic">{greetingName}</span>.
+                                </h1>
+                                <p className="text-zinc-500 dark:text-zinc-400 text-lg">Here’s what’s happening across your vault today.</p>
+                            </>
+                        ) : (
+                            <>
+                                <h1 className="font-sans tracking-tight text-3xl md:text-5xl text-zinc-900 dark:text-white leading-tight mb-2">
+                                    <span>Dash</span><span className="text-[#84cc16] dark:text-[#a3e635]">board</span>
+                                </h1>
+                                <p className="text-zinc-500 dark:text-zinc-400 text-lg">Here's your project overview for today.</p>
+                            </>
+                        )}
                         {/* At-a-Glance strip — live stats derived from store */}
                         {(() => {
                             const pendingPayment = projects.filter(p => p.status === 'awaiting_payment');
@@ -3831,8 +3852,10 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                 onClick={() => { playClick(); navigate('/workspace'); }}
                                 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white transition-colors cursor-pointer"
                             >
-                                <ChevronLeft className="w-4 h-4" />
-                                Close
+                                <span className="w-5 h-5 rounded-full border border-zinc-300/80 dark:border-white/20 flex items-center justify-center">
+                                    <X className="w-3.5 h-3.5" />
+                                </span>
+                                Close panel
                             </button>
                         </div>
                         <div className="flex-1 overflow-y-auto">
@@ -3847,10 +3870,10 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             )}
 
             {/* ── Help FAB ── */}
-            <div className="fixed bottom-24 right-4 lg:bottom-8 lg:right-8 z-40">
+            <div className="fixed bottom-24 right-4 lg:bottom-8 lg:right-8 z-[96]">
                 {currentPath === 'help' ? (
                     <button
-                        onClick={() => { playClick(); navigate('/workspace'); }}
+                        onClick={() => { playClick(); navigate(layoutMode === 'full' ? '/dashboard' : '/workspace'); }}
                         className="w-12 h-12 bg-zinc-900 dark:bg-white/10 hover:bg-zinc-800 dark:hover:bg-white/20 text-white rounded-2xl flex items-center justify-center shadow-lg transition-all hover:scale-110 duration-300 cursor-pointer"
                         aria-label="Close help"
                     >
@@ -4436,7 +4459,7 @@ const AppContent = () => {
                         />)}>
                             {/* Home surface is DeliveryWidget in AppLayout when docked; in full layout route redirects to a real panel. */}
                             <Route path="/workspace" element={layoutMode === 'full' ? <Navigate to="/dashboard" replace /> : null} />
-                            <Route path="/dashboard" element={<Suspense fallback={<DashboardSkeleton />}><DashboardView projects={projects} user={user} /></Suspense>} />
+                            <Route path="/dashboard" element={<Suspense fallback={<DashboardSkeleton />}><DashboardView projects={projects} user={user} headerVariant={layoutMode === 'full' ? 'greeting' : 'default'} /></Suspense>} />
                             <Route path="/activity" element={<Suspense fallback={<PageLoader />}><ActivityView /></Suspense>} />
                             <Route path="/vault" element={<Suspense fallback={<VaultSkeleton />}><VaultView projects={projects} /></Suspense>} />
                             <Route path="/reports" element={<Suspense fallback={<PageLoader />}><ReportsView /></Suspense>} />

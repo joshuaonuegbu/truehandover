@@ -89,6 +89,7 @@ html {
   margin: 0;
   padding: 0;
   scrollbar-gutter: stable;
+  background: var(--color-editorial);
 }
 
 body {
@@ -113,6 +114,10 @@ body {
 .dark body {
   background-color: var(--color-cosmic);
   color: #ffffff;
+}
+
+.dark html {
+  background-color: var(--color-cosmic);
 }
 
 .dark #root {
