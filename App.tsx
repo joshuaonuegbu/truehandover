@@ -1295,7 +1295,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                 <h1 className="font-serif tracking-tight text-3xl md:text-5xl text-zinc-900 dark:text-white leading-tight mb-2">
                                     {greetingLine} <span className="text-[#84cc16] dark:text-[#a3e635] italic">{greetingName}</span>.
                                 </h1>
-                                <p className="text-zinc-500 dark:text-zinc-400 text-lg">Here’s what’s happening across your vault today.</p>
+                                <p className="text-zinc-500 dark:text-zinc-400 text-lg">Here's your project overview for today.</p>
                             </>
                         ) : (
                             <>
@@ -4245,7 +4245,7 @@ const AppContent = () => {
                 shouldBeDark = themeMode === 'dark';
             }
             setIsDarkMode(shouldBeDark);
-            // Toggle 'dark' class on HTML or Body if needed, though parent div handles it here
+            document.documentElement.classList.toggle('dark', shouldBeDark);
         };
 
         applyTheme();

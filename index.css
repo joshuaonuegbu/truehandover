@@ -92,6 +92,10 @@ html {
   background: var(--color-editorial);
 }
 
+html.dark {
+  background-color: var(--color-cosmic);
+}
+
 body {
   background: var(--color-editorial);
   color: #0f172a;
@@ -116,8 +120,25 @@ body {
   color: #ffffff;
 }
 
-.dark html {
-  background-color: var(--color-cosmic);
+/* Selection + form controls */
+::selection {
+  background: rgba(163, 230, 53, 0.35);
+}
+
+::-moz-selection {
+  background: rgba(163, 230, 53, 0.35);
+}
+
+.dark ::selection {
+  background: rgba(163, 230, 53, 0.22);
+}
+
+.dark ::-moz-selection {
+  background: rgba(163, 230, 53, 0.22);
+}
+
+:root {
+  accent-color: var(--color-brand);
 }
 
 .dark #root {
