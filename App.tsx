@@ -3141,7 +3141,6 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
     // g-chord state for "g+d / g+v / g+r / g+a / g+s" navigation shortcuts
     const gChordRef = useRef(false);
     const gChordTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const dockWidgetRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleDown = (e: KeyboardEvent) => {
@@ -3486,36 +3485,6 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
     const headerHeightPx = 64;
     const isDockMode = layoutMode !== 'full';
     const isPanelOpen = isDockMode && currentPath !== 'workspace';
-
-    useEffect(() => {
-        if (!isDockMode) {
-            document.documentElement.style.removeProperty('--dock-panel-left');
-            return;
-        }
-
-        const update = () => {
-            const el = dockWidgetRef.current;
-            if (!el) return;
-            const rect = el.getBoundingClientRect();
-            const gutter = window.innerWidth >= 1280 ? 36 : 16;
-            const leftPx = Math.round(rect.right + gutter);
-            document.documentElement.style.setProperty('--dock-panel-left', `${leftPx}px`);
-        };
-
-        update();
-        window.addEventListener('resize', update);
-
-        let ro: ResizeObserver | null = null;
-        if (typeof ResizeObserver !== 'undefined' && dockWidgetRef.current) {
-            ro = new ResizeObserver(() => update());
-            ro.observe(dockWidgetRef.current);
-        }
-
-        return () => {
-            window.removeEventListener('resize', update);
-            ro?.disconnect();
-        };
-    }, [isDockMode]);
     const topbarGlassCls = 'bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-zinc-200/60 dark:border-white/10 shadow-lg';
     const topbarGlassHoverCls = 'hover:bg-slate-200/70 dark:hover:bg-white/10';
     const greetingName = useMemo(() => {
@@ -3785,7 +3754,6 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             {/* ── Delivery Widget: floats left, vertically centered below header ── */}
             {isDockMode && (
                 <div
-                    ref={dockWidgetRef}
                     className="fixed left-4 right-4 sm:left-8 sm:right-auto z-20 flex items-center transition-[opacity,transform] duration-500"
                     style={{ top: stripOffset + headerHeightPx, bottom: 72 }}
                 >
@@ -3853,7 +3821,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             {/* ── Side panel ── */}
             {isDockMode && (
                 <aside
-                    className={`dock-panel fixed right-0 bottom-0 z-[70] w-full max-w-[960px] lg:w-auto lg:max-w-none bg-[#f0f2f5] dark:bg-cosmic transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                    className={`fixed right-0 bottom-0 z-[70] w-full max-w-[960px] lg:w-auto lg:max-w-none lg:left-[420px] xl:left-[440px] bg-[#f0f2f5] dark:bg-cosmic transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}
                     style={{ top: stripOffset }}
                     aria-hidden={!isPanelOpen}
                 >
