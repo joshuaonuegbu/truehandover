@@ -2024,8 +2024,8 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
     );
 };
 
-const MobileNavBar = ({ navItems, currentPath, onNavigate }: { navItems: any[], currentPath: string, onNavigate: (id: string) => void }) => (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[49] bg-white/90 dark:bg-[#1a1a23]/90 backdrop-blur-xl border-t border-zinc-200/50 dark:border-white/10">
+const MobileNavBar = ({ navItems, currentPath, onNavigate, layoutMode }: { navItems: any[], currentPath: string, onNavigate: (id: string) => void, layoutMode?: 'dock' | 'full' }) => (
+    <div className={`lg:hidden fixed bottom-0 left-0 right-0 z-[49] ${layoutMode === 'full' ? 'bg-[#f0f2f5]/95 dark:bg-cosmic/95' : 'bg-white/90 dark:bg-[#1a1a23]/90'} backdrop-blur-xl border-t border-zinc-200/50 dark:border-white/10`}>
         <div className="flex justify-around items-center h-16 sm:h-20 max-w-lg mx-auto">
             {navItems.map((item) => {
                 const isActive = currentPath === item.id;
@@ -3485,8 +3485,12 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
     const headerHeightPx = 64;
     const isDockMode = layoutMode !== 'full';
     const isPanelOpen = isDockMode && currentPath !== 'workspace';
-    const topbarGlassCls = 'bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-zinc-200/60 dark:border-white/10 shadow-lg';
-    const topbarGlassHoverCls = 'hover:bg-slate-200/70 dark:hover:bg-white/10';
+    const topbarGlassCls = layoutMode === 'full'
+        ? 'bg-[#f0f2f5] dark:bg-cosmic border border-zinc-200/60 dark:border-white/10 shadow-none'
+        : 'bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-zinc-200/60 dark:border-white/10 shadow-lg';
+    const topbarGlassHoverCls = layoutMode === 'full'
+        ? 'hover:bg-slate-200/70 dark:hover:bg-[#2b2b3a]'
+        : 'hover:bg-slate-200/70 dark:hover:bg-white/10';
     const greetingName = useMemo(() => {
         const fullName = (user?.name || '').trim();
         return fullName ? fullName.split(/\s+/)[0] : 'there';
@@ -3597,13 +3601,17 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
 
             {/* ── Top bar ── */}
             <header
-                className="fixed left-0 right-0 z-[85] flex items-center justify-between px-4 sm:px-6 lg:px-8 transition-[top] duration-200 pointer-events-none"
+                className={`fixed left-0 right-0 z-[85] flex items-center justify-between px-4 sm:px-6 lg:px-8 transition-[top] duration-200 pointer-events-none ${
+                    layoutMode === 'full'
+                        ? 'bg-[#f0f2f5] dark:bg-cosmic border-b border-zinc-200/60 dark:border-white/10'
+                        : ''
+                }`}
                 style={{ top: stripOffset, height: headerHeightPx }}
             >
                 {/* Logo */}
                 <button
                     className="flex items-center gap-2 cursor-pointer group shrink-0 pointer-events-auto"
-                    onClick={() => { playClick(); navigate('/workspace'); }}
+                    onClick={() => { playClick(); navigate(layoutMode === 'full' ? '/dashboard' : '/workspace'); }}
                     title="Home"
                 >
                     <EditorialIcon className="w-5 h-5 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
@@ -3768,17 +3776,9 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                     style={{ top: stripOffset + headerHeightPx }}
                 >
                     <div className="h-full overflow-y-auto px-3 sm:px-5 lg:px-6 xl:px-7 py-3 sm:py-4 bg-[#f0f2f5] dark:bg-cosmic">
-                        {currentPath === 'workspace' ? (
-                            <div className="h-full flex items-stretch justify-center">
-                                <div className="h-full flex items-stretch py-2">
-                                    <DeliveryWidget isDarkMode={isDarkMode} onPublish={saveProject} />
-                                </div>
-                            </div>
-                        ) : (
-                            <div key={location.pathname} className="h-full animate-route-in">
-                                <Outlet context={{ privacyMode, openSearch: () => setIsSearchOpen(true) }} />
-                            </div>
-                        )}
+                        <div key={location.pathname} className="h-full animate-route-in">
+                            <Outlet context={{ privacyMode, openSearch: () => setIsSearchOpen(true) }} />
+                        </div>
                     </div>
                 </main>
             )}
@@ -3870,7 +3870,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             </div>
 
             {/* ── Mobile bottom navigation ── */}
-            <MobileNavBar navItems={navItems} currentPath={currentPath} onNavigate={(id) => { playClick(); handleTopLevelNavigate(id); }} />
+            <MobileNavBar navItems={navItems} currentPath={currentPath} layoutMode={layoutMode} onNavigate={(id) => { playClick(); handleTopLevelNavigate(id); }} />
 
             {/* ── Search overlay (above everything including strip) ── */}
             {isSearchOpen && <SearchCommandPalette onClose={() => setIsSearchOpen(false)} />}
@@ -4434,8 +4434,8 @@ const AppContent = () => {
                             privacyMode={privacyMode}
                             onSignOut={resetStore}
                         />)}>
-                            {/* Home surface is DeliveryWidget in AppLayout; null outlet so /workspace stays a valid parent match for nested routes */}
-                            <Route path="/workspace" element={null} />
+                            {/* Home surface is DeliveryWidget in AppLayout when docked; in full layout route redirects to a real panel. */}
+                            <Route path="/workspace" element={layoutMode === 'full' ? <Navigate to="/dashboard" replace /> : null} />
                             <Route path="/dashboard" element={<Suspense fallback={<DashboardSkeleton />}><DashboardView projects={projects} user={user} /></Suspense>} />
                             <Route path="/activity" element={<Suspense fallback={<PageLoader />}><ActivityView /></Suspense>} />
                             <Route path="/vault" element={<Suspense fallback={<VaultSkeleton />}><VaultView projects={projects} /></Suspense>} />
