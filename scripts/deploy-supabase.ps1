@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "Heartflair: Supabase deploy (Edge Functions + Secrets)" -ForegroundColor Cyan
+Write-Host "Heartifact: Supabase deploy (Edge Functions + Secrets)" -ForegroundColor Cyan
 Write-Host ""
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
@@ -39,6 +39,7 @@ $functions = @(
   "stripe-checkout",
   "stripe-onboarding",
   "stripe-webhook",
+  "manual-payment-verify",
   "client-preview",
   "creator-projects",
   "r2-presign",
@@ -52,4 +53,3 @@ foreach ($fn in $functions) {
 
 Write-Host ""
 Write-Host "Done." -ForegroundColor Green
-

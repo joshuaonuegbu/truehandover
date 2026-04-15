@@ -1,5 +1,5 @@
 
-// Mock Backend Services for Heartflair
+// Mock Backend Services for Heartifact
 
 export const AuthService = {
     signIn: async (email: string, pass: string) => {
@@ -29,7 +29,7 @@ export const ProjectService = {
             data: { 
                 id: 'proj_' + Math.random().toString(36).substr(2, 9), 
                 ...data,
-                client_link: `https://heartflair.com/preview/proj_${Math.random().toString(36).substr(2, 6)}`
+                client_link: `https://heartifact.com/preview/proj_${Math.random().toString(36).substr(2, 6)}`
             } 
         };
     },

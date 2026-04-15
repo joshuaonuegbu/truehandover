@@ -7,14 +7,14 @@
 
 This document is retained as a reference for a future secure connector implementation.
 
-Historically, Heartflair supported "Bring Your Own Storage" (BYOS) via cloud-drive connections in:
+Historically, Heartifact supported "Bring Your Own Storage" (BYOS) via cloud-drive connections in:
 
 `Settings -> Storage -> Cloud Drive`
 
 ## The Non-Negotiable Reality
 
-If you want Heartflair to show an OAuth consent screen like "Heartflair wants access to your Drive",
-you (Heartflair) must register an OAuth app with each provider at least once.
+If you want Heartifact to show an OAuth consent screen like "Heartifact wants access to your Drive",
+you (Heartifact) must register an OAuth app with each provider at least once.
 
 Your customers do **not** create OAuth keys. They simply click **Connect** and grant permissions.
 

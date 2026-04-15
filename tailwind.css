@@ -1,8 +1,23 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 @font-face {
   font-family: "Aktiv Grotesk";
-  src: local("Aktiv Grotesk"), local("AktivGrotesk-Regular");
+  font-style: normal;
+  font-weight: 100 900;
+  src:
+    local("Aktiv Grotesk"),
+    local("Aktiv Grotesk Regular"),
+    local("Aktiv Grotesk Medium"),
+    local("Aktiv Grotesk Bold"),
+    local("Aktiv Grotesk W01 Regular"),
+    local("Aktiv Grotesk W01"),
+    local("AktivGrotesk"),
+    local("AktivGrotesk-Regular"),
+    local("AktivGrotesk-Medium"),
+    local("AktivGrotesk-Bold"),
+    local("Aktiv Grotesk Corp"),
+    url("/fonts/AktivGrotesk-Regular.woff2") format("woff2"),
+    url("/fonts/AktivGrotesk-Regular.woff") format("woff");
   font-display: swap;
 }
 
@@ -18,7 +33,7 @@
   font-display: swap;
 }
 
-/* Class-based dark mode — driven by .dark on <html>, not by OS preference */
+/* Class-based dark mode â€” driven by .dark on <html>, not by OS preference */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Give every interactive element a pointer cursor by default */
@@ -28,7 +43,7 @@
   }
 
   .dark {
-    --color-lime-600: #a3e635;
+    --color-lime-600: #bef264;
   }
 
   button,
@@ -44,7 +59,7 @@
     cursor: pointer;
   }
 
-  /* On-brand keyboard focus rings — only shown for keyboard navigation */
+  /* On-brand keyboard focus rings â€” only shown for keyboard navigation */
   :focus-visible {
     outline: 2px solid var(--color-lime-600);
     outline-offset: 2px;
@@ -144,29 +159,59 @@
   @keyframes widget-highlight-double-frame {
     0% {
       opacity: 0;
-      box-shadow: 0 0 0 0 rgba(132, 204, 22, 0);
+      box-shadow: 0 0 0 0 rgba(190, 242, 100, 0);
       transform: scale(0.992);
     }
     18% {
       opacity: 1;
-      box-shadow: 0 0 24px 8px rgba(132, 204, 22, 0.2);
+      box-shadow: 0 0 24px 8px rgba(190, 242, 100, 0.2);
     }
     36% {
       opacity: 0.35;
-      box-shadow: 0 0 10px 2px rgba(132, 204, 22, 0.1);
+      box-shadow: 0 0 10px 2px rgba(190, 242, 100, 0.1);
     }
     62% {
       opacity: 1;
-      box-shadow: 0 0 30px 10px rgba(132, 204, 22, 0.24);
+      box-shadow: 0 0 30px 10px rgba(190, 242, 100, 0.24);
       transform: scale(1);
     }
     80% {
       opacity: 0.3;
-      box-shadow: 0 0 10px 2px rgba(132, 204, 22, 0.1);
+      box-shadow: 0 0 10px 2px rgba(190, 242, 100, 0.1);
     }
     100% {
       opacity: 0;
-      box-shadow: 0 0 0 0 rgba(132, 204, 22, 0);
+      box-shadow: 0 0 0 0 rgba(190, 242, 100, 0);
+      transform: scale(1.01);
+    }
+  }
+
+  @keyframes widget-highlight-double-frame-dark {
+    0% {
+      opacity: 0;
+      box-shadow: 0 0 0 0 rgba(190, 242, 100, 0);
+      transform: scale(0.992);
+    }
+    18% {
+      opacity: 1;
+      box-shadow: 0 0 24px 8px rgba(190, 242, 100, 0.2);
+    }
+    36% {
+      opacity: 0.35;
+      box-shadow: 0 0 10px 2px rgba(190, 242, 100, 0.1);
+    }
+    62% {
+      opacity: 1;
+      box-shadow: 0 0 30px 10px rgba(190, 242, 100, 0.24);
+      transform: scale(1);
+    }
+    80% {
+      opacity: 0.3;
+      box-shadow: 0 0 10px 2px rgba(190, 242, 100, 0.1);
+    }
+    100% {
+      opacity: 0;
+      box-shadow: 0 0 0 0 rgba(190, 242, 100, 0);
       transform: scale(1.01);
     }
   }
@@ -182,8 +227,8 @@
     position: absolute;
     inset: -30px;
     border-radius: 2.5rem;
-    border: 2px solid rgba(132, 204, 22, 0.4);
-    box-shadow: 0 0 0 0 rgba(132, 204, 22, 0);
+    border: 2px solid rgba(190, 242, 100, 0.4);
+    box-shadow: 0 0 0 0 rgba(190, 242, 100, 0);
     opacity: 0;
     pointer-events: none;
     z-index: 1;
@@ -192,30 +237,51 @@
   .widget-highlight-shell.widget-highlight-double::after {
     animation: widget-highlight-double-frame 2.4s cubic-bezier(0.22, 1, 0.36, 1) 1 both;
   }
+
+  .dark .widget-highlight-shell::after {
+    border-color: rgba(190, 242, 100, 0.4);
+    box-shadow: 0 0 0 0 rgba(190, 242, 100, 0);
+  }
+
+  .dark .widget-highlight-shell.widget-highlight-double::after {
+    animation-name: widget-highlight-double-frame-dark;
+  }
 }
 
 @theme {
-  /* ── Base Colors ── */
+  /* â”€â”€ Base Colors â”€â”€ */
   --color-cosmic: #323242;
   --color-obsidian: #0f0f15;
   --color-charcoal: #23232e;
   --color-surface: #2D2E45;
   --color-editorial: #F8FAFC;
 
-  /* ── Brand Colors ── */
+  /* â”€â”€ Brand Colors â”€â”€ */
   --color-brand: #a3e635;
-  --color-brand-hover: #84cc16;
-  --color-brand-glow: rgba(163, 230, 53, 0.5);
+  --color-brand-hover: #a3e635;
+  --color-brand-glow: rgba(163, 230, 53, 0.22);
+
+  /* Keep all lime utilities aligned to the brand icon accent. */
+  --color-lime-50: #a3e635;
+  --color-lime-100: #a3e635;
+  --color-lime-200: #a3e635;
+  --color-lime-300: #a3e635;
+  --color-lime-400: #a3e635;
+  --color-lime-500: #a3e635;
+  --color-lime-600: #a3e635;
+  --color-lime-700: #a3e635;
+  --color-lime-800: #a3e635;
+  --color-lime-900: #a3e635;
 
   /* Recovery shim: map accidental blue/green palette usage back to lime family. */
   --color-blue-50: #f7fee7;
   --color-blue-100: #ecfccb;
   --color-blue-200: #d9f99d;
   --color-blue-300: #a3e635;
-  --color-blue-400: #bef264;
+  --color-blue-400: #a3e635;
   --color-blue-500: #a3e635;
-  --color-blue-600: #84cc16;
-  --color-blue-700: #65a30d;
+  --color-blue-600: #a3e635;
+  --color-blue-700: #a3e635;
   --color-blue-800: #4d7c0f;
   --color-blue-900: #365314;
 
@@ -223,19 +289,19 @@
   --color-green-100: #ecfccb;
   --color-green-200: #d9f99d;
   --color-green-300: #a3e635;
-  --color-green-400: #bef264;
+  --color-green-400: #a3e635;
   --color-green-500: #a3e635;
-  --color-green-600: #84cc16;
-  --color-green-700: #65a30d;
+  --color-green-600: #a3e635;
+  --color-green-700: #a3e635;
   --color-green-800: #4d7c0f;
   --color-green-900: #365314;
 
-  /* ── Typography ── */
-  --font-sans: "Aktiv Grotesk", "Neue Haas Grotesk Text Pro", "Space Grotesk", "Neue Haas Grotesk Display Pro", "Helvetica Neue", Arial, sans-serif;
+  /* â”€â”€ Typography â”€â”€ */
+  --font-sans: "DM Sans", "Hanken Grotesk", "Karla", "PT Sans", "Libre Franklin", "Space Grotesk", "Neue Haas Grotesk Text Pro", "Neue Haas Grotesk Display Pro", "Helvetica Neue", Arial, sans-serif;
   --font-serif: "Fraunces", "Times New Roman", serif;
   --font-mono: "JetBrains Mono", monospace;
 
-  /* ── Animations ── */
+  /* â”€â”€ Animations â”€â”€ */
   --animate-fade-in: fadeIn 0.6s ease-out;
   --animate-slide-up: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-ticker: ticker 545s linear infinite;
@@ -285,26 +351,61 @@
       transform: translateX(100%);
     }
   }
+  --animate-editor-in: editorIn 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  @keyframes editorIn {
+    0% { opacity: 0; transform: translateX(16px) scale(0.995); }
+    100% { opacity: 1; transform: translateX(0) scale(1); }
+  }
 }
 
 @layer base {
   :root {
     --color-brand: #a3e635;
-    --color-brand-hover: #84cc16;
-    --color-brand-glow: rgba(163, 230, 53, 0.5);
+    --color-brand-hover: #a3e635;
+    --color-brand-glow: rgba(163, 230, 53, 0.22);
+    --color-lime-500: #a3e635;
+    --color-lime-600: #a3e635;
+
+    --color-blue-400: #a3e635;
+    --color-blue-500: #a3e635;
+    --color-blue-600: #a3e635;
+    --color-green-400: #a3e635;
+    --color-green-500: #a3e635;
+    --color-green-600: #a3e635;
   }
 
   .dark {
-    --color-brand: #a3e635;
-    --color-brand-hover: #84cc16;
-    --color-brand-glow: rgba(163, 230, 53, 0.5);
+    --color-brand: #bef264;
+    --color-brand-hover: #bef264;
+    --color-brand-glow: rgba(190, 242, 100, 0.22);
+    --color-lime-500: #bef264;
+    --color-lime-600: #bef264;
 
-    /* Keep mutated blue/green utility usage visually on-brand in dark mode. */
+    /* Dark: brand lime #bef264 for mapped blue/green utilities. */
     --color-blue-400: #bef264;
-    --color-blue-500: #a3e635;
-    --color-blue-600: #84cc16;
+    --color-blue-500: #bef264;
+    --color-blue-600: #bef264;
     --color-green-400: #bef264;
-    --color-green-500: #a3e635;
-    --color-green-600: #84cc16;
+    --color-green-500: #bef264;
+    --color-green-600: #bef264;
   }
 }
+
+@layer utilities {
+  .bg-lime-50,
+  .bg-lime-100,
+  .bg-lime-200,
+  .bg-lime-300,
+  .bg-lime-400,
+  .bg-lime-500,
+  .bg-lime-600,
+  .bg-lime-700,
+  .bg-lime-800,
+  .bg-lime-900,
+  .bg-blue-500,
+  .bg-blue-600,
+  .bg-blue-700 {
+    color: #0f172a !important;
+  }
+}
+

@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Lock, Unlock, Download, ShieldCheck,
@@ -19,6 +19,10 @@ import { PaymentTerminal } from './PaymentTerminal';
 import { InlineErrorBanner } from './Shared';
 import ThemeModeDropdown from './ThemeModeDropdown';
 import BrandLogo from './BrandLogo';
+import { LayoutBillboard, LayoutDeck, LayoutJournal, LayoutMasonry, PortalLayoutVariant } from './ClientPreviewLayouts';
+import { PortalLightboxVariant, PortalStyleLightbox } from './ClientPreviewLightboxes';
+
+const ARCHIVED_PORTAL_LAYOUTS: PortalLayoutVariant[] = ['cinema', 'split', 'portfolio', 'modeler', 'studio'];
 
 // --- PROPS INTERFACE ---
 interface ClientPreviewPageProps {
@@ -39,7 +43,8 @@ interface ClientPreviewPageProps {
     lightboxIndex: number | null;
     setLightboxIndex: (index: number | null) => void;
     revisions: Record<string, any[]>;
-    onPaymentComplete: () => void;
+    onPaymentComplete: (method?: 'stripe' | 'manual') => void;
+    canVerifyManualPayment?: boolean;
     handleSubmitRevision: (text: string, pin?: {x: number, y: number}) => void;
     handleDeleteRevision: (index: number) => void;
     activeFilter: 'all' | 'image' | 'doc' | 'video' | 'audio' | 'archive';
@@ -55,6 +60,8 @@ interface ClientPreviewPageProps {
     onRenameAsset?: (fileId: string, newName: string) => void;
     onResizeAsset?: (fileId: string, newSize: string) => void;
     onRemoveAsset?: (fileId: string) => void;
+    /** When the vault lightbox opens/closes, parent chrome (device toolbar, floating preview pill) can hide so it never stacks above the lightbox. */
+    onLightboxOpenChange?: (open: boolean) => void;
 }
 
 interface ClientLibraryViewProps {
@@ -122,7 +129,7 @@ const ClientLibraryView: React.FC<ClientLibraryViewProps> = ({ projects, isDarkM
                         <p className={`text-xs ${textMuted} mt-1`}>{totalVisibleAssets} assets across {visibleProjects.length} deliveries</p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className={`flex items-center gap-2 px-3 h-10 rounded-xl border ${isDarkMode ? 'bg-black/20 border-white/10 text-zinc-300' : 'glass-panel text-zinc-600'}`}>
+                        <div className={`flex items-center gap-2 px-3 h-10 rounded-xl border ${isDarkMode ? 'bg-black/20 border-white/10 text-zinc-300' : 'bg-white/90 border-zinc-200 text-zinc-600 shadow-sm'}`}>
                             <Search className="w-3.5 h-3.5" />
                             <input
                                 value={searchTerm}
@@ -134,7 +141,7 @@ const ClientLibraryView: React.FC<ClientLibraryViewProps> = ({ projects, isDarkM
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value as any)}
-                            className={`h-10 px-3 rounded-xl border text-xs font-bold uppercase tracking-wider outline-none ${isDarkMode ? 'bg-black/20 border-white/10 text-zinc-300' : 'glass-panel text-zinc-600'}`}
+                            className={`h-10 px-3 rounded-xl border text-xs font-bold uppercase tracking-wider outline-none ${isDarkMode ? 'bg-black/20 border-white/10 text-zinc-300' : 'bg-white/90 border-zinc-200 text-zinc-600 shadow-sm'}`}
                         >
                             <option value="recent">Recently Viewed</option>
                             <option value="newest">Newest Delivery</option>
@@ -208,13 +215,13 @@ const ClientLibraryView: React.FC<ClientLibraryViewProps> = ({ projects, isDarkM
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 onClick={() => handleAssetOpen(file.id)}
-                                                className={`mt-3 h-9 rounded-xl flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${isDarkMode ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-zinc-900 text-white hover:bg-zinc-800'}`}
+                                                className={`mt-3 h-9 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${isDarkMode ? 'bg-[#bef264] text-zinc-950 hover:bg-[#d9f99d]' : 'bg-zinc-900 text-white hover:bg-zinc-800'}`}
                                             >
                                                 <Download className="w-3.5 h-3.5" />
                                                 Open Asset
                                             </a>
                                         ) : (
-                                            <div className={`mt-3 h-9 rounded-xl flex items-center justify-center text-[10px] font-bold uppercase tracking-widest ${isDarkMode ? 'bg-white/5 text-zinc-400' : 'bg-zinc-200 text-zinc-500'}`}>
+                                            <div className={`mt-3 h-9 rounded-2xl flex items-center justify-center text-[10px] font-bold uppercase tracking-widest ${isDarkMode ? 'bg-white/5 text-zinc-400' : 'bg-zinc-200 text-zinc-500'}`}>
                                                 Link Unavailable
                                             </div>
                                         )}
@@ -239,14 +246,14 @@ const SVG_PATTERNS = {
     lines: `data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40L40 0' stroke='black' stroke-width='2' fill='none'/%3E%3C/svg%3E`,
     dots: `data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='2' fill='black'/%3E%3C/svg%3E`,
     grid: `data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0H40V40' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E`,
-    plus: `data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 15V25M15 20H25' stroke='black' stroke-width='1.5' stroke-linecap='square'/%3E%3C/svg%3E`,
-    hex: `data:image/svg+xml,%3Csvg width='28' height='24' viewBox='0 0 28 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M14 0L28 6L28 18L14 24L0 18L0 6Z M14 0L0 6 M28 6L14 12L0 18 M28 18L14 12L0 6' fill='none' stroke='black' stroke-width='1'/%3E%3C/svg%3E`,
-    rhombus: `data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0L40 20L20 40L0 20Z' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E`,
-    waves: `data:image/svg+xml,%3Csvg width='40' height='20' viewBox='0 0 40 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10 Q 10 0 20 10 T 40 10' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E`,
+    plus: `data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 15V25M15 20H25' stroke='black' stroke-width='1' stroke-linecap='square'/%3E%3C/svg%3E`,
+    hex: `data:image/svg+xml,%3Csvg width='28' height='24' viewBox='0 0 28 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M14 0L28 6L28 18L14 24L0 18L0 6Z M14 0L0 6 M28 6L14 12L0 18 M28 18L14 12L0 6' fill='none' stroke='black' stroke-width='0.75'/%3E%3C/svg%3E`,
+    rhombus: `data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0L40 20L20 40L0 20Z' fill='none' stroke='black' stroke-width='1'/%3E%3C/svg%3E`,
+    waves: `data:image/svg+xml,%3Csvg width='40' height='20' viewBox='0 0 40 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10 Q 10 0 20 10 T 40 10' fill='none' stroke='black' stroke-width='1'/%3E%3C/svg%3E`,
     radar: `data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='5' fill='none' stroke='black' stroke-width='1.5'/%3E%3Ccircle cx='30' cy='30' r='12' fill='none' stroke='black' stroke-width='1.5'/%3E%3Ccircle cx='30' cy='30' r='20' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E`,
-    cross: `data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 15L25 25M25 15L15 25' stroke='black' stroke-width='1.5' stroke-linecap='square'/%3E%3C/svg%3E`,
+    cross: `data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 15L25 25M25 15L15 25' stroke='black' stroke-width='1' stroke-linecap='square'/%3E%3C/svg%3E`,
     graph: `data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0H20V20' fill='none' stroke='black' stroke-width='0.5'/%3E%3C/svg%3E`,
-    zigzag: `data:image/svg+xml,%3Csvg width='40' height='30' viewBox='0 0 40 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 30 L10 0 L20 30 L30 0 L40 30' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E`
+    zigzag: `data:image/svg+xml,%3Csvg width='40' height='30' viewBox='0 0 40 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 30 L10 0 L20 30 L30 0 L40 30' fill='none' stroke='black' stroke-width='1'/%3E%3C/svg%3E`
 };
 
 const EditorialIcon = ({ className }: { className?: string }) => (
@@ -333,24 +340,24 @@ const CredentialVaultWidget = ({ credentials, isLocked, isDarkMode }: any) => {
                             // UNLOCKED STATE
                             <div className="space-y-2">
                                 <div className="flex gap-2">
-                                    <div className={`flex-1 h-7 px-2 rounded border flex items-center font-mono text-[10px] truncate ${isDarkMode ? 'bg-black/40 border-white/5 text-zinc-300' : 'glass-panel text-zinc-600'}`}>
+                                    <div className={`flex-1 h-7 px-2 rounded border flex items-center font-mono text-[10px] truncate ${isDarkMode ? 'bg-black/40 border-white/5 text-zinc-300' : 'bg-white/90 border-zinc-200 text-zinc-600 shadow-sm'}`}>
                                         {cred.username}
                                     </div>
                                     <button
                                         onClick={() => handleCopy(cred.username, cred.id + '_u')}
-                                        className={`w-7 h-7 flex items-center justify-center rounded border ${isDarkMode ? 'bg-white/5 border-white/5 hover:bg-white/10' : 'glass-panel hover:bg-zinc-50'} transition-colors`}
+                                        className={`w-7 h-7 flex items-center justify-center rounded border ${isDarkMode ? 'bg-white/5 border-white/5 hover:bg-white/10' : 'bg-white/90 border-zinc-200 text-zinc-600 hover:bg-zinc-50 shadow-sm'} transition-colors`}
                                         title="Copy Username"
                                     >
                                         {copiedId === cred.id + '_u' ? <Check className="w-3 h-3 text-blue-500" /> : <Copy className="w-3 h-3 text-zinc-400" />}
                                     </button>
                                 </div>
                                 <div className="flex gap-2">
-                                    <div className={`flex-1 h-7 px-2 rounded border flex items-center font-mono text-[10px] truncate ${isDarkMode ? 'bg-black/40 border-white/5 text-zinc-300' : 'glass-panel text-zinc-600'}`}>
+                                    <div className={`flex-1 h-7 px-2 rounded border flex items-center font-mono text-[10px] truncate ${isDarkMode ? 'bg-black/40 border-white/5 text-zinc-300' : 'bg-white/90 border-zinc-200 text-zinc-600 shadow-sm'}`}>
                                         {revealedIds.has(cred.id) ? cred.password : '****************'}
                                     </div>
                                     <button
                                         onClick={() => handleCopy(cred.password, cred.id + '_p')}
-                                        className={`w-7 h-7 flex items-center justify-center rounded border ${isDarkMode ? 'bg-white/5 border-white/5 hover:bg-white/10' : 'glass-panel hover:bg-zinc-50'} transition-colors`}
+                                        className={`w-7 h-7 flex items-center justify-center rounded border ${isDarkMode ? 'bg-white/5 border-white/5 hover:bg-white/10' : 'bg-white/90 border-zinc-200 text-zinc-600 hover:bg-zinc-50 shadow-sm'} transition-colors`}
                                         title="Copy Password"
                                     >
                                         {copiedId === cred.id + '_p' ? <Check className="w-3 h-3 text-blue-500" /> : <Copy className="w-3 h-3 text-zinc-400" />}
@@ -379,7 +386,7 @@ const CredentialVaultWidget = ({ credentials, isLocked, isDarkMode }: any) => {
 const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, onAssetClick, onRequestCorrection, isPhoneLike, onRename, onResize, onRemove }: any) => {
     const textPrimary = isDarkMode ? 'text-white' : 'text-zinc-900';
     const brandGreenBg = isDarkMode ? 'bg-blue-500' : 'bg-blue-600';
-    const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#a3e635]' : 'shadow-[0_0_10px_rgba(163,230,53,0.5)]';
+    const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#bef264]' : 'shadow-[0_0_10px_rgba(190, 242, 100,0.5)]';
     const borderColor = isDarkMode ? 'border-white/5' : 'border-zinc-200';
     const [expandedSpecs, setExpandedSpecs] = useState<Set<string>>(new Set());
     const [copiedHashId, setCopiedHashId] = useState<string | null>(null);
@@ -427,9 +434,15 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                 return (
                     <div
                         key={file.id}
-                        className={`group relative ${isDarkMode ? 'bg-zinc-800 border-white/5 hover:shadow-white/5 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)]' : 'bg-white border-zinc-100 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]'} rounded-[1.5rem] border overflow-hidden transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-[1.01]`}
+                        className={`group relative rounded-[2rem] border overflow-hidden transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-[1.01] ${isDarkMode
+                            ? 'bg-charcoal border-white/[0.06] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] hover:shadow-[0_28px_55px_-14px_rgba(0,0,0,0.55),0_0_40px_-10px_rgba(255,255,255,0.07)]'
+                            : 'bg-white border-zinc-200/50 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]'
+                            }`}
                         style={{ animationDelay: `${index * 100}ms` }}
                     >
+                        <div className={`absolute inset-0 pointer-events-none rounded-[2rem] ${isDarkMode ? 'opacity-[0.04]' : 'opacity-[0.02]'}`} style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                        <div className={`absolute -top-20 -right-20 w-64 h-64 rounded-full blur-[80px] pointer-events-none ${isDarkMode ? 'bg-blue-500/5' : 'bg-blue-300/10'}`} />
+                        <div className="relative z-10">
                         {/* Inline remove button (editor desktop preview only) */}
                         {onRemove && (
                             <button
@@ -445,21 +458,21 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                         <button
                             type="button"
                             onClick={() => onAssetClick(index)}
-                            className={`aspect-[16/10] w-full ${isDarkMode ? 'bg-black' : 'bg-zinc-50'} relative overflow-hidden rounded-t-[1.5rem] isolate flex items-center justify-center cursor-pointer border-none p-0`}
+                            className={`aspect-[16/10] w-full ${isDarkMode ? 'bg-black' : 'bg-zinc-50'} relative overflow-hidden rounded-t-[2rem] isolate flex items-center justify-center cursor-pointer border-none p-0`}
                             aria-label={`View details for ${file.name}`}
                         >
                             {file.previewUrl ? (
                                 <img
                                     src={getUnlockedPreviewUrl(file)}
                                     alt={file.name}
-                                    className={`w-full h-full object-cover rounded-t-[1.5rem] transition-all duration-700 [image-rendering:auto] ${file.locked && isLocked ? 'scale-105 blur-[8px] opacity-80' : 'group-hover:scale-[1.02] [filter:contrast(1.08)_saturate(1.06)_brightness(1.02)]'}`}
+                                    className={`w-full h-full object-cover rounded-t-[2rem] transition-all duration-700 [image-rendering:auto] ${file.locked && isLocked ? 'scale-105 opacity-80' : 'group-hover:scale-[1.02] [filter:contrast(1.08)_saturate(1.06)_brightness(1.02)]'}`}
                                 />
                             ) : (
                                 <div className="opacity-20">{getFileIcon(file.type)}</div>
                             )}
                             {file.locked && isLocked && (
                                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none">
-                                    <div className={`absolute inset-0 rounded-t-[1.5rem] ${isDarkMode ? 'bg-black/20' : 'bg-white/10'} backdrop-blur-md`} />
+                                    <div className={`absolute inset-0 rounded-t-[2rem] ${isDarkMode ? 'bg-black/20' : 'bg-white/10'} backdrop-blur-md`} />
                                     <div className="relative z-30 flex flex-col items-center">
                                         <div className={`w-16 h-16 rounded-2xl ${isDarkMode ? 'bg-black/40 border-white/10' : 'bg-white/20 border-white/30'} backdrop-blur-xl border flex items-center justify-center mb-4 shadow-2xl`}>
                                             <Lock className="w-7 h-7 text-white drop-shadow-md" />
@@ -470,11 +483,11 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                             )}
                             <div className="absolute top-4 left-4 z-30">
                                 <div className={`px-3 py-1.5 rounded-lg ${isDarkMode ? 'bg-black/80 border-white/10 text-zinc-300' : 'bg-white/90 border-zinc-200/50 text-zinc-700'} backdrop-blur-md border shadow-sm flex items-center gap-2`}>
-                                    {getFileIcon(file.type).props.className.includes('Image') ? <ImageIcon className="w-3 h-3 text-zinc-500" /> : <FileText className="w-3 h-3 text-zinc-500" />}
+                                    {(file.type === 'image' || file.type === 'design') ? <ImageIcon className="w-3 h-3 text-zinc-500" /> : <FileText className="w-3 h-3 text-zinc-500" />}
                                     <span className="text-[10px] font-bold uppercase tracking-wider">{file.type}</span>
                                 </div>
                             </div>
-                            <div className="absolute inset-0 z-20 rounded-t-[1.5rem] bg-transparent group-hover:bg-transparent transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 duration-300">
+                            <div className="absolute inset-0 z-20 rounded-t-[2rem] bg-transparent group-hover:bg-transparent transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 duration-300">
                                 <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform"><Maximize2 className="w-5 h-5" /></div>
                             </div>
                         </button>
@@ -516,14 +529,14 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                                 title={onResize ? 'Click to edit size' : undefined}
                                             >{file.size}</span>
                                         )}
-                                        <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" /><span className="uppercase tracking-wider">Version {file.version}.0</span>
+                                        <span className={`w-1 h-1 rounded-full ${isDarkMode ? 'bg-zinc-700' : 'bg-zinc-300'}`} /><span className="uppercase tracking-wider">Version {file.version}.0</span>
                                     </div>
                                 </div>
                                 <div className={`w-2.5 h-2.5 shrink-0 rounded-full mt-1.5 ${file.locked && isLocked ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : `${brandGreenBg} ${brandGreenShadow}`}`} />
                             </div>
                             <div className={`${expandedSpecs.has(file.id) ? 'block' : (isPhoneLike ? 'hidden' : 'hidden md:block')} mb-4 md:mb-6 p-3 rounded-xl border transition-all ${isDarkMode ? 'bg-black/20 border-white/5' : 'bg-zinc-50 border-zinc-100'}`}>
                                 <div className="flex justify-between items-center mb-2"><span className="text-[10px] font-bold uppercase text-zinc-500">Technical Specs</span><ShieldCheck className="w-3 h-3 text-zinc-400" /></div>
-                                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px] md:text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+                                <div className={`grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px] md:text-xs font-mono ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
                                     <div><span className="opacity-60">Type</span> <span className="uppercase">{file.type}</span></div>
                                     <div><span className="opacity-60">Size</span> {file.size}</div>
                                     <div className="truncate"><span className="opacity-60">Source</span> {file.tag || (file.storageProvider && file.storageProvider !== 'native' ? `${file.storageProvider.charAt(0).toUpperCase()}${file.storageProvider.slice(1)}` : 'Native')}</div>
@@ -543,8 +556,8 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                                 title="Copy SHA-256 hash"
                                                 className={`shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border transition-all ${
                                                     copiedHashId === file.id
-                                                        ? 'bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-400'
-                                                        : 'border-zinc-200/50 dark:border-white/10 text-zinc-400 hover:text-zinc-700 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10'
+                                                        ? (isDarkMode ? 'bg-blue-900/30 border-blue-700 text-blue-400' : 'bg-blue-100 border-blue-300 text-blue-700')
+                                                        : (isDarkMode ? 'border-white/10 text-zinc-400 hover:text-white hover:bg-white/10' : 'border-zinc-200/50 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100')
                                                 }`}
                                             >
                                                 <Copy className="w-2.5 h-2.5" />
@@ -565,16 +578,17 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                 ) : (
                                     file.downloadUrl ? (
                                         <>
-                                            <a href={file.downloadUrl} target="_blank" rel="noopener noreferrer" className={`flex-1 h-11 md:h-12 ${isDarkMode ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'} font-bold text-[10px] md:text-xs uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02]`}>
+                                            <a href={file.downloadUrl} target="_blank" rel="noopener noreferrer" className={`flex-1 h-11 md:h-12 ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-blue-600 hover:bg-blue-700 text-white'} font-bold text-[10px] md:text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02]`}>
                                                 {file.externalUrl ? <ExternalLink className="w-4 h-4" /> : <Download className="w-4 h-4" />} <span className="hidden sm:inline">{file.externalUrl ? "Open Secure Link" : "Download Original"}</span><span className="sm:hidden">{file.externalUrl ? "Open" : "Download"}</span>
                                             </a>
                                             <button aria-label="Request Correction" onClick={() => onRequestCorrection(index)} disabled={isRevisionSent} className={`h-12 w-12 flex items-center justify-center rounded-xl border transition-colors ${isRevisionSent ? (isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500 cursor-default' : 'bg-amber-100 text-amber-600 cursor-default') : (isDarkMode ? 'border-white/5 hover:bg-white/10 text-zinc-400 hover:text-amber-500' : 'border-zinc-200/50 hover:bg-zinc-50 text-zinc-400 hover:text-amber-500')}`}><MessageSquarePlus className="w-5 h-5" /></button>
                                         </>
                                     ) : (
-                                        <button disabled className="flex-1 h-12 bg-zinc-200 dark:bg-white/10 text-zinc-400 font-bold text-xs uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 cursor-wait"><Loader2 className="w-4 h-4 animate-spin" /> Generating Link...</button>
+                                        <button disabled className={`flex-1 h-12 text-zinc-400 font-bold text-xs uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 cursor-wait ${isDarkMode ? 'bg-white/10' : 'bg-zinc-200'}`}><Loader2 className="w-4 h-4 animate-spin" /> Generating Link...</button>
                                     )
                                 )}
                             </div>
+                        </div>
                         </div>
                     </div>
                 );
@@ -625,8 +639,8 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                         )}
                         {/* Hover glow */}
                         <div className={`absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${isDarkMode
-                            ? 'bg-[radial-gradient(circle_at_top_left,_rgba(163,230,53,0.10)_0%,_transparent_55%)]'
-                            : 'bg-[radial-gradient(circle_at_top_left,_rgba(163,230,53,0.12)_0%,_transparent_55%)]'
+                            ? 'bg-[radial-gradient(circle_at_top_left,_rgba(190, 242, 100,0.10)_0%,_transparent_55%)]'
+                            : 'bg-[radial-gradient(circle_at_top_left,_rgba(190, 242, 100,0.12)_0%,_transparent_55%)]'
                             }`} />
 
                         <div className="relative flex items-center gap-4 p-4 sm:p-5">
@@ -640,7 +654,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                             {file.previewUrl ? (
                                 <img
                                     src={file.previewUrl}
-                                        className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${isFileLocked ? 'blur-[3px] grayscale-[30%] opacity-60' : ''}`}
+                                        className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${isFileLocked ? 'grayscale-[30%] opacity-60' : ''}`}
                                     alt={file.name}
                                 />
                             ) : (
@@ -663,7 +677,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                         <div className="flex items-center gap-2">
                                             <span className={`w-2 h-2 rounded-full ${isFileLocked
                                                 ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.35)]'
-                                                : `${brandGreenBg} ${isDarkMode ? 'shadow-[0_0_12px_rgba(163,230,53,0.35)]' : 'shadow-[0_0_10px_rgba(163,230,53,0.25)]'}`
+                                                : `${brandGreenBg} ${isDarkMode ? 'shadow-[0_0_12px_rgba(190, 242, 100,0.35)]' : 'shadow-[0_0_10px_rgba(190, 242, 100,0.25)]'}`
                                                 }`} />
                                             {onRename && editingNameId === file.id ? (
                                                 <input
@@ -727,7 +741,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                         onClick={(e) => { e.stopPropagation(); onRequestCorrection(index); }}
                                                 className={`flex items-center gap-2 px-3 py-2 rounded-full border transition-all text-[10px] font-bold uppercase tracking-widest ${isRevisionSent
                                             ? 'bg-amber-500/10 border-amber-500/20 text-amber-500'
-                                                    : `${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white' : 'glass-panel hover:bg-zinc-50 text-zinc-600'}`
+                                                    : `${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white' : 'bg-white/90 border-zinc-200 text-zinc-600 hover:bg-zinc-50 shadow-sm'}`
                                                     }`}
                                         title={isRevisionSent ? 'View Request' : 'Request Correction'}
                                     >
@@ -762,7 +776,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
 
 
 // --- SUB-COMPONENT: VISUAL LIGHTBOX (OPTIMIZED) ---
-const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, themeMode, revisions, onClose, onNext, onPrev, onSelect, onToggleTheme, onSetThemeMode, onSubmitRevision, onDeleteRevision, showWatermark = true, showProtectedLabel = true }: any) => {
+const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, themeMode, revisions, onClose, onNext, onPrev, onSelect, onToggleTheme, onSetThemeMode, onSubmitRevision, onDeleteRevision, showWatermark = true, showProtectedLabel = true, isEmbedded = false }: any) => {
     const [localShowWatermark, setLocalShowWatermark] = useState(showWatermark);
     const [localShowProtectedLabel, setLocalShowProtectedLabel] = useState(showProtectedLabel);
     // Sync when project-level props change
@@ -995,7 +1009,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
 
     return (
         // Premium frosted backdrop: keep heavy blur, but lower tint opacity (~65% reduction vs prior /90)
-        <div className={`fixed inset-0 z-[100] flex items-stretch ${isDarkMode ? 'bg-black/45' : 'bg-zinc-50/35'} backdrop-blur-3xl ${isClosing ? 'animate-lightbox-exit' : 'animate-lightbox-entry'}`}>
+        <div className={`${isEmbedded ? 'absolute inset-0 z-[500]' : 'fixed inset-0 z-[500]'} flex items-stretch ${isDarkMode ? 'bg-black/45' : 'bg-zinc-50/35'} backdrop-blur-3xl ${isClosing ? 'animate-lightbox-exit' : 'animate-lightbox-entry'}`}>
             <style>{`
                 @keyframes slideInRight { from { transform: translateX(40px) scale(0.98); opacity: 0; filter: blur(4px); } to { transform: translateX(0) scale(1); opacity: 1; filter: blur(0); } }
                 @keyframes slideInLeft { from { transform: translateX(-40px) scale(0.98); opacity: 0; filter: blur(4px); } to { transform: translateX(0) scale(1); opacity: 1; filter: blur(0); } }
@@ -1067,7 +1081,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                     </button>
                                 </>
                             )}
-                            {isProtectedPreview && (
+                            {isProtectedPreview && isEmbedded && (
                                 <>
                                     <button
                                         aria-label="Toggle Watermark"
@@ -1184,7 +1198,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                                         setImagePreviewError(null);
                                                         setImageRetrySeed((seed) => seed + 1);
                                                     }}
-                                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white dark:text-white text-[10px] font-bold uppercase tracking-wider transition-colors"
+                                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white dark:text-zinc-950 text-[10px] font-bold uppercase tracking-wider transition-colors"
                                                 >
                                                     <RefreshCw className="w-3 h-3" />
                                                     Retry Preview
@@ -1201,7 +1215,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                                 }}>
                                                     {localShowWatermark && (
                                                         <div className="absolute inset-0" style={{
-                                                            backgroundImage: `url("data:image/svg+xml,%3Csvg width='300' height='300' viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-weight='900' font-size='24' fill='${isDarkMode ? 'white' : 'black'}' fill-opacity='0.07' transform='rotate(-45 150 150)' text-anchor='middle' dominant-baseline='middle' letter-spacing='4'%3EHeartFlair PREVIEW%3C/text%3E%3C/svg%3E")`,
+                                                            backgroundImage: `url("data:image/svg+xml,%3Csvg width='300' height='300' viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-weight='900' font-size='24' fill='${isDarkMode ? 'white' : 'black'}' fill-opacity='0.07' transform='rotate(-45 150 150)' text-anchor='middle' dominant-baseline='middle' letter-spacing='4'%3ETrueHandover PREVIEW%3C/text%3E%3C/svg%3E")`,
                                                             backgroundRepeat: 'repeat',
                                                             backgroundSize: `${Math.round(300 / zoomLevel)}px ${Math.round(300 / zoomLevel)}px`
                                                         }} />
@@ -1277,7 +1291,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                                                     transition: 'transform 220ms ease'
                                                                 }}
                                                             >
-                                                                <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-[10px] shadow-lg border border-black/10 cursor-pointer hover:scale-110 transition-transform">
+                                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shadow-lg border border-black/10 cursor-pointer hover:scale-110 transition-transform ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-blue-500 text-white'}`}>
                                                                     {index + 1}
                                                                 </div>
                                                                 <div className="absolute top-full mt-2 w-48 p-3 rounded-xl bg-zinc-900 border border-white/10 text-white text-[10px] shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 flex flex-col gap-1">
@@ -1292,23 +1306,23 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                                         <div 
                                                             className="absolute revision-pin z-[60] flex items-center justify-center"
                                                             style={{ 
-                                                                left: `${draftPin.x * 100}%`, 
-                                                                top: `${draftPin.y * 100}%`,
+	                                                                left: `${draftPin!.x * 100}%`, 
+	                                                                top: `${draftPin!.y * 100}%`,
                                                                 transform: `translate(-50%, -50%) scale(${1/zoomLevel})` 
                                                             }}
                                                         >
                                                             <div className="relative">
-                                                                <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-[10px] shadow-lg animate-pulse" />
+                                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shadow-lg animate-pulse ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-blue-500 text-white'}`} />
                                                                 
                                                                 <div 
-                                                                    className={`absolute top-full lg:left-1/2 lg:-translate-x-1/2 left-0 mt-3 w-64 p-3 rounded-2xl border shadow-2xl flex flex-col gap-2 cursor-auto ${isDarkMode ? 'bg-zinc-800 border-white/10' : 'glass-panel'}`}
+                                                                        className={`absolute top-full lg:left-1/2 lg:-translate-x-1/2 left-0 mt-3 w-64 p-3 rounded-2xl border shadow-2xl flex flex-col gap-2 cursor-auto ${isDarkMode ? 'bg-zinc-800 border-white/10' : 'bg-white/95 border-zinc-200 text-zinc-900'}`}
                                                                     onClick={e => e.stopPropagation()} 
                                                                     onWheel={e => e.stopPropagation()}
                                                                     onDoubleClick={e => e.stopPropagation()}
                                                                 >
                                                                     <textarea
                                                                         autoFocus
-                                                                        placeholder="What needs changing?"
+                                                                            placeholder="Describe the correction needed..."
                                                                         className={`w-full text-xs p-2.5 rounded-xl border outline-none resize-none h-20 placeholder:opacity-50 ${isDarkMode ? 'bg-zinc-900/40 border-white/5 text-white' : 'bg-zinc-50 border-zinc-100 text-zinc-900'}`}
                                                                         value={draftMessage}
                                                                         onChange={e => setDraftMessage(e.target.value)}
@@ -1331,7 +1345,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                                                         >Cancel</button>
                                                                         <button 
                                                                             type="button"
-                                                                            className="text-[10px] uppercase font-bold tracking-widest bg-blue-500 text-white rounded-lg px-3 py-1.5 hover:bg-blue-600 transition-colors"
+                                                                            className={`text-[10px] uppercase font-bold tracking-widest rounded-2xl px-3 py-1.5 transition-colors ${isDarkMode ? 'bg-[#bef264] text-zinc-950 hover:bg-[#d9f99d]' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
                                                                                 submitDraftPin();
@@ -1553,7 +1567,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                         <div className={`p-6 border-t ${isDarkMode ? 'border-white/5 bg-[#1a1a1f]/80' : 'border-zinc-100 bg-zinc-50/80'}`}>
                             {file.locked && isLocked ? (
                                 <>
-                                    <div className={`relative rounded-xl border transition-all focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-500 ${isDarkMode ? 'bg-black/20 border-white/10' : 'glass-panel'}`}>
+                                    <div className={`relative rounded-xl border transition-all focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-500 ${isDarkMode ? 'bg-black/20 border-white/10' : 'bg-white/90 border-zinc-200 shadow-sm'}`}>
                                         <textarea value={currentRevisionText} onChange={(e) => setCurrentRevisionText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSubmitRevision(currentRevisionText); setCurrentRevisionText(''); } }} placeholder="Describe the correction needed..." className={`w-full h-24 p-4 bg-transparent outline-none text-sm resize-none ${textPrimary} placeholder:text-zinc-500`} />
                                         <div className="absolute bottom-3 right-3 flex items-center gap-2">
                                             <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider hidden md:inline">Shift+Enter for new line</span>
@@ -1564,7 +1578,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                 </>
                             ) : (
                                 <div className="text-center">
-                                    <a href={file.downloadUrl} target="_blank" rel="noopener noreferrer" className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}><Download className="w-4 h-4" /> Download Asset</a>
+                                    <a href={file.downloadUrl} target="_blank" rel="noopener noreferrer" className={`w-full py-4 rounded-2xl font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}><Download className="w-4 h-4" /> Download Asset</a>
                                     <p className="text-[10px] text-zinc-400 mt-3">Full resolution unlocked.</p>
                                 </div>
                             )}
@@ -1582,11 +1596,12 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     allowSidebarCollapse = false,
     onDockedSidebarCollapseChange,
     reserveCollapsedHeaderBackSlot = 0,
-    isLocked, lightboxIndex, setLightboxIndex, revisions, onPaymentComplete,
+    isLocked, lightboxIndex, setLightboxIndex, revisions, onPaymentComplete, canVerifyManualPayment = false,
     handleSubmitRevision, handleDeleteRevision, activeFilter, setActiveFilter, theme,
     filteredFiles, handleRequestCorrection, accessDenied, refreshAccess
     , paymentError, onDismissPaymentError
     , onRenameAsset, onResizeAsset, onRemoveAsset
+    , onLightboxOpenChange
 }) => {
     const navigate = useNavigate();
     const creatorName = user?.name || "Creator";
@@ -1621,7 +1636,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['client']));
     const toggleSection = (id: string) => { setExpandedSections(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; }); };
     const mobileHeaderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const mainScrollRef = useRef<HTMLElement>(null);
+    const mainScrollRef = useRef<HTMLDivElement>(null);
     const isPendingVerification = project.status === 'payment_verification';
     const isPaid = project.status === 'paid' || project.status === 'completed';
 
@@ -1661,19 +1676,34 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
         } catch {
             return;
         }
-        window.parent.postMessage({ type: 'Heartflair_PREVIEW_THEME', isDarkMode }, window.location.origin);
+        window.parent.postMessage({ type: 'TrueHandover_PREVIEW_THEME', isDarkMode }, window.location.origin);
     }, [isDarkMode]);
+
+    const lightboxOpen = lightboxIndex !== null;
+    useEffect(() => {
+        onLightboxOpenChange?.(lightboxOpen);
+        try {
+            if (window.self === window.top) return;
+        } catch {
+            return;
+        }
+        window.parent.postMessage({ type: 'TrueHandover_PREVIEW_LIGHTBOX', open: lightboxOpen }, window.location.origin);
+    }, [lightboxOpen, onLightboxOpenChange]);
 
     const isBelowLg = viewport.width < 1024;
     const isLandscape = viewport.width > viewport.height;
     const deviceType = deviceParam === 'tablet' || deviceParam === 'mobile' || deviceParam === 'foldable' ? deviceParam : null;
     const isCanvasSim = Boolean(deviceType);
+    /** Tighter main padding in sim; sticky bleed only when main has horizontal padding (non-sim). */
+    const simMainScrollPadding = isCanvasSim ? 'p-2 sm:p-3' : 'p-3 sm:p-4 md:p-6 lg:p-8';
+    const simStickyOverflowBleedX = isCanvasSim ? '' : '-mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8';
     const isPhoneLike = Math.min(viewport.width, viewport.height) < 500;
     const isRealTabletViewport = !deviceType && isBelowLg && !isPhoneLike;
 
     // Enable a true split layout for any landscape device inside the simulator, and for real devices
     // below `lg` (this includes phone landscape, where the sidebar can be collapsed).
     const isLandscapeSplit = !isEmbedded && isLandscape && (deviceType ? true : isBelowLg);
+    const simCanvasScrollPaddingY = `pt-2 sm:pt-3 ${!isEmbedded && isLocked && !isPaid ? (isLandscapeSplit ? 'pb-8' : 'pb-24 lg:pb-8') : 'pb-2 sm:pb-3'}`;
     // Docked sidebar collapse is supported for:
     // - Split landscape (mobile/tablet/foldable)
     // - Desktop (lg+) where the sidebar is docked
@@ -1701,7 +1731,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
         }
         if (!inIframe) return;
         window.parent.postMessage({
-            type: 'Heartflair_PREVIEW_SIDEBAR_STATE',
+            type: 'TrueHandover_PREVIEW_SIDEBAR_STATE',
             collapsed: isDockedSidebarCollapsed,
         }, window.location.origin);
     }, [isDockedSidebarCollapsed]);
@@ -1725,7 +1755,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
             isLandscapeSplit;
 
         window.parent.postMessage({
-            type: 'Heartflair_PREVIEW_STATUSBAR',
+            type: 'TrueHandover_PREVIEW_STATUSBAR',
             mode: wantsTransparentLightStatusBar ? 'transparent' : 'solid',
         }, window.location.origin);
     }, [isDarkMode, deviceType, isLandscapeSplit]);
@@ -1739,6 +1769,13 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     const isActualDesktopViewport = !deviceType && !isBelowLg;
     const isTrueDesktop = !isEmbedded && isActualDesktopViewport;
     const isCompactDesktopHeader = isActualDesktopViewport && viewport.width < 1240;
+    const rawPortalLayout = ((theme?.layout || 'default') as PortalLayoutVariant);
+    const selectedPortalLayout: PortalLayoutVariant = ARCHIVED_PORTAL_LAYOUTS.includes(rawPortalLayout) ? 'default' : rawPortalLayout;
+    const useAlternativePortalLayout = selectedPortalLayout !== 'default';
+    const useJournalChromePadding = selectedPortalLayout === 'journal';
+    const alternativeLayoutManagesOwnScroll = selectedPortalLayout === 'deck' || selectedPortalLayout === 'masonry';
+    const selectedLightbox = ((theme?.lightbox || 'default') as PortalLightboxVariant);
+    const layoutFiles = project.files || [];
 
     // Auto-hide mobile header after 5 seconds of inactivity (portrait + stacked only)
     // Disabled: users expect the project title header to remain visible and stable.
@@ -1778,6 +1815,14 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
             setIsSplitSidebarCollapsed(false);
         }
     }, [canCollapseDockedSidebar]);
+
+    useEffect(() => {
+        if (useAlternativePortalLayout) {
+            setIsSplitSidebarCollapsed(false);
+            setIsMobileInfoOpen(false);
+            setIsMobilePaymentOpen(false);
+        }
+    }, [useAlternativePortalLayout]);
 
     // Show header on ANY scroll, hide after 5s of no scroll
     const lastScrollY = useRef(0);
@@ -1827,7 +1872,11 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     }
 
     const patternColorClass = isDarkMode ? 'bg-white' : 'bg-zinc-900';
-    const patternOpacityClass = isDarkMode ? 'opacity-[0.1]' : 'opacity-[0.15]';
+    const subtlePatternIds = new Set(['plus', 'cross', 'hex', 'rhombus', 'waves', 'zigzag']);
+    const isSubtlePattern = subtlePatternIds.has(pattern);
+    const patternOpacityClass = isDarkMode
+        ? (isSubtlePattern ? 'opacity-[0.08]' : 'opacity-[0.1]')
+        : (isSubtlePattern ? 'opacity-[0.12]' : 'opacity-[0.15]');
     // OPTIMIZED OVERLAY: Reduced opacity by 10%, increased depth/color by 10%
     // Light mode: reduce overlay tint so the wallpaper + film grain read more clearly (requested).
     const sidebarOverlay = isDarkMode ? 'from-[#1a1a24]/80 via-[#1a1a24]/60 to-[#1a1a24]/30' : 'from-[#f1f5f9]/70 via-[#f1f5f9]/60 to-[#f1f5f9]/35';
@@ -1847,6 +1896,147 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
         );
     }
 
+    const renderLightboxOverlay = (sourceFiles: FileAsset[]) => {
+        if (lightboxIndex === null || !sourceFiles[lightboxIndex]) return null;
+
+        const activeFile = sourceFiles[lightboxIndex];
+        const commonLightboxProps = {
+            file: activeFile,
+            allFiles: sourceFiles,
+            currentIndex: lightboxIndex,
+            isEmbedded,
+            isLocked: isLocked && activeFile.locked,
+            isDarkMode,
+            revisions: revisions[activeFile.id] || [],
+            onClose: () => setLightboxIndex(null),
+            onNext: () => { if (lightboxIndex < sourceFiles.length - 1) setLightboxIndex(lightboxIndex + 1); else setLightboxIndex(0); },
+            onPrev: () => { if (lightboxIndex > 0) setLightboxIndex(lightboxIndex - 1); else setLightboxIndex(sourceFiles.length - 1); },
+            onSelect: setLightboxIndex,
+            onSubmitRevision: handleSubmitRevision,
+            onDeleteRevision: handleDeleteRevision,
+            onToggleTheme,
+            onSetThemeMode,
+            themeMode,
+            showWatermark: project.showWatermark !== false,
+            showProtectedLabel: project.showProtectedLabel !== false,
+        };
+
+        if (selectedLightbox === 'default') {
+            return <VisualLightbox {...commonLightboxProps} />;
+        }
+
+        return (
+            <PortalStyleLightbox
+                variant={selectedLightbox}
+                file={commonLightboxProps.file}
+                allFiles={commonLightboxProps.allFiles}
+                currentIndex={commonLightboxProps.currentIndex}
+                isEmbedded={commonLightboxProps.isEmbedded}
+                isLocked={commonLightboxProps.isLocked}
+                isDarkMode={commonLightboxProps.isDarkMode}
+                revisions={commonLightboxProps.revisions}
+                onClose={commonLightboxProps.onClose}
+                onNext={commonLightboxProps.onNext}
+                onPrev={commonLightboxProps.onPrev}
+                onSelect={commonLightboxProps.onSelect}
+                onSubmitRevision={commonLightboxProps.onSubmitRevision}
+            />
+        );
+    };
+
+    if (useAlternativePortalLayout) {
+        const showAlternativePreviewChrome = !isEmbedded && Boolean(user);
+
+        const renderAlternativeLayout = () => {
+            const layoutProps = {
+                project,
+                files: layoutFiles,
+                isLocked,
+                isDarkMode,
+                onAssetClick: (index: number) => setLightboxIndex(index),
+                onRequestCorrection: (index: number) => handleRequestCorrection(index),
+                onPaymentComplete: (method?: 'stripe' | 'manual') => onPaymentComplete(method),
+                creatorName,
+                canVerifyManualPayment,
+                isEmbedded,
+                revisions,
+            };
+
+            switch (selectedPortalLayout) {
+                case 'billboard':
+                    return <LayoutBillboard {...layoutProps} />;
+                case 'masonry':
+                    return <LayoutMasonry {...layoutProps} />;
+                case 'journal':
+                    return <LayoutJournal {...layoutProps} />;
+                case 'deck':
+                    return <LayoutDeck {...layoutProps} />;
+                default:
+                    return null;
+            }
+        };
+
+        return (
+            <div className={`relative ${isEmbedded ? 'h-full w-full' : 'min-h-screen h-[100dvh]'} w-full min-w-0 ${isDarkMode ? 'bg-cosmic text-zinc-100' : 'bg-[#FDFDFD] text-zinc-900'} font-sans overflow-hidden ${motionReady ? 'transition-colors duration-500' : ''}`}>
+                {renderLightboxOverlay(layoutFiles)}
+
+                {pattern && pattern !== 'none' && (
+                    <div className="absolute inset-0 pointer-events-none z-0">
+                        <div
+                            className={`w-full h-full transition-all duration-500 ${patternColorClass} ${patternOpacityClass}`}
+                            style={{
+                                maskImage: maskImage,
+                                WebkitMaskImage: maskImage,
+                                maskSize: maskSize,
+                                WebkitMaskSize: maskSize,
+                                maskRepeat: maskRepeat,
+                                WebkitMaskRepeat: maskRepeat,
+                            }}
+                        />
+                    </div>
+                )}
+
+                {showAlternativePreviewChrome ? (
+                    <div className="absolute top-0 left-0 right-0 z-40 px-3 sm:px-4 py-3" style={{ paddingTop: headerChromePadTop }}>
+                        <div className="flex items-center justify-between gap-3">
+                            <button
+                                type="button"
+                                onClick={() => { playClick(); onBack(); }}
+                                className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 backdrop-blur-md ${isDarkMode ? 'bg-black/30 hover:bg-black/45 text-white border border-white/10' : 'bg-white/85 hover:bg-white text-zinc-700 border border-zinc-200/70 shadow-sm'}`}
+                                aria-label="Back"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+
+                            {onSetThemeMode ? (
+                                <ThemeModeDropdown
+                                    isDarkMode={isDarkMode}
+                                    themeMode={themeMode}
+                                    onChange={onSetThemeMode}
+                                />
+                            ) : null}
+                        </div>
+                    </div>
+                ) : null}
+
+                {paymentError && (
+                    <div className={`absolute ${isEmbedded ? 'top-2' : (showAlternativePreviewChrome ? 'top-20' : 'top-3')} left-3 right-3 z-40`}>
+                        <InlineErrorBanner
+                            message={paymentError}
+                            onDismiss={onDismissPaymentError}
+                        />
+                    </div>
+                )}
+
+                <div className={`relative z-10 h-full w-full min-h-0 ${alternativeLayoutManagesOwnScroll ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden'} ${showAlternativePreviewChrome && useJournalChromePadding ? 'pt-[84px]' : ''} custom-scrollbar`}>
+                    <div className={alternativeLayoutManagesOwnScroll ? 'w-full h-full min-h-0' : 'w-full min-h-full'}>
+                        {renderAlternativeLayout()}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     const sidebarBody = (
                 <div className={`
                     relative z-20 flex-1 flex flex-col h-full overflow-hidden min-h-0
@@ -1858,7 +2048,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 <div className="relative group cursor-pointer"><img src={project.client.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"} className={`w-14 h-14 rounded-full border-2 ${isDarkMode ? 'border-white/10' : 'border-white shadow-sm'} shadow-xl object-cover`} /><div className={`absolute -bottom-1 -right-1 ${isDarkMode ? 'bg-black' : 'bg-white'} rounded-full p-1`}><div className={`w-3 h-3 ${brandGreenBg} rounded-full`} /></div></div>
                                 <div><p className={`text-[10px] font-bold uppercase tracking-widest ${textSecondary} mb-1`}>Delivery For</p><h3 className={`font-bold text-lg leading-none ${textPrimary}`}>{project.client.name}</h3></div>
                             </div>
-                            <h1 className={`font-sans tracking-tight text-3xl md:text-4xl lg:text-[46px] font-medium ${textPrimary} leading-[0.95] tracking-tight mb-4 drop-shadow-sm`}>{project.name}</h1>
+                            <h1 className={`font-sans tracking-tight text-3xl md:text-4xl lg:text-[46px] font-medium ${textPrimary} leading-[0.95] tracking-tight mb-4`}>{project.name}</h1>
                             {/* Updated Description Color for Legibility: Darker Lime/Slate */}
                             <p className={`${isDarkMode ? 'text-zinc-400' : 'text-zinc-800'} text-lg font-medium leading-relaxed`}>Complete deliverables package containing <span className={`${textPrimary} font-bold`}>{project.files.length} finalized assets</span>.</p>
                             {project.accessConfig?.mode === 'one_time' && <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold uppercase tracking-widest"><Flame className="w-3 h-3" /> One-Time Access Link</div>}
@@ -1978,7 +2168,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                     {isLandscapeSplit && isPhoneLike && isLocked && !isPendingVerification ? (
                         // Phone landscape split: keep the footer compact so the details area stays useful.
                         // The full terminal lives in the bottom sheet (opened via the button below).
-                        <div className={`relative z-20 py-3 pl-6 pr-5 ${isDarkMode ? 'bg-[#2a2a35]/95 border-t border-white/5' : 'bg-white/60 border-t border-zinc-200'} backdrop-blur-xl shrink-0`}>
+                        <div className={`relative z-20 py-3 ${isCanvasSim ? 'px-3' : 'pl-6 pr-5'} ${isDarkMode ? 'bg-[#2a2a35]/95 border-t border-white/5' : 'bg-white/60 border-t border-zinc-200'} backdrop-blur-xl shrink-0`}>
                             <div className="flex items-center justify-between gap-3">
                                 <div className="min-w-0">
                                     <p className={`text-[10px] font-bold uppercase tracking-widest ${textSecondary}`}>Total Due</p>
@@ -1987,7 +2177,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => { playClick(); setIsMobilePaymentOpen(true); }}
-                                    className={`shrink-0 px-3 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center gap-2 ${isDarkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-zinc-900 text-white hover:bg-zinc-800'}`}
+                                    className={`shrink-0 px-3 py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center gap-2 ${isDarkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-zinc-900 text-white hover:bg-zinc-800'}`}
                                 >
                                     {project.requiresSignature ? <PenTool className="w-3.5 h-3.5" /> : <CreditCard className="w-3.5 h-3.5" />}
                                     {project.requiresSignature ? 'Sign / Pay' : 'Pay Now'}
@@ -1995,7 +2185,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             </div>
                         </div>
                     ) : (
-                        <div className={`relative z-20 p-4 md:p-6 lg:p-8 ${isDarkMode ? 'bg-[#2a2a35]/95 border-t border-white/5' : 'bg-white/60 border-t border-zinc-200'} backdrop-blur-xl shrink-0`}>
+                        <div className={`relative z-20 ${isCanvasSim ? 'px-3 py-4 sm:px-4' : 'p-4 md:p-6 lg:p-8'} ${isDarkMode ? 'bg-[#2a2a35]/95 border-t border-white/5' : 'bg-white/60 border-t border-zinc-200'} backdrop-blur-xl shrink-0`}>
                         <PaymentTerminal
                             project={project}
                             isDarkMode={isDarkMode}
@@ -2003,359 +2193,19 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 isLandscapeCompact={isLandscapeSplit && isPhoneLike}
                             creatorName={creatorName}
                             onPaymentComplete={onPaymentComplete}
-                            onMockVerify={onPaymentComplete}
+                            canVerifyManualPayment={canVerifyManualPayment}
+                            onMockVerify={canVerifyManualPayment ? () => onPaymentComplete() : undefined}
                         />
                     </div>
                     )}
                 </div>
     );
 
-    return (
-        <div className={`flex ${isLandscapeSplit ? 'flex-row' : 'flex-col'} lg:flex-row ${isEmbedded ? 'h-full w-full' : 'min-h-screen h-[100dvh]'} ${isDarkMode ? 'bg-cosmic text-zinc-100' : 'bg-[#FDFDFD] text-zinc-900'} font-sans overflow-hidden ${motionReady ? 'transition-colors duration-500' : ''} relative`}>
-            {lightboxIndex !== null && filteredFiles[lightboxIndex] && (
-                <VisualLightbox
-                    file={filteredFiles[lightboxIndex]}
-                    allFiles={filteredFiles}
-                    currentIndex={lightboxIndex}
-                    isLocked={isLocked && filteredFiles[lightboxIndex].locked}
-                    isDarkMode={isDarkMode}
-                    themeMode={themeMode}
-                    revisions={revisions[filteredFiles[lightboxIndex].id] || []}
-                    onClose={() => setLightboxIndex(null)}
-                    onNext={() => { if (lightboxIndex < filteredFiles.length - 1) setLightboxIndex(lightboxIndex + 1); else setLightboxIndex(0); }}
-                    onPrev={() => { if (lightboxIndex > 0) setLightboxIndex(lightboxIndex - 1); else setLightboxIndex(filteredFiles.length - 1); }}
-                    onSelect={setLightboxIndex}
-                    onToggleTheme={onToggleTheme}
-                    onSetThemeMode={onSetThemeMode}
-                    onSubmitRevision={handleSubmitRevision}
-                    onDeleteRevision={handleDeleteRevision}
-                    showWatermark={project.showWatermark !== false}
-                    showProtectedLabel={project.showProtectedLabel !== false}
-                />
-            )}
-
-            {/* Mobile Backdrop Overlay (Payment only) */}
-            {!isEmbedded && isMobilePaymentOpen && (
-                <div
-                    className="fixed inset-0 bg-transparent z-40 lg:hidden"
-                    onClick={() => { setIsMobilePaymentOpen(false); showMobileHeader(); }}
-                />
-            )}
-
-            <aside className={`
-                flex-shrink-0 z-30 transition-[width,min-width,opacity,transform] duration-500 ease-in-out
-                ${isLandscapeSplit
-                    ? (isDockedSidebarCollapsed
-                         ? 'opacity-0 -translate-x-2 pointer-events-none shadow-none border-r-0 h-full'
-                         : 'h-full'
-                      )
-                     : isDockedSidebarCollapsed
-                         ? 'w-0 opacity-0 -translate-x-2 pointer-events-none shadow-none border-r-0 h-full'
-                         : `
-                             lg:w-[350px] xl:w-[420px]
-                             w-full
-                             lg:h-full
-                         `
-                  }
-                ${isDarkMode ? 'bg-zinc-800' : 'bg-[#f1f5f9]'} 
-                ${isDockedSidebarCollapsed ? 'border-r-0 border-b-0' : (isLandscapeSplit ? 'border-r border-zinc-200/50 dark:border-white/5' : 'border-b lg:border-b-0 lg:border-r border-zinc-200/50 dark:border-white/5')}
-                flex flex-col relative shadow-2xl overflow-hidden
-            `}
-            style={isLandscapeSplit
-                ? {
-                    width: `${isDockedSidebarCollapsed ? 0 : splitSidebarExpandedWidth}px`,
-                    minWidth: `${isDockedSidebarCollapsed ? 0 : splitSidebarExpandedWidth}px`,
-                }
-                : undefined
-            }>
-                <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden">
-                    {theme.wallpaper ? (
-                        // ADJUSTED: Opacity adjusted per user request — Light boosted to full, Dark: 60%
-                        <img src={theme.wallpaper} className={`w-full h-full object-cover transition-all duration-700 ${isDarkMode ? 'opacity-60 grayscale-[20%]' : 'opacity-100 grayscale-0'}`} alt="Background" />
-                    ) : (
-                        // GOLDILOCKS STYLE: If no wallpaper, show a subtle radial gradient to create "nice" depth without being overwhelming
-                        <div className={`w-full h-full ${isDarkMode ? 'bg-[radial-gradient(circle_at_top_right,_#2d2d3a_0%,_#23232e_100%)]' : 'bg-[radial-gradient(circle_at_top_left,_#f8fafc_0%,_#e2e8f0_100%)]'}`} />
-                    )}
-                </div>
-
-                {/* CRANKED GRAIN: Stronger film grain (requested). */}
-                {theme.showGrain && (
-                    <div
-                        className={`absolute inset-0 z-0 pointer-events-none ${isDarkMode ? 'opacity-85 mix-blend-overlay' : 'opacity-80 mix-blend-overlay'}`}
-                        style={{ backgroundImage: NOISE_SVG, filter: 'contrast(450%) brightness(110%)' }}
-                    ></div>
-                )}
-
-                {/* UPDATED: Added backdrop-blur-sm to the overlay to smooth out noisy wallpapers behind text */}
-                <div className={`absolute inset-0 z-10 bg-gradient-to-b ${sidebarOverlay} backdrop-blur-[1px]`} />
-                <div className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.1)_100%)]" />
-
-                {/* Drag handle removed per user feedback — X button is sufficient */}
-
-                {/* Mobile/Tablet Header (stacked layout) */}
-                 {!isEmbedded && !isLandscapeSplit && (
-                     <div
-                        className={`lg:hidden relative shrink-0 z-50 ${!isMobileInfoOpen ? 'border-b border-zinc-200/50 dark:border-white/5' : ''} ${isDarkMode ? 'bg-[#2b2b38]' : 'bg-[#f1f5f9]'}`}
-                        style={{ paddingTop: headerChromePadTop }}
-                     >
-                        <div className="flex items-center gap-3 px-4 sm:px-5 pb-2">
-                            <button
-                                onClick={onBack}
-                                className={`shrink-0 p-2 -ml-2 rounded-full hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors`}
-                                aria-label="Back"
-                            >
-                                <ChevronLeft className={`w-5 h-5 ${textPrimary}`} />
-                            </button>
-
-                            <div className="min-w-0 flex-1">
-                                <h1 className={`font-serif ${isMobileInfoOpen ? 'text-base' : 'text-lg'} font-medium ${textPrimary} truncate leading-none`}>{project.name}</h1>
-                                <p className={`text-[10px] ${textSecondary} mt-0.5 font-bold uppercase tracking-wider truncate`}>{project.files.length} Assets{isLocked && !isMobileInfoOpen ? ` - $${project.amount.toLocaleString()}` : ''}</p>
-                            </div>
-
-                            {isMobileInfoOpen ? (
-                                <button
-                                    onClick={() => { setIsMobileInfoOpen(false); showMobileHeader(); }}
-                                    className={`shrink-0 p-2.5 rounded-full ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'} transition-colors`}
-                                    aria-label="Close Details"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={() => { playClick(); openMobileDetails(); }}
-                                    className={`shrink-0 whitespace-nowrap px-3.5 sm:px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'} transition-colors`}
-                                    aria-label="Details"
-                                >
-                                    <Menu className="w-3.5 h-3.5" />
-                                    <span>Details</span>
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Split Header (Landscape) — docked sidebar with collapse control */}
-                {!isEmbedded && isLandscapeSplit && (
-                    <div
-                        className={`lg:hidden relative shrink-0 z-50 border-b border-zinc-200/50 dark:border-white/5 ${isDarkMode ? 'bg-[#2b2b38]' : 'bg-[#f1f5f9]'}`}
-                        style={{ paddingTop: headerChromePadTop }}
-                    >
-                        <div className="flex items-center gap-3 px-4 pb-2">
-                            <button
-                                onClick={() => { playClick(); onBack(); }}
-                                className={`shrink-0 p-2 -ml-2 rounded-full hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors`}
-                                aria-label="Back"
-                            >
-                                <ChevronLeft className={`w-5 h-5 ${textPrimary}`} />
-                            </button>
-
-                            <div className="min-w-0 flex-1">
-                                <p className={`text-sm font-bold ${textPrimary} truncate leading-tight`}>{project.name}</p>
-                                <p className={`text-[10px] font-bold uppercase tracking-wider ${textSecondary} truncate`}>{project.files.length} Assets{isLocked ? ` - $${project.amount.toLocaleString()}` : ''}</p>
-                            </div>
-
-                            <button
-                                onClick={collapseDockedSidebar}
-                                className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'} transition-colors`}
-                                aria-label="Collapse Details"
-                                title="Hide Details"
-                            >
-                                <PanelRightClose className="w-3.5 h-3.5" />
-                                <span>Details</span>
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Desktop Back Button Area (with Creator Preview Badge) */}
-                {(!isEmbedded || allowSidebarCollapse) && (
-                    <div
-                        className="hidden lg:flex relative z-20 px-8 pt-8 pb-2 justify-between items-center gap-3 overflow-x-auto no-scrollbar"
-                        style={{ paddingTop: paddingTop ? `max(32px, ${paddingTop})` : '32px' }}
-                    >
-                        <div className="flex items-center gap-4 min-w-0">
-                            {!isEmbedded && (
-                                <button onClick={onBack} className={`group flex items-center gap-2 ${isCompactDesktopHeader ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-full ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white' : 'bg-white/50 border-zinc-200/50 hover:bg-white text-zinc-600 hover:text-zinc-900'} backdrop-blur-md border shadow-sm transition-all duration-300 hover:scale-105 shrink-0`}>
-                                    <ChevronLeft className={`${isCompactDesktopHeader ? 'w-3.5 h-3.5' : 'w-4 h-4'} group-hover:-translate-x-1 transition-transform`} />
-                                    <span className={`${isCompactDesktopHeader ? 'text-[11px]' : 'text-xs'} font-bold uppercase tracking-widest`}>Back</span>
-                                </button>
-                            )}
-                            {/* Creator Preview Disclaimer — shown on full preview routes (not embedded editor preview). */}
-                            {!isEmbedded && !project.clientViewedAt && (
-                                <div className={`${isCompactDesktopHeader ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-full flex items-center gap-2 ${isCompactDesktopHeader ? 'text-[9px]' : 'text-[10px]'} font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-700'} shrink-0`}>
-                                    <Eye className={`${isCompactDesktopHeader ? 'w-3 h-3' : 'w-3.5 h-3.5'}`} />
-                                    <span>Creator Preview</span>
-                                </div>
-                            )}
-                            {/* Non-desktop layouts keep the collapse control here (left group). */}
-                            {canCollapseDockedSidebar && !isDockedSidebarCollapsed && !isActualDesktopViewport && (
-                                <button
-                                    type="button"
-                                    onClick={collapseDockedSidebar}
-                                    className={`${isCompactDesktopHeader ? 'p-2' : 'p-2.5'} rounded-full border shadow-sm transition-all duration-300 hover:scale-105 ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white' : 'bg-white/50 border-zinc-200/50 hover:bg-white text-zinc-600 hover:text-zinc-900'} backdrop-blur-md shrink-0`}
-                                    aria-label="Collapse Details"
-                                    title="Hide Details"
-                                >
-                                    <PanelRightClose className={`${isCompactDesktopHeader ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
-                                </button>
-                            )}
-                        </div>
-                        {/* Desktop-only: collapse button lives on the far right (red-spot placement). */}
-                        {canCollapseDockedSidebar && !isDockedSidebarCollapsed && isActualDesktopViewport && (
-                            <button
-                                type="button"
-                                onClick={collapseDockedSidebar}
-                                className={`${isCompactDesktopHeader ? 'p-2' : 'p-2.5'} rounded-full border shadow-sm transition-all duration-300 hover:scale-105 ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white' : 'bg-white/50 border-zinc-200/50 hover:bg-white text-zinc-600 hover:text-zinc-900'} backdrop-blur-md shrink-0`}
-                                aria-label="Collapse Details"
-                                title="Hide Details"
-                            >
-                                <PanelRightClose className={`${isCompactDesktopHeader ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
-                            </button>
-                        )}
-                    </div>
-                )}
-
-                                {showDockedSidebar && sidebarBody}
-
-            </aside>
-
-            {/* Mobile Sticky Bottom Payment Bar */}
-            {!isEmbedded && !isLandscapeSplit && !isMobileInfoOpen && !isMobilePaymentOpen && isLocked && !isPendingVerification && (
-                <div className={`
-                    fixed bottom-0 left-0 right-0 z-40 lg:hidden animate-fade-in
-                    ${isDarkMode ? 'bg-zinc-800/98 border-white/10' : 'bg-white/98 border-zinc-200'}
-                    border-t backdrop-blur-xl
-                    py-3 pl-6 pr-5
-                `} style={{
-                    paddingBottom: paddingBottom ? `max(12px, ${paddingBottom})` : 'max(12px, env(safe-area-inset-bottom))',
-                    paddingLeft: 'max(24px, env(safe-area-inset-left))',
-                    paddingRight: 'max(20px, env(safe-area-inset-right))',
-                }}>
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                            <p className={`text-[10px] font-bold uppercase tracking-widest ${textSecondary}`}>Total Due</p>
-                            <p className={`text-xl font-sans tracking-tight font-bold ${textPrimary} leading-tight`} style={{ textShadow: isDarkMode ? '0 1px 4px rgba(0,0,0,0.4)' : 'none' }}>${project.amount.toLocaleString()}</p>
-                        </div>
-                        <div className="flex gap-2 shrink-0">
-                            <button
-                                onClick={() => { playClick(); openMobileDetails(); }}
-                                className={`px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'}`}
-                            >
-                                Details
-                            </button>
-                            <button
-                                onClick={() => { playClick(); setIsMobilePaymentOpen(true); }}
-                                className={`px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-2 ${isDarkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-zinc-900 text-white hover:bg-zinc-800'}`}
-                            >
-                                <CreditCard className="w-3.5 h-3.5" /> Pay Now
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Mobile Sticky Bottom Bar - Pending Verification */}
-            {!isEmbedded && !isLandscapeSplit && !isMobileInfoOpen && isPendingVerification && (
-                <div className={`
-                    fixed bottom-0 left-0 right-0 z-40 lg:hidden animate-fade-in
-                    ${isDarkMode ? 'bg-zinc-800/98 border-white/10' : 'bg-white/98 border-zinc-200'}
-                    border-t backdrop-blur-xl
-                    px-4 py-4
-                `} style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
-                    <div className="flex items-center justify-center gap-3 text-amber-500">
-                        <RefreshCw className="w-4 h-4 animate-spin" style={{ animationDuration: '3s' }} />
-                        <span className="text-xs font-bold uppercase tracking-widest">Verification Pending</span>
-                    </div>
-                </div>
-            )}
-
-            {/* Mobile Payment Bottom Sheet */}
-            {!isEmbedded && isMobilePaymentOpen && (
-                <div className={`
-                    fixed bottom-0 left-0 right-0 z-50 lg:hidden animate-sheet-up
-                    max-h-[85vh] rounded-t-[2rem] overflow-hidden
-                    shadow-[0_-20px_60px_rgba(0,0,0,0.4)]
-                    ${isDarkMode ? 'bg-zinc-800' : 'bg-[#f1f5f9]'}
-                `}>
-                    <div className="flex justify-center pt-3 pb-1">
-                        <div className={`w-10 h-1.5 rounded-full ${isDarkMode ? 'bg-white/20' : 'bg-zinc-300'}`} />
-                    </div>
-                    <div className="flex items-center justify-between px-6 py-3">
-                        <h3 className={`font-sans tracking-tight text-lg font-medium ${textPrimary}`}>Payment</h3>
-                        <button
-                            onClick={() => setIsMobilePaymentOpen(false)}
-                            className={`p-2.5 rounded-full ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'} transition-colors`}
-                        >
-                            <X className="w-4 h-4" />
-                        </button>
-                    </div>
-                    <div className="overflow-y-auto px-6 pb-8" style={{ maxHeight: 'calc(85vh - 80px)', paddingBottom: 'max(32px, env(safe-area-inset-bottom))' }}>
-                        <PaymentTerminal
-                            project={project}
-                            isDarkMode={isDarkMode}
-                            isEmbedded={isEmbedded}
-                                isLandscapeCompact={isLandscapeSplit && isPhoneLike}
-                            creatorName={creatorName}
-                                onPaymentComplete={() => { setIsMobilePaymentOpen(false); onPaymentComplete(); }}
-                            onMockVerify={() => { setIsMobilePaymentOpen(false); onPaymentComplete(); }}
-                        />
-                    </div>
-                </div>
-            )}
-
-                <div className={`flex-1 relative flex flex-col overflow-hidden bg-transparent min-w-0 min-h-0 transition-opacity duration-150 ease-out ${motionReady ? 'opacity-100' : 'opacity-0'}`}>
-                {pattern && pattern !== 'none' && <div className="absolute inset-0 pointer-events-none z-0"><div className={`w-full h-full transition-all duration-500 ${patternColorClass} ${patternOpacityClass}`} style={{ maskImage: maskImage, WebkitMaskImage: maskImage, maskSize: maskSize, WebkitMaskSize: maskSize, maskRepeat: maskRepeat, WebkitMaskRepeat: maskRepeat }} /></div>}
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-zinc-100/50 dark:bg-white/[0.02] rounded-full blur-[100px] -z-10 pointer-events-none" />
-
-                    {/* Desktop-only: when the docked sidebar is collapsed, use minimal controls (no glass header). */}
-                    {isActualDesktopViewport && isDockedSidebarCollapsed && (!isEmbedded || allowSidebarCollapse) && (
-                        <div className="hidden lg:flex absolute top-8 left-8 right-8 z-40 items-center justify-between pointer-events-none">
-                            <div className="flex items-center gap-2 pointer-events-auto">
-                                {!isEmbedded ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => { playClick(); onBack(); }}
-                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${isDarkMode ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-zinc-50 text-zinc-700 border border-zinc-200'}`}
-                                        aria-label="Back"
-                                    >
-                                        <ChevronLeft className="w-5 h-5" />
-                                    </button>
-                                ) : reserveCollapsedHeaderBackSlot > 0 ? (
-                                    <div className="flex-shrink-0 flex items-center gap-2" aria-hidden="true">
-                                        {Array.from({ length: reserveCollapsedHeaderBackSlot }, (_, i) => (
-                                            <div key={i} className="w-10 h-10" />
-                                        ))}
-                                    </div>
-                                ) : null}
-                                <button
-                                    type="button"
-                                    onClick={() => { playClick(); setIsSplitSidebarCollapsed(false); }}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15' : 'bg-white border border-zinc-200/50 text-zinc-600 hover:bg-zinc-50'}`}
-                                    aria-label="Show Details"
-                                    title="Show Details"
-                                >
-                                    <PanelRightOpen className="w-3.5 h-3.5" />
-                                    <span>Details</span>
-                                </button>
-                            </div>
-
-                            <div className="flex items-center gap-3 pointer-events-auto">
-                                {!isEmbedded && !project.clientViewedAt && (
-                                    <div className={`px-3 py-1.5 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-700'}`}>
-                                        <Eye className="w-3.5 h-3.5" />
-                                        <span>Creator Preview</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    <main ref={mainScrollRef} onScroll={handleMainScroll} className={`flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 ${isActualDesktopViewport && isDockedSidebarCollapsed && (!isEmbedded || allowSidebarCollapse) ? 'lg:pt-24' : ''} scroll-smooth relative z-10 w-full ${!isEmbedded && isLocked && !isPaid ? (isLandscapeSplit ? 'pb-8' : 'pb-24 lg:pb-8') : ''}`}>
-
-                        {/* Collapsed Docked Sidebar Controls (Landscape split + Desktop) */}
-                        {!isEmbedded && isDockedSidebarCollapsed && !isTrueDesktop && (
+    const collapsedDockedGalleryHeader = (
+        <>
+{!isEmbedded && isDockedSidebarCollapsed && !isTrueDesktop && (
                             <div
-                                className={`sticky top-0 z-40 -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 mb-4 ${isTrueDesktop ? '-mt-3 sm:-mt-4 md:-mt-6 lg:-mt-8' : ''}`}
+                                className={`sticky top-0 z-40 ${simStickyOverflowBleedX} mb-4 ${isTrueDesktop ? '-mt-3 sm:-mt-4 md:-mt-6 lg:-mt-8' : ''}`}
                                 // Sticky positioning is relative to the scrollport (padding box). On desktop the scroll
                                 // container has `lg:p-8`, so we offset the sticky top by that padding to truly flush.
                                 style={{ top: isTrueDesktop ? '-32px' : '0px' }}
@@ -2379,7 +2229,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                     {/* Desktop-only: keep the glass background flush to the top, but align the controls
                                         to the same y-level as the expanded desktop sidebar header (which sits below 32px padding). */}
                                     {isTrueDesktop && <div aria-hidden className="h-[22px]" />}
-                        <div className={`flex items-center justify-between gap-3 px-4 sm:px-5 md:px-6 lg:px-8 ${isTrueDesktop ? 'th-desktop-flush-content py-2.5' : 'pb-2'}`}>
+                        <div className={`flex items-center justify-between gap-3 ${isCanvasSim ? 'px-2 sm:px-3' : 'px-4 sm:px-5 md:px-6 lg:px-8'} ${isTrueDesktop ? 'th-desktop-flush-content py-2.5' : 'pb-2'}`}>
                                         {isTrueDesktop ? (
                                             <>
                                                 <div className="flex items-center gap-2 shrink-0">
@@ -2450,7 +2300,12 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             </div>
                         )}
 
-                        {/* Inline Details Panel (Stacked Portrait) */}
+                                                                </>
+    );
+
+    const galleryMainScrollRest = (
+        <>
+{/* Inline Details Panel (Stacked Portrait) */}
                         {showInlineSidebar && (
                             <section className={`lg:hidden relative overflow-hidden rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.45)] border ${isDarkMode ? 'bg-zinc-800 border-white/10' : 'bg-[#f1f5f9] border-zinc-200'} mb-4 h-[66vh] md:h-[70vh] animate-sheet-up`}>
                                 {/* 85% height vs prior "full" portrait details sheet so the gallery remains discoverable behind it. */}
@@ -2494,7 +2349,8 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             </button>
                         </div>
                     )}
-                    <div className={`max-w-[98%] 2xl:max-w-[2000px] mx-auto`}>
+                    {/* Simulator iframe: full-bleed width — max-w-[98%] left visible root bg (cosmic / off-white) as a “chassis gap” on the sides */}
+                    <div className={isCanvasSim ? 'w-full max-w-none min-w-0' : 'max-w-[98%] 2xl:max-w-[2000px] mx-auto'}>
                         {paymentError && (
                             <InlineErrorBanner
                                 message={paymentError}
@@ -2649,7 +2505,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                     else navigate('/');
                                 }}
                             >
-                                <div className={`flex items-center gap-5 px-6 py-3 rounded-full transition-all duration-300 backdrop-blur-md border ${isDarkMode ? 'bg-[#2a2a35] border-white/10 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] hover:shadow-white/5' : 'bg-zinc-50 border-zinc-200/50 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]'} hover:scale-[1.02] hover:-translate-y-1`}>
+                                <div className={`flex items-center gap-5 px-6 py-3 rounded-[2rem] transition-all duration-300 border shadow-sm dark:shadow-md ${isDarkMode ? 'bg-charcoal border-white/[0.06] hover:border-white/10' : 'bg-white border-zinc-200/50 hover:border-zinc-300/80'} hover:scale-[1.02] hover:-translate-y-0.5`}>
                                     <EditorialIcon className={`w-8 h-8 ${isDarkMode ? 'text-white' : 'text-zinc-900'} group-hover:rotate-12 transition-transform duration-500`} /><div className={`h-8 w-px ${isDarkMode ? 'bg-white/10' : 'bg-zinc-900/10'}`} />
                                     <div className="flex flex-col items-start text-left">
                                         <span className={`text-[10px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'} mb-0.5`}>
@@ -2657,7 +2513,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                         </span>
                                         <div className="flex items-center gap-1.5 group-hover:gap-2 transition-all">
                                             <span className={`font-serif font-bold text-base ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-                                                {isCanvasSim ? 'About HeartFlair' : 'Try HeartFlair'}
+                                                {isCanvasSim ? 'About TrueHandover' : 'Try TrueHandover'}
                                             </span>
                                             <ArrowRight className={`w-4 h-4 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
                                         </div>
@@ -2674,8 +2530,361 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 </p>
                             </div>
                         </div>
-
                     </div>
+        </>
+    );
+
+    return (
+        <div className={`flex ${isLandscapeSplit ? 'flex-row' : 'flex-col'} lg:flex-row ${isEmbedded ? 'h-full w-full' : 'min-h-screen h-[100dvh]'} w-full min-w-0 ${isDarkMode ? 'bg-cosmic text-zinc-100' : 'bg-[#FDFDFD] text-zinc-900'} font-sans overflow-hidden ${motionReady ? 'transition-colors duration-500' : ''} relative`}>
+            {renderLightboxOverlay(filteredFiles)}
+
+            {/* Mobile Backdrop Overlay (Payment only) */}
+            {!isEmbedded && isMobilePaymentOpen && (
+                <div
+                    className="fixed inset-0 bg-transparent z-40 lg:hidden"
+                    onClick={() => { setIsMobilePaymentOpen(false); showMobileHeader(); }}
+                />
+            )}
+
+            <aside className={`
+                flex-shrink-0 z-30 transition-[width,min-width,opacity,transform] duration-500 ease-in-out
+                ${isLandscapeSplit
+                    ? (isDockedSidebarCollapsed
+                         ? 'opacity-0 -translate-x-2 pointer-events-none shadow-none border-r-0 h-full'
+                         : 'h-full'
+                      )
+                     : isDockedSidebarCollapsed
+                         ? 'w-0 opacity-0 -translate-x-2 pointer-events-none shadow-none border-r-0 h-full'
+                         : `
+                             lg:w-[350px] xl:w-[420px]
+                             w-full
+                             lg:h-full
+                         `
+                  }
+                ${isDarkMode ? 'bg-zinc-800' : 'bg-[#f1f5f9]'} 
+                ${isDockedSidebarCollapsed ? 'border-r-0 border-b-0' : (isLandscapeSplit ? 'border-r border-zinc-200/50 dark:border-white/5' : 'border-b lg:border-b-0 lg:border-r border-zinc-200/50 dark:border-white/5')}
+                flex flex-col relative shadow-2xl overflow-hidden
+            `}
+            style={isLandscapeSplit
+                ? {
+                    width: `${isDockedSidebarCollapsed ? 0 : splitSidebarExpandedWidth}px`,
+                    minWidth: `${isDockedSidebarCollapsed ? 0 : splitSidebarExpandedWidth}px`,
+                }
+                : undefined
+            }>
+                <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden">
+                    {theme.wallpaper ? (
+                        // ADJUSTED: Opacity adjusted per user request — Light boosted to full, Dark: 60%
+                        <img src={theme.wallpaper} className={`w-full h-full object-cover transition-all duration-700 ${isDarkMode ? 'opacity-60 grayscale-[20%]' : 'opacity-100 grayscale-0'}`} alt="Background" />
+                    ) : (
+                        // GOLDILOCKS STYLE: If no wallpaper, show a subtle radial gradient to create "nice" depth without being overwhelming
+                        <div className={`w-full h-full ${isDarkMode ? 'bg-[radial-gradient(circle_at_top_right,_#2d2d3a_0%,_#23232e_100%)]' : 'bg-[radial-gradient(circle_at_top_left,_#f8fafc_0%,_#e2e8f0_100%)]'}`} />
+                    )}
+                </div>
+
+                {/* CRANKED GRAIN: Stronger film grain (requested). */}
+                {theme.showGrain && (
+                    <div
+                        className={`absolute inset-0 z-0 pointer-events-none ${isDarkMode ? 'opacity-85 mix-blend-overlay' : 'opacity-80 mix-blend-overlay'}`}
+                        style={{ backgroundImage: NOISE_SVG, filter: 'contrast(450%) brightness(110%)' }}
+                    ></div>
+                )}
+
+                {/* UPDATED: Added backdrop-blur-sm to the overlay to smooth out noisy wallpapers behind text */}
+                <div className={`absolute inset-0 z-10 bg-gradient-to-b ${sidebarOverlay} backdrop-blur-[1px]`} />
+                <div className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.1)_100%)]" />
+
+                {/* Drag handle removed per user feedback — X button is sufficient */}
+
+                {/* Mobile/Tablet Header (stacked layout) */}
+                 {!isEmbedded && !isLandscapeSplit && (
+                     <div
+                        className={`lg:hidden relative shrink-0 z-50 ${!isMobileInfoOpen ? 'border-b border-zinc-200/50 dark:border-white/5' : ''} ${isDarkMode ? 'bg-[#2b2b38]' : 'bg-[#f1f5f9]'}`}
+                        style={{ paddingTop: headerChromePadTop }}
+                     >
+                        <div className={`flex items-center gap-3 pb-2 ${isCanvasSim ? 'px-2 sm:px-3' : 'px-4 sm:px-5'}`}>
+                            <button
+                                onClick={onBack}
+                                className={`shrink-0 p-2 -ml-2 rounded-full hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors`}
+                                aria-label="Back"
+                            >
+                                <ChevronLeft className={`w-5 h-5 ${textPrimary}`} />
+                            </button>
+
+                            <div className="min-w-0 flex-1">
+                                <h1 className={`font-serif ${isMobileInfoOpen ? 'text-base' : 'text-lg'} font-medium ${textPrimary} truncate leading-none`}>{project.name}</h1>
+                                <p className={`text-[10px] ${textSecondary} mt-0.5 font-bold uppercase tracking-wider truncate`}>{project.files.length} Assets{isLocked && !isMobileInfoOpen ? ` - $${project.amount.toLocaleString()}` : ''}</p>
+                            </div>
+
+                            {isMobileInfoOpen ? (
+                                <button
+                                    onClick={() => { setIsMobileInfoOpen(false); showMobileHeader(); }}
+                                    className={`shrink-0 p-2.5 rounded-full ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'} transition-colors`}
+                                    aria-label="Close Details"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => { playClick(); openMobileDetails(); }}
+                                    className={`shrink-0 whitespace-nowrap px-3.5 sm:px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'} transition-colors`}
+                                    aria-label="Details"
+                                >
+                                    <Menu className="w-3.5 h-3.5" />
+                                    <span>Details</span>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Split Header (Landscape) — docked sidebar with collapse control */}
+                {!isEmbedded && isLandscapeSplit && (
+                    <div
+                        className={`lg:hidden relative shrink-0 z-50 border-b border-zinc-200/50 dark:border-white/5 ${isDarkMode ? 'bg-[#2b2b38]' : 'bg-[#f1f5f9]'}`}
+                        style={{ paddingTop: headerChromePadTop }}
+                    >
+                        <div className={`flex items-center gap-3 pb-2 ${isCanvasSim ? 'px-2 sm:px-3' : 'px-4'}`}>
+                            <button
+                                onClick={() => { playClick(); onBack(); }}
+                                className={`shrink-0 p-2 -ml-2 rounded-full hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors`}
+                                aria-label="Back"
+                            >
+                                <ChevronLeft className={`w-5 h-5 ${textPrimary}`} />
+                            </button>
+
+                            <div className="min-w-0 flex-1">
+                                <p className={`text-sm font-bold ${textPrimary} truncate leading-tight`}>{project.name}</p>
+                                <p className={`text-[10px] font-bold uppercase tracking-wider ${textSecondary} truncate`}>{project.files.length} Assets{isLocked ? ` - $${project.amount.toLocaleString()}` : ''}</p>
+                            </div>
+
+                            <button
+                                onClick={collapseDockedSidebar}
+                                className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'} transition-colors`}
+                                aria-label="Collapse Details"
+                                title="Hide Details"
+                            >
+                                <PanelRightClose className="w-3.5 h-3.5" />
+                                <span>Details</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Desktop Back Button Area (with Creator Preview Badge) */}
+                {(!isEmbedded || allowSidebarCollapse) && (
+                    <div
+                        className="hidden lg:flex relative z-20 px-8 pt-8 pb-2 justify-between items-center gap-3 overflow-x-auto no-scrollbar"
+                        style={{ paddingTop: paddingTop ? `max(32px, ${paddingTop})` : '32px' }}
+                    >
+                        <div className="flex items-center gap-4 min-w-0">
+                            {!isEmbedded && (
+                                <button onClick={onBack} className={`group flex items-center gap-2 ${isCompactDesktopHeader ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-full ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white' : 'bg-white/50 border-zinc-200/50 hover:bg-white text-zinc-600 hover:text-zinc-900'} backdrop-blur-md border shadow-sm transition-all duration-300 hover:scale-105 shrink-0`}>
+                                    <ChevronLeft className={`${isCompactDesktopHeader ? 'w-3.5 h-3.5' : 'w-4 h-4'} group-hover:-translate-x-1 transition-transform`} />
+                                    <span className={`${isCompactDesktopHeader ? 'text-[11px]' : 'text-xs'} font-bold uppercase tracking-widest`}>Back</span>
+                                </button>
+                            )}
+                            {/* Creator Preview Disclaimer — shown on full preview routes (not embedded editor preview). */}
+                            {!isEmbedded && !project.clientViewedAt && (
+                                <div className={`${isCompactDesktopHeader ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-full flex items-center gap-2 ${isCompactDesktopHeader ? 'text-[9px]' : 'text-[10px]'} font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-700'} shrink-0`}>
+                                    <Eye className={`${isCompactDesktopHeader ? 'w-3 h-3' : 'w-3.5 h-3.5'}`} />
+                                    <span>Creator Preview</span>
+                                </div>
+                            )}
+                            {/* Non-desktop layouts keep the collapse control here (left group). */}
+                            {canCollapseDockedSidebar && !isDockedSidebarCollapsed && !isActualDesktopViewport && (
+                                <button
+                                    type="button"
+                                    onClick={collapseDockedSidebar}
+                                    className={`${isCompactDesktopHeader ? 'p-2' : 'p-2.5'} rounded-full border shadow-sm transition-all duration-300 hover:scale-105 ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white' : 'bg-white/50 border-zinc-200/50 hover:bg-white text-zinc-600 hover:text-zinc-900'} backdrop-blur-md shrink-0`}
+                                    aria-label="Collapse Details"
+                                    title="Hide Details"
+                                >
+                                    <PanelRightClose className={`${isCompactDesktopHeader ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+                                </button>
+                            )}
+                        </div>
+                        {/* Desktop-only: collapse button lives on the far right (red-spot placement). */}
+                        {canCollapseDockedSidebar && !isDockedSidebarCollapsed && isActualDesktopViewport && (
+                            <button
+                                type="button"
+                                onClick={collapseDockedSidebar}
+                                className={`${isCompactDesktopHeader ? 'p-2' : 'p-2.5'} rounded-full border shadow-sm transition-all duration-300 hover:scale-105 ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white' : 'bg-white/50 border-zinc-200/50 hover:bg-white text-zinc-600 hover:text-zinc-900'} backdrop-blur-md shrink-0`}
+                                aria-label="Collapse Details"
+                                title="Hide Details"
+                            >
+                                <PanelRightClose className={`${isCompactDesktopHeader ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                                {showDockedSidebar && sidebarBody}
+
+            </aside>
+
+            {/* Mobile Sticky Bottom Payment Bar */}
+            {!isEmbedded && !isLandscapeSplit && !isMobileInfoOpen && !isMobilePaymentOpen && isLocked && !isPendingVerification && (
+                <div className={`
+                    fixed bottom-0 left-0 right-0 z-40 lg:hidden animate-fade-in
+                    ${isDarkMode ? 'bg-zinc-800/98 border-white/10' : 'bg-white/98 border-zinc-200'}
+                    border-t backdrop-blur-xl
+                    ${isCanvasSim ? 'py-3 px-3' : 'py-3 pl-6 pr-5'}
+                `} style={{
+                    paddingBottom: paddingBottom ? `max(12px, ${paddingBottom})` : 'max(12px, env(safe-area-inset-bottom))',
+                    ...(isCanvasSim
+                        ? {}
+                        : {
+                            paddingLeft: 'max(24px, env(safe-area-inset-left))',
+                            paddingRight: 'max(20px, env(safe-area-inset-right))',
+                        }),
+                }}>
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                            <p className={`text-[10px] font-bold uppercase tracking-widest ${textSecondary}`}>Total Due</p>
+                            <p className={`text-xl font-sans tracking-tight font-bold ${textPrimary} leading-tight`} style={{ textShadow: isDarkMode ? '0 1px 4px rgba(0,0,0,0.4)' : 'none' }}>${project.amount.toLocaleString()}</p>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                            <button
+                                onClick={() => { playClick(); openMobileDetails(); }}
+                                className={`px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'}`}
+                            >
+                                Details
+                            </button>
+                            <button
+                                onClick={() => { playClick(); setIsMobilePaymentOpen(true); }}
+                                className={`px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-2 ${isDarkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-zinc-900 text-white hover:bg-zinc-800'}`}
+                            >
+                                <CreditCard className="w-3.5 h-3.5" /> Pay Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Mobile Sticky Bottom Bar - Pending Verification */}
+            {!isEmbedded && !isLandscapeSplit && !isMobileInfoOpen && isPendingVerification && (
+                <div className={`
+                    fixed bottom-0 left-0 right-0 z-40 lg:hidden animate-fade-in
+                    ${isDarkMode ? 'bg-zinc-800/98 border-white/10' : 'bg-white/98 border-zinc-200'}
+                    border-t backdrop-blur-xl
+                    px-4 py-4
+                `} style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
+                    <div className="flex items-center justify-center gap-3 text-amber-500">
+                        <RefreshCw className="w-4 h-4 animate-spin" style={{ animationDuration: '3s' }} />
+                        <span className="text-xs font-bold uppercase tracking-widest">Verification Pending</span>
+                    </div>
+                </div>
+            )}
+
+            {/* Mobile Payment Bottom Sheet */}
+            {!isEmbedded && isMobilePaymentOpen && (
+                <div className={`
+                    fixed bottom-0 left-0 right-0 z-50 lg:hidden animate-sheet-up
+                    max-h-[85vh] rounded-t-[2rem] overflow-hidden
+                    shadow-[0_-20px_60px_rgba(0,0,0,0.4)]
+                    ${isDarkMode ? 'bg-zinc-800' : 'bg-[#f1f5f9]'}
+                `}>
+                    <div className="flex justify-center pt-3 pb-1">
+                        <div className={`w-10 h-1.5 rounded-full ${isDarkMode ? 'bg-white/20' : 'bg-zinc-300'}`} />
+                    </div>
+                    <div className="flex items-center justify-between px-6 py-3">
+                        <h3 className={`font-sans tracking-tight text-lg font-medium ${textPrimary}`}>Payment</h3>
+                        <button
+                            onClick={() => setIsMobilePaymentOpen(false)}
+                            className={`p-2.5 rounded-full ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'} transition-colors`}
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                    <div className="overflow-y-auto px-6 pb-8" style={{ maxHeight: 'calc(85vh - 80px)', paddingBottom: 'max(32px, env(safe-area-inset-bottom))' }}>
+                        <PaymentTerminal
+                            project={project}
+                            isDarkMode={isDarkMode}
+                            isEmbedded={isEmbedded}
+                                isLandscapeCompact={isLandscapeSplit && isPhoneLike}
+                            creatorName={creatorName}
+                                onPaymentComplete={(method) => { setIsMobilePaymentOpen(false); onPaymentComplete(method); }}
+                            canVerifyManualPayment={canVerifyManualPayment}
+                            onMockVerify={canVerifyManualPayment ? () => { setIsMobilePaymentOpen(false); onPaymentComplete(); } : undefined}
+                        />
+                    </div>
+                </div>
+            )}
+
+                <div className={`flex-1 relative flex flex-col overflow-hidden bg-transparent min-w-0 min-h-0 transition-opacity duration-150 ease-out ${motionReady ? 'opacity-100' : 'opacity-0'}`}>
+                {pattern && pattern !== 'none' && <div className="absolute inset-0 pointer-events-none z-0"><div className={`w-full h-full transition-all duration-500 ${patternColorClass} ${patternOpacityClass}`} style={{ maskImage: maskImage, WebkitMaskImage: maskImage, maskSize: maskSize, WebkitMaskSize: maskSize, maskRepeat: maskRepeat, WebkitMaskRepeat: maskRepeat }} /></div>}
+                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-zinc-100/50 dark:bg-white/[0.02] rounded-full blur-[100px] -z-10 pointer-events-none" />
+
+                    {/* Desktop-only: when the docked sidebar is collapsed, use minimal controls (no glass header). */}
+                    {isActualDesktopViewport && isDockedSidebarCollapsed && (!isEmbedded || allowSidebarCollapse) && (
+                        <div className="hidden lg:flex absolute top-8 left-8 right-8 z-40 items-center justify-between pointer-events-none">
+                            <div className="flex items-center gap-2 pointer-events-auto">
+                                {!isEmbedded ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => { playClick(); onBack(); }}
+                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${isDarkMode ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-zinc-50 text-zinc-700 border border-zinc-200'}`}
+                                        aria-label="Back"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                ) : reserveCollapsedHeaderBackSlot > 0 ? (
+                                    <div className="flex-shrink-0 flex items-center gap-2" aria-hidden="true">
+                                        {Array.from({ length: reserveCollapsedHeaderBackSlot }, (_, i) => (
+                                            <div key={i} className="w-10 h-10" />
+                                        ))}
+                                    </div>
+                                ) : null}
+                                <button
+                                    type="button"
+                                    onClick={() => { playClick(); setIsSplitSidebarCollapsed(false); }}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15' : 'bg-white border border-zinc-200/50 text-zinc-600 hover:bg-zinc-50'}`}
+                                    aria-label="Show Details"
+                                    title="Show Details"
+                                >
+                                    <PanelRightOpen className="w-3.5 h-3.5" />
+                                    <span>Details</span>
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-3 pointer-events-auto">
+                                {!isEmbedded && !project.clientViewedAt && (
+                                    <div className={`px-3 py-1.5 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-700'}`}>
+                                        <Eye className="w-3.5 h-3.5" />
+                                        <span>Creator Preview</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    <main
+                        ref={isCanvasSim ? undefined : mainScrollRef}
+                        onScroll={isCanvasSim ? undefined : handleMainScroll}
+                        className={`flex-1 min-h-0 min-w-0 relative z-10 w-full ${
+                            isCanvasSim
+                                ? `flex flex-col overflow-hidden ${isActualDesktopViewport && isDockedSidebarCollapsed && (!isEmbedded || allowSidebarCollapse) ? 'lg:pt-24' : ''}`
+                                : `overflow-y-auto ${simMainScrollPadding} scroll-smooth ${isActualDesktopViewport && isDockedSidebarCollapsed && (!isEmbedded || allowSidebarCollapse) ? 'lg:pt-24' : ''} ${!isEmbedded && isLocked && !isPaid ? (isLandscapeSplit ? 'pb-8' : 'pb-24 lg:pb-8') : ''}`
+                        }`}
+                    >
+                        {isCanvasSim ? (
+                            <div
+                                ref={mainScrollRef}
+                                onScroll={handleMainScroll}
+                                className={`flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden scroll-smooth pr-0 ${simCanvasScrollPaddingY}`}
+                            >
+                                {collapsedDockedGalleryHeader}
+                                <div className="px-2 sm:px-3 min-w-0">
+                                {galleryMainScrollRest}
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                {collapsedDockedGalleryHeader}
+                                {galleryMainScrollRest}
+                            </>
+                        )}
                 </main>
             </div>
 
@@ -2688,17 +2897,17 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             <div className="flex items-center justify-between gap-4">
                                 <div className="min-w-0">
                                     <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Preview Mode</p>
-                                    <h3 className="font-serif text-xl font-bold truncate">About HeartFlair</h3>
+                                    <h3 className="font-serif text-xl font-bold truncate">About TrueHandover</h3>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
                                     <a
-                                        href="https://heartflair.com"
+                                        href="https://truehandover.com"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className={`hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-white/10 border-white/10 text-white hover:bg-white/15' : 'bg-zinc-50 border-zinc-200/50 text-zinc-700 hover:bg-zinc-100'}`}
                                         title="Opens in a new tab (exits simulation)"
                                     >
-                                        <span>HeartFlair.com</span>
+                                        <span>truehandover.com</span>
                                         <ExternalLink className="w-3.5 h-3.5" />
                                     </a>
                                     <button
@@ -2719,16 +2928,16 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             </p>
                             <div className={`rounded-2xl px-4 py-3 border ${isDarkMode ? 'bg-white/5 border-white/10 text-zinc-300' : 'bg-zinc-50 border-zinc-200/50 text-zinc-600'}`}>
                                 <p className="text-[11px] leading-relaxed">
-                                    Visiting <span className={`${isDarkMode ? 'text-white' : 'text-zinc-900'} font-bold`}>HeartFlair.com</span> opens the product website in a new tab.
+                                    Visiting <span className={`${isDarkMode ? 'text-white' : 'text-zinc-900'} font-bold`}>truehandover.com</span> opens the product website in a new tab.
                                     It is not your client portal domain (whitelabel/custom domains are separate).
                                 </p>
                                 <a
-                                    href="https://heartflair.com"
+                                    href="https://truehandover.com"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className={`mt-3 inline-flex sm:hidden items-center gap-2 px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${isDarkMode ? 'bg-white/10 border-white/10 text-white hover:bg-white/15' : 'glass-panel text-zinc-700 hover:bg-zinc-50'}`}
+                                    className={`mt-3 inline-flex sm:hidden items-center gap-2 px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${isDarkMode ? 'bg-white/10 border-white/10 text-white hover:bg-white/15' : 'bg-white/90 border-zinc-200 text-zinc-700 hover:bg-zinc-50 shadow-sm'}`}
                                 >
-                                    <span>HeartFlair.com</span>
+                                    <span>truehandover.com</span>
                                     <ExternalLink className="w-3.5 h-3.5" />
                                 </a>
                                 <p className={`mt-2 text-[9px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
@@ -2746,7 +2955,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setIsLearnMoreOpen(false)}
-                                className={`w-full sm:w-auto px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-zinc-900 hover:bg-zinc-800 text-white'}`}
+                                className={`w-full sm:w-auto px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-zinc-900 hover:bg-zinc-800 text-white'}`}
                             >
                                 Continue Preview
                             </button>

@@ -90,8 +90,8 @@ export default defineConfig(({ mode }) => {
             enabled: false,             // don't run SW in dev (avoids stale cache confusion)
           },
           manifest: {
-            name: 'Heartflair',
-            short_name: 'Heartflair',
+            name: 'Heartifact',
+            short_name: 'Heartifact',
             description: 'Client delivery and payment platform for creative freelancers.',
             theme_color: '#0f0f15',
             background_color: '#0f0f15',

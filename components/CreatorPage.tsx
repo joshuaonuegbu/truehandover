@@ -30,15 +30,15 @@ const detectTypeFromUrl = (raw: string): string | null => {
 import {
     ChevronLeft, Save, Upload, Calendar, DollarSign,
     User, FileText, Plus, X, Image as ImageIcon,
-    Film, Music, File, CheckCircle, LayoutTemplate,
-    Link as LinkIcon, Cloud, ExternalLink, RefreshCw,
+    Music, File, CheckCircle, LayoutTemplate,
+    Link as LinkIcon, Cloud, RefreshCw,
     Sun, Moon, Grid, Activity, MoreHorizontal, Slash,
     Hexagon, Cpu, Plus as PlusIcon, Square, Trash2,
     Layers, ToggleRight, MessageSquare, Flag, PenTool,
     Wallet, Smartphone, Mail, Coins, ShieldAlert,
     Infinity, Hourglass, Flame, Camera, Type,
     Target, Radio, Crosshair, Box, Play, Hash,
-    Monitor, AlertCircle, Loader2, Key, PanelLeftClose, PanelLeftOpen, EyeOff, Pencil, Settings
+    Monitor, AlertCircle, Loader2, Key, PanelLeftClose, PanelLeftOpen, EyeOff, Pencil
 } from 'lucide-react';
 import { Project, FileAsset, ProjectTheme, Milestone, UserProfile, CredentialBlock } from '../types';
 import { playClick, playSuccess } from '../utils/sound';
@@ -63,7 +63,12 @@ const createClientLinkToken = () => {
     return `cl_${hex}_${Date.now().toString(36)}`;
 };
 
-const GRADIENT_TEXT = "text-transparent bg-clip-text bg-gradient-to-br from-zinc-900 via-zinc-600 to-zinc-400 dark:from-white dark:via-zinc-200 dark:to-zinc-500";
+const ARCHIVED_LAYOUT_IDS = new Set(['cinema', 'split', 'portfolio', 'modeler', 'studio']);
+const normalizePortalLayoutForPicker = (layout?: string): string => {
+    if (!layout || ARCHIVED_LAYOUT_IDS.has(layout)) return 'default';
+    return layout;
+};
+
 
 // --- VISUAL CONSTANTS ---
 // High-visibility SVG Grain (Matching ClientPreviewPage)
@@ -231,7 +236,7 @@ const Toggle = ({ checked, onChange }: { checked: boolean, onChange: (v: boolean
         onClick={() => { playClick(); onChange(!checked); }}
         className={`w-11 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${checked ? 'bg-brand dark:bg-brand' : 'bg-zinc-200 dark:bg-white/10'}`}
     >
-        <div className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow-sm transition-all duration-300 ${checked ? 'translate-x-5 bg-white dark:bg-black' : 'bg-white'}`} />
+        <div className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow-sm transition-all duration-300 ${checked ? 'translate-x-5 bg-white dark:bg-zinc-950' : 'bg-white dark:bg-zinc-500'}`} />
     </button>
 );
 
@@ -380,7 +385,6 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
     const [systemDark, setSystemDark] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches);
 
     const [showAvatarSelector, setShowAvatarSelector] = useState(false);
-    const [showAdvanced, setShowAdvanced] = useState(false);  // ADDED: Simplification Toggle
     const [customWallpapers, setCustomWallpapers] = useState<ProjectTheme[]>([]);
     const [isEditorCollapsed, setIsEditorCollapsed] = useState(false);
     const [isPreviewDockedSidebarCollapsed, setIsPreviewDockedSidebarCollapsed] = useState(false);
@@ -847,7 +851,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
     };
 
     return (
-        <div className="flex h-screen overflow-hidden bg-[#F2F5F3] dark:bg-cosmic relative">
+        <div className="flex h-screen overflow-hidden bg-[#f0f2f5] dark:bg-cosmic relative">
             <div
                 className="absolute inset-0 opacity-[0.06] dark:opacity-0 mix-blend-multiply pointer-events-none z-0"
                 style={{
@@ -891,16 +895,16 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                 onChange={handleAssetUpload}
             />
 
-            {/* LEFT PANEL: EDITOR (25%) */}
-            <div className={`${isEditorCollapsed ? 'w-0 min-w-0 opacity-0 pointer-events-none' : 'w-[25%] min-w-[340px] opacity-100'} flex flex-col border-r border-zinc-200/80 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl border border-white/20 dark:border-white/20 backdrop-blur-xl relative z-20 overflow-hidden transition-all duration-300`}>
-                {/* Film Grain Overlay - Switched to SVG with stronger opacity & mix-blend-multiply for light mode */}
+            {/* LEFT PANEL: EDITOR (~21% width — ~15% narrower than prior 25% / 340px min) */}
+            <div className={`${isEditorCollapsed ? 'w-0 min-w-0 opacity-0 pointer-events-none' : 'w-[25%] lg:w-[28%] min-w-[340px] max-w-[480px] opacity-100'} flex flex-col border-r border-zinc-200/80 dark:border-white/10 bg-[#f0f2f5] dark:bg-cosmic relative z-20 overflow-hidden transition-all duration-300`}>
+                {/* Match the workspace shell surface instead of a custom editor-only treatment */}
                 <div
-                    className="absolute inset-0 pointer-events-none z-0 mix-blend-multiply dark:mix-blend-overlay opacity-15 dark:opacity-30"
-                    style={{ backgroundImage: NOISE_SVG, filter: 'contrast(170%) brightness(100%)' }}
+                    className="absolute inset-0 pointer-events-none z-0 mix-blend-multiply dark:mix-blend-overlay opacity-[0.06] dark:opacity-[0.1]"
+                    style={{ backgroundImage: NOISE_SVG, filter: 'contrast(150%)' }}
                 ></div>
 
                 {/* Editor Header */}
-                <div className="h-16 px-6 flex items-center justify-between border-b border-zinc-200/80 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl border-b border-white/20 dark:border-white/20 backdrop-blur-md sticky top-0 z-30 relative">
+                <div className="h-16 px-6 flex items-center justify-between border-b border-zinc-200/80 dark:border-white/10 bg-[#f0f2f5]/92 dark:bg-cosmic/92 backdrop-blur-xl sticky top-0 z-30 relative">
                     <button
                         onClick={() => { playClick(); onBack(); }}
                         className="flex items-center gap-2 text-zinc-500 hover:text-obsidian dark:hover:text-white transition-colors text-xs font-bold uppercase tracking-wider"
@@ -936,7 +940,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                 {/* Scrollable Form Area */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-5 scroll-smooth relative z-10">
                     <div>
-                        <h2 className={`text-3xl font-sans tracking-tight font-semibold tracking-tight mb-1 ${GRADIENT_TEXT}`}>
+                        <h2 className="text-3xl font-sans tracking-tight font-semibold tracking-tight mb-1 text-zinc-900 dark:text-white">
                             Project Config
                         </h2>
                         <p className="text-zinc-500 dark:text-zinc-400 text-sm">Changes update the preview instantly.</p>
@@ -951,10 +955,12 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     )}
 
                     {/* Basic Info Card */}
-                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                    <div className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] p-6 lg:p-8 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden relative group transition-all">
+                        <div className="absolute inset-0 pointer-events-none rounded-[2rem] opacity-[0.04] dark:opacity-[0.04] z-0" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-zinc-900/5 dark:bg-white/5 rounded-full blur-[80px] pointer-events-none z-0" />
                         <div className="space-y-4">
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest flex justify-between">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex justify-between">
                                     Project Name
                                     {errors.name && <span className="text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Required</span>}
                                 </label>
@@ -962,13 +968,13 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     value={formData.name}
                                     onChange={e => { setFormData({ ...formData, name: e.target.value }); setErrors({ ...errors, name: false }); }}
                                     placeholder="e.g. Q4 Marketing Campaign"
-                                    className={`w-full p-3 bg-editorial dark:bg-black/20 border rounded-xl outline-none transition-colors text-sm font-bold text-obsidian dark:text-white ${errors.name ? 'border-red-500 focus:border-red-500' : 'border-zinc-200/50 dark:border-white/10 focus:border-brand dark:focus:border-brand'}`}
+                                    className={`w-full p-3 bg-white dark:bg-white/8 border rounded-xl outline-none transition-colors text-sm font-bold text-zinc-900 dark:text-white placeholder:text-zinc-400 ${errors.name ? 'border-red-500 focus:border-red-500' : 'border-zinc-200 dark:border-white/10 focus:border-zinc-300 dark:focus:border-white/25'}`}
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest flex items-center gap-1 justify-between">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-1 justify-between">
                                         <div className="flex items-center gap-1"><DollarSign className="w-3 h-3" /> Value</div>
                                         {errors.amount && <span className="text-red-500 text-[9px] font-bold">Required</span>}
                                     </label>
@@ -976,18 +982,18 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         type="number"
                                         value={formData.amount}
                                         onChange={e => { setFormData({ ...formData, amount: Number(e.target.value) }); setErrors({ ...errors, amount: false }); }}
-                                        className={`w-full p-3 bg-editorial dark:bg-black/20 border rounded-xl outline-none transition-colors font-mono text-sm text-obsidian dark:text-white ${errors.amount ? 'border-red-500 focus:border-red-500' : 'border-zinc-200/50 dark:border-white/10 focus:border-brand dark:focus:border-brand'}`}
+                                        className={`w-full p-3 bg-white dark:bg-white/8 border rounded-xl outline-none transition-colors font-mono text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 ${errors.amount ? 'border-red-500 focus:border-red-500' : 'border-zinc-200 dark:border-white/10 focus:border-zinc-300 dark:focus:border-white/25'}`}
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest flex items-center gap-1">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-1">
                                         <Calendar className="w-3 h-3" /> Due Date
                                     </label>
                                     <input
                                         type="date"
                                         value={formData.dueDate}
                                         onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                                        className="th-date-input w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
+                                        className="th-date-input w-full p-3 bg-white dark:bg-white/8 border border-zinc-200 dark:border-white/10 rounded-xl focus:border-zinc-300 dark:focus:border-white/25 outline-none transition-colors text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400"
                                     />
                                 </div>
                             </div>
@@ -995,7 +1001,9 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     </div>
 
                     {/* Client Card */}
-                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                    <div className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] p-6 lg:p-8 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden relative group transition-all">
+                        <div className="absolute inset-0 pointer-events-none rounded-[2rem] opacity-[0.04] dark:opacity-[0.04] z-0" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-zinc-900/5 dark:bg-white/5 rounded-full blur-[80px] pointer-events-none z-0" />
                         <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
                             <User className="w-3 h-3" /> Client Details
                         </h3>
@@ -1021,7 +1029,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     </div>
                                 </div>
                                 {showAvatarSelector && (
-                                    <div className="grid grid-cols-5 gap-2 p-2 bg-editorial dark:bg-black/20 rounded-xl border border-zinc-200/50 dark:border-white/5 animate-fade-in mt-2">
+                                    <div className="grid grid-cols-5 gap-2 p-2 bg-white dark:bg-white/8 rounded-xl border border-zinc-200/50 dark:border-white/5 animate-fade-in mt-2">
                                         {AVATAR_PRESETS.map((url, i) => (
                                             <button
                                                 type="button"
@@ -1045,13 +1053,13 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 value={formData.client?.name}
                                 onChange={e => setFormData({ ...formData, client: { ...formData.client!, name: e.target.value } })}
                                 placeholder="Client Name"
-                                className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
+                                className="w-full p-3 bg-white dark:bg-white/8 border border-zinc-200 dark:border-white/10 rounded-xl focus:border-zinc-300 dark:focus:border-white/25 outline-none transition-colors text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400"
                             />
                             <input
                                 value={formData.client?.company}
                                 onChange={e => setFormData({ ...formData, client: { ...formData.client!, company: e.target.value } })}
                                 placeholder="Company"
-                                className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
+                                className="w-full p-3 bg-white dark:bg-white/8 border border-zinc-200 dark:border-white/10 rounded-xl focus:border-zinc-300 dark:focus:border-white/25 outline-none transition-colors text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400"
                             />
                             <div className="grid grid-cols-1 gap-3">
                                 <div className="relative">
@@ -1060,7 +1068,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         value={formData.client?.email}
                                         onChange={e => setFormData({ ...formData, client: { ...formData.client!, email: e.target.value } })}
                                         placeholder="Email Address"
-                                        className="w-full p-3 pl-10 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
+                                        className="w-full p-3 pl-10 bg-white dark:bg-white/8 border border-zinc-200 dark:border-white/10 rounded-xl focus:border-zinc-300 dark:focus:border-white/25 outline-none transition-colors text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400"
                                     />
                                 </div>
                                 <div className="relative">
@@ -1069,24 +1077,15 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         value={formData.client?.phone}
                                         onChange={e => setFormData({ ...formData, client: { ...formData.client!, phone: e.target.value } })}
                                         placeholder="Phone (Optional)"
-                                        className="w-full p-3 pl-10 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm text-obsidian dark:text-white"
+                                        className="w-full p-3 pl-10 bg-white dark:bg-white/8 border border-zinc-200 dark:border-white/10 rounded-xl focus:border-zinc-300 dark:focus:border-white/25 outline-none transition-colors text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400"
                                     />
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <button 
-                        onClick={() => { playClick(); setShowAdvanced(!showAdvanced); }}
-                        className="w-full py-4 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-black dark:text-zinc-500 dark:hover:text-zinc-200 border border-dashed border-zinc-200/50 dark:border-white/10 rounded-2xl hover:border-zinc-300 dark:hover:border-white/20 transition-all group"
-                    >
-                         {showAdvanced ? 'Hide Advanced Options' : 'Show Advanced Options'} <Settings className="w-3.5 h-3.5 group-hover:rotate-45 transition-transform" />
-                    </button>
-
-                    {showAdvanced && (
-                    <>
                     {/* NEW LINK SECURITY SECTION */}
-                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none animate-fade-in">
+                    <div className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] p-5 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden animate-fade-in">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
                             <ShieldAlert className="w-3 h-3" /> Link Security
                         </h3>
@@ -1142,7 +1141,9 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     </div>
 
                     {/* Project Controls */}
-                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                    <div className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] p-6 lg:p-8 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden relative group transition-all">
+                        <div className="absolute inset-0 pointer-events-none rounded-[2rem] opacity-[0.04] dark:opacity-[0.04] z-0" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-zinc-900/5 dark:bg-white/5 rounded-full blur-[80px] pointer-events-none z-0" />
                         <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
                             <Activity className="w-3 h-3" /> Project Controls
                         </h3>
@@ -1169,7 +1170,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             </div>
                             {formData.accessConfig?.scopeCreepPaused && (
                                 <div className="pl-6">
-                                    <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Pause Message</label>
+                                    <label className="text-xs font-medium tracking-wider text-zinc-400">Pause Message</label>
                                     <input
                                         value={formData.accessConfig?.pauseReason || 'Project Paused: Revision Limit Reached'}
                                         onChange={e => setFormData({
@@ -1180,7 +1181,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             }
                                         })}
                                         placeholder="Project Paused: Revision Limit Reached"
-                                        className="mt-2 w-full p-2 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-lg focus:border-brand dark:focus:border-brand outline-none transition-colors text-xs text-obsidian dark:text-white"
+                                        className="mt-2 w-full p-2 bg-white dark:bg-white/8 border border-zinc-200/50 dark:border-white/10 rounded-lg focus:border-zinc-300 dark:focus:border-white/25 outline-none transition-colors text-xs text-zinc-900 dark:text-white"
                                     />
                                 </div>
                             )}
@@ -1213,7 +1214,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     <EyeOff className="w-4 h-4 text-zinc-400" />
                                     <div>
                                         <span className="text-sm font-medium dark:text-white">Tiled Watermark</span>
-                                        <p className="text-[10px] text-zinc-400 mt-0.5">Show faint Heartflair text behind locked previews</p>
+                                        <p className="text-[10px] text-zinc-400 mt-0.5">Show faint Heartifact text behind locked previews</p>
                                     </div>
                                 </div>
                                 <Toggle checked={formData.showWatermark !== false} onChange={v => setFormData({ ...formData, showWatermark: v })} />
@@ -1232,7 +1233,9 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     </div>
 
                     {/* Milestones */}
-                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                    <div className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] p-6 lg:p-8 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden relative group transition-all">
+                        <div className="absolute inset-0 pointer-events-none rounded-[2rem] opacity-[0.04] dark:opacity-[0.04] z-0" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-zinc-900/5 dark:bg-white/5 rounded-full blur-[80px] pointer-events-none z-0" />
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                                 <Flag className="w-3 h-3" /> Project Milestones
@@ -1243,13 +1246,13 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                         {formData.useMilestones && (
                             <div className="space-y-3 animate-fade-in">
                                 {formData.milestones?.map((milestone, index) => (
-                                    <div key={milestone.id} className="p-3 bg-editorial dark:bg-black/20 rounded-xl border border-zinc-200/50 dark:border-white/5 space-y-2">
+                                    <div key={milestone.id} className="p-3 bg-white dark:bg-white/8 rounded-xl border border-zinc-200/50 dark:border-white/5 space-y-2">
                                         <div className="flex gap-2">
                                             <input
                                                 value={milestone.title}
                                                 onChange={e => updateMilestone(index, 'title', e.target.value)}
                                                 placeholder="Milestone Name"
-                                                className="flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white"
+                                                className="flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-zinc-300 dark:focus:border-white/25 outline-none text-zinc-900 dark:text-white"
                                             />
                                             <button onClick={() => removeMilestone(index)} className="p-2 text-zinc-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
                                         </div>
@@ -1259,13 +1262,13 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                 value={milestone.amount}
                                                 onChange={e => updateMilestone(index, 'amount', Number(e.target.value))}
                                                 placeholder="$ Amount"
-                                                className="flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white"
+                                                className="flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-zinc-300 dark:focus:border-white/25 outline-none text-zinc-900 dark:text-white"
                                             />
                                             <input
                                                 type="date"
                                                 value={milestone.dueDate}
                                                 onChange={e => updateMilestone(index, 'dueDate', e.target.value)}
-                                                className="th-date-input flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white"
+                                                className="th-date-input flex-1 p-2 bg-white dark:bg-white/5 rounded-lg text-xs border border-transparent focus:border-zinc-300 dark:focus:border-white/25 outline-none text-zinc-900 dark:text-white"
                                             />
                                         </div>
                                     </div>
@@ -1281,14 +1284,16 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     </div>
 
                     {/* NEW: CREDENTIAL VAULT SECTION */}
-                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                    <div className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] p-6 lg:p-8 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden relative group transition-all">
+                        <div className="absolute inset-0 pointer-events-none rounded-[2rem] opacity-[0.04] dark:opacity-[0.04] z-0" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-zinc-900/5 dark:bg-white/5 rounded-full blur-[80px] pointer-events-none z-0" />
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                                 <Key className="w-3 h-3" /> Credential Vault
                             </h3>
                             <button
                                 onClick={() => setShowCredentialModal(true)}
-                                className="text-[10px] font-bold uppercase bg-zinc-200 hover:bg-brand hover:text-white dark:bg-white/20 dark:text-white dark:hover:bg-brand dark:hover:text-black px-3 py-1.5 rounded-lg transition-colors border border-transparent dark:border-white/10"
+                                className="text-xs font-medium bg-zinc-100 hover:bg-brand hover:text-white dark:bg-white/20 dark:text-white dark:hover:bg-brand dark:hover:text-black px-3 py-1.5 rounded-lg transition-colors border border-transparent dark:border-white/10"
                             >
                                 + Add Keys
                             </button>
@@ -1299,30 +1304,30 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                         </p>
 
                         {showCredentialModal && (
-                            <div className="mb-4 p-4 bg-editorial dark:bg-black/20 rounded-xl border border-dashed border-zinc-200/50 dark:border-white/10 animate-fade-in">
+                            <div className="mb-4 p-4 bg-white dark:bg-white/8 rounded-xl border border-dashed border-zinc-200/50 dark:border-white/10 animate-fade-in">
                                 <div className="space-y-3">
                                     <input
                                         placeholder="Service Name (e.g. WP Admin)"
-                                        className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white font-bold"
+                                        className="w-full p-2 bg-white dark:bg-white/8 rounded text-xs border border-transparent focus:border-zinc-300 dark:focus:border-white/25 outline-none text-zinc-900 dark:text-white font-bold"
                                         value={newCredential.serviceName || ''}
                                         onChange={(e) => setNewCredential({ ...newCredential, serviceName: e.target.value })}
                                     />
                                     <input
                                         placeholder="Username"
-                                        className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white font-mono"
+                                        className="w-full p-2 bg-white dark:bg-white/8 rounded text-xs border border-transparent focus:border-zinc-300 dark:focus:border-white/25 outline-none text-zinc-900 dark:text-white font-mono"
                                         value={newCredential.username || ''}
                                         onChange={(e) => setNewCredential({ ...newCredential, username: e.target.value })}
                                     />
                                     <input
                                         placeholder="Password"
                                         type="password"
-                                        className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white font-mono"
+                                        className="w-full p-2 bg-white dark:bg-white/8 rounded text-xs border border-transparent focus:border-zinc-300 dark:focus:border-white/25 outline-none text-zinc-900 dark:text-white font-mono"
                                         value={newCredential.password || ''}
                                         onChange={(e) => setNewCredential({ ...newCredential, password: e.target.value })}
                                     />
                                     <textarea
                                         placeholder="Notes (Optional)"
-                                        className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white resize-none h-16"
+                                        className="w-full p-2 bg-white dark:bg-white/8 rounded text-xs border border-transparent focus:border-zinc-300 dark:focus:border-white/25 outline-none text-zinc-900 dark:text-white resize-none h-16"
                                         value={newCredential.notes || ''}
                                         onChange={(e) => setNewCredential({ ...newCredential, notes: e.target.value })}
                                     />
@@ -1336,7 +1341,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
 
                         <div className="space-y-2">
                             {formData.credentials?.map((cred) => (
-                                <div key={cred.id} className="flex items-center justify-between p-3 bg-editorial dark:bg-black/20 rounded-xl border border-zinc-200/50 dark:border-white/5 group">
+                                <div key={cred.id} className="flex items-center justify-between p-3 bg-white dark:bg-white/8 rounded-xl border border-zinc-200/50 dark:border-white/5 group">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
                                             <Key className="w-4 h-4" />
@@ -1355,11 +1360,10 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                         </div>
                     </div>
 
-                    </>
-                    )}
-
                     {/* Payment Methods */}
-                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                    <div className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] p-6 lg:p-8 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden relative group transition-all">
+                        <div className="absolute inset-0 pointer-events-none rounded-[2rem] opacity-[0.04] dark:opacity-[0.04] z-0" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-zinc-900/5 dark:bg-white/5 rounded-full blur-[80px] pointer-events-none z-0" />
                         <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
                             <Wallet className="w-3 h-3" /> Payment Methods
                         </h3>
@@ -1372,7 +1376,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     <button
                                         type="button"
                                         onClick={() => { playClick(); window.location.assign('/settings'); }}
-                                        className="shrink-0 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-amber-500 text-white hover:bg-amber-600 transition-colors"
+                                        className="shrink-0 px-3 py-2 rounded-lg text-xs font-medium bg-amber-500 text-white hover:bg-amber-600 transition-colors"
                                     >
                                         Connect Stripe
                                     </button>
@@ -1380,7 +1384,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             </div>
                         )}
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between p-2 bg-editorial dark:bg-black/20 rounded-lg">
+                            <div className="flex items-center justify-between p-2 bg-white dark:bg-white/8 rounded-lg">
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full bg-[#635BFF]"></div>
                                     <span className="text-sm font-bold dark:text-white">Stripe Checkout</span>
@@ -1396,7 +1400,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             value={formData.paymentMethods?.venmo}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, venmo: e.target.value } })}
                                             placeholder="@username"
-                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
+                                            className="w-full p-3 bg-white dark:bg-white/8 border border-zinc-200 dark:border-white/10 rounded-xl focus:border-zinc-300 dark:focus:border-white/25 outline-none transition-colors text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -1405,7 +1409,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             value={formData.paymentMethods?.cashapp}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, cashapp: e.target.value } })}
                                             placeholder="$tag"
-                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
+                                            className="w-full p-3 bg-white dark:bg-white/8 border border-zinc-200 dark:border-white/10 rounded-xl focus:border-zinc-300 dark:focus:border-white/25 outline-none transition-colors text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -1414,7 +1418,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             value={formData.paymentMethods?.paypal}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, paypal: e.target.value } })}
                                             placeholder="paypal.me/you"
-                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
+                                            className="w-full p-3 bg-white dark:bg-white/8 border border-zinc-200 dark:border-white/10 rounded-xl focus:border-zinc-300 dark:focus:border-white/25 outline-none transition-colors text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -1423,7 +1427,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             value={formData.paymentMethods?.zelle}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, zelle: e.target.value } })}
                                             placeholder="Email or phone"
-                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs text-obsidian dark:text-white"
+                                            className="w-full p-3 bg-white dark:bg-white/8 border border-zinc-200 dark:border-white/10 rounded-xl focus:border-zinc-300 dark:focus:border-white/25 outline-none transition-colors text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400"
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-1.5">
@@ -1432,7 +1436,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             value={formData.paymentMethods?.bankInfo}
                                             onChange={e => setFormData({ ...formData, paymentMethods: { ...formData.paymentMethods, bankInfo: e.target.value } })}
                                             placeholder="Routing / account / instructions"
-                                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none text-xs h-24 resize-none text-obsidian dark:text-white"
+                                            className="w-full p-3 bg-white dark:bg-white/8 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-zinc-300 dark:focus:border-white/25 outline-none text-xs h-24 resize-none text-zinc-900 dark:text-white"
                                         />
                                     </div>
                                 </div>
@@ -1444,7 +1448,9 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     </div>
 
                     {/* Message Editor */}
-                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                    <div className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] p-6 lg:p-8 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden relative group transition-all">
+                        <div className="absolute inset-0 pointer-events-none rounded-[2rem] opacity-[0.04] dark:opacity-[0.04] z-0" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-zinc-900/5 dark:bg-white/5 rounded-full blur-[80px] pointer-events-none z-0" />
                         <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
                             <MessageSquare className="w-3 h-3" /> Personal Message
                         </h3>
@@ -1452,7 +1458,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             value={formData.message}
                             onChange={e => setFormData({ ...formData, message: e.target.value })}
                             placeholder="Enter a personal message for the client..."
-                            className="w-full p-3 bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-brand dark:focus:border-brand outline-none transition-colors text-sm min-h-[100px] resize-y mb-3 text-obsidian dark:text-white"
+                            className="w-full p-3 bg-white dark:bg-white/8 border border-zinc-200/50 dark:border-white/10 rounded-xl focus:border-zinc-300 dark:focus:border-white/25 outline-none transition-colors text-sm min-h-[100px] resize-y mb-3 text-zinc-900 dark:text-white"
                         />
                         <div className="flex flex-wrap gap-2">
                             {MESSAGE_PRESETS.map((preset) => (
@@ -1464,7 +1470,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         setFormData({ ...formData, message: text });
                                         playClick();
                                     }}
-                                    className="px-3 py-1.5 rounded-lg border border-zinc-200/50 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-zinc-500 hover:bg-zinc-200 dark:hover:bg-white/5 hover:text-obsidian dark:hover:text-white transition-colors"
+                                    className="px-3 py-1.5 rounded-lg border border-zinc-200/50 dark:border-white/10 text-xs font-medium tracking-wider text-zinc-500 hover:bg-zinc-200 dark:hover:bg-white/5 hover:text-obsidian dark:hover:text-white transition-colors"
                                 >
                                     {preset.label}
                                 </button>
@@ -1473,7 +1479,9 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     </div>
 
                     {/* Theme Selector */}
-                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none">
+                    <div className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] p-6 lg:p-8 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden relative group transition-all">
+                        <div className="absolute inset-0 pointer-events-none rounded-[2rem] opacity-[0.04] dark:opacity-[0.04] z-0" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-zinc-900/5 dark:bg-white/5 rounded-full blur-[80px] pointer-events-none z-0" />
                         {/* ... Theme selector content ... */}
                         <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
                             <LayoutTemplate className="w-3 h-3" /> Wallpapers
@@ -1497,7 +1505,19 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 <button
                                     type="button"
                                     key={`custom-${i}`}
-                                    onClick={() => { playClick(); setFormData({ ...formData, theme: { ...custom, pattern: formData.theme?.pattern || 'lines', showGrain: formData.theme?.showGrain ?? true } }); }}
+                                    onClick={() => {
+                                        playClick();
+                                        setFormData({
+                                            ...formData,
+                                            theme: {
+                                                ...custom,
+                                                pattern: formData.theme?.pattern || 'lines',
+                                                showGrain: formData.theme?.showGrain ?? true,
+                                                layout: formData.theme?.layout || 'default',
+                                                lightbox: formData.theme?.lightbox || 'default',
+                                            },
+                                        });
+                                    }}
                                     className={`
                                         relative aspect-video rounded-lg overflow-hidden cursor-pointer group border-2 transition-all bg-zinc-200 dark:bg-white/5 w-full p-0
                                         ${formData.theme?.wallpaper === custom.wallpaper ? 'border-brand ring-2 ring-brand/20 dark:border-brand dark:ring-brand/20' : 'border-transparent hover:border-zinc-200/50 dark:hover:border-white/20'}
@@ -1527,7 +1547,19 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 <button
                                     type="button"
                                     key={i}
-                                    onClick={() => { playClick(); setFormData({ ...formData, theme: { ...preset, pattern: formData.theme?.pattern || 'lines', showGrain: formData.theme?.showGrain ?? true } }); }}
+                                    onClick={() => {
+                                        playClick();
+                                        setFormData({
+                                            ...formData,
+                                            theme: {
+                                                ...preset,
+                                                pattern: formData.theme?.pattern || 'lines',
+                                                showGrain: formData.theme?.showGrain ?? true,
+                                                layout: formData.theme?.layout || 'default',
+                                                lightbox: formData.theme?.lightbox || 'default',
+                                            },
+                                        });
+                                    }}
                                     className={`
                                         relative aspect-video rounded-lg overflow-hidden cursor-pointer group border-2 transition-all bg-zinc-200 dark:bg-white/5 w-full p-0
                                         ${formData.theme?.name === preset.name && !customWallpapers.find(c => c.wallpaper === formData.theme?.wallpaper) ? 'border-brand ring-2 ring-brand/20 dark:border-brand dark:ring-brand/20' : 'border-transparent hover:border-zinc-200/50 dark:hover:border-white/20'}
@@ -1560,13 +1592,13 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 </h3>
                                 <button
                                     onClick={toggleGrain}
-                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors ${formData.theme?.showGrain ? 'bg-brand/20 text-brand border-brand/50 dark:bg-brand/20 dark:text-brand dark:border-brand/50 border' : 'bg-zinc-200 dark:bg-white/10 text-zinc-500'}`}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium tracking-wider transition-colors ${formData.theme?.showGrain ? 'bg-brand/20 text-brand border-brand/50 dark:bg-brand/20 dark:text-brand dark:border-brand/50 border' : 'bg-zinc-200 dark:bg-white/10 text-zinc-500'}`}
                                 >
                                     {formData.theme?.showGrain ? 'Film Grain ON' : 'Film Grain OFF'}
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-4 gap-2">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                                 {PATTERNS.map((p) => (
                                     <button
                                         key={p.id}
@@ -1582,7 +1614,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             });
                                         }}
                                         className={`
-                                            aspect-square rounded-lg flex flex-col items-center justify-center gap-1 border transition-all hover:bg-editorial dark:hover:bg-white/5
+                                            aspect-square rounded-lg flex flex-col items-center justify-center gap-1 border transition-all hover:bg-editorial dark:hover:bg-white/5 min-w-0 p-1.5 sm:p-0
                                             ${formData.theme?.pattern === p.id
                                                 ? 'border-brand bg-brand/10 text-brand dark:border-brand dark:bg-brand/10 dark:text-brand'
                                                 : 'border-zinc-200/50 dark:border-white/10 text-zinc-400'
@@ -1591,15 +1623,114 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         title={p.label}
                                     >
                                         <p.icon className={`w-4 h-4 ${p.id === 'cross' ? 'rotate-45' : ''}`} />
-                                        <span className="text-[9px] font-bold uppercase opacity-70">{p.label}</span>
+                                        <span className="w-full text-center truncate text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.03em] opacity-70">{p.label}</span>
                                     </button>
                                 ))}
                             </div>
                         </div>
                     </div>
 
+                    {/* Layout Selector */}
+                    <div className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] p-6 lg:p-8 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden relative group transition-all">
+                        <div className="absolute inset-0 pointer-events-none rounded-[2rem] opacity-[0.04] dark:opacity-[0.04] z-0" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-zinc-900/5 dark:bg-white/5 rounded-full blur-[80px] pointer-events-none z-0" />
+                        <div className="relative z-10">
+                            <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
+                                <LayoutTemplate className="w-3 h-3" /> Client Portal Layout
+                            </h3>
+                            <div className="grid grid-cols-3 gap-2">
+                                {[
+                                    { id: 'default', icon: LayoutTemplate, label: 'Default', shortLabel: 'Default' },
+                                    { id: 'billboard', icon: Monitor, label: 'Billboard', shortLabel: 'Board' },
+                                    { id: 'masonry', icon: Grid, label: 'Masonry', shortLabel: 'Mason' },
+                                    { id: 'journal', icon: FileText, label: 'Journal', shortLabel: 'Journal' },
+                                    { id: 'deck', icon: Layers, label: 'Deck', shortLabel: 'Deck' },
+                                ].map(({ id: l, icon: LayoutIcon, label, shortLabel }) => (
+                                    <button
+                                        key={l}
+                                        type="button"
+                                        onClick={() => {
+                                            playClick();
+                                            // Make sure we have a fallback if theme doesn't exist yet
+                                            const currentTheme = formData.theme || { ...WALLPAPER_PRESETS[1], pattern: 'lines', showGrain: true };
+                                            setFormData({
+                                                ...formData,
+                                                theme: {
+                                                    ...currentTheme,
+                                                    layout: l as any
+                                                }
+                                            });
+                                        }}
+                                        className={`
+                                            px-2 sm:px-3 py-2.5 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all hover:bg-editorial dark:hover:bg-white/5 min-w-0
+                                            ${normalizePortalLayoutForPicker(formData.theme?.layout as string | undefined) === l
+                                                ? 'border-brand bg-brand/10 text-brand dark:border-brand dark:bg-brand/10 dark:text-brand'
+                                                : 'border-zinc-200/50 dark:border-white/10 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'
+                                            }
+                                        `}
+                                    >
+                                        <LayoutIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                                        <span className="w-full text-center text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.04em] leading-tight truncate">
+                                            <span className="sm:hidden">{shortLabel}</span>
+                                            <span className="hidden sm:inline">{label}</span>
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                            <p className="mt-3 text-[10px] text-zinc-500 leading-relaxed">
+                                Select how clients will experience their deliverables. Default uses a standard grid, while other options provide curated, gallery-style presentations.
+                            </p>
+                            {/* Archived layouts: cinema, split, portfolio, modeler, and studio are preserved in code but removed from active selection. */}
+
+                            <div className="mt-5 pt-4 border-t border-zinc-200/60 dark:border-white/10">
+                                <h4 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-3 flex items-center gap-2">
+                                    <Monitor className="w-3 h-3" /> Lightbox Style
+                                </h4>
+                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                                    {[
+                                        { id: 'default', label: 'Default', shortLabel: 'Default' },
+                                        { id: 'pro', label: 'Pro', shortLabel: 'Pro' },
+                                        { id: 'workstation', label: 'Workstation', shortLabel: 'Work' },
+                                        { id: 'canvas', label: 'Canvas', shortLabel: 'Canvas' },
+                                        { id: 'sheet', label: 'Sheet', shortLabel: 'Sheet' },
+                                    ].map(({ id: lens, label, shortLabel }) => (
+                                        <button
+                                            key={lens}
+                                            type="button"
+                                            onClick={() => {
+                                                playClick();
+                                                const currentTheme = formData.theme || { ...WALLPAPER_PRESETS[1], pattern: 'lines', showGrain: true };
+                                                setFormData({
+                                                    ...formData,
+                                                    theme: {
+                                                        ...currentTheme,
+                                                        lightbox: lens as any,
+                                                    },
+                                                });
+                                            }}
+                                            className={`
+                                                px-2 sm:px-3 py-2 rounded-xl border text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.04em] transition-all min-w-0
+                                                ${(formData.theme?.lightbox || 'default') === lens
+                                                    ? 'border-brand bg-brand/10 text-brand dark:border-brand dark:bg-brand/10 dark:text-brand'
+                                                    : 'border-zinc-200/50 dark:border-white/10 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-editorial dark:hover:bg-white/5'
+                                                }
+                                            `}
+                                        >
+                                            <span className="w-full text-center truncate">
+                                                <span className="sm:hidden">{shortLabel}</span>
+                                                <span className="hidden sm:inline">{label}</span>
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Vault Assets */}
-                    <div className="bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/60 dark:border-white/20 p-5 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:shadow-none relative overflow-hidden">
+                    <div className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] p-6 lg:p-8 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden relative group transition-all">
+                        <div className="absolute inset-0 pointer-events-none rounded-[2rem] opacity-[0.04] dark:opacity-[0.04] z-0" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-zinc-900/5 dark:bg-white/5 rounded-full blur-[80px] pointer-events-none z-0" />
                         {/* ... Asset list logic ... */}
                         <div className="relative z-10">
                             {uploadError && (
@@ -1616,20 +1747,20 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                 </h3>
                                 <button
                                     onClick={() => { setShowLinkModal(true); setLinkError(null); setLinkNameWarning(null); setLinkImportSuccess(null); }}
-                                    className="text-[10px] font-bold uppercase bg-zinc-200 hover:bg-brand hover:text-white dark:bg-white/20 dark:text-white dark:hover:bg-brand dark:hover:text-black px-3 py-1.5 rounded-lg transition-colors border border-transparent dark:border-white/10"
+                                    className="text-xs font-medium bg-zinc-100 hover:bg-brand hover:text-white dark:bg-white/20 dark:text-white dark:hover:bg-brand dark:hover:text-black px-3 py-1.5 rounded-lg transition-colors border border-transparent dark:border-white/10"
                                 >
                                     + Add Link
                                 </button>
                             </div>
 
                             {showLinkModal && (
-                                <div className="mb-4 p-4 bg-editorial dark:bg-black/20 rounded-xl border border-dashed border-zinc-200/50 dark:border-white/10 animate-fade-in">
+                                <div className="mb-4 p-4 bg-white dark:bg-white/8 rounded-xl border border-dashed border-zinc-200/50 dark:border-white/10 animate-fade-in">
                                     <div className="space-y-3">
                                         <div className="inline-flex items-center gap-2">
-                                            <span className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border bg-brand text-white border-brand dark:bg-brand dark:text-black dark:border-brand">
+                                            <span className="px-3 py-1.5 rounded-lg text-xs font-medium tracking-wider border bg-brand text-white border-brand dark:bg-brand dark:text-black dark:border-brand">
                                                 Secure Link Import
                                             </span>
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                            <span className="text-xs font-medium tracking-wider text-zinc-500 dark:text-zinc-400">
                                                 (requires connected cloud drive)
                                             </span>
                                         </div>
@@ -1651,7 +1782,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         <div>
                                             <input
                                                 placeholder="Label (optional)"
-                                                className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white"
+                                                className="w-full p-2 bg-white dark:bg-white/8 rounded text-xs border border-transparent focus:border-zinc-300 dark:focus:border-white/25 outline-none text-zinc-900 dark:text-white"
                                                 value={newLink.name}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
@@ -1669,7 +1800,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         </div>
                                         <input
                                             placeholder="File or Folder URL (Google Drive / Dropbox / OneDrive)"
-                                            className={`w-full p-2 bg-white dark:bg-black/40 rounded text-xs border focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white transition-colors ${newLink.url.trim() && files.some(f => (f.externalUrl || '') === newLink.url.trim())
+                                            className={`w-full p-2 bg-white dark:bg-white/8 rounded text-xs border focus:border-zinc-300 dark:focus:border-white/25 outline-none text-zinc-900 dark:text-white transition-colors ${newLink.url.trim() && files.some(f => (f.externalUrl || '') === newLink.url.trim())
                                                 ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/10'
                                                 : 'border-transparent'
                                                 }`}
@@ -1687,14 +1818,14 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         />
                                         {detectedLinkType && (
                                             <div className="flex items-center gap-1.5">
-                                                <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Detected:</span>
+                                                <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Detected:</span>
                                                 <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-50 text-brand-hover border border-blue-200 dark:bg-brand/15 dark:text-brand dark:border-brand/25">{detectedLinkType}</span>
                                             </div>
                                         )}
 
                                         <input
                                             placeholder="File size (optional, e.g. 24.5 MB)"
-                                            className="w-full p-2 bg-white dark:bg-black/40 rounded text-xs border border-transparent focus:border-brand dark:focus:border-brand outline-none text-obsidian dark:text-white"
+                                            className="w-full p-2 bg-white dark:bg-white/8 rounded text-xs border border-transparent focus:border-zinc-300 dark:focus:border-white/25 outline-none text-zinc-900 dark:text-white"
                                             value={newLink.size}
                                             onChange={(e) => {
                                                 setNewLink({ ...newLink, size: e.target.value });
@@ -1707,9 +1838,9 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         </p>
 
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Connected:</span>
+                                            <span className="text-xs font-medium tracking-wider text-zinc-500 dark:text-zinc-400">Connected:</span>
                                             {connectedDriveProviders.length > 0 ? connectedDriveProviders.map((provider) => (
-                                                <span key={provider} className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-brand-hover border border-blue-200 dark:bg-brand/15 dark:text-brand dark:border-brand/20">
+                                                <span key={provider} className="px-2 py-1 rounded-full text-xs font-medium tracking-wider bg-blue-50 text-brand-hover border border-blue-200 dark:bg-brand/15 dark:text-brand dark:border-brand/20">
                                                     {provider}
                                                 </span>
                                             )) : (
@@ -1718,7 +1849,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         </div>
 
                                         <div className="flex justify-end gap-2">
-                                            <button onClick={() => { setShowLinkModal(false); setLinkError(null); setLinkNameWarning(null); setLinkImportSuccess(null); }} className="px-3 py-1.5 text-[10px] font-bold uppercase text-zinc-600 hover:text-obsidian hover:bg-zinc-200 dark:text-zinc-200 dark:hover:text-white dark:hover:bg-white/10 rounded transition-colors">Done</button>
+                                            <button onClick={() => { setShowLinkModal(false); setLinkError(null); setLinkNameWarning(null); setLinkImportSuccess(null); }} className="px-3 py-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 hover:bg-editorial dark:text-zinc-300 dark:hover:text-white dark:hover:bg-white/10 rounded-lg px-4 transition-colors">Done</button>
                                             <button onClick={handleAddLink} disabled={isAddingLink} className="px-3 py-1.5 bg-brand text-white dark:bg-brand dark:text-black text-[10px] font-bold uppercase rounded shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">{isAddingLink ? 'Importing...' : 'Import Link'}</button>
                                         </div>
                                     </div>
@@ -1727,7 +1858,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
 
                             <div className={`space-y-2 ${errors.files ? 'p-2 border border-red-500/50 rounded-xl bg-red-500/5' : ''}`}>
                                 {files.map((file, i) => (
-                                    <div key={i} className="flex items-center gap-3 p-2 bg-editorial dark:bg-black/20 rounded-lg border border-zinc-200/50 dark:border-white/5">
+                                    <div key={i} className="flex items-center gap-3 p-2 bg-white dark:bg-white/8 rounded-lg border border-zinc-200/50 dark:border-white/5">
                                         <div className="w-8 h-8 rounded bg-zinc-200 dark:bg-white/10 flex items-center justify-center text-zinc-500">
                                             {file.type === 'image' ? <ImageIcon className="w-4 h-4" /> : <File className="w-4 h-4" />}
                                         </div>
@@ -1831,10 +1962,10 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-6 border-t border-zinc-200/80 dark:border-white/10 bg-white/70 dark:bg-black/40 backdrop-blur-xl border border-white/20 dark:border-white/20 backdrop-blur-md relative z-10">
+                <div className="p-6 border-t border-zinc-200/80 dark:border-white/5 bg-[#f0f2f5]/92 dark:bg-cosmic/92 backdrop-blur-xl relative z-10">
                     <button
                         onClick={handleSave}
-                        className="w-full py-4 rounded-2xl bg-brand hover:bg-brand-hover text-white dark:bg-brand dark:hover:bg-brand-hover dark:text-black font-bold text-sm uppercase tracking-widest shadow-[0_16px_40px_rgba(163,230,53,0.30)] hover:shadow-[0_20px_48px_rgba(163,230,53,0.35)] hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
+                        className="w-full py-4 rounded-2xl bg-brand hover:bg-brand-hover text-zinc-950 font-bold text-sm uppercase tracking-widest shadow-[0_16px_40px_rgba(190, 242, 100,0.30)] hover:shadow-[0_20px_48px_rgba(190, 242, 100,0.35)] hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
                     >
                         <Save className="w-4 h-4" />
                         {existingProject ? 'Publish Changes' : 'Create & Publish'}
@@ -1843,28 +1974,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
             </div>
 
             {/* RIGHT PANEL: LIVE PREVIEW (75%) */}
-            <div className="flex-1 relative bg-black overflow-hidden shadow-2xl group/preview-area">
-                
-                {/* Dynamic Ambient Background for Right Panel */}
-                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                    {/* 1. Base Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111] to-[#050505]" />
-                    
-                    {/* 2. Animated Orbs/Glows (Slow moving) */}
-                    <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-brand/5 rounded-full blur-[120px] animate-float-delayed" />
-                    <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-500/5 rounded-full blur-[150px] animate-float" />
-
-                    {/* 3. Subtle Grain */}
-                    <div className="absolute inset-0 opacity-[0.2]" style={{ backgroundImage: NOISE_SVG, filter: 'contrast(120%)' }} />
-
-                    {/* 4. Wallpaper Reflection (Blurred) - Gives a sense of environment if a wallpaper is set */}
-                    {!isCanvasPreviewMode && formData.theme?.wallpaper && (
-                        <div 
-                            className="absolute inset-0 bg-cover bg-center opacity-20 blur-3xl transition-all duration-1000 transform scale-125"
-                            style={{ backgroundImage: `url(${formData.theme.wallpaper})` }}
-                        />
-                    )}
-                </div>
+            <div className="flex-1 relative overflow-hidden shadow-2xl group/preview-area">
 
                 {/* Collapsed editor restore control */}
                 {isEditorCollapsed && (
@@ -1909,7 +2019,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     <button
                                         type="button"
                                         onClick={() => { playClick(); setIsEditorCollapsed(false); }}
-                                        className="px-4 py-2 rounded-full bg-brand hover:bg-brand-hover text-black text-[10px] font-bold uppercase tracking-widest shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-brand/40 flex items-center gap-2 transition-all hover:scale-[1.02]"
+                                        className="px-4 py-2 rounded-full bg-brand hover:bg-brand-hover text-black text-xs font-medium tracking-widest shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-brand/40 flex items-center gap-2 transition-all hover:scale-[1.02]"
                                         aria-label="Show Editor"
                                         title="Show Editor"
                                     >
@@ -1917,7 +2027,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         Show Editor
                                     </button>
                                 </div>
-                                <div className="px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/70 whitespace-nowrap">
+                                <div className="px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-xs font-medium text-white/90 whitespace-nowrap">
                                     Editor collapsed (preview-only)
                                 </div>
                             </>
@@ -1928,7 +2038,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                 <div className="absolute top-6 right-6 z-50 pointer-events-none">
                     <div className="bg-black/50 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full flex items-center gap-2 shadow-2xl">
                         <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_red]"></div>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-white">Live Preview Editor</span>
+                        <span className="text-xs font-medium text-white">Live Preview Editor</span>
                     </div>
                 </div>
 
@@ -1958,7 +2068,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
 
             {/* Upload Progress Toast Overlay */}
             {isUploading && (
-                <div className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-[300] bg-white dark:bg-[#1a1a23] border border-zinc-200/50 dark:border-white/10 rounded-2xl shadow-2xl p-4 w-72 animate-slide-up ring-1 ring-black/5">
+                <div className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-[300] bg-white dark:bg-black/25 border border-zinc-200/50 dark:border-white/10 rounded-2xl shadow-2xl p-4 w-72 animate-slide-up ring-1 ring-black/5">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center shrink-0">
                             <Upload className="w-4 h-4 text-blue-600 dark:text-blue-400 animate-bounce" />
@@ -1982,4 +2092,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
 };
 
 export default CreatorPage;
+
+
+
 

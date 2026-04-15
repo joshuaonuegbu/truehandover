@@ -2,7 +2,22 @@
 
 @font-face {
   font-family: "Aktiv Grotesk";
-  src: local("Aktiv Grotesk"), local("AktivGrotesk-Regular");
+  font-style: normal;
+  font-weight: 100 900;
+  src:
+    local("Aktiv Grotesk"),
+    local("Aktiv Grotesk Regular"),
+    local("Aktiv Grotesk Medium"),
+    local("Aktiv Grotesk Bold"),
+    local("Aktiv Grotesk W01 Regular"),
+    local("Aktiv Grotesk W01"),
+    local("AktivGrotesk"),
+    local("AktivGrotesk-Regular"),
+    local("AktivGrotesk-Medium"),
+    local("AktivGrotesk-Bold"),
+    local("Aktiv Grotesk Corp"),
+    url("/fonts/AktivGrotesk-Regular.woff2") format("woff2"),
+    url("/fonts/AktivGrotesk-Regular.woff") format("woff");
   font-display: swap;
 }
 
@@ -26,11 +41,11 @@
   --color-surface: #2D2E45;
   --color-editorial: #F8FAFC;
 
-  --color-brand: #a3e635;
-  --color-brand-hover: #84cc16;
-  --color-brand-glow: rgba(163, 230, 53, 0.5);
+  --color-brand: #bef264;
+  --color-brand-hover: #65a30d;
+  --color-brand-glow: rgba(190, 242, 100, 0.5);
 
-  --font-sans: "Aktiv Grotesk", "Neue Haas Grotesk Text Pro", "Space Grotesk", "Neue Haas Grotesk Display Pro", "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "DM Sans", "Hanken Grotesk", "Karla", "PT Sans", "Libre Franklin", "Space Grotesk", "Neue Haas Grotesk Text Pro", "Neue Haas Grotesk Display Pro", "Helvetica Neue", Arial, sans-serif;
   --font-serif: "Fraunces", "Times New Roman", serif;
   --font-mono: "JetBrains Mono", monospace;
 
@@ -121,20 +136,28 @@ body {
 }
 
 /* Selection + form controls */
-::selection {
-  background: rgba(163, 230, 53, 0.35);
+html ::selection,
+html *::selection {
+  background: rgba(59, 130, 246, 0.35) !important;
+  color: #0b0b0b !important;
 }
 
-::-moz-selection {
-  background: rgba(163, 230, 53, 0.35);
+html ::-moz-selection,
+html *::-moz-selection {
+  background: rgba(59, 130, 246, 0.35) !important;
+  color: #0b0b0b !important;
 }
 
-.dark ::selection {
-  background: rgba(163, 230, 53, 0.22);
+html.dark ::selection,
+html.dark *::selection {
+  background: rgba(59, 130, 246, 0.25) !important;
+  color: #f8fafc !important;
 }
 
-.dark ::-moz-selection {
-  background: rgba(163, 230, 53, 0.22);
+html.dark ::-moz-selection,
+html.dark *::-moz-selection {
+  background: rgba(59, 130, 246, 0.25) !important;
+  color: #f8fafc !important;
 }
 
 :root {
@@ -248,12 +271,64 @@ body {
 /* ── Glass Panel ── */
 .glass-panel {
   background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(228, 228, 231, 0.5);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .dark .glass-panel {
   background: #23232e;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Heartifact widget surface overlays (match Reports "Net Revenue" panel) --- */
+:root {
+  --hf-noise-svg: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+}
+
+.hf-surface {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  border-radius: 1.5rem !important;
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.hf-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: -1;
+  background-image: var(--hf-noise-svg);
+  background-repeat: repeat;
+  opacity: 0.02;
+}
+
+.dark .hf-surface::before {
+  opacity: 0.04;
+}
+
+.hf-surface::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: -1;
+  top: -5rem;
+  right: -5rem;
+  width: 18rem;
+  height: 18rem;
+  border-radius: 9999px;
+  background: rgba(147, 197, 253, 0.1);
+  filter: blur(80px);
+}
+
+.dark .hf-surface::after {
+  background: rgba(147, 197, 253, 0.08);
+}
+
+.hf-no-glow::after {
+  content: none !important;
 }

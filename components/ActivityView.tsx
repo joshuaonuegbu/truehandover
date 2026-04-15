@@ -5,7 +5,7 @@ import {
     List as ListIcon, Server, Clock, CheckCircle, FolderLock, Search,
     Download, Receipt, ChevronRight
 } from 'lucide-react';
-import { Card } from './Shared';
+import { Card, Widget } from './Shared';
 import { useStore } from '../context/StoreContext';
 import { isMockMode } from '../config/mockMode';
 
@@ -291,14 +291,14 @@ const ActivityView = () => {
                 <div className="flex justify-between items-end">
                     <div>
                         <h2 className="text-4xl font-sans tracking-tight font-medium text-obsidian dark:text-white">
-                            Activity & <span className="text-blue-600 dark:text-brand">Timeline</span>
+                            Activity & Timeline
                         </h2>
                         <p className="text-zinc-500 dark:text-zinc-400 text-base mt-1">
                             Operational ledger and financial events.
                         </p>
                     </div>
                     <div className="flex gap-2">
-                        <button className="px-4 py-2 bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 rounded-lg text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:bg-editorial dark:hover:bg-white/10 transition-colors">
+                        <button className="px-4 py-2 bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 rounded-2xl text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:bg-editorial dark:hover:bg-white/10 transition-colors">
                             Export CSV
                         </button>
                     </div>
@@ -309,11 +309,11 @@ const ActivityView = () => {
             <div className="flex-1 flex flex-col lg:flex-row gap-8 lg:overflow-hidden">
 
                 {/* Left: Filters & Metrics Sidebar - Scrollable independently if needed */}
-                <div className="lg:w-80 shrink-0 flex flex-col gap-8 lg:overflow-y-auto no-scrollbar pr-2 pb-6">
+                <div className="lg:w-80 shrink-0 flex flex-col gap-8 lg:overflow-y-auto no-scrollbar pr-2 pb-6 p-6">
                     {/* Filters */}
                     <div>
                         <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-4 px-1">Ledger Filters</h3>
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-2">
                             {[
                                 { id: 'all', label: 'All Activity', icon: ListIcon },
                                 { id: 'financial', label: 'Financial', icon: Banknote },
@@ -323,15 +323,14 @@ const ActivityView = () => {
                                 <button
                                     key={item.id}
                                     onClick={() => setFilter(item.id as any)}
-                                    className={`
-                                        flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all text-left
+                                    className={`w-full p-3 rounded-xl border flex items-center gap-3 text-sm font-bold transition-all text-left
                                         ${filter === item.id
-                                            ? 'bg-obsidian text-white dark:bg-white dark:text-black shadow-md'
-                                            : 'text-zinc-500 hover:bg-zinc-200 dark:hover:bg-white/5'
+                                            ? 'bg-white dark:bg-white/[0.06] border-zinc-200/50 dark:border-white/[0.12] shadow-sm text-zinc-900 dark:text-white'
+                                            : 'bg-transparent border-zinc-200/50 dark:border-white/[0.06] text-zinc-500 hover:bg-white/70 dark:hover:bg-white/[0.04]'
                                         }
                                     `}
                                 >
-                                    <item.icon className={`w-4 h-4 ${filter === item.id ? 'text-blue-400 dark:text-black' : 'text-zinc-400'}`} />
+                                    <item.icon className={`w-4 h-4 ${filter === item.id ? 'text-blue-600 dark:text-brand' : 'text-zinc-400'}`} />
                                     {item.label}
                                 </button>
                             ))}
@@ -340,41 +339,26 @@ const ActivityView = () => {
 
                     {/* Metrics Widgets - Stacked vertically under filters */}
                     <div className="flex flex-col gap-4">
-                        {/* Pending Revenue */}
-                        <div className="relative p-5 rounded-2xl bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/5 shadow-sm group overflow-hidden">
-                            <div className="flex justify-between items-start mb-3">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Pending Revenue</span>
-                                <Clock className="w-4 h-4 text-amber-500" />
-                            </div>
+                        <Widget compact title={"Pending Revenue"} titleIcon={Clock} className="group rounded-2xl" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
                             <PrivacyBlur className="text-2xl font-sans tracking-tight font-medium text-obsidian dark:text-white tracking-tight">${pendingRevenue.toLocaleString()}</PrivacyBlur>
                             <p className="text-[10px] text-amber-600 dark:text-amber-500 mt-1 font-bold">Locked in active vaults</p>
-                        </div>
+                        </Widget>
 
-                        {/* Cleared MTD */}
-                        <div className="relative p-5 rounded-2xl bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/5 shadow-sm group overflow-hidden">
-                            <div className="flex justify-between items-start mb-3">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Cleared (MTD)</span>
-                                <CheckCircle className="w-4 h-4 text-blue-600 dark:text-brand" />
-                            </div>
+                        <Widget compact title={"Cleared (MTD)"} titleIcon={CheckCircle} className="group rounded-2xl" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
                             <PrivacyBlur className="text-2xl font-sans tracking-tight font-medium text-obsidian dark:text-white tracking-tight">${clearedMtd.toLocaleString()}</PrivacyBlur>
                             <p className="text-[10px] text-blue-600 dark:text-brand mt-1 font-bold">+12% from last month</p>
-                        </div>
+                        </Widget>
 
-                        {/* Active Vaults */}
-                        <div className="relative p-5 rounded-2xl bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/5 shadow-sm group overflow-hidden">
-                            <div className="flex justify-between items-start mb-3">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Active Vaults</span>
-                                <FolderLock className="w-4 h-4 text-blue-500" />
-                            </div>
+                        <Widget compact title={"Active Vaults"} titleIcon={FolderLock} className="group rounded-2xl" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
                             <div className="text-2xl font-sans tracking-tight font-medium text-obsidian dark:text-white tracking-tight">{activeVaults}</div>
                             <p className="text-[10px] text-zinc-500 mt-1 font-bold">{awaitingAction} awaiting client action</p>
-                        </div>
+                        </Widget>
                     </div>
                 </div>
 
                 {/* Right: Timeline Feed - Fills remaining space, Scrollable internally */}
                 <div className="flex-1 h-full min-h-0">
-                    <Card hoverEffect={false} className="h-full flex flex-col !p-0 overflow-hidden shadow-sm border border-zinc-200/50 dark:border-white/5">
+                    <Card hoverEffect={false} className="h-full flex flex-col !p-0 overflow-hidden shadow-sm border border-zinc-200/50 dark:border-white/[0.06]">
                         <div className="shrink-0 p-6 border-b border-zinc-200/50 dark:border-white/5 bg-editorial/50 dark:bg-white/[0.02]">
                             <div className="flex justify-between items-center gap-4">
                                 <h3 className="font-sans tracking-tight text-lg text-obsidian dark:text-white shrink-0">Transaction Log</h3>
@@ -387,7 +371,7 @@ const ActivityView = () => {
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder="Search transactions..."
-                                        className="w-full pl-9 pr-4 py-2 bg-white dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-lg text-xs font-bold text-zinc-700 dark:text-zinc-200 focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-zinc-400 placeholder:font-medium"
+                                        className="w-full pl-9 pr-4 py-2 bg-white dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] rounded-lg text-xs font-bold text-zinc-700 dark:text-zinc-200 focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-zinc-400 placeholder:font-medium"
                                     />
                                 </div>
 
@@ -481,4 +465,3 @@ const ActivityView = () => {
 };
 
 export default ActivityView;
-

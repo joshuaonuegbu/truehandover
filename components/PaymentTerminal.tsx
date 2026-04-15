@@ -14,8 +14,10 @@ interface PaymentTerminalProps {
     isDarkMode: boolean;
     isEmbedded?: boolean; // If true (Creator Preview), disable interactions
     isLandscapeCompact?: boolean;
+    manualTransferMode?: 'modal' | 'inline';
     creatorName?: string;
     onPaymentComplete: (method: 'stripe' | 'manual') => void; // Updated to pass method
+    canVerifyManualPayment?: boolean;
     onMockVerify?: () => void; // Restored: Callback to simulate freelancer confirmation
 }
 
@@ -24,8 +26,10 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
     isDarkMode, 
     isEmbedded = false,
     isLandscapeCompact = false,
+    manualTransferMode = 'modal',
     creatorName = "Creator",
     onPaymentComplete,
+    canVerifyManualPayment = false,
     onMockVerify
 }) => {
     // --- STATE ---
@@ -62,7 +66,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
     // Brand colors - Consistent with App
     const brandGreenBg = isDarkMode ? 'bg-brand' : 'bg-brand';
     const brandGreenText = isDarkMode ? 'text-brand' : 'text-brand';
-    const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#a3e635]' : 'shadow-[0_0_10px_rgba(163,230,53,0.5)]';
+    const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#bef264]' : 'shadow-[0_0_10px_rgba(190, 242, 100,0.5)]';
 
     // --- EFFECTS ---
     
@@ -210,6 +214,22 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
     }
 
     if (isPendingVerification) {
+        const canConfirmNow = !isEmbedded && canVerifyManualPayment && Boolean(onMockVerify);
+
+        if (!canConfirmNow) {
+            return (
+                <div className="w-full bg-amber-500/10 border border-amber-500/20 rounded-2xl p-8 flex flex-col items-center justify-center text-center animate-fade-in">
+                    <div className="w-14 h-14 bg-amber-500 rounded-full flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(245,158,11,0.3)]">
+                        <RefreshCw className="w-7 h-7 text-white animate-spin" style={{ animationDuration: '3s' }} />
+                    </div>
+                    <h4 className="font-bold text-amber-500 text-xl tracking-tight">Verification Pending</h4>
+                    <p className={`text-sm ${textSecondary} mt-2 max-w-[220px] leading-relaxed`}>
+                        Waiting for the creator to confirm receipt of funds.
+                    </p>
+                </div>
+            );
+        }
+
         return (
             <button 
                 type="button"
@@ -228,9 +248,9 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                 <p className={`text-sm ${textSecondary} mt-2 max-w-[200px] leading-relaxed`}>
                     Creator notified. Assets unlock upon confirmation.
                 </p>
-                {!isEmbedded && (
+                {!isEmbedded && canVerifyManualPayment && (
                     <p className="text-[10px] text-amber-500/60 mt-4 uppercase tracking-widest font-bold">
-                        (Click to Simulate Confirm)
+                        Confirm Receipt
                     </p>
                 )}
             </button>
@@ -240,9 +260,9 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
     return (
         <div className="w-full relative">
             {/* Manual Payment Modal Overlay */}
-            {showManualModal && (
+            {manualTransferMode === 'modal' && showManualModal && (
                 <div 
-                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in" 
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-md animate-fade-in" 
                     onClick={() => setShowManualModal(false)}
                     role="dialog"
                     aria-modal="true"
@@ -395,7 +415,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                                 </button>
                             )}
                             
-                            {hasManual && (
+                            {hasManual && manualTransferMode === 'modal' && (
                                 <button 
                                     onClick={() => { playClick(); setShowManualModal(true); }}
                                     disabled={isEmbedded}
@@ -407,6 +427,29 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                                 >
                                     <QrCode className="w-4 h-4" /> Manual Transfer
                                 </button>
+                            )}
+
+                            {hasManual && manualTransferMode === 'inline' && (
+                                <div className={`rounded-xl border p-3.5 ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-zinc-200 bg-zinc-50/80'}`}>
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <QrCode className={`w-4 h-4 ${isDarkMode ? 'text-zinc-300' : 'text-zinc-700'}`} />
+                                        <span className={`text-[10px] font-bold uppercase tracking-widest ${textSecondary}`}>Manual Transfer</span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {pm.venmo && <div className="flex items-center justify-between p-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-mono text-xs font-bold border border-blue-100 dark:border-blue-500/20"><div className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> Venmo</div><span>{pm.venmo}</span></div>}
+                                        {pm.cashapp && <div className="flex items-center justify-between p-2.5 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-mono text-xs font-bold border border-green-100 dark:border-green-500/20"><div className="flex items-center gap-2"><DollarSign className="w-3.5 h-3.5" /> CashApp</div><span>{pm.cashapp}</span></div>}
+                                        {pm.paypal && <div className="flex items-center justify-between p-2.5 rounded-lg bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 font-mono text-xs font-bold border border-sky-100 dark:border-sky-500/20"><div className="flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> PayPal</div><span>{pm.paypal}</span></div>}
+                                        {pm.zelle && <div className="flex items-center justify-between p-2.5 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 font-mono text-xs font-bold border border-purple-100 dark:border-purple-500/20"><div className="flex items-center gap-2"><Send className="w-3.5 h-3.5" /> Zelle</div><span>{pm.zelle}</span></div>}
+                                        {pm.bankInfo && <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 text-xs border border-amber-100 dark:border-amber-500/20"><span className="font-bold uppercase tracking-widest text-[10px]">Bank</span><p className="mt-1 whitespace-pre-wrap break-words font-mono">{pm.bankInfo}</p></div>}
+                                    </div>
+                                    <button
+                                        onClick={handleManualPaymentCommit}
+                                        disabled={isEmbedded}
+                                        className={`mt-3 w-full h-11 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors ${isDarkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-zinc-900 text-white hover:bg-zinc-800'} ${isEmbedded ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    >
+                                        I Have Sent Payment
+                                    </button>
+                                </div>
                             )}
 
                             {!hasStripe && !hasManual && (

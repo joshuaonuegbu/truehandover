@@ -115,6 +115,7 @@ Deploy required functions:
 `npx supabase functions deploy stripe-checkout`
 `npx supabase functions deploy stripe-onboarding`
 `npx supabase functions deploy stripe-webhook`
+`npx supabase functions deploy manual-payment-verify`
 `npx supabase functions deploy client-preview`
 `npx supabase functions deploy creator-projects`
 `npx supabase functions deploy audit-trail`

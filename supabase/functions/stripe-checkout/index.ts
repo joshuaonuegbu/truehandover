@@ -61,7 +61,7 @@ serve(async (req) => {
                     currency: 'usd',
                     product_data: {
                         name: project.name,
-                        description: "Secure delivery via Heartflair",
+                        description: "Secure delivery via Heartifact",
                     },
                     unit_amount: Math.round(project.amount * 100), // convert to cents
                 },

@@ -1,10 +1,10 @@
-﻿import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
 
-// ─── Design tokens ─────────────────────────────────────────────────────────────
+// --- Design tokens -------------------------------------------------------------
 const C = {
   ink:         rgb(0.07,  0.07,  0.10),
   inkSub:      rgb(0.24,  0.26,  0.30),
-  accentBrand: rgb(0.745, 0.949, 0.392),  // #a3e635 – UI brand lime
+  accentBrand: rgb(0.745, 0.949, 0.392),  // #bef264 � UI brand lime
   accent:      rgb(0.38,  0.58,  0.06),   // darker accessible lime for rules/text
   accentSoft:  rgb(0.91,  0.97,  0.83),
   slate:       rgb(0.46,  0.50,  0.56),
@@ -60,7 +60,7 @@ interface TableColumn<T> {
   noClip?: boolean;
 }
 
-// ─── Exported input types ──────────────────────────────────────────────────────
+// --- Exported input types ------------------------------------------------------
 export interface AuditTrailPdfInput {
   projectName:  string;
   projectId:    string;
@@ -124,18 +124,18 @@ export interface PortfolioOverviewPdfInput {
   projects: Array<{ name: string; clientName: string; status: string; amountUsd: number; createdAt: string }>;
 }
 
-// ─── Page constants ────────────────────────────────────────────────────────────
+// --- Page constants ------------------------------------------------------------
 const PAGE_W  = 612;
 const PAGE_H  = 792;
 const MARGIN  = 48;
-const CONTENT = PAGE_W - MARGIN * 2; // 516 — all table column widths must sum to this
+const CONTENT = PAGE_W - MARGIN * 2; // 516 � all table column widths must sum to this
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
+// --- Helpers -------------------------------------------------------------------
 const fmt$ = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(n || 0);
 
 const fmtDate = (v?: string, short = false) => {
-  if (!v) return '—';
+  if (!v) return '�';
   const d = new Date(v);
   if (Number.isNaN(d.getTime())) return v;
   return short
@@ -167,7 +167,7 @@ const statusTone = (s: string): MetricCard['tone'] => {
   return 'accent';
 };
 
-/** Convert snake_case status to Title Case. e.g. awaiting_payment → Awaiting Payment */
+/** Convert snake_case status to Title Case. e.g. awaiting_payment ? Awaiting Payment */
 const fmtStatus = (s: string) =>
   s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
@@ -175,14 +175,14 @@ const fmtStatus = (s: string) =>
 const clip = (text: string, maxWidth: number, font: PDFFont, size: number): string => {
   if (font.widthOfTextAtSize(text, size) <= maxWidth) return text;
   let s = text;
-  while (s.length > 1 && font.widthOfTextAtSize(s + '…', size) > maxWidth) s = s.slice(0, -1);
-  return s + '…';
+  while (s.length > 1 && font.widthOfTextAtSize(s + '�', size) > maxWidth) s = s.slice(0, -1);
+  return s + '�';
 };
 
 /** Word-wrap text to maxWidth using actual font metrics. */
 const wrap = (text: string, maxWidth: number, font: PDFFont, size: number): string[] => {
   const t = (text || '').trim();
-  if (!t) return ['—'];
+  if (!t) return ['�'];
   const words = t.split(/\s+/);
   const lines: string[] = [];
   let current = '';
@@ -199,7 +199,7 @@ const wrap = (text: string, maxWidth: number, font: PDFFont, size: number): stri
   return lines;
 };
 
-// ─── Page context factory ──────────────────────────────────────────────────────
+// --- Page context factory ------------------------------------------------------
 const HEADER_H = 92;
 
 const createCtx = async (title: string, subtitle: string): Promise<PdfCtx> => {
@@ -226,12 +226,12 @@ const createCtx = async (title: string, subtitle: string): Promise<PdfCtx> => {
     thickness: 0.5, color: rgb(0.18, 0.20, 0.24),
   });
 
-  // EditorialIcon — SVG paths from App.tsx, viewBox 0 0 32 32 scaled to 20pt
+  // EditorialIcon � SVG paths from App.tsx, viewBox 0 0 32 32 scaled to 20pt
   const iScale = 20 / 32;
   const iX = MARGIN;
   const iY = PAGE_H - 12; // SVG viewport anchor in PDF coords
 
-  page.drawSvgPath('M4 15C6.13 9.5 10.75 6.75 14.13 10.13C15.25 11.25 15.63 12.63 16 12.63C16.38 12.63 16.75 11.25 17.88 10.13C21.25 6.75 25.88 9.5 28 15', {
+  page.drawSvgPath('M4 15C4 10.6 9.4 7 16 7C22.6 7 28 10.6 28 15', {
     x: iX, y: iY, scale: iScale, borderColor: C.white, borderWidth: 1.5,
   });
   page.drawSvgPath('M 12,22 m -6,0 a 6,6 0 1,0 12,0 a 6,6 0 1,0 -12,0', {
@@ -241,17 +241,17 @@ const createCtx = async (title: string, subtitle: string): Promise<PdfCtx> => {
     x: iX, y: iY, scale: iScale, color: C.accentBrand, borderColor: C.white, borderWidth: 1.5,
   });
 
-  // Brand name — serif bold, matches UI font-serif header
-  page.drawText('Heartflair', { x: MARGIN + 28, y: PAGE_H - 30, size: 16, font: serifBold, color: C.white });
+  // Brand name � serif bold, matches UI font-serif header
+  page.drawText('Heartifact', { x: MARGIN + 28, y: PAGE_H - 30, size: 16, font: serifBold, color: C.white });
 
-  // "OFFICIAL DOCUMENT" badge — top-right
+  // "OFFICIAL DOCUMENT" badge � top-right
   const badgeText = 'OPERATIONAL RECORD';
   page.drawText(badgeText, {
     x: PAGE_W - MARGIN - fonts.bold.widthOfTextAtSize(badgeText, 6.5) - 10,
     y: PAGE_H - 22, size: 6.5, font: fonts.bold, color: rgb(0.38, 0.42, 0.48),
   });
 
-  // Document title + subtitle — lower band of header
+  // Document title + subtitle � lower band of header
   page.drawText(title,    { x: MARGIN, y: PAGE_H - 68, size: 11,  font: fonts.bold, color: C.white });
   page.drawText(subtitle, { x: MARGIN, y: PAGE_H - 83, size: 7.5, font: fonts.reg,  color: rgb(0.55, 0.60, 0.66) });
 
@@ -273,7 +273,7 @@ const ensureSpace = (ctx: PdfCtx, h: number) => {
   if (ctx.y - h < ctx.margin + 30) addPage(ctx);
 };
 
-// ─── Drawing primitives ────────────────────────────────────────────────────────
+// --- Drawing primitives --------------------------------------------------------
 const drawText = (
   ctx: PdfCtx,
   text: string,
@@ -295,7 +295,7 @@ const drawRule = (ctx: PdfCtx, color = C.line) => {
   ctx.y -= 10;
 };
 
-// ─── Section heading with 3 pt left accent bar ────────────────────────────────
+// --- Section heading with 3 pt left accent bar --------------------------------
 const drawSection = (ctx: PdfCtx, title: string, subtitle?: string) => {
   ensureSpace(ctx, 46);
   ctx.y -= 10;
@@ -318,7 +318,7 @@ const drawSection = (ctx: PdfCtx, title: string, subtitle?: string) => {
   ctx.y -= 10;
 };
 
-// ─── Key-value row ─────────────────────────────────────────────────────────────
+// --- Key-value row -------------------------------------------------------------
 const KV_LABEL_W = 144;
 
 const drawKeyValue = (
@@ -343,7 +343,7 @@ const drawKeyValue = (
   ctx.y -= 3;
 };
 
-// ─── Metric cards (taller, left-border + tinted background) ───────────────────
+// --- Metric cards (taller, left-border + tinted background) -------------------
 const drawMetricCards = (ctx: PdfCtx, cards: MetricCard[]) => {
   const gap = 10;
   const n   = cards.length;
@@ -372,7 +372,7 @@ const drawMetricCards = (ctx: PdfCtx, cards: MetricCard[]) => {
   ctx.y -= cH + 12;
 };
 
-// ─── Table (column widths MUST sum to CONTENT = 516) ──────────────────────────
+// --- Table (column widths MUST sum to CONTENT = 516) --------------------------
 const ROW_H = 20;
 
 const drawTable = <T extends object>(
@@ -431,7 +431,7 @@ const drawTable = <T extends object>(
   ctx.y -= 8;
 };
 
-// ─── Asset table + full-width hash fingerprint block ──────────────────────────
+// --- Asset table + full-width hash fingerprint block --------------------------
 // The assets table deliberately omits the hash column; hashes are shown below
 // in monospace at full width with no truncation.
 const drawAssetTable = (ctx: PdfCtx, files: AuditTrailPdfInput['files']) => {
@@ -460,14 +460,14 @@ const drawAssetTable = (ctx: PdfCtx, files: AuditTrailPdfInput['files']) => {
 
   for (const f of filesWithHashes) {
     ensureSpace(ctx, 36);
-    const metaText = `  ·  ${f.type}  ·  ${f.size}  ·  ${(f as { locked?: boolean }).locked ? 'Locked' : 'Unlocked'}`;
+    const metaText = `  �  ${f.type}  �  ${f.size}  �  ${(f as { locked?: boolean }).locked ? 'Locked' : 'Unlocked'}`;
     ctx.page.drawText(f.name, { x: ctx.margin, y: ctx.y, size: 8, font: ctx.fonts.bold, color: C.inkSub });
     ctx.page.drawText(metaText, {
       x: ctx.margin + ctx.fonts.bold.widthOfTextAtSize(f.name, 8),
       y: ctx.y, size: 7.5, font: ctx.fonts.reg, color: C.slate,
     });
     ctx.y -= 13;
-    // Full hash — panel background, full width, no truncation
+    // Full hash � panel background, full width, no truncation
     ctx.page.drawRectangle({ x: ctx.margin, y: ctx.y - 5, width: CONTENT, height: 16, color: C.panel });
     ctx.page.drawText(`SHA-256  ${f.hash}`, {
       x: ctx.margin + 9, y: ctx.y, size: 7, font: ctx.fonts.mono, color: C.inkSub,
@@ -476,12 +476,12 @@ const drawAssetTable = (ctx: PdfCtx, files: AuditTrailPdfInput['files']) => {
   }
 };
 
-// ─── Footer on all pages ───────────────────────────────────────────────────────
+// --- Footer on all pages -------------------------------------------------------
 const stampFooters = (ctx: PdfCtx, docLabel: string) => {
   ctx.pages.forEach((page, i) => {
     page.drawLine({ start: { x: MARGIN, y: 40 }, end: { x: PAGE_W - MARGIN, y: 40 }, thickness: 0.75, color: C.line });
     page.drawText(docLabel, { x: MARGIN, y: 24, size: 6.5, font: ctx.fonts.mono, color: C.slate });
-    const brand = 'Heartflair';
+    const brand = 'Heartifact';
     page.drawText(brand, {
       x: PAGE_W / 2 - ctx.fonts.serifBold.widthOfTextAtSize(brand, 7) / 2,
       y: 24, size: 7, font: ctx.fonts.serifBold, color: C.slateMid,
@@ -499,12 +499,12 @@ const toBlob = async (ctx: PdfCtx, docLabel: string) => {
   return new Blob([await ctx.doc.save()], { type: 'application/pdf' });
 };
 
-// ─── Document generators ───────────────────────────────────────────────────────
+// --- Document generators -------------------------------------------------------
 
 export const createAuditTrailPdf = async (input: AuditTrailPdfInput) => {
   const ctx = await createCtx(
     'Official Delivery Audit Trail',
-    'Mock populated report — layout and hierarchy preview',
+    'Mock populated report � layout and hierarchy preview',
   );
   drawText(ctx, `Document ID: ${input.evidenceId}`, { size: 7, font: 'mono', color: C.slate });
   drawText(ctx, `Generated: ${fmtDate(new Date().toISOString())}`, { size: 7, color: C.slate });
@@ -568,12 +568,12 @@ export const createRightsCertificatePdf = async (input: RightsCertificatePdfInpu
   drawKeyValue(ctx, 'Effective Date', fmtDate(input.effectiveAt));
 
   drawSection(ctx, 'Scope Of Rights');
-  input.scope.forEach((item) => drawText(ctx, `• ${item}`, { size: 9, x: ctx.margin + 12 }));
+  input.scope.forEach((item) => drawText(ctx, `� ${item}`, { size: 9, x: ctx.margin + 12 }));
 
   ctx.y -= 10;
   drawSection(ctx, 'Declaration');
   const decl = wrap(
-    'This certificate records that consideration for the above work has been satisfied through the Heartflair workflow and that the accompanying rights transfer has been acknowledged for operational record-keeping purposes.',
+    'This certificate records that consideration for the above work has been satisfied through the Heartifact workflow and that the accompanying rights transfer has been acknowledged for operational record-keeping purposes.',
     CONTENT, ctx.fonts.reg, 9,
   );
   decl.forEach((line) => drawText(ctx, line, { size: 9 }));

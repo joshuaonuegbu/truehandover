@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
     ArrowRight, Shield, Zap, Globe,
@@ -27,20 +27,20 @@ import {
     Banknote,
     Menu,
     LifeBuoy,
-    Youtube
+    Youtube,
+    LayoutGrid
 } from 'lucide-react';
 import { playClick } from '../utils/sound';
-import BrandLogo from './BrandLogo';
 import ThemeModeDropdown from './ThemeModeDropdown';
+import BrandLogo from './BrandLogo';
 
 // --- VISUAL PRIMITIVES ---
 
 // OPTIMIZED: Granular Film Grain SVG (Synced with App.tsx Vault Style)
 // baseFrequency=0.98 provides the "Ultra High Res" digital film look.
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.7' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
-
 const Logo = ({ className = "w-8 h-8" }) => (
-    <BrandLogo className={className} accentColor="#a3e635" />
+    <BrandLogo className={className} />
 );
 
 const BrandXIcon = ({ className = "w-4 h-4" }) => (
@@ -126,7 +126,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
                         width="100%"
                         height="100%"
                         src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=0&loop=1&playlist=${videoId}`}
-                        title="HeartFlair Film"
+                        title="TrueHandover Film"
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
@@ -142,8 +142,8 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
                     `}
                 >
                     <button
-                        onClick={() => { playClick(); handleClose(); setTimeout(onStart, 300); }}
-                        className="px-8 py-4 bg-brand text-black rounded-full font-bold text-sm uppercase tracking-widest hover:scale-105 hover:shadow-[0_0_30px_rgba(163,230,53,0.4)] transition-all shadow-lg flex items-center gap-3"
+                        onClick={() => { handleClose(); setTimeout(onStart, 300); }}
+                        className="px-8 py-4 bg-brand text-black rounded-full font-bold text-sm uppercase tracking-widest hover:scale-105 hover:shadow-[0_0_30px_rgba(190, 242, 100,0.4)] transition-all shadow-lg flex items-center gap-3"
                     >
                         Start for Free <ArrowRight className="w-4 h-4" />
                     </button>
@@ -163,6 +163,169 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
     );
 };
 
+/**
+ * Chooses how to enter the app — avoids jumping straight into a raw OS file picker from primary CTAs.
+ * Full-page drag-and-drop still works for returning visitors who already know the shortcut.
+ */
+const GetStartedModal = ({
+    isOpen,
+    onClose,
+    onStartFresh,
+    onChooseFiles,
+    filesPathAvailable,
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    onStartFresh: () => void;
+    onChooseFiles: () => void;
+    filesPathAvailable: boolean;
+}) => {
+    const [render, setRender] = useState(false);
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            setRender(true);
+        } else {
+            setVisible(false);
+            const timer = setTimeout(() => setRender(false), 450);
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (render) {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => setVisible(true));
+            });
+        }
+    }, [render]);
+
+    const handleClose = () => {
+        setVisible(false);
+        setTimeout(() => onClose(), 450);
+    };
+
+    if (!render) return null;
+
+    return (
+        <div className="fixed inset-0 z-[10001] flex flex-col items-center justify-center p-4 sm:p-8">
+            <div
+                className={`absolute inset-0 bg-[#323242]/50 backdrop-blur-xl transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${visible ? 'opacity-100' : 'opacity-0'}`}
+                onClick={handleClose}
+                aria-hidden
+            />
+            <div
+                className={`relative z-10 w-full max-w-2xl transform transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${visible ? 'scale-100 opacity-100 translate-y-0' : 'scale-[0.98] opacity-0 translate-y-6'}`}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="get-started-title"
+            >
+                <div className="rounded-[1.75rem] border border-slate-200/80 dark:border-white/[0.1] bg-white dark:bg-charcoal shadow-2xl overflow-hidden">
+                    <div className="px-6 sm:px-10 pt-8 pb-6 border-b border-slate-200/60 dark:border-white/[0.06] flex items-start justify-between gap-4">
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500 mb-2">TrueHandover</p>
+                            <h2 id="get-started-title" className="font-serif text-2xl sm:text-3xl text-black dark:text-white tracking-tight">
+                                How would you like to begin?
+                            </h2>
+                            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-md">
+                                Start in the workspace right away, or load deliverables first — your choice.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => { playClick(); handleClose(); }}
+                            className="shrink-0 p-2.5 rounded-full border border-slate-200 dark:border-white/15 text-slate-500 hover:text-black dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                            aria-label="Close"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    <div className="p-6 sm:p-10 space-y-4">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                playClick();
+                                handleClose();
+                                setTimeout(onStartFresh, 200);
+                            }}
+                            className="w-full text-left rounded-2xl border border-slate-200 dark:border-white/[0.1] bg-slate-50/80 dark:bg-white/[0.04] hover:border-brand/60 dark:hover:border-brand/40 hover:bg-white dark:hover:bg-white/[0.07] transition-all p-5 sm:p-6 group"
+                        >
+                            <div className="flex items-start gap-4">
+                                <div className="w-11 h-11 rounded-xl bg-brand/15 dark:bg-brand/20 flex items-center justify-center text-zinc-900 dark:text-brand shrink-0 group-hover:scale-105 transition-transform">
+                                    <LayoutGrid className="w-5 h-5" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="font-bold text-sm uppercase tracking-widest text-black dark:text-white mb-1 flex items-center gap-2">
+                                        Open the workspace
+                                        <ArrowRight className="w-4 h-4 opacity-50 group-hover:translate-x-0.5 transition-transform" />
+                                    </p>
+                                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        Jump in and explore Quick delivery, vault, and settings. Add files whenever you&apos;re ready.
+                                    </p>
+                                </div>
+                            </div>
+                        </button>
+
+                        {filesPathAvailable && (
+                            <div className="rounded-2xl border border-dashed border-slate-300/90 dark:border-white/15 bg-white dark:bg-[#2a2a38]/50 p-5 sm:p-6">
+                                <div className="flex items-start gap-4 mb-4">
+                                    <div className="w-11 h-11 rounded-xl bg-slate-200/80 dark:bg-white/10 flex items-center justify-center text-zinc-800 dark:text-white shrink-0">
+                                        <Upload className="w-5 h-5" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="font-bold text-sm uppercase tracking-widest text-black dark:text-white mb-1">
+                                            Bring files first
+                                        </p>
+                                        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                            We&apos;ll place them in Quick delivery so you can add the client, publish, and share the vault in a few steps.
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        playClick();
+                                        handleClose();
+                                        setTimeout(onChooseFiles, 200);
+                                    }}
+                                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-black text-white dark:bg-white dark:text-zinc-950 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity"
+                                >
+                                    Choose files
+                                </button>
+                            </div>
+                        )}
+
+                        {filesPathAvailable && (
+                            <p className="text-center text-[11px] text-slate-500 dark:text-slate-400 pt-2">
+                                Tip: you can also <span className="text-slate-700 dark:text-slate-300 font-medium">drag files from your desktop</span> onto this page anytime.
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+/** Clean panel surface (Reports-style): charcoal/white, zinc borders, soft shadow — no grain or gradient wash */
+const NetRevenueStylePanel = ({
+    children,
+    className = '',
+    roundedClass = 'rounded-[2rem]',
+}: {
+    children: React.ReactNode;
+    className?: string;
+    roundedClass?: string;
+}) => (
+    <div
+        className={`relative overflow-hidden bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md flex flex-col min-h-0 ${roundedClass} ${className}`}
+    >
+        <div className="relative z-10 flex flex-col flex-1 min-h-0 w-full">{children}</div>
+    </div>
+);
+
 const SectionHeading = ({ badge, title, subtitle, className = "" }: any) => (
     <div className={`mb-20 ${className}`}>
         {badge && (
@@ -180,30 +343,27 @@ const SectionHeading = ({ badge, title, subtitle, className = "" }: any) => (
 );
 
 const BentoCard = ({ children, className = "", title, subtitle, icon: Icon }: { children?: React.ReactNode, className?: string, title?: string, subtitle?: string, icon?: any }) => (
-    <div className={`
-        relative bg-white dark:bg-[#2D2E45] border border-slate-200 dark:border-white/10 rounded-[2rem] overflow-hidden group flex flex-col
-        hover:border-slate-200 dark:hover:border-white/20 transition-all duration-500 shadow-xl dark:shadow-2xl dark:shadow-black/20
-        ${className}
-    `}>
-        {/* Header if Title Provided */}
+    <NetRevenueStylePanel
+        className={`group flex flex-col transition-all duration-500 hover:border-zinc-300/80 dark:hover:border-white/10 ${className}`}
+    >
         {(title || Icon) && (
-            <div className="p-8 pb-4 relative z-10">
+            <div className="p-8 pb-4 shrink-0">
                 <div className="flex items-center gap-3 mb-3">
                     {Icon && (
-                        <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center justify-center text-black dark:text-brand">
+                        <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] flex items-center justify-center text-black dark:text-brand">
                             <Icon className="w-5 h-5" />
                         </div>
                     )}
                     <div>
                         {title && <h3 className="font-serif text-xl text-black dark:text-white leading-none mb-1 tracking-wide">{title}</h3>}
-                        {subtitle && <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">{subtitle}</p>}
+                        {subtitle && <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">{subtitle}</p>}
                     </div>
                 </div>
             </div>
         )}
 
-        <div className="relative z-10 flex-1">{children}</div>
-    </div>
+        <div className="flex-1 flex flex-col min-h-0">{children}</div>
+    </NetRevenueStylePanel>
 );
 
 // --- SECTIONS ---
@@ -225,7 +385,7 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
             <div className="max-w-[1200px] mx-auto bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
                 <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                     <Logo className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
-                    <span className="font-serif text-lg sm:text-xl tracking-tight text-black dark:text-white">HeartFlair</span>
+                    <span className="font-serif text-lg sm:text-xl tracking-tight text-black dark:text-white">TrueHandover</span>
                 </div>
 
                 <div className="hidden md:flex items-center gap-8">
@@ -244,7 +404,7 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
 
                     <button
                         onClick={onStart}
-                        className="px-6 py-2.5 bg-black dark:bg-brand text-white dark:text-black rounded-full font-bold text-xs uppercase tracking-[0.15em] hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_20px_rgba(163,230,53,0.5)] transition-all shadow-lg border border-transparent dark:border-brand"
+                        className="px-6 py-2.5 bg-black dark:bg-brand text-white dark:text-zinc-950 rounded-2xl font-bold text-xs uppercase tracking-[0.15em] hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_20px_rgba(190, 242, 100,0.5)] transition-all shadow-lg border border-transparent dark:border-brand"
                     >
                         Start for Free
                     </button>
@@ -291,13 +451,13 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
                     <div className="flex flex-col gap-4">
                         <button
                             onClick={() => { setIsMenuOpen(false); window.location.href = '/signin?from=landing'; }}
-                            className="w-full py-4 rounded-xl border border-slate-200 dark:border-white/10 text-obsidian dark:text-white font-bold text-xs uppercase tracking-widest"
+                            className="w-full py-4 rounded-2xl border border-slate-200 dark:border-white/10 text-obsidian dark:text-white font-bold text-xs uppercase tracking-widest"
                         >
                             Sign In
                         </button>
                         <button
                             onClick={() => { setIsMenuOpen(false); onStart(); }}
-                            className="w-full py-4 rounded-xl bg-black dark:bg-brand text-white dark:text-black font-bold text-xs uppercase tracking-widest shadow-lg"
+                            className="w-full py-4 rounded-2xl bg-black dark:bg-brand text-white dark:text-zinc-950 font-bold text-xs uppercase tracking-widest shadow-lg"
                         >
                             Start for Free
                         </button>
@@ -336,7 +496,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1200px] h-full pointer-events-none overflow-hidden z-0">
                     <div className={`
                     absolute top-[20%] right-[5%] md:right-[15%] w-48 h-64 bg-white dark:bg-[#2D2E45] rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl rotate-12 transition-all duration-700 ease-out overflow-hidden
-                    ${isHoveringCTA ? 'translate-y-[-20px] scale-110 shadow-[0_20px_50px_rgba(163,230,53,0.2)]' : 'translate-y-0 opacity-40'}
+                    ${isHoveringCTA ? 'translate-y-[-20px] scale-110 shadow-[0_20px_50px_rgba(190, 242, 100,0.2)]' : 'translate-y-0 opacity-40'}
                 `}>
                         <div
                             className="absolute inset-0 opacity-0 dark:opacity-40 mix-blend-multiply dark:mix-blend-overlay pointer-events-none z-0"
@@ -373,7 +533,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                     </a>
 
                     <div className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-sm shadow-sm transition-all hover:bg-white dark:hover:bg-white/10 cursor-default">
-                        <div className="w-2 h-2 bg-brand rounded-full animate-pulse shadow-[0_0_8px_#a3e635]"></div>
+                        <div className="w-2 h-2 bg-brand rounded-full animate-pulse shadow-[0_0_8px_#bef264]"></div>
                         <span className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-none uppercase tracking-wider">
                             Now available in public beta
                         </span>
@@ -383,7 +543,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                 <div className="relative z-10 max-w-5xl mx-auto text-center mb-16">
                     <h1 className="font-serif text-5xl md:text-8xl lg:text-9xl font-medium tracking-tight leading-[0.95] mb-10 animate-slide-up">
                         <span className="text-red-600 dark:text-red-500 drop-shadow-sm">Stop Chasing.</span> <br />
-                        <span className="text-black dark:text-white">Start <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[#a3e635] to-lime-600">Delivering.</span></span>
+                        <span className="text-black dark:text-white">Start <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[#bef264] to-[#bef264]">Delivering.</span></span>
                     </h1>
 
                     <div className="max-w-4xl mx-auto leading-relaxed mb-12 animate-slide-up" style={{ animationDelay: '0.1s' }}>
@@ -391,17 +551,17 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                             The end of the "You send first" standoff.
                         </p>
                         <p className="text-lg md:text-2xl text-slate-600 dark:text-slate-200 font-light leading-relaxed">
-                            HeartFlair ensures your assets are <span className="border-b-2 border-brand text-black dark:text-white font-medium">securely handed over</span> only when payment clears.
+                            TrueHandover ensures your assets are <span className="border-b-2 border-brand text-black dark:text-white font-medium">securely handed over</span> only when payment clears.
                             We generate watermarked previews automatically, so your client reviews the excellence while you retain the master files.
                         </p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                         <button
-                            onClick={() => { playClick(); onStart(); }}
+                            onClick={() => { onStart(); }}
                             onMouseEnter={() => setIsHoveringCTA(true)}
                             onMouseLeave={() => setIsHoveringCTA(false)}
-                            className="group relative h-16 px-10 bg-brand text-black rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(163,230,53,0.6)] shadow-xl"
+                            className="group relative h-16 px-10 bg-brand text-zinc-950 rounded-2xl font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(190, 242, 100,0.6)] shadow-xl"
                         >
                             <span className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-cta-sheen" />
@@ -413,7 +573,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
 
                         <button
                             onClick={() => { playClick(); onWatchVideo(); }}
-                            className="group h-16 px-10 rounded-full border border-slate-200 dark:border-white/20 text-black dark:text-white font-bold text-sm uppercase tracking-widest hover:bg-black/5 dark:hover:bg-white/5 transition-all backdrop-blur-sm flex items-center gap-3 hover:shadow-lg"
+                            className="group h-16 px-10 rounded-2xl border border-slate-200 dark:border-white/20 text-black dark:text-white font-bold text-sm uppercase tracking-widest hover:bg-black/5 dark:hover:bg-white/5 transition-all backdrop-blur-sm flex items-center gap-3 hover:shadow-lg"
                         >
                             <PlayCircle className="w-4 h-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" /> Watch the Film
                         </button>
@@ -471,7 +631,7 @@ const ComparisonSection = () => {
     }, [hoveredCard, oldWayItems.length]);
 
     return (
-        <section id="comparison" className="py-32 px-6 bg-white dark:bg-[#2D2E45] transition-colors duration-700 relative overflow-hidden">
+        <section id="comparison" className="py-32 px-6 bg-editorial dark:bg-cosmic transition-colors duration-700 relative overflow-hidden">
             <div
                 className={`absolute top-1/2 left-0 w-[500px] h-[500px] bg-red-600 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all duration-700 ease-in-out
                 ${hoveredCard === 'old' ? 'opacity-25 scale-110' : 'opacity-8 scale-100'}
@@ -495,7 +655,7 @@ const ComparisonSection = () => {
                     <div
                         onMouseEnter={() => setHoveredCard('old')}
                         onMouseLeave={() => setHoveredCard(null)}
-                        className={`p-10 rounded-[2.5rem] bg-editorial dark:bg-[#2D2E45] border border-dashed border-slate-200 dark:border-white/10 relative group transition-all duration-500 hover:bg-slate-200 dark:hover:bg-[#3a3a52] ${hoveredCard !== 'old' ? 'animate-old-way-breathe' : ''}`}
+                        className={`p-10 rounded-[2.5rem] bg-white/60 dark:bg-[#2D2E45]/60 backdrop-blur-sm border border-dashed border-slate-300/80 dark:border-white/15 relative group transition-all duration-500 shadow-sm dark:shadow-md hover:bg-white/80 dark:hover:bg-[#2D2E45]/80 hover:border-slate-400/80 dark:hover:border-white/20 ${hoveredCard !== 'old' ? 'animate-old-way-breathe' : ''}`}
                     >
                         <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                             <X className="w-32 h-32 text-red-500 rotate-12" />
@@ -529,7 +689,7 @@ const ComparisonSection = () => {
                         </div>
                     </div>
 
-                    {/* The HeartFlair Way */}
+                    {/* The TrueHandover Way */}
                     <div
                         onMouseEnter={() => setHoveredCard('new')}
                         onMouseLeave={() => setHoveredCard(null)}
@@ -575,10 +735,10 @@ const ComparisonSection = () => {
 const BentoGrid = () => {
     // ... [Same implementation as before] ...
     const [isCustom, setIsCustom] = useState(false);
-    const [accentColor, setAccentColor] = useState('#a3e635');
+    const [accentColor, setAccentColor] = useState('#bef264');
 
     const brandConfigs = [
-        { name: 'Default', color: '#a3e635', domain: 'portal.heartflair.com' },
+        { name: 'Default', color: '#bef264', domain: 'portal.truehandover.com' },
         { name: 'Onyx', color: '#334155', domain: 'vault.agency.com' },
         { name: 'Cobalt', color: '#3b82f6', domain: 'files.studio.io' }
     ];
@@ -688,20 +848,20 @@ const BentoGrid = () => {
                     <BentoCard className="md:col-span-6 lg:col-span-8 !p-0 min-h-[540px]">
                         <div className="flex flex-col md:flex-row h-full w-full">
                             {/* LEFT: Control Panel */}
-                            <div className="w-full md:w-[340px] p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/10 flex flex-col bg-editorial dark:bg-[#2D2E45]">
+                            <div className="w-full md:w-[340px] p-8 border-b md:border-b-0 md:border-r border-zinc-200/50 dark:border-white/[0.06] flex flex-col bg-zinc-50/90 dark:bg-white/[0.03]">
                                 <div>
                                     <div className="mb-8">
                                         <div className="flex items-start justify-between mb-4">
                                             <div>
                                                 <h3 className="font-serif text-2xl text-black dark:text-white tracking-wide">Your Brand</h3>
-                                                <p className="text-sm text-slate-500">Custom Portal</p>
+                                                <p className="text-sm text-zinc-500 dark:text-zinc-400">Custom Portal</p>
                                             </div>
-                                            <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-black dark:text-brand">
+                                            <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] flex items-center justify-center text-black dark:text-brand">
                                                 <Palette className="w-5 h-5" />
                                             </div>
                                         </div>
 
-                                        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
                                             Make it yours. Swap the logo, pick your colors, and use your domain.
                                             Clients see your brand, not ours.
                                         </p>
@@ -709,7 +869,7 @@ const BentoGrid = () => {
 
                                     {/* Brand Selection */}
                                     <div className="space-y-3">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-4">Choose Identity</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-4">Choose Identity</p>
                                         {brandConfigs.map((brand, i) => (
                                             <button
                                                 key={brand.name}
@@ -721,23 +881,23 @@ const BentoGrid = () => {
                                                 className={`
                                                     w-full p-4 rounded-xl border flex items-center gap-4 transition-all group
                                                     ${accentColor === brand.color
-                                                        ? 'bg-white dark:bg-white/10 border-slate-200 dark:border-white/20 shadow-md'
-                                                        : 'bg-transparent border-slate-200 dark:border-white/5 hover:bg-white/50 dark:hover:bg-white/5'
+                                                        ? 'bg-white dark:bg-white/[0.06] border-zinc-200/50 dark:border-white/[0.12] shadow-sm'
+                                                        : 'bg-transparent border-zinc-200/50 dark:border-white/[0.06] hover:bg-white/70 dark:hover:bg-white/[0.04]'
                                                     }
                                                 `}
                                             >
                                                 <div className={`
                                                     w-4 h-4 rounded-full border flex items-center justify-center
-                                                    ${accentColor === brand.color ? 'border-black dark:border-white' : 'border-slate-400 dark:border-slate-600'}
+                                                    ${accentColor === brand.color ? 'border-zinc-900 dark:border-white' : 'border-zinc-400 dark:border-zinc-500'}
                                                 `}>
                                                     {accentColor === brand.color && <div className="w-2 h-2 rounded-full bg-brand" />}
                                                 </div>
 
                                                 <div className="flex-1 text-left">
-                                                    <div className={`text-sm font-bold ${accentColor === brand.color ? 'text-black dark:text-white' : 'text-slate-500'}`}>
+                                                    <div className={`text-sm font-bold ${accentColor === brand.color ? 'text-black dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}>
                                                         {brand.name}
                                                     </div>
-                                                    <div className="text-xs text-slate-400 dark:text-slate-500 font-mono">{brand.domain}</div>
+                                                    <div className="text-xs text-zinc-400 dark:text-zinc-500 font-mono">{brand.domain}</div>
                                                 </div>
 
                                                 {accentColor === brand.color && (
@@ -748,38 +908,29 @@ const BentoGrid = () => {
                                     </div>
                                 </div>
 
-                                <div className="mt-auto pt-6 border-t border-slate-200 dark:border-white/5">
-                                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                                <div className="mt-auto pt-6 border-t border-zinc-200/50 dark:border-white/[0.06]">
+                                    <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
                                         <ShieldCheck className="w-3 h-3" />
                                         <span>Business Plan Feature</span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* RIGHT: Live Preview */}
-                            <div className="flex-1 relative bg-slate-200 dark:bg-[#323242] p-8 flex items-center justify-center overflow-hidden">
-                                <div
-                                    className="absolute inset-0 opacity-[0.08] transition-all duration-1000"
-                                    style={{ backgroundColor: accentColor }}
-                                />
-                                <div className="absolute inset-0 opacity-[0.03]" style={{
-                                    backgroundImage: `radial-gradient(circle at 1px 1px, black 1px, transparent 0)`,
-                                    backgroundSize: '24px 24px'
-                                }} />
-
+                            {/* RIGHT: Live Preview — flat panel, no accent wash or dot noise */}
+                            <div className="flex-1 relative bg-zinc-100 dark:bg-black/25 p-8 flex items-center justify-center overflow-hidden border-t md:border-t-0 border-zinc-200/50 dark:border-white/[0.06]">
                                 {/* Domain Badge */}
-                                <div className="absolute top-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/80 dark:bg-[#2D2E45]/85 backdrop-blur-xl border border-slate-200 dark:border-white/10 flex items-center gap-2 z-20 shadow-sm">
-                                    <Globe className="w-3 h-3 text-slate-500" />
-                                    <span className="text-xs font-mono text-slate-500 dark:text-slate-400 transition-all duration-500">
+                                <div className="absolute top-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] flex items-center gap-2 z-20 shadow-sm">
+                                    <Globe className="w-3 h-3 text-zinc-500 dark:text-zinc-400" />
+                                    <span className="text-xs font-mono text-zinc-500 dark:text-zinc-400 transition-all duration-500">
                                         {currentBrand.domain}
                                     </span>
                                 </div>
 
                                 {/* Portal Preview Card */}
                                 <div className="relative w-full max-w-[340px] transition-all duration-700 z-10">
-                                    <div className="bg-white dark:bg-[#2D2E45] rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden shadow-2xl">
+                                    <div className="bg-white dark:bg-charcoal rounded-2xl border border-zinc-200/50 dark:border-white/[0.06] overflow-hidden shadow-sm dark:shadow-md">
                                         {/* Header */}
-                                        <div className="p-6 border-b border-slate-200 dark:border-white/5 flex items-center justify-between">
+                                        <div className="p-6 border-b border-zinc-200/50 dark:border-white/[0.06] flex items-center justify-between">
                                             <div className="relative w-10 h-10">
                                                 <div className={`absolute inset-0 transition-all duration-500 ${isCustom ? 'opacity-0 scale-50' : 'opacity-100 scale-100'}`}>
                                                     <Logo className="w-10 h-10 text-black dark:text-white hover:rotate-12 transition-transform duration-500" />
@@ -791,7 +942,7 @@ const BentoGrid = () => {
                                                     <Crown className="w-10 h-10" />
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                                            <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
                                                 <Lock className="w-3 h-3" />
                                                 <span className="font-mono">Secure</span>
                                             </div>
@@ -799,11 +950,11 @@ const BentoGrid = () => {
 
                                         {/* Content Area */}
                                         <div className="p-6 space-y-4">
-                                            <div className="aspect-video bg-slate-200 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/5" />
+                                            <div className="aspect-video bg-zinc-100 dark:bg-white/[0.04] rounded-lg border border-zinc-200/50 dark:border-white/[0.06]" />
                                             <div className="space-y-2">
-                                                <div className="h-2 bg-slate-200 dark:bg-white/5 rounded-full w-3/4" />
-                                                <div className="h-2 bg-slate-200 dark:bg-white/5 rounded-full w-full" />
-                                                <div className="h-2 bg-slate-200 dark:bg-white/5 rounded-full w-5/6" />
+                                                <div className="h-2 bg-zinc-100 dark:bg-white/[0.06] rounded-full w-3/4" />
+                                                <div className="h-2 bg-zinc-100 dark:bg-white/[0.06] rounded-full w-full" />
+                                                <div className="h-2 bg-zinc-100 dark:bg-white/[0.06] rounded-full w-5/6" />
                                             </div>
                                         </div>
 
@@ -843,7 +994,7 @@ const BentoGrid = () => {
                                         </div>
                                         <div className="w-full bg-slate-200 dark:bg-white/5 rounded-full h-1.5 overflow-hidden">
                                             <div
-                                                className="bg-brand h-full shadow-[0_0_10px_#a3e635]"
+                                                className="bg-brand h-full shadow-[0_0_10px_#bef264]"
                                                 style={{ width: '34%' }}
                                             />
                                         </div>
@@ -869,10 +1020,8 @@ const BentoGrid = () => {
                                 <p className="text-slate-600 dark:text-slate-200 text-xs leading-relaxed mb-4">
                                     Require a digital signature approval before assets are unlocked.
                                 </p>
-                                <div className="flex-1 bg-editorial dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 p-3 relative overflow-hidden flex flex-col justify-center items-center">
-                                    {/* Signature visual */}
-                                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: NOISE_SVG }}></div>
-                                    <div className="w-full max-w-[140px] space-y-2 relative z-10">
+                                <div className="flex-1 bg-zinc-50 dark:bg-white/[0.04] rounded-xl border border-zinc-200/50 dark:border-white/[0.06] p-3 relative flex flex-col justify-center items-center">
+                                    <div className="w-full max-w-[140px] space-y-2">
                                         <div className="h-1 w-full bg-slate-200 dark:bg-white/10 rounded-full" />
                                         <div className="h-1 w-2/3 bg-slate-200 dark:bg-white/10 rounded-full" />
                                         <div className="h-8 border-b border-slate-200 dark:border-white/20 mt-2 flex items-end">
@@ -1009,7 +1158,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                             onClick={() => { playClick(); setBillingCycle(prev => prev === 'monthly' ? 'yearly' : 'monthly'); }}
                             className="w-14 h-8 bg-slate-200 dark:bg-white/10 rounded-full relative transition-colors p-1"
                         >
-                            <div className={`w-6 h-6 bg-white dark:bg-brand rounded-full shadow-md transition-transform duration-300 ${billingCycle === 'yearly' ? 'translate-x-6' : ''}`} />
+                            <div className={`w-6 h-6 rounded-full shadow-md transition-transform duration-300 bg-white dark:bg-zinc-950 ${billingCycle === 'yearly' ? 'translate-x-6' : ''}`} />
                         </button>
                         <span className={`text-sm font-bold ${billingCycle === 'yearly' ? 'text-black dark:text-white' : 'text-slate-500'}`}>Yearly <span className="text-brand text-[10px] ml-1 uppercase tracking-wider">Save 18%</span></span>
                     </div>
@@ -1020,15 +1169,16 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
 
                     {/* Starter - Only visible in Monthly - ENHANCED BORDER */}
                     {billingCycle === 'monthly' && (
-                        <div className="p-8 rounded-[2rem] border-2 border-slate-200 hover:border-obsidian/30 dark:border-white/10 dark:hover:border-white/20 bg-white dark:bg-[#2D2E45] transition-all flex flex-col shadow-lg dark:shadow-none h-full animate-fade-in">
-                            <div className="font-mono text-xs uppercase tracking-widest text-slate-500 mb-6">Starter</div>
+                        <NetRevenueStylePanel className="flex flex-col h-full animate-fade-in hover:border-zinc-300/80 dark:hover:border-white/10 transition-colors duration-300">
+                            <div className="p-8 flex flex-col flex-1 min-h-0">
+                            <div className="font-mono text-xs uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-6">Starter</div>
                             <div className="flex items-baseline gap-1 mb-2">
                                 <span className="text-4xl font-serif font-bold">$0</span>
                                 <span className="text-sm text-slate-500">/mo</span>
                             </div>
                             <div className="text-sm text-slate-500 dark:text-slate-300 mb-8 min-h-[40px]">Perfect for your first secure handover.</div>
 
-                            <button onClick={onStart} className="w-full py-4 rounded-xl border border-slate-200 dark:border-white/20 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black font-bold text-xs uppercase tracking-widest transition-all mb-8">
+                            <button onClick={onStart} className="w-full py-4 rounded-2xl border border-slate-200 dark:border-white/20 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-zinc-950 font-bold text-xs uppercase tracking-widest transition-all mb-8">
                                 Start Free
                             </button>
 
@@ -1042,15 +1192,16 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Stripe Payments Only</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Basic Audit Logs</li>
                                 </ul>
-                                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-200 dark:border-white/5 pb-2 pt-4">Limits</p>
-                                <ul className="space-y-4 text-sm text-slate-400">
-                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-slate-300 shrink-0" /> No BYOS Storage Links</li>
-                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-slate-300 shrink-0" /> 7-Day Link Expiry</li>
-                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-slate-300 shrink-0" /> "Powered by" Branding</li>
-                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-slate-300 shrink-0" /> No Manual Payments</li>
+                                <p className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 border-b border-zinc-200/50 dark:border-white/[0.06] pb-2 pt-4">Limits</p>
+                                <ul className="space-y-4 text-sm text-zinc-500 dark:text-zinc-400">
+                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-zinc-300 dark:text-zinc-600 shrink-0" /> No BYOS Storage Links</li>
+                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-zinc-300 dark:text-zinc-600 shrink-0" /> 7-Day Link Expiry</li>
+                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-zinc-300 dark:text-zinc-600 shrink-0" /> "Powered by" Branding</li>
+                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-zinc-300 dark:text-zinc-600 shrink-0" /> No Manual Payments</li>
                                 </ul>
                             </div>
-                        </div>
+                            </div>
+                        </NetRevenueStylePanel>
                     )}
 
                     {/* Studio - SOLID DEFAULT BORDER + HOVER ANIMATION & SHIFT */}
@@ -1061,20 +1212,21 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                         bg-brand /* Default Solid Border */
                         transform transition-all duration-300 ease-out
                         lg:-translate-y-4 /* Default 'Sweet Spot' Lift only on desktop */
-                        group-hover:-translate-y-2 lg:group-hover:-translate-y-6 group-hover:shadow-[0_20px_40px_-10px_rgba(163,230,53,0.4)] /* Hover Lift + Glow */
+                        group-hover:-translate-y-2 lg:group-hover:-translate-y-6 group-hover:shadow-[0_20px_40px_-10px_rgba(190, 242, 100,0.4)] /* Hover Lift + Glow */
                     ">
                             {/* The Animated Gradient Border Layer - Only visible on hover */}
                             <div className="
                             absolute inset-0 rounded-[2rem]
-                            bg-gradient-to-r from-[#a3e635] via-emerald-400 to-[#a3e635]
+                            bg-gradient-to-r from-[#bef264] via-emerald-400 to-[#bef264]
                             bg-[length:200%_auto]
                             opacity-0 group-hover:opacity-100
                             group-hover:animate-border-flow
                             transition-opacity duration-300
                         " />
 
-                            {/* The Inner Content */}
-                            <div className="relative h-full bg-white dark:bg-[#2D2E45] rounded-[1.9rem] p-8 flex flex-col overflow-hidden">
+                            {/* The Inner Content — clean panel inside brand ring; no grain or gradient wash */}
+                            <div className="relative h-full rounded-[1.9rem] overflow-hidden flex flex-col bg-white dark:bg-charcoal">
+                                <div className="relative z-10 p-8 flex flex-col flex-1 min-h-0">
                                 <div className="absolute top-0 right-0 p-6">
                                     <div className="px-3 py-1 bg-brand text-black text-[10px] font-bold uppercase tracking-widest rounded-full">Sweet Spot</div>
                                 </div>
@@ -1089,16 +1241,16 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                                     <span className="text-5xl font-serif font-bold text-black dark:text-white">
                                         {billingCycle === 'monthly' ? '$11.99' : '$119'}
                                     </span>
-                                    <span className="text-sm text-slate-500">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                                    <span className="text-sm text-zinc-500 dark:text-zinc-400">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
                                 </div>
-                                <div className="text-sm text-slate-500 dark:text-slate-300 mb-8 min-h-[40px]">For consistent delivery & branding.</div>
+                                <div className="text-sm text-zinc-500 dark:text-zinc-400 mb-8 min-h-[40px]">For consistent delivery & branding.</div>
 
-                                <button onClick={onStart} className="w-full py-4 rounded-xl bg-brand text-black hover:bg-black hover:text-brand dark:hover:bg-white dark:hover:text-black font-bold text-xs uppercase tracking-widest transition-all shadow-lg mb-8">
+                                <button onClick={onStart} className="w-full py-4 rounded-2xl bg-brand text-zinc-950 hover:bg-black hover:text-brand dark:hover:bg-white dark:hover:text-zinc-950 font-bold text-xs uppercase tracking-widest transition-all shadow-lg mb-8">
                                     Get Studio
                                 </button>
 
                                 <div className="space-y-4">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 border-b border-slate-200 dark:border-white/10 pb-2">Everything in Starter, plus</p>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 border-b border-zinc-200/50 dark:border-white/[0.06] pb-2">Everything in Starter, plus</p>
                                     <ul className="space-y-4 text-sm font-medium text-black dark:text-white">
                                         <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> <span className="font-bold">0% Platform Fees (Standard Processing Only*)</span></li>
                                         <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> <span className="font-bold">Unlimited</span> Projects</li>
@@ -1112,6 +1264,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                                         <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> Permanent Links (No Expiry)</li>
                                     </ul>
                                 </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1121,14 +1274,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                         {/* Background Color - Layer 0 */}
                         <div className="absolute inset-0 bg-[#45455e] rounded-[1.9rem]"></div>
 
-                        {/* Cinematic Grain Texture Overlay - Layer 1 (On top of BG, below content) - Increased opacity slightly */}
-                        <div className="absolute inset-0 z-10 opacity-[0.2] pointer-events-none mix-blend-overlay" style={{ backgroundImage: NOISE_SVG }}></div>
-
-                        {/* Radial Ambient Glow - Layer 2 */}
-                        <div className="absolute top-0 right-0 w-[300px] h-[300px] z-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent pointer-events-none rounded-[2rem]"></div>
-
-                        {/* Content Container - Layer 3 (z-20) */}
-                        <div className="relative z-20 p-8 h-full flex flex-col text-white rounded-[1.9rem]">
+                        <div className="relative z-10 p-8 h-full flex flex-col text-white rounded-[1.9rem]">
 
                             <div className="absolute top-0 right-0 p-6">
                                 <div className="px-3 py-1 bg-white/10 border border-white/20 text-white text-[10px] font-bold uppercase tracking-widest rounded-full flex items-center gap-2 shadow-sm backdrop-blur-md">
@@ -1155,7 +1301,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                             <div className="text-sm text-indigo-200/80 mb-8 min-h-[40px]">High volume infrastructure for elites.</div>
 
                             {/* Glassmorphism Button */}
-                            <button onClick={onStart} className="w-full py-4 rounded-xl bg-white/5 backdrop-blur-md border border-white/20 text-white hover:bg-white/15 hover:border-white/30 font-bold text-xs uppercase tracking-widest transition-all mb-8 shadow-lg group relative overflow-hidden">
+                            <button onClick={onStart} className="w-full py-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/20 text-white hover:bg-white/15 hover:border-white/30 font-bold text-xs uppercase tracking-widest transition-all mb-8 shadow-lg group relative overflow-hidden">
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                                 Go Business
                             </button>
@@ -1190,21 +1336,21 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
 const FAQItem = ({ question, answer }: { question: string, answer: string }) => {
     const [isOpen, setIsOpen] = useState(false);
     return (
-        <div className="border-b border-slate-200 dark:border-white/10 last:border-0">
+        <div className="border-b border-zinc-200/50 dark:border-white/[0.06] last:border-0">
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full py-6 flex items-center justify-between text-left group"
             >
-                <span className="text-lg font-serif text-obsidian dark:text-white group-hover:text-brand dark:group-hover:text-brand transition-colors pr-8 tracking-wide">
+                <span className="text-lg font-serif text-zinc-900 dark:text-white group-hover:text-brand dark:group-hover:text-brand transition-colors pr-8 tracking-wide">
                     {question}
                 </span>
-                <div className={`shrink-0 w-8 h-8 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center transition-all ${isOpen ? 'bg-obsidian text-white dark:bg-white dark:text-black rotate-45' : 'bg-transparent text-slate-400'}`}>
+                <div className={`shrink-0 w-8 h-8 rounded-full border border-zinc-200/50 dark:border-white/[0.06] flex items-center justify-center transition-all ${isOpen ? 'bg-obsidian text-white dark:bg-white dark:text-black rotate-45' : 'bg-transparent text-zinc-400'}`}>
                     <Plus className="w-4 h-4" />
                 </div>
             </button>
             <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${isOpen ? 'grid-rows-[1fr] pb-6' : 'grid-rows-[0fr]'}`}>
                 <div className="overflow-hidden">
-                    <p className="text-slate-500 dark:text-slate-200 leading-relaxed max-w-2xl">
+                    <p className="text-zinc-500 dark:text-zinc-300 leading-relaxed max-w-2xl">
                         {answer}
                     </p>
                 </div>
@@ -1223,14 +1369,15 @@ const FAQSection = () => (
                 <h2 className="font-serif text-4xl md:text-5xl text-obsidian dark:text-white mb-6 tracking-wide">Common Questions</h2>
             </div>
 
-            <div className="bg-white dark:bg-[#2D2E45] rounded-[2.5rem] p-8 md:p-12 border border-slate-200 dark:border-white/5 shadow-sm">
+            <NetRevenueStylePanel roundedClass="rounded-[2rem]">
+                <div className="p-8 md:p-12">
                 <FAQItem
-                    question="What is HeartFlair?"
-                    answer="HeartFlair is a secure asset gateway designed for the creative economy. Think of it as a 'vending machine' for your business. It automates the final exchange of work for payment. You upload deliverables to a protected portal where clients can review watermarked previews. The high-resolution files are secured and instantly released only after payment is verified."
+                    question="What is TrueHandover?"
+                    answer="TrueHandover is a secure asset gateway designed for the creative economy. Think of it as a 'vending machine' for your business. It automates the final exchange of work for payment. You upload deliverables to a protected portal where clients can review watermarked previews. The high-resolution files are secured and instantly released only after payment is verified."
                 />
                 <FAQItem
-                    question="Is HeartFlair an escrow platform?"
-                    answer="No. HeartFlair is a technical delivery protocol, not a financial escrow service. We facilitate payments using Stripe Connect. We do not take custody of your funds. The payment is processed by Stripe and routed to your connected account immediately. This reduces liability and keeps you in control."
+                    question="Is TrueHandover an escrow platform?"
+                    answer="No. TrueHandover is a technical delivery protocol, not a financial escrow service. We facilitate payments using Stripe Connect. We do not take custody of your funds. The payment is processed by Stripe and routed to your connected account immediately. This reduces liability and keeps you in control."
                 />
                 <FAQItem
                     question="How do I get paid?"
@@ -1260,7 +1407,8 @@ const FAQSection = () => (
                     question="How do you handle disputes?"
                     answer="Ideally, we prevent them entirely! Since the client can't access the final files until they pay, the power dynamic is balanced from the start. You stay in control. If things do get tricky, though, we provide a clean 'Evidence Pack' showing exactly who viewed what, and when."
                 />
-            </div>
+                </div>
+            </NetRevenueStylePanel>
         </div>
     </section>
 );
@@ -1274,19 +1422,19 @@ const CookieConsentBanner = ({ onChoose }: { onChoose: (choice: Exclude<CookieCo
                 <div className="pr-2">
                     <p className="text-sm font-bold text-obsidian dark:text-white">Cookie settings</p>
                     <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        We use essential cookies to keep HeartFlair secure and working. Optional cookies help us improve performance and product analytics.
+                        We use essential cookies to keep TrueHandover secure and working. Optional cookies help us improve performance and product analytics.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => onChoose('essential')}
-                        className="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors"
+                        className="px-4 py-2 rounded-2xl text-xs font-bold uppercase tracking-widest bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors"
                     >
                         Essential Only
                     </button>
                     <button
                         onClick={() => onChoose('all')}
-                        className="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest bg-black dark:bg-brand text-white dark:text-black hover:opacity-90 transition-opacity"
+                        className="px-4 py-2 rounded-2xl text-xs font-bold uppercase tracking-widest bg-black dark:bg-brand text-white dark:text-zinc-950 hover:opacity-90 transition-opacity"
                     >
                         Accept All
                     </button>
@@ -1302,18 +1450,18 @@ const Footer = () => (
             <div className="flex flex-col items-start gap-4">
                 <div className="flex items-center gap-3 group cursor-pointer">
                     <Logo className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
-                    <span className="font-serif text-xl tracking-tight">HeartFlair</span>
+                    <span className="font-serif text-xl tracking-tight">TrueHandover</span>
                 </div>
                 <p className="text-slate-500 dark:text-slate-400 font-serif italic text-lg tracking-wide">Creative delivery, finally done right.</p>
 
                 <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
-                    <a href="https://youtube.com/@heartflair" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="YouTube">
+                    <a href="https://youtube.com/@truehandover" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="YouTube">
                         <Youtube className="w-4 h-4" />
                     </a>
-                    <a href="https://x.com/heartflair" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="X (Twitter)">
+                    <a href="https://x.com/TrueHandover" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="X (Twitter)">
                         <BrandXIcon className="w-4 h-4" />
                     </a>
-                    <a href="https://discord.gg/heartflair" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="Discord">
+                    <a href="https://discord.gg/TrueHandover" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="Discord">
                         <BrandDiscordIcon className="w-4 h-4" />
                     </a>
                 </div>
@@ -1326,7 +1474,7 @@ const Footer = () => (
             </div>
 
             <div className="text-[10px] text-slate-500 font-mono">
-                © 2026 HeartFlair Ltd.
+                © 2026 TrueHandover Ltd.
             </div>
         </div>
     </footer>
@@ -1336,6 +1484,7 @@ export default function LandingPage({ onGetStarted, onQuickStartWithFiles, curre
 
     // Removed internal state management for theme to rely on parent App state
     const [isVideoOpen, setIsVideoOpen] = useState(false);
+    const [isGetStartedOpen, setIsGetStartedOpen] = useState(false);
     const [isDropActive, setIsDropActive] = useState(false);
     const quickUploadInputRef = useRef<HTMLInputElement | null>(null);
     const dragCounterRef = useRef(0);
@@ -1354,10 +1503,19 @@ export default function LandingPage({ onGetStarted, onQuickStartWithFiles, curre
         }
     };
 
+    const openGetStartedModal = () => {
+        playClick();
+        setIsGetStartedOpen(true);
+    };
+
     const handleQuickStartFiles = (incoming: FileList | File[] | null) => {
         if (!onQuickStartWithFiles || !incoming || incoming.length === 0) return;
         const files = Array.from(incoming);
         onQuickStartWithFiles(files);
+    };
+
+    const triggerQuickFilePicker = () => {
+        quickUploadInputRef.current?.click();
     };
 
     const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
@@ -1411,23 +1569,20 @@ export default function LandingPage({ onGetStarted, onQuickStartWithFiles, curre
             {isDropActive && (
                 <div className="fixed inset-0 z-[1200] pointer-events-none bg-black/40 dark:bg-[#323242]/60 backdrop-blur-[2px]">
                     <div className="absolute inset-0 flex items-center justify-center px-6">
-                        <div className="rounded-3xl border border-white/20 bg-white/90 dark:bg-[#2D2E45]/90 shadow-2xl px-8 py-10 text-center max-w-xl w-full">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-4">Quick Start</p>
-                            <h3 className="font-serif text-4xl text-zinc-900 dark:text-white mb-3">Drop files to start</h3>
-                            <p className="text-sm text-zinc-600 dark:text-zinc-300">We will open a new handover draft with your files preloaded.</p>
+                        <div className="rounded-3xl border border-white/20 bg-white/90 dark:bg-[#2D2E45]/90 shadow-2xl px-8 py-10 text-left max-w-lg w-full">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3">Quick start</p>
+                            <h3 className="font-serif text-3xl sm:text-4xl text-zinc-900 dark:text-white mb-4">Drop to deliver</h3>
+                            <p className="text-sm text-zinc-600 dark:text-zinc-300 mb-5 leading-relaxed">
+                                We&apos;ll load your files into <strong className="text-zinc-800 dark:text-white">Quick delivery</strong>. Next you&apos;ll add client details, choose a link or email, publish, then share the vault.
+                            </p>
+                            <ol className="text-xs text-zinc-500 dark:text-zinc-400 space-y-2 list-decimal list-inside border-t border-zinc-200/60 dark:border-white/10 pt-4">
+                                <li>Files land in the left delivery panel (dock layout).</li>
+                                <li>Create link <span className="text-zinc-400">or</span> send email → Publish.</li>
+                                <li>Copy the client link or send from the success screen.</li>
+                            </ol>
                         </div>
                     </div>
                 </div>
-            )}
-
-            {onQuickStartWithFiles && (
-                <button
-                    type="button"
-                    onClick={() => { playClick(); quickUploadInputRef.current?.click(); }}
-                    className="fixed bottom-6 right-6 z-[1000] px-5 py-3 rounded-full bg-black text-white dark:bg-brand dark:text-black text-[11px] font-bold uppercase tracking-widest shadow-2xl border border-black/10 dark:border-brand hover:scale-105 transition-transform"
-                >
-                    Drop files or browse
-                </button>
             )}
 
             {/* Floating Theme Toggle — desktop only, aligned to the right edge of the nav pill */}
@@ -1448,20 +1603,24 @@ export default function LandingPage({ onGetStarted, onQuickStartWithFiles, curre
                 </div>
             </div>
             {/* Nav receives isHidden prop to create cinema mode */}
-            <Nav onStart={onGetStarted} currentTheme={currentTheme} onSetThemeMode={onSetThemeMode || (() => toggleTheme?.())} isHidden={isVideoOpen} />
+            <Nav onStart={openGetStartedModal} currentTheme={currentTheme} onSetThemeMode={onSetThemeMode || (() => toggleTheme?.())} isHidden={isVideoOpen} />
             <main>
-                <Hero onStart={onGetStarted} onWatchVideo={() => setIsVideoOpen(true)} />
+                <Hero onStart={openGetStartedModal} onWatchVideo={() => setIsVideoOpen(true)} />
                 <ComparisonSection />
                 <BentoGrid />
-                <Pricing onStart={onGetStarted} />
+                <Pricing onStart={openGetStartedModal} />
                 <FAQSection />
             </main>
-            <VideoModal isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} onStart={onGetStarted} />
+            <VideoModal isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} onStart={openGetStartedModal} />
+            <GetStartedModal
+                isOpen={isGetStartedOpen}
+                onClose={() => setIsGetStartedOpen(false)}
+                onStartFresh={onGetStarted}
+                onChooseFiles={triggerQuickFilePicker}
+                filesPathAvailable={Boolean(onQuickStartWithFiles)}
+            />
             <Footer />
             {cookieConsent === 'unknown' && <CookieConsentBanner onChoose={handleCookieChoice} />}
         </div>
     );
 }
-
-
-

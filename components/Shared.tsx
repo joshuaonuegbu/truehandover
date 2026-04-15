@@ -17,10 +17,9 @@ export const Card: React.FC<CardProps> = ({ children, className = "", noPadding 
         <div
             onClick={onClick}
             className={`
-                relative glass-panel rounded-3xl dark:rounded-[2.5rem]
+                relative hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md rounded-[2rem] overflow-hidden
                 ${noPadding ? '' : 'p-6 md:p-8'} 
-                ${hoverEffect ? 'hover:scale-[1.01] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] dark:hover:shadow-[#a3e635]/5 hover:-translate-y-1 transition-all duration-300' : ''}
-                dark:ring-1 dark:ring-white/5
+                ${hoverEffect ? 'hover:-translate-y-1 hover:shadow-md dark:hover:shadow-lg transition-all duration-300' : ''}
                 ${className}
             `}
         >
@@ -36,8 +35,8 @@ interface BadgeProps {
 
 export const Badge: React.FC<BadgeProps> = ({ children, color = 'lime' }) => {
     const colors = {
-        emerald: 'bg-lime-600 text-white shadow-lg shadow-lime-600/20 dark:bg-[#a3e635] dark:text-black dark:shadow-[0_0_15px_rgba(163,230,53,0.4)]',
-        lime: 'bg-lime-600 text-white shadow-lg shadow-lime-600/20 dark:bg-[#a3e635] dark:text-black dark:shadow-[0_0_15px_rgba(163,230,53,0.4)]',
+        emerald: 'bg-lime-600 text-white shadow-lg shadow-lime-600/20 dark:bg-[#bef264] dark:text-black dark:shadow-[0_0_15px_rgba(190, 242, 100,0.4)]',
+        lime: 'bg-lime-600 text-white shadow-lg shadow-lime-600/20 dark:bg-[#bef264] dark:text-black dark:shadow-[0_0_15px_rgba(190, 242, 100,0.4)]',
         orange: 'bg-[#fb923c] text-white shadow-[0_0_15px_rgba(251,146,60,0.4)]',
         white: 'bg-white text-black shadow-lg',
         gray: 'bg-slate-200 dark:bg-[#1E1F30] text-slate-600 dark:text-slate-300',
@@ -72,5 +71,58 @@ export const InlineErrorBanner: React.FC<InlineErrorBannerProps> = ({ message, o
                 </button>
             )}
         </div>
+    );
+};
+
+interface WidgetProps {
+    title?: React.ReactNode;
+    titleIcon?: React.ElementType;
+    titleClassName?: string;
+    headerClassName?: string;
+    actions?: React.ReactNode;
+    className?: string;
+    children?: React.ReactNode;
+    surfaceless?: boolean;
+    compact?: boolean;
+}
+
+export const Widget: React.FC<WidgetProps> = ({ title, titleIcon: TitleIcon, titleClassName = '', headerClassName = 'px-6 pt-6 pb-3', actions, className = '', children, surfaceless = false, compact = false }) => {
+    const innerPaddingClass = compact ? 'px-4 py-4' : 'px-4 pb-6';
+    const headerPaddingClass = compact ? 'px-4 pt-4 pb-3' : headerClassName;
+
+    if (surfaceless) {
+        return (
+            <div className={className}>
+                {(title || actions) && (
+                    <div className={`flex items-start justify-between ${headerPaddingClass}`}>
+                        <div className={`flex items-center gap-3 ${titleClassName}`}>
+                            {TitleIcon && <TitleIcon className="w-4 h-4" />}
+                            {typeof title === 'string' ? <h3 className="text-sm font-bold">{title}</h3> : title}
+                        </div>
+                        {actions && <div className="flex items-center gap-2">{actions}</div>}
+                    </div>
+                )}
+                <div className={innerPaddingClass}>
+                    {children}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <Card noPadding={compact} className={className}>
+            {(title || actions) && (
+                <div className={`flex items-start justify-between ${headerPaddingClass}`}>
+                    <div className={`flex items-center gap-3 ${titleClassName}`}>
+                        {TitleIcon && <TitleIcon className="w-4 h-4" />}
+                        {typeof title === 'string' ? <h3 className="text-sm font-bold">{title}</h3> : title}
+                    </div>
+                    {actions && <div className="flex items-center gap-2">{actions}</div>}
+                </div>
+            )}
+            <div className={innerPaddingClass}>
+                {children}
+            </div>
+        </Card>
     );
 };

@@ -56,6 +56,8 @@ export interface ProjectTheme {
     brandPrimary?: string;
     brandAccent?: string;
     brandLogoUrl?: string;
+    layout?: 'default' | 'billboard' | 'masonry' | 'cinema' | 'journal' | 'split' | 'portfolio' | 'deck' | 'modeler' | 'studio';
+    lightbox?: 'default' | 'pro' | 'workstation' | 'canvas' | 'sheet';
 }
 
 export interface ProjectPaymentMethods {
@@ -128,11 +130,18 @@ export interface StorageSettings {
      * - Platform storage (private R2) is handled via server-issued presigned URLs.
      * - Do not store any cloud OAuth tokens or S3/R2 secret keys in the browser or in `profiles.storage_settings`.
      */
-    mode: 'platform';
+    mode: 'platform' | 'drive' | 's3';
 
     // Optional non-sensitive BYOS label (links-only workflow; no OAuth tokens stored client-side).
     byosDriveProvider?: 'google' | 'dropbox' | 'onedrive';
     byosDriveAccountLabel?: string;
+
+    // Optional non-sensitive S3/R2 metadata (links-only workflow; no secret keys stored client-side).
+    s3Provider?: 'aws' | 'r2' | 'custom';
+    s3Bucket?: string;
+    s3Region?: string;
+    s3Endpoint?: string;
+    s3PublicBaseUrl?: string;
 }
 
 export interface RevisionRequest {

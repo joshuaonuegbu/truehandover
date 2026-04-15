@@ -18,6 +18,39 @@ const DEVICES = {
 type DeviceMode = 'desktop' | 'tablet' | 'mobile' | 'foldable';
 type FrameOption = 'dynamicIsland' | 'cameraDot' | 'none';
 
+/** Base gradient behind simulator chrome — identical for standalone /preview and editor-embedded preview */
+const previewShellBackground = (isDark: boolean) =>
+    isDark
+        ? 'linear-gradient(160deg, #151520 0%, #101018 48%, #0c0c12 100%)'
+        : 'linear-gradient(145deg, #f8fafc 0%, #eef2f6 42%, #e2e8f0 100%)';
+
+/** Film grain + dot grid + radial washes — must match exactly in every preview shell */
+const PreviewModeShellTexture = ({ isDarkMode }: { isDarkMode: boolean }) => (
+    <>
+        <div
+            className={`absolute inset-0 pointer-events-none ${isDarkMode ? 'mix-blend-soft-light' : 'mix-blend-multiply'}`}
+            style={{
+                opacity: isDarkMode ? 0.35 : 0.16,
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+            }}
+        />
+        <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+                opacity: 0.04,
+                backgroundImage: 'radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px)',
+                backgroundSize: '24px 24px',
+            }}
+        />
+        <div
+            className={`absolute inset-0 pointer-events-none ${isDarkMode ? 'bg-[radial-gradient(ellipse_50%_40%_at_50%_45%,_rgba(190, 242, 100,0.04)_0%,_transparent_70%)]' : 'bg-[radial-gradient(ellipse_55%_45%_at_50%_42%,_rgba(59,130,246,0.08)_0%,_transparent_72%)]'}`}
+        />
+        <div
+            className={`absolute inset-0 pointer-events-none ${isDarkMode ? 'bg-[radial-gradient(ellipse_at_center,_transparent_40%,_rgba(0,0,0,0.5)_100%)]' : 'bg-[radial-gradient(ellipse_at_center,_transparent_42%,_rgba(148,163,184,0.16)_100%)]'}`}
+        />
+    </>
+);
+
 // --- MOCK STATUS BAR COMPONENT ---
 const MockStatusBar = ({ width, isDark, heightPx, lightModeStyle }: { width: number; isDark: boolean; heightPx: number; lightModeStyle?: 'solid' | 'transparent' }) => {
     const textColor = isDark ? 'text-white' : 'text-black';
@@ -115,6 +148,8 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     const [iframeThemeIsDark, setIframeThemeIsDark] = useState<boolean | null>(null);
     const [iframeStatusBarLightModeStyle, setIframeStatusBarLightModeStyle] = useState<'solid' | 'transparent'>('solid');
     const [iframeDockedSidebarCollapsed, setIframeDockedSidebarCollapsed] = useState<boolean>(false);
+    /** True while the iframe (or inline preview) has the asset lightbox open — hide simulator chrome so it never stacks above the lightbox. */
+    const [previewChromeSuppressed, setPreviewChromeSuppressed] = useState(false);
 
     // --- VIEWPORT DETECTION ---
     const [viewportClass, setViewportClass] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -136,6 +171,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     const resolvedThemeMode: 'light' | 'dark' | 'system' = themeMode || 'system';
     const isDarkForStatusBar = resolvedThemeMode === 'dark' || (resolvedThemeMode === 'system' && isDarkMode);
     const statusBarIsDark = iframeThemeIsDark ?? isDarkForStatusBar;
+    const canVerifyManualPayment = Boolean(user?.id);
 
     // State
     const [accessDenied, setAccessDenied] = useState(false);
@@ -165,21 +201,21 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
             if (!data || typeof data.type !== 'string') return;
 
             // Child (iframe) -> parent: keep mock status bar in sync with the preview theme.
-            if (data.type === 'Heartflair_PREVIEW_THEME') {
+            if (data.type === 'Heartifact_PREVIEW_THEME') {
                 if (typeof data.isDarkMode !== 'boolean') return;
                 setIframeThemeIsDark(data.isDarkMode);
                 return;
             }
 
             // Child (iframe) -> parent: tweak mock status bar background based on preview layout state.
-            if (data.type === 'Heartflair_PREVIEW_STATUSBAR') {
+            if (data.type === 'Heartifact_PREVIEW_STATUSBAR') {
                 if (data.mode !== 'solid' && data.mode !== 'transparent') return;
                 setIframeStatusBarLightModeStyle(data.mode);
                 return;
             }
 
             // Child (iframe) -> parent: keep track of docked sidebar collapse state so overlays can avoid collisions.
-            if (data.type === 'Heartflair_PREVIEW_SIDEBAR_STATE') {
+            if (data.type === 'Heartifact_PREVIEW_SIDEBAR_STATE') {
                 if (typeof data.collapsed !== 'boolean') return;
                 setIframeDockedSidebarCollapsed(data.collapsed);
                 onDockedSidebarCollapseChange?.(data.collapsed);
@@ -187,9 +223,16 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
             }
 
             // Parent (creator/editor) -> child: push live project edits into the canvas iframe so it stays in sync.
-            if (data.type === 'Heartflair_PREVIEW_SET_PROJECT') {
+            if (data.type === 'Heartifact_PREVIEW_SET_PROJECT') {
                 if (!data.project) return;
                 setProject(data.project as Project);
+                return;
+            }
+
+            // Child iframe -> parent: vault lightbox covers the simulator; hide device toolbar / pills.
+            if (data.type === 'Heartifact_PREVIEW_LIGHTBOX') {
+                if (typeof data.open !== 'boolean') return;
+                setPreviewChromeSuppressed(data.open);
                 return;
             }
         };
@@ -203,6 +246,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         setIframeThemeIsDark(null);
         setIframeStatusBarLightModeStyle('solid');
         setIframeDockedSidebarCollapsed(false);
+        setPreviewChromeSuppressed(false);
     }, [deviceMode, themeMode]);
 
     useEffect(() => {
@@ -257,7 +301,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     };
 
     // --- PAYMENT & UNLOCK LOGIC ---
-    const handlePaymentComplete = async (method?: any) => {
+    const handlePaymentComplete = async (method?: 'stripe' | 'manual') => {
         if (isEmbedded) return;
         setPaymentError(null);
         try {
@@ -268,17 +312,30 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
             }
             if (project.status === 'payment_verification') {
                 const result = await PaymentService.verifyManualPayment(project.id);
-                if (result.success) {
-                    unlockProject();
+                if (!result.success) {
+                    setPaymentError(('error' in result ? result.error : '') || 'Payment verification did not complete. Please try again.');
                     return;
                 }
-                setPaymentError('Payment verification did not complete. Please try again.');
+
+                const refreshed = await PaymentService.getClientPreviewProject(project.clientLink);
+                if (refreshed.success) {
+                    setProject(refreshed.data.project);
+                    playSuccess();
+                    return;
+                }
+
+                // Fallback: reflect paid state in UI without minting any client-side download URLs.
+                setProject(prev => ({
+                    ...prev,
+                    status: 'paid',
+                    files: prev.files.map(f => ({ ...f, locked: false, downloadUrl: undefined }))
+                }));
+                playSuccess();
                 return;
             }
-            const checkout = await PaymentService.createCheckoutSession(project.id);
+            const checkout = await PaymentService.createCheckoutSession(project.clientLink);
             if (!checkout.success) {
-                const errorMessage = 'error' in checkout ? checkout.error : 'Could not start Stripe Checkout.';
-                setPaymentError(errorMessage || 'Could not start Stripe Checkout.');
+                setPaymentError(('error' in checkout ? checkout.error : '') || 'Could not start Stripe Checkout.');
                 return;
             }
             window.location.href = checkout.data.url;
@@ -287,15 +344,6 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
             setPaymentError('We could not complete payment processing right now. Please retry.');
         }
     };
-
-    const unlockProject = () => {
-        setPaymentError(null);
-        setProject(prev => ({
-            ...prev, status: 'paid',
-            files: prev.files.map(f => ({ ...f, locked: false, downloadUrl: f.externalUrl ? f.externalUrl : `https://vault-cdn.heartflair.com/secure/${f.id}?sig=${Math.random().toString(36).substring(7)}&exp=${Date.now() + 3600000}` }))
-        }));
-        playSuccess();
-    }
 
     const handleRequestCorrection = (index: number) => { playClick(); handleSetLightboxIndex(index); };
 
@@ -358,7 +406,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         const onMessage = (event: MessageEvent) => {
             if (event.origin !== window.location.origin) return;
             const data = event.data as any;
-            if (!data || data.type !== 'Heartflair_SIM_EXIT') return;
+            if (!data || data.type !== 'Heartifact_SIM_EXIT') return;
             if (deviceMode !== 'desktop') switchDevice('desktop');
         };
         window.addEventListener('message', onMessage);
@@ -405,7 +453,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         if (deviceMode === 'desktop' || isRawMode || viewportClass === 'mobile') return;
         const target = iframeRef.current?.contentWindow;
         if (!target) return;
-        target.postMessage({ type: 'Heartflair_PREVIEW_SET_PROJECT', project }, window.location.origin);
+        target.postMessage({ type: 'Heartifact_PREVIEW_SET_PROJECT', project }, window.location.origin);
     }, [deviceMode, orientation, iframeRefreshKey, iframeLoadedTick, project, isRawMode, viewportClass]);
 
     // --- RENDER: ClientPreviewPage (props bundle) ---
@@ -414,7 +462,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         // This prevents creators from accidentally landing in /vault or other admin routes in the iframe.
         if (isRawMode) {
             try {
-                window.parent.postMessage({ type: 'Heartflair_SIM_EXIT' }, window.location.origin);
+                window.parent.postMessage({ type: 'Heartifact_SIM_EXIT' }, window.location.origin);
             } catch { }
             return;
         }
@@ -435,6 +483,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         refreshAccess: () => { localStorage.removeItem(`viewed_${project.id}`); window.location.reload(); },
         paymentError,
         onDismissPaymentError: () => setPaymentError(null),
+        canVerifyManualPayment,
         allowSidebarCollapse,
         onDockedSidebarCollapseChange,
         reserveCollapsedHeaderBackSlot,
@@ -443,6 +492,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         onRenameAsset,
         onResizeAsset,
         onRemoveAsset,
+        onLightboxOpenChange: setPreviewChromeSuppressed,
     };
 
     // --- RAW MODE: Render component directly (used inside iframes) ---
@@ -472,8 +522,11 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
 
         return (
             // Match the preview page background immediately to avoid a white flash between mode switches.
-            <div className={`relative w-full h-full ${isDarkMode ? 'bg-black' : 'bg-[#FDFDFD]'}`}>
+            <div className="relative w-full h-full overflow-hidden" style={{ background: previewShellBackground(isDarkMode) }}>
+                <PreviewModeShellTexture isDarkMode={isDarkMode} />
+                <div className="relative z-10 w-full h-full min-h-0">
                 <ClientPreviewPage {...previewProps} />
+                </div>
                 {/* Fade-out dark overlay to prevent a bright flash when returning from the simulator */}
                 {isDesktopFadingIn && (
                     <div
@@ -482,7 +535,8 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                     />
                 )}
                 {/* Floating Device Mode Switcher */}
-                <div className="fixed bottom-6 right-6 z-[60] flex items-center gap-1 bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+                {!previewChromeSuppressed && (
+                <div className="fixed bottom-6 right-6 z-[60] flex items-center gap-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
                     <span className="px-2 text-[10px] font-bold uppercase tracking-widest text-white/70 select-none">
                         Preview
                     </span>
@@ -494,6 +548,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                         ><Icon className="w-4 h-4" /></button>
                     ))}
                 </div>
+                )}
             </div>
         );
     }
@@ -532,60 +587,70 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         canvasDeviceOptions.push({ mode: 'foldable', icon: RectangleHorizontal, label: 'Foldable' });
     }
 
+    const canvasPillClass = isDarkMode
+        ? 'bg-[#23232e]/88 border-white/[0.08] text-white/75 shadow-[0_16px_40px_-24px_rgba(0,0,0,0.55)]'
+        : 'bg-white/92 border-zinc-200/60 text-zinc-600 shadow-[0_18px_44px_-24px_rgba(15,23,42,0.2)]';
+    const canvasPillHoverClass = isDarkMode
+        ? 'hover:bg-white/12 hover:text-white'
+        : 'hover:bg-white hover:text-zinc-900';
+    const canvasActivePillClass = isDarkMode
+        ? 'bg-white/16 text-white shadow-sm ring-1 ring-white/15'
+        : 'bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-200/70';
+    const canvasDividerClass = isDarkMode ? 'bg-white/10' : 'bg-zinc-200/80';
+    const canvasDisclaimerClass = isDarkMode
+        ? 'bg-[#23232e]/88 border-white/10 text-zinc-200'
+        : 'bg-white/92 border-zinc-200/60 text-zinc-700';
+    const deviceShadow = isDarkMode
+        ? '0 30px 80px -15px rgba(0,0,0,0.6), 0 15px 40px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03), inset 0 0 0 1px rgba(255,255,255,0.03)'
+        : '0 28px 70px -24px rgba(15,23,42,0.28), 0 16px 34px -20px rgba(15,23,42,0.2), 0 0 0 1px rgba(255,255,255,0.75), inset 0 0 0 1px rgba(255,255,255,0.65)';
+    const deviceBezelColor = isDarkMode ? '#222230' : '#d9e0e8';
+    const deviceBezelBackground = isDarkMode ? '#0a0a0e' : '#f8fafc';
+
     return (
         <div className={`w-full ${isEmbedded ? 'h-full' : 'h-[100dvh]'} flex flex-col relative overflow-hidden select-none`}
-            style={{ background: isEmbedded ? 'transparent' : 'linear-gradient(145deg, #1a1a24 0%, #141420 30%, #0f0f1a 60%, #1a1a26 100%)' }}
+            style={{ background: previewShellBackground(isDarkMode) }}
         >
-            {/* === CANVAS BACKGROUND TEXTURE === */}
-            {!isEmbedded && (
-                <>
-                    <div className="absolute inset-0 opacity-[0.35] pointer-events-none mix-blend-soft-light"
-                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")` }}
-                    />
-                    <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-                </>
-            )}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_50%_45%,_rgba(163,230,53,0.04)_0%,_transparent_70%)] pointer-events-none" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_40%,_rgba(0,0,0,0.5)_100%)] pointer-events-none" />
+            <PreviewModeShellTexture isDarkMode={isDarkMode} />
 
             {/* Fade only the foreground UI during transitions to avoid flashing the page background */}
             <div className={`relative z-10 flex flex-col w-full h-full transition-all duration-300 ease-out ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
 
             {/* === FLOATING TOOLBAR === */}
+            {!previewChromeSuppressed && (
             <div className="relative z-50 flex items-center justify-center pt-4 pb-2 gap-2 px-4 shrink-0 flex-nowrap overflow-x-auto no-scrollbar">
                 {/* Back button */}
                 {!isEmbedded && (
                     <button onClick={() => { playClick(); switchDevice('desktop'); }}
-                        className="p-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white/75 hover:text-white transition-all backdrop-blur-xl shadow-sm"
+                        className={`p-2.5 rounded-xl border transition-all backdrop-blur-xl ${canvasPillClass} ${canvasPillHoverClass}`}
                         title="Exit Preview"
                     ><ChevronLeft className="w-4 h-4" /></button>
                 )}
 
                 {/* Main toolbar pill */}
-                <div className="flex items-center gap-1 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-1.5 shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
+                <div className={`flex items-center gap-1 backdrop-blur-2xl border rounded-2xl p-1.5 ${canvasPillClass}`}>
                     {/* Device Switcher */}
                     {canvasDeviceOptions.map(({ mode, icon: Icon, label }) => (
                         <button key={mode} aria-label={label} title={label}
                             onClick={() => switchDevice(mode)}
                             className={`p-2.5 rounded-xl transition-all duration-200 ${deviceMode === mode
-                                ? 'bg-white/20 text-white shadow-sm ring-1 ring-white/25'
-                                : 'text-white/55 hover:text-white/85 hover:bg-white/10'
+                                ? canvasActivePillClass
+                                : `${isDarkMode ? 'text-white/55' : 'text-zinc-500'} ${canvasPillHoverClass}`
                                 }`}
                         ><Icon className="w-4 h-4" /></button>
                     ))}
 
-                    <div className="w-px h-6 bg-white/10 mx-1" />
+                    <div className={`w-px h-6 mx-1 ${canvasDividerClass}`} />
 
                     {/* Orientation Toggle */}
                     <button
                         onClick={() => { playClick(); setOrientation(prev => prev === 'portrait' ? 'landscape' : 'portrait'); }}
-                        className={`p-2.5 rounded-xl transition-all ${orientation === 'landscape' ? 'bg-white/20 text-white ring-1 ring-white/25' : 'text-white/55 hover:text-white/85 hover:bg-white/10'}`}
+                        className={`p-2.5 rounded-xl transition-all ${orientation === 'landscape' ? canvasActivePillClass : `${isDarkMode ? 'text-white/55' : 'text-zinc-500'} ${canvasPillHoverClass}`}`}
                         title={isPortrait ? 'Switch to Landscape' : 'Switch to Portrait'}
                     >
                         <RotateCw className={`w-4 h-4 transition-transform duration-300 ${orientation === 'landscape' ? 'rotate-90' : ''}`} />
                     </button>
 
-                    <div className="w-px h-6 bg-white/10 mx-1" />
+                    <div className={`w-px h-6 mx-1 ${canvasDividerClass}`} />
 
                     <ThemeModeDropdown
                         themeMode={themeMode || 'system'}
@@ -596,15 +661,15 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                         }}
                         isDarkMode={true}
                         compact
-                        buttonClassName="p-2.5 rounded-xl transition-all text-white/75 hover:text-white hover:bg-white/10 flex items-center"
+                        buttonClassName={`p-2.5 rounded-xl transition-all flex items-center ${isDarkMode ? 'text-white/75 hover:text-white hover:bg-white/10' : 'text-zinc-500 hover:text-zinc-900 hover:bg-white'}`}
                     />
 
                     {/* Frame Options Toggle (mobile only) */}
                     {isMobile && (
                         <>
-                            <div className="w-px h-6 bg-white/10 mx-1" />
+                            <div className={`w-px h-6 mx-1 ${canvasDividerClass}`} />
                             <button onClick={() => { playClick(); setShowFrameSettings(p => !p); }}
-                                className={`p-2.5 rounded-xl transition-all ${showFrameSettings ? 'bg-white/20 text-white ring-1 ring-white/25' : 'text-white/55 hover:text-white/85 hover:bg-white/10'}`}
+                                className={`p-2.5 rounded-xl transition-all ${showFrameSettings ? canvasActivePillClass : `${isDarkMode ? 'text-white/55' : 'text-zinc-500'} ${canvasPillHoverClass}`}`}
                                 title="Frame Options"
                             ><Settings2 className="w-4 h-4" /></button>
                         </>
@@ -612,29 +677,30 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                 </div>
 
                 {/* Device label pill */}
-                <div className="px-4 py-2 bg-white/[0.08] rounded-full text-[10px] font-bold uppercase tracking-widest text-white/70 border border-white/[0.14] font-mono whitespace-nowrap shadow-sm">
+                <div className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border font-mono whitespace-nowrap ${canvasPillClass}`}>
                     {deviceLabel} · {frameW}×{frameH}
                 </div>
 
                 {/* Refresh button */}
-                <button onClick={() => { playClick(); setIframeRefreshKey(k => k + 1); }}
-                    className="p-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white/65 hover:text-white transition-all backdrop-blur-xl shadow-sm"
+                <button onClick={() => { playClick(); setPreviewChromeSuppressed(false); setIframeRefreshKey(k => k + 1); }}
+                    className={`p-2.5 rounded-xl border transition-all backdrop-blur-xl ${canvasPillClass} ${canvasPillHoverClass}`}
                     title="Refresh Preview"
                 ><RefreshCw className="w-4 h-4" /></button>
             </div>
+            )}
 
             {/* Frame Options Dropdown (mobile only) */}
-            {showFrameSettings && isMobile && (
+            {showFrameSettings && isMobile && !previewChromeSuppressed && (
                 <div className="relative z-50 flex justify-center -mt-1 mb-1 px-4 animate-fade-in">
-                    <div className="flex items-center gap-1 bg-white/[0.06] backdrop-blur-xl border border-white/[0.08] rounded-xl p-1 shadow-lg">
+                    <div className={`flex items-center gap-1 backdrop-blur-xl border rounded-xl p-1 shadow-lg ${canvasPillClass}`}>
                         <button onClick={() => { playClick(); setFrameOption('dynamicIsland'); }}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${frameOption === 'dynamicIsland' ? 'bg-white/20 text-white ring-1 ring-white/25' : 'text-white/55 hover:text-white/85 hover:bg-white/10'}`}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${frameOption === 'dynamicIsland' ? canvasActivePillClass : `${isDarkMode ? 'text-white/55' : 'text-zinc-500'} ${canvasPillHoverClass}`}`}
                         >Pill Island</button>
                         <button onClick={() => { playClick(); setFrameOption('cameraDot'); }}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${frameOption === 'cameraDot' ? 'bg-white/20 text-white ring-1 ring-white/25' : 'text-white/55 hover:text-white/85 hover:bg-white/10'}`}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${frameOption === 'cameraDot' ? canvasActivePillClass : `${isDarkMode ? 'text-white/55' : 'text-zinc-500'} ${canvasPillHoverClass}`}`}
                         >Camera Dot</button>
                         <button onClick={() => { playClick(); setFrameOption('none'); }}
-                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${frameOption === 'none' ? 'bg-white/20 text-white ring-1 ring-white/25' : 'text-white/55 hover:text-white/85 hover:bg-white/10'}`}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${frameOption === 'none' ? canvasActivePillClass : `${isDarkMode ? 'text-white/55' : 'text-zinc-500'} ${canvasPillHoverClass}`}`}
                         >None</button>
                     </div>
                 </div>
@@ -643,8 +709,8 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
             {/* === DEVICE CANVAS AREA === */}
             <div ref={canvasRef} className="flex-1 flex items-center justify-center relative z-10 pb-4 px-4">
                 {/* Canvas Disclaimer (bottom-right, Creator Preview styling) */}
-                <div className="absolute bottom-6 right-6 z-[55] pointer-events-none select-none">
-                    <div className="px-4 py-2 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border bg-amber-500/10 border-amber-500/20 text-amber-400 backdrop-blur-md shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
+                <div className={`absolute bottom-6 right-6 z-[55] pointer-events-none select-none ${previewChromeSuppressed ? 'opacity-0' : ''}`}>
+                    <div className={`px-4 py-2 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border backdrop-blur-md ${canvasDisclaimerClass}`}>
                         <Eye className="w-3.5 h-3.5" />
                         <span>Preview: What Your Client Sees</span>
                     </div>
@@ -652,22 +718,47 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                 {/* Scaled device wrapper */}
                 <div
                     className="relative transition-all duration-300 ease-out"
-                    style={{ width: frameW * scale, height: frameH * scale }}
+                    style={{ width: Math.ceil(frameW * scale), height: Math.ceil(frameH * scale) }}
                 >
                     <div
-                        className="absolute top-0 left-0 origin-top-left transition-all duration-300 ease-out"
-                        style={{ width: frameW, height: frameH, transform: `scale(${scale})` }}
+                        className="absolute top-0 left-0 origin-top-left transition-all duration-300 ease-out [transform:translateZ(0)]"
+                        style={{
+                            width: frameW,
+                            height: frameH,
+                            transform: `scale(${scale})`,
+                            backfaceVisibility: 'hidden',
+                        }}
                     >
                         {/* Device shadow */}
                         <div className="absolute inset-0 pointer-events-none" style={{
                             borderRadius: device.bezelRadius,
-                            boxShadow: '0 30px 80px -15px rgba(0,0,0,0.6), 0 15px 40px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03), inset 0 0 0 1px rgba(255,255,255,0.03)',
+                            boxShadow: deviceShadow,
                         }} />
 
-                        {/* Device bezel */}
-                        <div className="absolute inset-0 overflow-hidden bg-[#0a0a0e]"
-                            style={{ borderRadius: device.bezelRadius, border: `${device.bezelWidth}px solid #222230` }}
+                        {/* Device bezel — iframe is position-filled first so status/notch paint above; avoids inline-iframe subpixel gaps at the right edge */}
+                        <div
+                            className="absolute inset-0 overflow-hidden"
+                            style={{
+                                borderRadius: device.bezelRadius,
+                                border: `${device.bezelWidth}px solid ${deviceBezelColor}`,
+                                backgroundColor: deviceBezelBackground,
+                                isolation: 'isolate',
+                            }}
                         >
+                            <iframe
+                                key={`${deviceMode}-${orientation}-${themeMode}-${iframeRefreshKey}`}
+                                src={iframeSrc}
+                                className="absolute inset-0 z-0 box-border block border-0 size-full max-w-none"
+                                title={`${deviceLabel} Preview`}
+                                ref={iframeRef}
+                                onLoad={() => setIframeLoadedTick(t => t + 1)}
+                                style={{
+                                    borderRadius: `calc(${device.bezelRadius} - ${device.bezelWidth}px)`,
+                                    // Match ClientPreviewPage root (`bg-cosmic` / `bg-[#FDFDFD]`) so any subpixel edge blends with the vault, not a different black/white.
+                                    backgroundColor: isDarkMode ? '#323242' : '#FDFDFD',
+                                }}
+                            />
+
                             {/* === MOCK STATUS BAR === */}
                             <MockStatusBar width={frameW} isDark={statusBarIsDark} heightPx={statusBarHeightPx} lightModeStyle={iframeStatusBarLightModeStyle} />
 
@@ -703,38 +794,24 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                             {isMobile && isPortrait && (
                                 <div className="absolute bottom-[6px] left-1/2 -translate-x-1/2 z-[60] w-[120px] h-[4px] rounded-full bg-white/20" />
                             )}
-
-                            {/* The iframe */}
-                            <iframe
-                                key={`${deviceMode}-${orientation}-${themeMode}-${iframeRefreshKey}`}
-                                src={iframeSrc}
-                                className="w-full h-full border-0"
-                                title={`${deviceLabel} Preview`}
-                                ref={iframeRef}
-                                onLoad={() => setIframeLoadedTick(t => t + 1)}
-                                style={{
-                                    borderRadius: `calc(${device.bezelRadius} - ${device.bezelWidth}px)`,
-                                    backgroundColor: isDarkMode ? '#0f0f15' : '#ffffff',
-                                }}
-                            />
                         </div>
 
                         {/* Side buttons — mobile */}
                         {isMobile && isPortrait && (
                             <>
-                                <div className="absolute top-[110px] -right-[3px] w-[3px] h-[44px] rounded-full bg-[#222230]" />
-                                <div className="absolute top-[100px] -left-[3px] w-[3px] h-[28px] rounded-full bg-[#222230]" />
-                                <div className="absolute top-[138px] -left-[3px] w-[3px] h-[28px] rounded-full bg-[#222230]" />
-                                <div className="absolute top-[72px] -left-[3px] w-[3px] h-[18px] rounded-full bg-[#222230]" />
+                                <div className="absolute top-[110px] -right-[3px] w-[3px] h-[44px] rounded-full" style={{ backgroundColor: deviceBezelColor }} />
+                                <div className="absolute top-[100px] -left-[3px] w-[3px] h-[28px] rounded-full" style={{ backgroundColor: deviceBezelColor }} />
+                                <div className="absolute top-[138px] -left-[3px] w-[3px] h-[28px] rounded-full" style={{ backgroundColor: deviceBezelColor }} />
+                                <div className="absolute top-[72px] -left-[3px] w-[3px] h-[18px] rounded-full" style={{ backgroundColor: deviceBezelColor }} />
                             </>
                         )}
 
                         {/* Side buttons — tablet */}
                         {deviceMode === 'tablet' && isPortrait && (
                             <>
-                                <div className="absolute -top-[3px] right-[70px] h-[3px] w-[28px] rounded-full bg-[#222230]" />
-                                <div className="absolute top-[80px] -right-[3px] w-[3px] h-[28px] rounded-full bg-[#222230]" />
-                                <div className="absolute top-[118px] -right-[3px] w-[3px] h-[28px] rounded-full bg-[#222230]" />
+                                <div className="absolute -top-[3px] right-[70px] h-[3px] w-[28px] rounded-full" style={{ backgroundColor: deviceBezelColor }} />
+                                <div className="absolute top-[80px] -right-[3px] w-[3px] h-[28px] rounded-full" style={{ backgroundColor: deviceBezelColor }} />
+                                <div className="absolute top-[118px] -right-[3px] w-[3px] h-[28px] rounded-full" style={{ backgroundColor: deviceBezelColor }} />
                             </>
                         )}
                     </div>
@@ -746,4 +823,3 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
 };
 
 export default ClientPreviewBiz;
-

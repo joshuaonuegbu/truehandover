@@ -12,7 +12,7 @@ import {
 import { canToggleMockMode, isMockMode, setMockMode } from '../config/mockMode';
 import { UserProfile, StorageSettings } from '../types';
 import { playClick, playSuccess } from '../utils/sound';
-import { Card, Badge, GRADIENT_TEXT, InlineErrorBanner } from './Shared';
+import { Card, Badge, InlineErrorBanner } from './Shared';
 import { StripeConnectService } from '../services/stripeService';
 
 // --- VISUAL CONSTANTS ---
@@ -28,13 +28,13 @@ const InputField = ({ label, value, onChange, placeholder, type = "text", icon: 
     <div className={`group space-y-1.5 ${className}`}>
         {label && <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">{label}</label>}
         <div className="relative flex items-center">
-            {Icon && <Icon className="absolute left-4 w-4 h-4 text-slate-400 group-focus-within:text-lime-600 dark:group-focus-within:text-[#a3e635] transition-colors" />}
+            {Icon && <Icon className="absolute left-4 w-4 h-4 text-slate-400 group-focus-within:text-lime-600 dark:group-focus-within:text-[#bef264] transition-colors" />}
             <input
                 type={type}
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
-                className={`w-full h-12 ${Icon ? 'pl-11 pr-4' : 'px-4'} bg-white dark:bg-[#18181b] border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#a3e635] outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 hover:border-slate-300 dark:hover:border-white/20`}
+                className={`w-full h-12 ${Icon ? 'pl-11 pr-4' : 'px-4'} bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 hover:border-slate-300 dark:hover:border-white/10`}
             />
         </div>
     </div>
@@ -44,6 +44,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
     // State
     const [formData, setFormData] = useState({
         name: user.name || '',
+        email: user.email || '',
         role: user.role || '',
         subdomain: user.subdomain || '',
         website: '',
@@ -72,11 +73,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
         supportEmail: ''
     });
 
-    // Storage Settings State (production posture: platform-managed storage only)
-    const [storageSettings] = useState<StorageSettings>(user.storageSettings || { mode: 'platform' });
+    // Storage Settings State (links-only BYOS; no secrets stored client-side)
+    const [storageSettings, setStorageSettings] = useState<StorageSettings>(user.storageSettings || { mode: 'platform' });
 
     // Shared error surface (used by payments + storage messaging)
     const [connectionError, setConnectionError] = useState<string | null>(null);
+    const [driveValidationUrl, setDriveValidationUrl] = useState('');
 
     // Stripe Connect State
     const [stripeConnected, setStripeConnected] = useState(user.stripeConnect?.connected || false);
@@ -120,6 +122,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
         // Prepare updates for the global user state
         const updates: Partial<UserProfile> = {
             name: formData.name,
+            email: formData.email,
             role: formData.role,
             subdomain: formData.subdomain,
             avatar: avatarPreview,
@@ -156,9 +159,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
             aria-checked={checked}
             aria-label={label}
             onClick={() => { playClick(); onChange(!checked); }}
-            className={`w-10 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-lime-500 ${checked ? 'bg-lime-600 dark:bg-[#a3e635]' : 'bg-slate-200 dark:bg-white/10'}`}
+            className={`w-10 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-lime-500 ${checked ? 'bg-lime-600 dark:bg-[#bef264]' : 'bg-slate-200 dark:bg-white/10'}`}
         >
-            <div className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow-sm transition-all duration-300 bg-white dark:bg-black ${checked ? 'translate-x-4' : ''}`} />
+            <div
+                className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow-sm transition-all duration-300 ${checked ? 'translate-x-4' : ''} ${
+                    checked ? 'bg-white dark:bg-zinc-950' : 'bg-white dark:bg-zinc-500'
+                }`}
+            />
         </button>
     );
 
@@ -166,7 +173,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
         <button
             onClick={() => { playClick(); setActiveTab(id); }}
             className={`
-                w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-4 group
+                w-full text-left p-3 rounded-2xl transition-all duration-200 flex items-center gap-4 group
                 ${activeTab === id
                     ? 'bg-white dark:bg-white/10 shadow-sm ring-1 ring-slate-200 dark:ring-white/5'
                     : 'hover:bg-slate-100 dark:hover:bg-white/5'
@@ -174,9 +181,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
             `}
         >
             <div className={`
-                w-10 h-10 rounded-lg flex items-center justify-center transition-colors
+                w-10 h-10 rounded-2xl flex items-center justify-center transition-colors
                 ${activeTab === id
-                    ? 'bg-lime-600 dark:bg-[#a3e635] text-white dark:text-black'
+                    ? 'bg-lime-600 dark:bg-[#bef264] text-white dark:text-zinc-950'
                     : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'
                 }
             `}>
@@ -203,21 +210,21 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
             <div className="flex flex-col gap-6 border-b border-slate-200 dark:border-white/5 pb-8">
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                     <div>
-                        <h2 className={`text-4xl font-sans tracking-tight font-medium tracking-tight ${GRADIENT_TEXT}`}>
-                            Your <span className="text-lime-600 dark:text-[#a3e635]">Settings</span>
+                        <h2 className="text-4xl font-sans tracking-tight font-medium tracking-tight text-slate-900 dark:text-white">
+                            Your Settings
                         </h2>
-                        <p className="text-slate-500 dark:text-slate-400 text-base mt-1">
+                        <p className="text-zinc-500 dark:text-zinc-400 text-base mt-1">
                             Manage your profile, billing, and system preferences.
                         </p>
                     </div>
                     <div>
                         <button
                             onClick={handleSave}
-                            className={`
-                                h-12 px-8 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 transition-all hover:scale-105 shadow-lg
+                                className={`
+                                h-12 px-8 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 transition-all hover:scale-105 shadow-lg
                                 ${isSaving
                                     ? 'bg-slate-100 dark:bg-white/10 text-slate-400 cursor-wait'
-                                    : 'bg-slate-900 text-white dark:bg-white dark:text-black hover:bg-black dark:hover:bg-slate-200'
+                                    : 'bg-slate-800 text-white dark:bg-white dark:text-zinc-950 hover:bg-slate-900 dark:hover:bg-slate-200'
                                 }
                             `}
                         >
@@ -234,7 +241,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                 <div className="lg:w-80 shrink-0 flex flex-col gap-6">
 
                     {/* Profile "Passport" Card */}
-                    <div className="p-6 bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/5 rounded-[2rem] shadow-sm relative overflow-hidden group">
+                    <div className="p-6 bg-white dark:bg-charcoal border border-slate-200 dark:border-white/5 rounded-[2rem] shadow-sm relative overflow-hidden group">
                         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: NOISE_SVG }}></div>
                         <div className="absolute top-0 right-0 p-6 opacity-50">
                             <Verified className="w-24 h-24 text-slate-100 dark:text-white/5 -rotate-12" />
@@ -242,7 +249,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
 
                         <div className="relative z-10 flex flex-col items-center text-center">
                             <div className="relative mb-4">
-                                <div className="w-20 h-20 rounded-full p-1 bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/10 shadow-lg">
+                                <div className="w-20 h-20 rounded-full p-1 bg-white dark:bg-charcoal border border-slate-200 dark:border-white/10 shadow-lg">
                                     {avatarPreview ? (
                                         <img src={avatarPreview} className="w-full h-full rounded-full object-cover" alt="Profile" />
                                     ) : (
@@ -266,9 +273,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                 />
                             </div>
                             <h3 className="font-sans tracking-tight text-xl font-bold text-slate-900 dark:text-white">{formData.name}</h3>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-4">{user.email}</p>
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-lime-50 dark:bg-[#a3e635]/10 border border-lime-100 dark:border-[#a3e635]/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-lime-700 dark:text-[#a3e635]">
-                                <Crown className="w-3 h-3" /> Pro Plan
+                            <p className="text-xs text-slate-700 dark:text-slate-200 font-semibold">{formData.role || ' '}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-4">{formData.email}</p>
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#ecfccb] dark:bg-[#bef264]/16 border border-[#bef264] dark:border-[#bef264]/45 rounded-full text-[10px] font-bold uppercase tracking-wider text-[#65a30d] dark:text-[#bef264]">
+                                <Crown className="w-3 h-3 text-[#65a30d] dark:text-[#bef264]" /> Pro Plan
                             </div>
                         </div>
                     </div>
@@ -310,7 +318,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                     </div>
 
                     {/* Quick Toggles */}
-                    <div className="p-4 bg-white dark:bg-[#23232e] border border-slate-200 dark:border-white/5 rounded-2xl shadow-sm space-y-4">
+                    <div className="p-4 bg-white dark:bg-charcoal border border-slate-200 dark:border-white/5 rounded-2xl shadow-sm space-y-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
                                 <Shield className="w-4 h-4" />
@@ -347,14 +355,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
 
                     {/* Inner Header Title - Updates based on Tab */}
                     <div className="mb-8">
-                        <h3 className={`text-2xl font-sans tracking-tight font-medium tracking-tight ${GRADIENT_TEXT}`}>
+                        <h3 className="text-2xl font-sans tracking-tight font-medium tracking-tight text-slate-900 dark:text-white">
                             {activeTab === 'profile' && 'Profile Settings'}
                             {activeTab === 'payments' && 'Financial Stack'}
                             {activeTab === 'agency' && 'Agency Configuration'}
                             {activeTab === 'storage' && 'Storage'}
                             {activeTab === 'developer' && 'Developer Tools'}
                         </h3>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                        <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
                             {activeTab === 'profile' && 'Update your public profile and personal details.'}
                             {activeTab === 'payments' && 'Manage payout methods and Stripe integration.'}
                             {activeTab === 'agency' && 'Configure white-labeling and domain settings.'}
@@ -371,99 +379,111 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                             <>
                                 <Card>
                                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-white/5">
-                                        <User className="w-5 h-5 text-lime-600 dark:text-[#a3e635]" />
+                                        <User className="w-5 h-5 text-lime-600 dark:text-[#bef264]" />
                                         <h3 className="font-sans tracking-tight text-lg text-slate-900 dark:text-white">Basic Information</h3>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <InputField
                                             label="Full Name"
                                             value={formData.name}
                                             onChange={handleNameChange}
                                             placeholder="e.g. Alex Smith"
+                                            icon={User}
+                                        />
+                                        <InputField
+                                            label="Email"
+                                            value={formData.email}
+                                            onChange={(e: any) => handleChange('email', e.target.value)}
+                                            placeholder="e.g. alex@studio.com"
+                                            type="email"
+                                            icon={Mail}
                                         />
                                         <InputField
                                             label="Role / Title"
                                             value={formData.role}
                                             onChange={(e: any) => handleChange('role', e.target.value)}
                                             placeholder="e.g. Senior Product Designer"
+                                            icon={Fingerprint}
                                         />
                                     </div>
                                 </Card>
 
-                                <Card className="group relative overflow-hidden !bg-slate-900 dark:!bg-[#0f0f15] border-none" noPadding>
+                                <Card className="hf-no-glow group relative overflow-hidden !bg-[#12131b] border-none shadow-[0_20px_60px_-24px_rgba(15,23,42,0.45)] dark:shadow-[0_24px_70px_-26px_rgba(0,0,0,0.65)]" noPadding>
                                     <div className="absolute inset-0 z-0">
                                         <img
                                             src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800&auto=format&fit=crop&q=60"
-                                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 grayscale opacity-40 mix-blend-overlay"
+                                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-70"
                                             alt="Office"
+                                            loading="lazy"
                                         />
-                                        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/90 to-transparent dark:from-black dark:via-black/90" />
-                                        <div className="absolute inset-0 opacity-[0.1] pointer-events-none mix-blend-overlay" style={{ backgroundImage: NOISE_SVG }}></div>
+                                        <div className="absolute inset-0 bg-gradient-to-r from-[#081018]/55 via-[#0d111a]/30 to-[#112311]/20" />
+                                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(190,242,100,0.18)_0%,_rgba(190,242,100,0)_38%)]" />
+                                        <div className="absolute inset-0 opacity-[0.1] pointer-events-none mix-blend-soft-light" style={{ backgroundImage: NOISE_SVG }}></div>
                                     </div>
 
                                     <div className="p-6 relative z-10">
                                         <div className="flex justify-between items-start mb-5">
                                             <div>
                                                 <div className="flex items-center gap-2 mb-1.5">
-                                                    <Globe className="w-4 h-4 text-lime-400" />
-                                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-lime-400">Public Portal</span>
+                                                    <Globe className="w-4 h-4 text-[#bef264]" />
+                                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#d9f99d]">Public Portal</span>
                                                 </div>
                                                 <h3 className="font-sans tracking-tight text-xl text-white">Client Gateway</h3>
-                                                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed max-w-lg">
+                                                <p className="text-[11px] text-slate-200/85 mt-1 leading-relaxed max-w-lg">
                                                     This is the link your clients visit to view their project vault, preview deliverables, and complete payment. Share this URL after creating a project.
                                                 </p>
                                             </div>
-                                            <button aria-label="Open Public Portal" className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors text-white" title="Preview your client portal">
+                                            <button aria-label="Open Public Portal" className="p-2 bg-[#bef264]/20 rounded-xl hover:bg-[#bef264]/28 transition-colors text-[#d9f99d] border border-[#d9f99d]/45 shadow-[0_0_0_1px_rgba(190,242,100,0.08)]" title="Preview your client portal">
                                                 <ExternalLink className="w-4 h-4" />
                                             </button>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <div className="space-y-1.5">
-                                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Portal Subdomain</label>
-                                                <div className="flex items-center bg-black/30 border border-white/10 rounded-xl px-4 py-1 focus-within:border-lime-500/50 transition-colors">
-                                                    <span className="text-sm font-mono text-slate-500 mr-1">https://</span>
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Portal Subdomain</label>
+                                                <div className="flex items-center rounded-2xl px-4 py-1 bg-white/12 border border-white/18 backdrop-blur-xl shadow-[0_18px_40px_-28px_rgba(0,0,0,0.6)] focus-within:border-[#d9f99d]/55 focus-within:bg-white/16 transition-all">
+                                                    <span className="text-sm font-mono text-slate-300/70 mr-1">https://</span>
                                                     <input
                                                         value={formData.subdomain}
                                                         onChange={(e) => handleChange('subdomain', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                                                        className="bg-transparent flex-1 text-white font-bold outline-none placeholder:text-slate-600 h-10"
+                                                        className="bg-transparent flex-1 text-white font-semibold outline-none placeholder:text-slate-400/55 h-10"
                                                         placeholder="brand"
                                                     />
-                                                    <div className="pl-2 text-xs font-mono text-slate-500 border-l border-white/10 ml-2 py-1">
-                                                        .heartflair.com
+                                                    <div className="pl-2 text-xs font-mono text-slate-300/70 border-l border-white/12 ml-2 py-1">
+                                                        .heartifact.com
                                                     </div>
                                                 </div>
-                                                <p className="text-[10px] text-slate-500 pl-1">Your clients will access deliverables at this address</p>
+                                                <p className="text-[10px] text-slate-300/60 pl-1">Your clients will access deliverables at this address</p>
                                             </div>
 
                                             <div className="space-y-1.5">
-                                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Exit Redirect URL</label>
-                                                <div className="flex items-center bg-black/30 border border-white/10 rounded-xl px-4 py-1 focus-within:border-lime-500/50 transition-colors">
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Exit Redirect URL</label>
+                                                <div className="flex items-center rounded-2xl px-4 py-1 bg-white/12 border border-white/18 backdrop-blur-xl shadow-[0_18px_40px_-28px_rgba(0,0,0,0.6)] focus-within:border-[#d9f99d]/55 focus-within:bg-white/16 transition-all">
                                                     <input
                                                         value={formData.website}
                                                         onChange={(e) => handleChange('website', e.target.value)}
-                                                        className="bg-transparent flex-1 text-white text-sm outline-none placeholder:text-slate-600 h-10"
+                                                        className="bg-transparent flex-1 text-white text-sm font-medium outline-none placeholder:text-slate-400/55 h-10"
                                                         placeholder="https://yourportfolio.com"
                                                     />
                                                 </div>
-                                                <p className="text-[10px] text-slate-500 pl-1">Where clients go when they leave the vault (e.g. your website)</p>
+                                                <p className="text-[10px] text-slate-300/60 pl-1">Where clients go when they leave the vault (e.g. your website)</p>
                                             </div>
                                         </div>
 
                                         {/* Visual flow hint */}
-                                        <div className="mt-5 pt-4 border-t border-white/5 flex items-center gap-6 text-[10px] text-slate-500 uppercase tracking-wider font-bold">
+                                        <div className="mt-5 pt-4 border-t border-white/10 flex items-center gap-6 text-[10px] text-slate-300/70 uppercase tracking-wider font-bold">
                                             <div className="flex items-center gap-1.5">
-                                                <div className="w-5 h-5 rounded bg-white/10 flex items-center justify-center text-lime-400"><Globe className="w-3 h-3" /></div>
+                                                <div className="w-5 h-5 rounded bg-white/12 flex items-center justify-center text-[#bef264]"><Globe className="w-3 h-3" /></div>
                                                 <span>Client opens link</span>
                                             </div>
-                                            <ChevronRight className="w-3 h-3 text-white/20" />
+                                            <ChevronRight className="w-3 h-3 text-[#bef264]/60" />
                                             <div className="flex items-center gap-1.5">
-                                                <div className="w-5 h-5 rounded bg-white/10 flex items-center justify-center text-white/60"><Eye className="w-3 h-3" /></div>
+                                                <div className="w-5 h-5 rounded bg-white/12 flex items-center justify-center text-[#bef264]"><Eye className="w-3 h-3" /></div>
                                                 <span>Reviews vault</span>
                                             </div>
-                                            <ChevronRight className="w-3 h-3 text-white/20" />
+                                            <ChevronRight className="w-3 h-3 text-[#bef264]/60" />
                                             <div className="flex items-center gap-1.5">
-                                                <div className="w-5 h-5 rounded bg-white/10 flex items-center justify-center text-white/60"><CreditCard className="w-3 h-3" /></div>
+                                                <div className="w-5 h-5 rounded bg-white/12 flex items-center justify-center text-[#bef264]"><CreditCard className="w-3 h-3" /></div>
                                                 <span>Pays & unlocks</span>
                                             </div>
                                         </div>
@@ -490,7 +510,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                 </div>
                                             </div>
                                             {stripeConnected && (
-                                                <div className="px-3 py-1 bg-lime-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-lime-600 dark:text-[#a3e635] border border-lime-400/20 flex items-center gap-1.5">
+                                                <div className="px-3 py-1 bg-lime-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-lime-600 dark:text-[#bef264] border border-lime-400/20 flex items-center gap-1.5">
                                                     <div className="w-2 h-2 bg-lime-500 rounded-full animate-pulse" />
                                                     Connected
                                                 </div>
@@ -551,7 +571,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                                 }
                                                             }}
                                                             disabled={stripeConnecting}
-                                                            className={`px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest transition-all ${stripeConnecting
+                                                            className={`px-6 py-2.5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all ${stripeConnecting
                                                                 ? 'bg-white/20 text-white/50 cursor-wait'
                                                                 : 'bg-white text-[#635BFF] hover:bg-slate-100 hover:scale-[1.03] shadow-md shadow-white/15'
                                                                 }`}
@@ -623,7 +643,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                                         }
                                                                     });
                                                                 }}
-                                                                className="ml-3 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-red-500/20 text-white/60 hover:text-red-300 text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5"
+                                                                className="ml-3 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-lime-500/20 text-white/70 hover:text-lime-300 text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 border border-white/10 hover:border-lime-400/30"
                                                             >
                                                                 <Unlink className="w-3 h-3" />
                                                                 Disconnect
@@ -673,7 +693,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
 
                                     <Card>
                                         <div className="flex items-center gap-3 mb-6">
-                                            <div className="p-2 rounded-lg bg-lime-500/10 text-lime-600 dark:text-[#a3e635]"><Banknote className="w-5 h-5" /></div>
+                                            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400"><Banknote className="w-5 h-5" /></div>
                                             <h3 className="font-bold text-slate-900 dark:text-white">Bank Wire</h3>
                                         </div>
                                         <div className="space-y-2">
@@ -682,7 +702,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                 value={formData.bankInfo}
                                                 onChange={(e) => handleChange('bankInfo', e.target.value)}
                                                 placeholder="Bank Name, SWIFT, IBAN..."
-                                                className="w-full p-4 bg-white dark:bg-[#18181b] border border-slate-200 dark:border-white/10 rounded-xl focus:border-lime-600 dark:focus:border-[#a3e635] outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 min-h-[140px] resize-none hover:border-slate-300 dark:hover:border-white/20"
+                                                className="w-full p-4 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 min-h-[140px] resize-none hover:border-slate-300 dark:hover:border-white/10"
                                             />
                                         </div>
                                     </Card>
@@ -703,7 +723,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                     <h3 className="font-sans tracking-tight text-lg text-slate-900 dark:text-white">Whitelabel Domain</h3>
                                                 </div>
                                                 <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-1 pl-[34px]">
-                                                    Replace the default Heartflair URL with your own custom domain. Clients will see your brand only.
+                                                    Replace the default Heartifact URL with your own custom domain. Clients will see your brand only.
                                                 </p>
                                             </div>
                                             <Badge color="lime">Agency</Badge>
@@ -721,7 +741,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                 />
                                             </div>
                                             <div className="flex items-end">
-                                                <button className="h-12 px-5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black font-bold uppercase tracking-wider text-xs hover:opacity-90 transition-opacity">
+                                                <button className="h-12 px-5 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-zinc-950 font-bold uppercase tracking-wider text-xs hover:opacity-90 transition-opacity">
                                                     Verify
                                                 </button>
                                             </div>
@@ -733,13 +753,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                 <ChevronRight className="w-3.5 h-3.5 transition-transform group-open/dns:rotate-90" />
                                                 DNS Setup Instructions
                                             </summary>
-                                            <div className="mt-3 bg-slate-50 dark:bg-[#18181b] rounded-xl p-4 border border-slate-100 dark:border-white/5 font-mono text-xs">
+                                            <div className="mt-3 bg-slate-50 dark:bg-white/[0.04] rounded-xl p-4 border border-slate-100 dark:border-white/[0.06] font-mono text-xs">
                                                 <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-3 font-sans">Add this CNAME record in your domain registrar&apos;s DNS settings:</p>
                                                 <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-slate-600 dark:text-slate-300">
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Host</span>
                                                     <span className="text-slate-900 dark:text-white font-bold">portal</span>
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Value</span>
-                                                    <span className="text-lime-600 dark:text-[#a3e635]">cname.heartflair.com</span>
+                                                    <span className="text-lime-600 dark:text-[#bef264]">cname.heartifact.com</span>
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Type</span>
                                                     <span>CNAME</span>
                                                 </div>
@@ -749,7 +769,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         {/* What this does — visual hint */}
                                         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5 flex items-center gap-3 text-[10px] text-slate-400 dark:text-slate-500">
                                             <Shield className="w-4 h-4 shrink-0" />
-                                            <span className="leading-relaxed">Instead of <span className="font-mono text-slate-500 dark:text-slate-400">brand.heartflair.com</span>, your clients see <span className="font-mono font-bold text-slate-700 dark:text-white">{agencySettings.cname || 'portal.youragency.com'}</span></span>
+                                            <span className="leading-relaxed">Instead of <span className="font-mono text-slate-500 dark:text-slate-400">brand.heartifact.com</span>, your clients see <span className="font-mono font-bold text-slate-700 dark:text-white">{agencySettings.cname || 'portal.youragency.com'}</span></span>
                                         </div>
                                     </div>
                                 </Card>
@@ -775,7 +795,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-lime-600/10 text-lime-600 dark:bg-[#a3e635]/10 dark:text-[#a3e635] flex items-center justify-center"><Verified className="w-4 h-4" /></div>
+                                                    <div className="w-8 h-8 rounded-lg bg-lime-600/10 text-lime-600 dark:bg-[#bef264]/10 dark:text-[#bef264] flex items-center justify-center"><Verified className="w-4 h-4" /></div>
                                                     <div>
                                                         <p className="font-bold text-sm text-slate-900 dark:text-white">Remove Logo</p>
                                                         <p className="text-[10px] text-slate-500">Hide "Powered By"</p>
@@ -804,7 +824,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                             </div>
                                         </div>
 
-                                        <div className="p-6 bg-slate-50 dark:bg-[#18181b] rounded-2xl border border-slate-100 dark:border-white/5 space-y-6">
+                                        <div className="hf-surface p-6 bg-white dark:bg-charcoal rounded-[2rem] border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md overflow-hidden space-y-6">
                                             <div className="flex items-start justify-between gap-4">
                                                 <div>
                                                     <p className="text-sm font-bold text-slate-900 dark:text-white">Demo / Mock Mode</p>
@@ -824,8 +844,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                             </div>
 
                                             <div className={`p-3 rounded-xl flex items-start gap-3 border ${demoMode ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' : 'bg-lime-50 dark:bg-lime-500/10 border-lime-200 dark:border-lime-500/20'}`}>
-                                                <FlaskConical className={`w-4 h-4 mt-0.5 shrink-0 ${demoMode ? 'text-amber-600 dark:text-amber-400' : 'text-lime-600 dark:text-[#a3e635]'}`} />
-                                                <p className={`text-[11px] leading-relaxed font-medium ${demoMode ? 'text-amber-800 dark:text-amber-200' : 'text-lime-800 dark:text-lime-200'}`}>
+                                                <FlaskConical className={`w-4 h-4 mt-0.5 shrink-0 ${demoMode ? 'text-amber-600 dark:text-amber-400' : 'text-lime-600 dark:text-[#bef264]'}`} />
+                                                <p className={`text-[11px] leading-relaxed font-medium ${demoMode ? 'text-amber-800 dark:text-amber-200' : 'text-lime-800 dark:text-[#bef264]'}`}>
                                                     {demoMode
                                                         ? 'Demo mode is active. Pre-populated mock data and mock backend services are in use. File uploads and payments are simulated.'
                                                         : 'Live mode is active. The app is connected to your real Supabase backend. Sign in to load your projects.'}
@@ -833,10 +853,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                             </div>
                                         </div>
 
-                                        <div className="mt-6 p-4 bg-slate-50 dark:bg-[#18181b] rounded-2xl border border-slate-100 dark:border-white/5">
+                                        <div className="hf-surface mt-6 p-4 bg-white dark:bg-charcoal rounded-[2rem] border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md overflow-hidden">
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Runtime Info</p>
                                             <div className="space-y-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                                                <div className="flex justify-between"><span>Mode</span><span className={demoMode ? 'text-amber-500' : 'text-lime-600 dark:text-[#a3e635]'}>{demoMode ? 'DEMO' : 'LIVE'}</span></div>
+                                                <div className="flex justify-between"><span>Mode</span><span className={demoMode ? 'text-amber-500' : 'text-lime-600 dark:text-[#bef264]'}>{demoMode ? 'DEMO' : 'LIVE'}</span></div>
                                                 <div className="flex justify-between"><span>VITE_DEMO_MODE</span><span>{import.meta.env.VITE_DEMO_MODE ?? '(not set)'}</span></div>
                                                 <div className="flex justify-between"><span>Environment</span><span>{import.meta.env.MODE}</span></div>
                                                 <div className="flex justify-between"><span>Supabase</span><span>{import.meta.env.VITE_SUPABASE_URL ? '✓ configured' : '✗ missing'}</span></div>
@@ -859,41 +879,243 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                 <Card className="!p-8 relative overflow-hidden">
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-white/5">
-                                            <HardDrive className="w-5 h-5 text-lime-600 dark:text-[#a3e635]" />
+                                            <HardDrive className="w-5 h-5 text-lime-600 dark:text-[#bef264]" />
                                             <div>
                                                 <h3 className="font-sans tracking-tight text-xl text-slate-900 dark:text-white">Storage</h3>
-                                                <p className="text-xs text-slate-500">Uploads and deliveries are platform-managed in production.</p>
+                                                <p className="text-xs text-slate-500">Choose platform vault storage, or configure links-only imports.</p>
                                             </div>
                                         </div>
 
                                         <div className="space-y-4">
-                                            <div className="p-5 bg-slate-50 dark:bg-[#18181b] rounded-2xl border border-slate-100 dark:border-white/5">
-                                                <div className="flex items-start gap-3">
-                                                    <ShieldCheck className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
-                                                    <div>
-                                                        <p className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Platform Vault</p>
-                                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
-                                                            Heartflair uses server-issued presigned URLs for uploads and downloads. No S3/R2 secret keys or cloud OAuth tokens are stored in the browser or in your profile.
-                                                        </p>
-                                                        <div className="mt-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                                            <span className="px-2 py-1 rounded bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10">Mode</span>
-                                                            <span className="text-slate-600 dark:text-slate-300">{storageSettings.mode === 'platform' ? 'PLATFORM' : storageSettings.mode}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                            {connectionError && <InlineErrorBanner message={connectionError} onDismiss={() => setConnectionError(null)} />}
+
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <button
+                                                    onClick={() => { playClick(); setConnectionError(null); setStorageSettings(prev => ({ ...prev, mode: 'platform' })); }}
+                                                    className={`px-4 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all ${storageSettings.mode === 'platform' ? 'bg-lime-600 text-white dark:bg-[#bef264] dark:text-zinc-950 shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
+                                                >
+                                                    Platform Vault
+                                                </button>
+                                                <button
+                                                    onClick={() => { playClick(); setConnectionError(null); setStorageSettings(prev => ({ ...prev, mode: 'drive' })); }}
+                                                    className={`px-4 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all ${storageSettings.mode === 'drive' ? 'bg-lime-600 text-white dark:bg-[#bef264] dark:text-zinc-950 shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
+                                                >
+                                                    Cloud Drive
+                                                </button>
+                                                <button
+                                                    onClick={() => { playClick(); setConnectionError(null); setStorageSettings(prev => ({ ...prev, mode: 's3' })); }}
+                                                    className={`px-4 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all ${storageSettings.mode === 's3' ? 'bg-lime-600 text-white dark:bg-[#bef264] dark:text-zinc-950 shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
+                                                >
+                                                    S3 / R2 Bucket
+                                                </button>
                                             </div>
 
-                                            <div className="p-5 bg-white dark:bg-[#111116] rounded-2xl border border-slate-200 dark:border-white/10">
-                                                <div className="flex items-start gap-3">
-                                                    <ExternalLink className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
-                                                    <div>
-                                                        <p className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Cloud Drive Imports (Links)</p>
-                                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
-                                                            Paste share links from Google Drive, Dropbox, or OneDrive directly into a project. Folder imports and OAuth-based syncing are intentionally disabled until a fully server-side token flow is implemented.
+                                            {storageSettings.mode === 'platform' && (
+                                                <>
+                                                    <div className="hf-surface p-5 bg-white dark:bg-charcoal rounded-[2rem] border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md overflow-hidden">
+                                                        <div className="flex items-start gap-3">
+                                                            <ShieldCheck className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+                                                            <div>
+                                                                <p className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Platform Vault</p>
+                                                                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
+                                                                    Heartifact uses server-issued presigned URLs for uploads and downloads. No S3/R2 secret keys or cloud OAuth tokens are stored in the browser or in your profile.
+                                                                </p>
+                                                                <div className="mt-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                                                    <span className="px-2 py-1 rounded bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10">Mode</span>
+                                                                    <span className="text-slate-600 dark:text-slate-300">PLATFORM</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="hf-surface p-5 bg-white dark:bg-charcoal rounded-[2rem] border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md overflow-hidden">
+                                                        <div className="flex items-start gap-3">
+                                                            <ExternalLink className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+                                                            <div>
+                                                                <p className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Imports (Links)</p>
+                                                                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
+                                                                    Paste share links from Google Drive, Dropbox, OneDrive, or a public S3/R2 URL directly into a project. This is links-only: no OAuth tokens and no secret keys are stored in the browser.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            {storageSettings.mode === 'drive' && (
+                                                <div className="hf-surface p-5 bg-white dark:bg-charcoal rounded-[2rem] border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md overflow-hidden">
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <Cloud className="w-4 h-4 text-slate-500" />
+                                                            <div>
+                                                                <p className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Cloud Drive</p>
+                                                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Store labels only (no OAuth). Use share links inside projects.</p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => {
+                                                                playClick();
+                                                                const raw = driveValidationUrl.trim();
+                                                                if (!raw) {
+                                                                    setConnectionError('Paste a share link URL to validate (e.g. Drive/Dropbox/OneDrive).');
+                                                                    return;
+                                                                }
+                                                                let url: URL;
+                                                                try {
+                                                                    url = new URL(raw);
+                                                                } catch {
+                                                                    setConnectionError('That does not look like a valid URL.');
+                                                                    return;
+                                                                }
+                                                                const host = url.hostname.toLowerCase();
+                                                                const provider = storageSettings.byosDriveProvider;
+                                                                const hostOk =
+                                                                    host.includes('drive.google.com') ||
+                                                                    host.includes('docs.google.com') ||
+                                                                    host.includes('dropbox.com') ||
+                                                                    host.includes('1drv.ms') ||
+                                                                    host.includes('onedrive.live.com') ||
+                                                                    host.includes('sharepoint.com');
+                                                                if (!hostOk) {
+                                                                    setConnectionError('Unsupported host. Use a Google Drive, Dropbox, or OneDrive share link.');
+                                                                    return;
+                                                                }
+                                                                if (provider === 'google' && !(host.includes('drive.google.com') || host.includes('docs.google.com'))) {
+                                                                    setConnectionError('This link does not look like a Google Drive share link.');
+                                                                    return;
+                                                                }
+                                                                if (provider === 'dropbox' && !host.includes('dropbox.com')) {
+                                                                    setConnectionError('This link does not look like a Dropbox share link.');
+                                                                    return;
+                                                                }
+                                                                if (provider === 'onedrive' && !(host.includes('1drv.ms') || host.includes('onedrive.live.com') || host.includes('sharepoint.com'))) {
+                                                                    setConnectionError('This link does not look like a OneDrive share link.');
+                                                                    return;
+                                                                }
+                                                                setConnectionError(null);
+                                                                playSuccess();
+                                                            }}
+                                                            className="h-10 px-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-zinc-950 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity"
+                                                        >
+                                                            Validate
+                                                        </button>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">Provider</label>
+                                                            <div className="h-12 px-4 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl flex items-center">
+                                                                <select
+                                                                    value={storageSettings.byosDriveProvider || ''}
+                                                                    onChange={(e) => setStorageSettings(prev => ({ ...prev, byosDriveProvider: e.target.value as any }))}
+                                                                    className="w-full bg-transparent outline-none text-sm font-medium text-slate-900 dark:text-white"
+                                                                >
+                                                                    <option value="" disabled>Select provider</option>
+                                                                    <option value="google">Google Drive</option>
+                                                                    <option value="dropbox">Dropbox</option>
+                                                                    <option value="onedrive">OneDrive</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <InputField
+                                                            label="Account label"
+                                                            value={storageSettings.byosDriveAccountLabel || ''}
+                                                            onChange={(e: any) => setStorageSettings(prev => ({ ...prev, byosDriveAccountLabel: e.target.value }))}
+                                                            placeholder="e.g. Studio Drive"
+                                                            icon={HardDrive}
+                                                        />
+                                                        <InputField
+                                                            label="Share link URL"
+                                                            value={driveValidationUrl}
+                                                            onChange={(e: any) => setDriveValidationUrl(e.target.value)}
+                                                            placeholder="https://drive.google.com/..."
+                                                            icon={ExternalLink}
+                                                        />
+                                                    </div>
+                                                    <p className="mt-4 text-[10px] text-slate-500 dark:text-slate-400">
+                                                        Paste Drive/Dropbox/OneDrive share links into projects. We don&apos;t store OAuth tokens in your browser.
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {storageSettings.mode === 's3' && (
+                                                <div className="hf-surface p-5 bg-white dark:bg-charcoal rounded-[2rem] border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md overflow-hidden">
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <Server className="w-4 h-4 text-slate-500" />
+                                                            <div>
+                                                                <p className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">S3 / R2 (Links)</p>
+                                                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Metadata only. Use public URLs or share links inside projects.</p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => {
+                                                                playClick();
+                                                                if (!storageSettings.s3Bucket?.trim()) {
+                                                                    setConnectionError('Please add a bucket name (or switch back to Platform Vault).');
+                                                                    return;
+                                                                }
+                                                                setConnectionError(null);
+                                                                playSuccess();
+                                                            }}
+                                                            className="h-10 px-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-zinc-950 text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity"
+                                                        >
+                                                            Validate
+                                                        </button>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">Provider</label>
+                                                            <div className="h-12 px-4 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl flex items-center">
+                                                                <select
+                                                                    value={storageSettings.s3Provider || 'r2'}
+                                                                    onChange={(e) => setStorageSettings(prev => ({ ...prev, s3Provider: e.target.value as any }))}
+                                                                    className="w-full bg-transparent outline-none text-sm font-medium text-slate-900 dark:text-white"
+                                                                >
+                                                                    <option value="r2">Cloudflare R2</option>
+                                                                    <option value="aws">AWS S3</option>
+                                                                    <option value="custom">Custom S3</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <InputField
+                                                            label="Bucket name"
+                                                            value={storageSettings.s3Bucket || ''}
+                                                            onChange={(e: any) => setStorageSettings(prev => ({ ...prev, s3Bucket: e.target.value }))}
+                                                            placeholder="e.g. heartifact-vault"
+                                                            icon={Database}
+                                                        />
+                                                        <InputField
+                                                            label="Region (optional)"
+                                                            value={storageSettings.s3Region || ''}
+                                                            onChange={(e: any) => setStorageSettings(prev => ({ ...prev, s3Region: e.target.value }))}
+                                                            placeholder="e.g. us-east-1"
+                                                            icon={Globe}
+                                                        />
+                                                        <InputField
+                                                            label="Endpoint (optional)"
+                                                            value={storageSettings.s3Endpoint || ''}
+                                                            onChange={(e: any) => setStorageSettings(prev => ({ ...prev, s3Endpoint: e.target.value }))}
+                                                            placeholder="e.g. https://<account>.r2.cloudflarestorage.com"
+                                                            icon={Server}
+                                                        />
+                                                    </div>
+                                                    <div className="mt-4">
+                                                        <InputField
+                                                            label="Public base URL (optional)"
+                                                            value={storageSettings.s3PublicBaseUrl || ''}
+                                                            onChange={(e: any) => setStorageSettings(prev => ({ ...prev, s3PublicBaseUrl: e.target.value }))}
+                                                            placeholder="e.g. https://cdn.yourdomain.com/"
+                                                            icon={ExternalLink}
+                                                        />
+                                                        <p className="mt-2 text-[10px] text-slate-500 dark:text-slate-400">
+                                                            This is used for display + link generation only. No credentials are stored.
                                                         </p>
                                                     </div>
+                                                    <p className="mt-4 text-[10px] text-slate-500 dark:text-slate-400">
+                                                        Paste public S3/R2 URLs into projects. If you need private buckets, keep Platform Vault selected.
+                                                    </p>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
                                     </div>
                                 </Card>

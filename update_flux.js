@@ -53,7 +53,7 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                         <div className={\`w-10 h-10 rounded-xl flex items-center justify-center \${isDark ? "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]" : "bg-slate-900 text-white shadow-lg"}\`}>
                             <Zap className="w-6 h-6 fill-current" />
                         </div>
-                        <span className={\`\${textMain} text-xl font-bold tracking-tight\`}>Heartflair</span>
+                        <span className={\`\${textMain} text-xl font-bold tracking-tight\`}>Heartifact</span>
                     </div>
                 </div>
 

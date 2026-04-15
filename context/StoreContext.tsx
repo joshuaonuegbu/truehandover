@@ -141,6 +141,41 @@ const migrateDemoProjects = (projects: Project[]): Project[] => {
   });
 };
 
+const loadMockProjects = (): Project[] => {
+  try {
+    const stored = localStorage.getItem('th_projects');
+    const version = Number(localStorage.getItem(DEMO_SEED_VERSION_KEY) || 0);
+
+    // If version is older than current, FORCE migration from INITIAL_PROJECTS
+    // rather than migrating stale `stored` data that may not have the right shapes.
+    if (version < DEMO_SEED_VERSION) {
+      const migrated = migrateDemoProjects(INITIAL_PROJECTS);
+      try { localStorage.setItem(DEMO_SEED_VERSION_KEY, String(DEMO_SEED_VERSION)); } catch { }
+      return migrated;
+    }
+
+    return stored ? JSON.parse(stored) : migrateDemoProjects(INITIAL_PROJECTS);
+  } catch (e) {
+    console.error("Failed to load projects", e);
+    return migrateDemoProjects(INITIAL_PROJECTS);
+  }
+};
+
+const loadMockUser = (): UserProfile => {
+  try {
+    const stored = localStorage.getItem('th_user');
+    const version = Number(localStorage.getItem(DEMO_SEED_VERSION_KEY) || 0);
+    if (version < DEMO_SEED_VERSION) {
+      try { localStorage.setItem(DEMO_SEED_VERSION_KEY, String(DEMO_SEED_VERSION)); } catch { }
+      return INITIAL_USER;
+    }
+    return stored ? JSON.parse(stored) : INITIAL_USER;
+  } catch (e) {
+    console.error("Failed to load user", e);
+    return INITIAL_USER;
+  }
+};
+
 const INITIAL_USER: UserProfile = {
   id: 'u1',
   name: 'Bogdan Nikitin',
@@ -421,39 +456,12 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Lazy initialization — demo data in mock mode, empty state in production
   const [projects, setProjects] = useState<Project[]>(() => {
     if (!isMockMode()) return [];
-    try {
-      const stored = localStorage.getItem('th_projects');
-      const version = Number(localStorage.getItem(DEMO_SEED_VERSION_KEY) || 0);
-      
-      // If version is older than current, FORCE migration from INITIAL_PROJECTS
-      // rather than migrating stale `stored` data that may not have the right shapes.
-      if (version < DEMO_SEED_VERSION) {
-        const migrated = migrateDemoProjects(INITIAL_PROJECTS);
-        try { localStorage.setItem(DEMO_SEED_VERSION_KEY, String(DEMO_SEED_VERSION)); } catch { }
-        return migrated;
-      }
-      
-      return stored ? JSON.parse(stored) : migrateDemoProjects(INITIAL_PROJECTS);
-    } catch (e) {
-      console.error("Failed to load projects", e);
-      return INITIAL_PROJECTS;
-    }
+    return loadMockProjects();
   });
 
   const [user, setUser] = useState<UserProfile>(() => {
     if (!isMockMode()) return EMPTY_USER;
-    try {
-      const stored = localStorage.getItem('th_user');
-      const version = Number(localStorage.getItem(DEMO_SEED_VERSION_KEY) || 0);
-      if (version < DEMO_SEED_VERSION) {
-        try { localStorage.setItem(DEMO_SEED_VERSION_KEY, String(DEMO_SEED_VERSION)); } catch { }
-        return INITIAL_USER;
-      }
-      return stored ? JSON.parse(stored) : INITIAL_USER;
-    } catch (e) {
-      console.error("Failed to load user", e);
-      return INITIAL_USER;
-    }
+    return loadMockUser();
   });
 
   // --- SUPABASE SYNC LOGIC ---
@@ -510,10 +518,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       } else {
         // Not authenticated — use demo data in mock mode, empty state in production
         if (isMockMode()) {
-          const version = Number(localStorage.getItem(DEMO_SEED_VERSION_KEY) || 0);
-          const migrated = migrateDemoProjects(INITIAL_PROJECTS);
-          setProjects(migrated);
-          setUser(INITIAL_USER);
+          setProjects(loadMockProjects());
+          setUser(loadMockUser());
         } else {
           setProjects([]);
           setUser(EMPTY_USER);
@@ -665,10 +671,17 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const updateUser = async (updates: Partial<UserProfile>) => {
-    setUser(prev => ({ ...prev, ...updates }));
+    setUser(prev => {
+      const next = { ...prev, ...updates };
+      if (isMockMode()) {
+        try { localStorage.setItem('th_user', JSON.stringify(next)); } catch { }
+      }
+      return next;
+    });
     if (supabase && user.id && user.id !== INITIAL_USER.id) {
       // Map the frontend nesting over to the JSONB columns if needed
       await DB.updateProfile(user.id, {
+        ...(updates.email !== undefined ? { email: updates.email } : {}),
         name: updates.name,
         avatar: updates.avatar,
         role: updates.role,

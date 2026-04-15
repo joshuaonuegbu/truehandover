@@ -15,7 +15,7 @@ const EditorialIcon = ({ className }: { className?: string }) => (
     <BrandLogo className={className} />
 );
 
-// --- SECURE HANDOVER CARD (Heartflair Identity) ---
+// --- SECURE HANDOVER CARD (Heartifact Identity) ---
 const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: string | null, email: string, password: string }) => {
     const totalInputLength = email.length + password.length;
     const energyLevel = Math.min(1, totalInputLength / 28);
@@ -53,7 +53,7 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
             <div className="relative z-10 w-80 h-[28rem] transform-style-3d animate-elegant-float group">
 
                 {/* Back Plate - Structural Foundation */}
-                <div className={`absolute inset-0 w-full h-full bg-zinc-200/50 dark:bg-[#1c1c1f]/80 rounded-[3rem] shadow-2xl transform transition-all duration-1000 ease-out border-[0.5px] border-black/10 dark:border-white/10 overflow-hidden ${focusedField ? 'rotate-3 scale-[1.02] shadow-[0_30px_60px_-15px_rgba(163,230,53,0.3)]' : 'rotate-6 group-hover:rotate-3'}`} style={{ transform: focusedField ? `rotate(3deg) scale(${pulseScale.toFixed(3)})` : undefined }}>
+                <div className={`absolute inset-0 w-full h-full bg-zinc-200/50 dark:bg-[#1c1c1f]/80 rounded-[3rem] shadow-2xl transform transition-all duration-1000 ease-out border-[0.5px] border-black/10 dark:border-white/10 overflow-hidden ${focusedField ? 'rotate-3 scale-[1.02] shadow-[0_30px_60px_-15px_rgba(190, 242, 100,0.3)]' : 'rotate-6 group-hover:rotate-3'}`} style={{ transform: focusedField ? `rotate(3deg) scale(${pulseScale.toFixed(3)})` : undefined }}>
                     {/* Blurred preview grid */}
                     <div className="absolute inset-0 grid grid-cols-2 gap-1 p-4 opacity-30 dark:opacity-20">
                         <div className="rounded-xl bg-zinc-300 dark:bg-white/10" />
@@ -94,7 +94,7 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
 
                     <div className="flex-1 p-10 flex flex-col justify-between relative z-10">
                         <div className="flex justify-between items-start">
-                            <div className="w-14 h-14 rounded-2xl bg-blue-500 flex items-center justify-center shadow-[0_10px_30px_rgba(163,230,53,0.3)]">
+                            <div className="w-14 h-14 rounded-2xl bg-blue-500 flex items-center justify-center shadow-[0_10px_30px_rgba(190, 242, 100,0.3)]">
                                 <EditorialIcon className="w-7 h-7 text-black" />
                             </div>
                             <div className="px-4 py-1.5 rounded-full bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/10 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-300">
@@ -133,7 +133,7 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
                             <div className="h-[0.5px] w-full bg-zinc-200 dark:bg-white/10" />
                             <div className="flex justify-between items-end">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(163,230,53,0.5)] dark:shadow-[0_0_8px_rgba(163,230,53,0.4)]" />
+                                    <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(190, 242, 100,0.5)] dark:shadow-[0_0_8px_rgba(190, 242, 100,0.4)]" />
                                     <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">{statusLabel}</span>
                                 </div>
                                 <Activity className="w-7 h-7 text-blue-600 dark:text-blue-400" />
@@ -173,7 +173,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
     const rawReturnTo = searchParams.get('returnTo');
     const returnTo = rawReturnTo && rawReturnTo.startsWith('/') && !rawReturnTo.startsWith('//')
         ? rawReturnTo
-        : '/dashboard';
+        : '/workspace';
     const showBackButton = signInSource === 'landing' || signInSource === 'mode-switch';
 
     const handleBack = () => {
@@ -235,7 +235,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
     };
 
     return (
-        <div className="min-h-screen w-full flex bg-[#FDFDFB] dark:bg-[#121214] text-[#1a1a1a] dark:text-white transition-colors duration-1000 font-sans selection:bg-blue-200 dark:selection:bg-blue-900 overflow-hidden relative">
+        <div className="min-h-screen w-full flex bg-[#FDFDFB] dark:bg-[#121214] text-[#1a1a1a] dark:text-white transition-colors duration-1000 font-sans overflow-hidden relative">
 
             {/* Crisp film grain — visible in both modes */}
             <div className="absolute inset-0 pointer-events-none z-0 mix-blend-multiply dark:mix-blend-overlay"
@@ -274,7 +274,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                     className="absolute top-8 left-8 md:left-16 lg:left-20 cursor-pointer group flex items-center gap-3"
                 >
                     <EditorialIcon className="w-8 h-8 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
-                    <span className="font-sans tracking-tight font-bold text-xl tracking-tight hidden md:block text-black dark:text-white">HeartFlair</span>
+                    <span className="font-sans tracking-tight font-bold text-xl tracking-tight hidden md:block text-black dark:text-white">Heartifact</span>
                 </div>
 
                 {/* Theme Toggle */}
@@ -292,7 +292,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                 <div className="max-w-md w-full mx-auto pt-20 lg:pt-0 animate-slide-up">
                     <header className="mb-12">
                         <h1 className="font-sans tracking-tight text-5xl md:text-6xl font-medium tracking-tight mb-4 text-zinc-900 dark:text-white leading-[0.9]">
-                            {isSignUp ? "Create" : "Welcome"} <span className="italic text-blue-600 dark:text-blue-400">{isSignUp ? "Account." : "Back."}</span>
+                            {isSignUp ? "Create" : "Welcome"} <span className="font-serif italic text-[#bef264]">{isSignUp ? "Account." : "Back."}</span>
                         </h1>
                         <p className="text-zinc-500 dark:text-zinc-400 text-lg font-medium tracking-tight">
                             Access your secure professional workspace.
@@ -345,7 +345,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="group/btn h-14 px-10 bg-black dark:bg-blue-500 text-white dark:text-white rounded-full font-black text-[10px] uppercase tracking-[0.3em] transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-2xl shadow-black/20 dark:shadow-blue-500/10"
+                                className="group/btn h-14 px-10 bg-black dark:bg-blue-500 text-white dark:text-zinc-950 rounded-full font-black text-[10px] uppercase tracking-[0.3em] transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-2xl shadow-black/20 dark:shadow-blue-500/10"
                             >
                                 {isLoading ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -417,4 +417,3 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
         </div>
     );
 }
-

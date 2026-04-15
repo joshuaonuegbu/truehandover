@@ -1,13 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Users, TrendingUp, ArrowUpRight, ChevronRight,
-    ArrowRight, Search, SortAsc, Briefcase,
-    Clock, CheckCircle, AlertCircle, Star,
-    DollarSign, Calendar, Mail, Phone, Building2,
-    LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, Link as LinkIcon, Copy, Palette,
+    Users,
+    ArrowRight, Search,
+    Clock, AlertCircle, Star,
+    Mail, Phone, Building2,
+    ChevronDown, ChevronUp, Link as LinkIcon, Copy,     Palette,
 } from 'lucide-react';
-import { GRADIENT_TEXT } from './Shared';
+import { GRADIENT_TEXT, Card } from './Shared';
 import { useStore } from '../context/StoreContext';
 import { DB } from '../services/supabaseClient';
 import { Project } from '../types';
@@ -166,10 +166,12 @@ function ClientCard({
     client,
     brandKit,
     onSaveBrandKit,
+    className = '',
 }: {
     client: ClientSummary;
     brandKit?: { primaryColor?: string; accentColor?: string; logoUrl?: string; notes?: string };
     onSaveBrandKit: (email: string, kit: { primaryColor?: string; accentColor?: string; logoUrl?: string; notes?: string }) => Promise<void>;
+    className?: string;
 }) {
     const navigate = useNavigate();
     const [expanded, setExpanded] = useState(false);
@@ -275,7 +277,7 @@ function ClientCard({
     };
 
     return (
-        <div className="bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/5 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden hover:border-zinc-200/50 dark:hover:border-white/10 transition-all hover:shadow-lg group">
+        <Card noPadding className={className}>
             {/* Main row */}
             <div className="p-6">
                 <div className="flex items-start gap-5">
@@ -457,7 +459,7 @@ function ClientCard({
                             <button
                                 onClick={() => onSaveBrandKit(client.email, kitDraft)}
                                 disabled={!client.email}
-                                className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-600 text-white dark:bg-blue-500 border border-blue-600"
+                                className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-600 text-zinc-950 dark:bg-blue-500 dark:text-zinc-950 border border-blue-600"
                             >
                                 Save Kit
                             </button>
@@ -485,35 +487,7 @@ function ClientCard({
                     ))}
                 </div>
             )}
-        </div>
-    );
-}
-
-// â”€â”€â”€ Summary stat card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function StatCard({ icon: Icon, label, value, sub, color = 'lime' }: {
-    icon: React.ElementType;
-    label: string;
-    value: string;
-    sub?: string;
-    color?: 'lime' | 'amber' | 'blue' | 'slate';
-}) {
-    const colorMap = {
-        lime: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
-        amber: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400',
-        blue: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
-        slate: 'bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400',
-    };
-    return (
-        <div className="bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/5 shadow-sm dark:shadow-md rounded-[2rem] p-5 flex items-center gap-4">
-            <div className={`p-3 rounded-xl ${colorMap[color]}`}>
-                <Icon className="w-5 h-5" />
-            </div>
-            <div>
-                <div className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">{label}</div>
-                <div className="font-sans tracking-tight text-2xl font-medium text-zinc-900 dark:text-white leading-none">{value}</div>
-                {sub && <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1">{sub}</div>}
-            </div>
-        </div>
+        </Card>
     );
 }
 
@@ -578,80 +552,119 @@ function useClientRolodexState() {
 export const ClientRolodexContent: React.FC = () => {
     const navigate = useNavigate();
     const { clients, totalLTV, totalPending, topClient, nudgeCount, filtered, search, setSearch, sortBy, setSortBy, saveBrandKit, user } = useClientRolodexState();
+    const silverPlus = clients.filter(c => c.ltv >= 1000).length;
 
     return (
-        <div className="space-y-6 animate-fade-in pb-12">
-            {/* Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard icon={DollarSign} label="Total LTV" value={fmtCurrency(totalLTV)} sub="Across all paid projects" color="lime" />
-                <StatCard icon={Users} label="Total Clients" value={String(clients.length)} sub={`${clients.filter(c => c.ltv >= 1000).length} Silver tier or above`} color="blue" />
-                <StatCard icon={TrendingUp} label="Top Client" value={topClient ? fmtCurrency(topClient.ltv) : '—'} sub={topClient?.name} color="amber" />
-                <StatCard icon={AlertCircle} label="Need Attention" value={String(nudgeCount)} sub={nudgeCount > 0 ? 'Awaiting payment' : 'All clients up to date'} color={nudgeCount > 0 ? 'amber' : 'slate'} />
+        <div className="space-y-6 animate-fade-in pb-16">
+            <div className="relative overflow-hidden hf-surface bg-white dark:bg-charcoal rounded-[2rem] border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md bg-gradient-to-br from-white via-white to-zinc-50/95 dark:from-charcoal dark:via-charcoal dark:to-[#18181f]">
+                <div className="absolute left-0 top-5 bottom-5 w-1 rounded-full bg-gradient-to-b from-lime-500 to-brand dark:from-[#bef264] dark:to-[#84cc16] opacity-90" aria-hidden />
+                <div className="px-6 py-7 sm:px-9 sm:py-8 pl-8 sm:pl-10">
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                        <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
+                            <span className="w-2 h-2 rounded-full bg-lime-500 dark:bg-[#bef264] shadow-[0_0_10px_rgba(101,163,13,0.45)] dark:shadow-[0_0_12px_rgba(190,242,100,0.35)]" />
+                            Directory
+                        </span>
+                        {clients.length > 0 && (
+                            <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-zinc-100/90 dark:bg-white/[0.06] text-zinc-600 dark:text-zinc-300 border border-zinc-200/70 dark:border-white/[0.08]">
+                                {clients.length} contact{clients.length !== 1 ? 's' : ''}
+                            </span>
+                        )}
+                    </div>
+                    <h2 className="font-serif tracking-tight text-3xl md:text-4xl font-medium text-zinc-900 dark:text-white">
+                        Client roster
+                    </h2>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-2xl leading-relaxed">
+                        Lifetime value, open invoices, and portal tools — one row per contact. Search below, then sort by LTV, name, projects, or recency. Expand a row for reminders and per-client brand kits.
+                    </p>
+                </div>
             </div>
 
-            {/* Pending callout */}
+            <div className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] rounded-[2rem] shadow-sm dark:shadow-md grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 divide-zinc-200 dark:divide-white/[0.06] lg:divide-x overflow-hidden">
+                <div className="p-5 sm:p-6 bg-lime-500/[0.06] dark:bg-[#bef264]/[0.06]">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-lime-700 dark:text-[#bef264] mb-1">Portfolio LTV</p>
+                    <p className={`font-sans tracking-tight text-2xl font-medium ${GRADIENT_TEXT}`}>{fmtCurrency(totalLTV)}</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Paid & completed work</p>
+                </div>
+                <div className="p-5 sm:p-6">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Contacts</p>
+                    <p className="font-sans tracking-tight text-2xl font-medium text-zinc-900 dark:text-white">{clients.length}</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{silverPlus} silver+ tier</p>
+                </div>
+                <div className="p-5 sm:p-6">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Top relationship</p>
+                    <p className="font-sans tracking-tight text-xl font-medium text-zinc-900 dark:text-white truncate">{topClient ? fmtCurrency(topClient.ltv) : '—'}</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 truncate">{topClient?.name || 'Add projects to rank clients'}</p>
+                </div>
+                <div className="p-5 sm:p-6">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Needs nudge</p>
+                    <p className="font-sans tracking-tight text-2xl font-medium text-zinc-900 dark:text-white">{nudgeCount}</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{nudgeCount > 0 ? 'Awaiting payment' : 'All clear'}</p>
+                </div>
+            </div>
+
             {totalPending > 0 && (
-                <div className="flex items-center gap-4 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700/30 rounded-2xl">
-                    <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 shrink-0">
-                        <Clock className="w-5 h-5" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-bold text-amber-800 dark:text-amber-300">
-                            {fmtCurrency(totalPending)} outstanding across {nudgeCount} client{nudgeCount !== 1 ? 's' : ''}
-                        </p>
-                        <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
-                            Expand a client card below to send a payment reminder.
-                        </p>
-                    </div>
+                <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-2xl border border-amber-200/80 dark:border-amber-600/25 bg-amber-50/90 dark:bg-amber-950/20 text-sm">
+                    <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span className="font-bold text-amber-900 dark:text-amber-200">
+                        {fmtCurrency(totalPending)} open
+                    </span>
+                    <span className="text-amber-800/90 dark:text-amber-300/90">across {nudgeCount} client{nudgeCount !== 1 ? 's' : ''} — expand a row to send a reminder.</span>
                 </div>
             )}
 
-            {/* Controls */}
-            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-                <div className="relative w-full sm:max-w-xs group">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-white dark:bg-charcoal p-2 rounded-[2rem] border border-zinc-200 dark:border-white/[0.06]">
+                <div className="relative w-full sm:flex-1 group min-w-0">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
                     <input
                         type="text"
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        placeholder="Search clients…"
-                        className="w-full h-11 pl-11 pr-4 rounded-xl bg-white dark:bg-[#1a1a20] border border-zinc-200/50 dark:border-white/10 text-sm focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors placeholder:text-zinc-400"
+                        placeholder="Search name, email, or company…"
+                        className="w-full h-12 pl-11 pr-4 rounded-3xl bg-transparent text-sm outline-none transition-all placeholder:text-zinc-500 focus:bg-white dark:focus:bg-white/5"
                     />
                 </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hidden sm:block">Sort:</span>
+                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 pl-1 pr-2 sm:shrink-0">
                     {(['ltv', 'name', 'projects', 'recent'] as const).map(key => (
-                        <button key={key} onClick={() => setSortBy(key)} className={`px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${sortBy === key ? 'bg-blue-600 text-white dark:bg-blue-500 shadow-sm' : 'bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:border-zinc-200/50 dark:hover:border-white/20'}`}>
-                            {key === 'ltv' ? 'LTV' : key === 'recent' ? 'Recent' : key === 'projects' ? '# Projects' : 'Name'}
+                        <button
+                            key={key}
+                            type="button"
+                            onClick={() => { playClick(); setSortBy(key); }}
+                            className={`px-4 py-2.5 rounded-3xl text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors ${sortBy === key ? 'bg-white dark:bg-white/10 shadow-sm text-zinc-900 dark:text-white ring-1 ring-lime-500/25 dark:ring-[#bef264]/35' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`}
+                        >
+                            {key === 'ltv' ? 'LTV' : key === 'recent' ? 'Recent' : key === 'projects' ? 'Projects' : 'Name'}
                         </button>
                     ))}
                 </div>
             </div>
 
-            {/* Client list */}
             {filtered.length === 0 ? (
-                <div className="py-24 flex flex-col items-center justify-center opacity-50">
+                <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 py-20 px-6 text-center bg-white dark:bg-charcoal">
                     {search ? (
                         <>
-                            <Search className="w-10 h-10 mb-4 stroke-1" />
-                            <p className="font-sans tracking-tight text-xl italic">No clients matched "{search}"</p>
+                            <Search className="w-10 h-10 mx-auto mb-4 text-zinc-300 dark:text-zinc-600" />
+                            <p className="font-sans tracking-tight text-lg text-zinc-900 dark:text-white">No matches for &ldquo;{search}&rdquo;</p>
+                            <p className="text-sm text-zinc-500 mt-2">Try a shorter query or clear filters.</p>
+                            <button type="button" onClick={() => { playClick(); setSearch(''); }} className="mt-6 text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 hover:underline">
+                                Clear search
+                            </button>
                         </>
                     ) : (
                         <>
-                            <Users className="w-12 h-12 mb-4 stroke-1" />
-                            <p className="font-sans tracking-tight text-xl italic">No clients yet.</p>
-                            <p className="text-sm text-zinc-500 mt-2">Create your first project to see clients here.</p>
-                            <button onClick={() => navigate('/create')} className="mt-6 px-6 py-3 rounded-xl bg-blue-600 text-white dark:bg-blue-500 font-bold text-sm uppercase tracking-wider hover:scale-105 transition-transform">
-                                Create Project
+                            <Users className="w-12 h-12 mx-auto mb-4 text-zinc-300 dark:text-zinc-600" />
+                            <p className="font-sans tracking-tight text-lg text-zinc-900 dark:text-white">No clients yet</p>
+                            <p className="text-sm text-zinc-500 mt-2 max-w-sm mx-auto">When you create projects with client details, they consolidate here automatically.</p>
+                            <button type="button" onClick={() => { playClick(); navigate('/create'); }} className="mt-8 px-6 py-3 rounded-xl bg-zinc-900 dark:bg-blue-500 text-white dark:text-zinc-950 text-xs font-bold uppercase tracking-wider">
+                                Create project
                             </button>
                         </>
                     )}
                 </div>
             ) : (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3">
                     {filtered.map(client => (
                         <ClientCard
                             key={client.email || client.name}
+                            className="!rounded-[2rem] shadow-sm"
                             client={client}
                             brandKit={user.agencySettings?.brandKits?.[(client.email || '').toLowerCase()]}
                             onSaveBrandKit={saveBrandKit}
@@ -662,4 +675,3 @@ export const ClientRolodexContent: React.FC = () => {
         </div>
     );
 };
-

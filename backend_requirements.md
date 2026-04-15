@@ -1,6 +1,6 @@
-# 🏗️ Heartflair Backend Infrastructure Roadmap
+# 🏗️ Heartifact Backend Infrastructure Roadmap
 
-This document outlines the backend services required to migrate Heartflair from a client-side prototype to a production-ready SaaS platform.
+This document outlines the backend services required to migrate Heartifact from a client-side prototype to a production-ready SaaS platform.
 
 **Ranking Criteria:**
 1.  **Critical Path:** The application cannot function or secure assets without this.

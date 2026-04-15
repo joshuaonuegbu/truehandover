@@ -58,7 +58,7 @@ const ClientPortalPage = ({
                 <div className="rounded-2xl border border-zinc-200/50 bg-white p-6 md:p-8 mb-6">
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-2">HeartFlair Client Portal</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-2">Heartifact Client Portal</p>
                             <h1 className="font-sans tracking-tight text-4xl leading-tight">{portal.client?.name || 'Client'}</h1>
                             <p className="text-sm text-zinc-500 mt-2">All projects and delivery status in one place.</p>
                         </div>

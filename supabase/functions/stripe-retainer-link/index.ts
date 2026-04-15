@@ -64,7 +64,7 @@ serve(async (req) => {
             recurring: { interval },
             product_data: {
               name: `${clientName} Retainer`,
-              description: `Recurring ${interval} retainer payment secured by Heartflair`,
+              description: `Recurring ${interval} retainer payment secured by Heartifact`,
             },
           },
           quantity: 1,

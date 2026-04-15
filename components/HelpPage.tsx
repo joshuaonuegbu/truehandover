@@ -18,7 +18,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
         {
             category: 'payments',
             q: "How do I get paid?",
-            a: "Heartflair integrates directly with Stripe Connect. When you link your bank account in Settings, client payments flow directly to you. We do not hold your funds in a wallet, ensuring faster payouts and reduced platform risk."
+            a: "Heartifact integrates directly with Stripe Connect. When you link your bank account in Settings, client payments flow directly to you. We do not hold your funds in a wallet, ensuring faster payouts and reduced platform risk."
         },
         {
             category: 'client',
@@ -38,7 +38,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
         {
             category: 'delivery',
             q: "Can I use my own storage provider?",
-            a: "Yes. On the Agency plan, you can connect your own AWS S3 bucket or Google Drive. Heartflair acts as the gatekeeper, managing access permissions while the files reside on your own infrastructure."
+            a: "Yes. On the Agency plan, you can connect your own AWS S3 bucket or Google Drive. Heartifact acts as the gatekeeper, managing access permissions while the files reside on your own infrastructure."
         },
         {
             category: 'payments',
@@ -86,10 +86,10 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
                 <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-5">
                     <div>
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-3">
-                            <LifeBuoy className="w-3 h-3" /> Heartflair Support
+                            <LifeBuoy className="w-3 h-3" /> Heartifact Support
                         </div>
                         <h1 className="font-sans tracking-tight text-4xl md:text-5xl font-medium text-zinc-900 dark:text-white leading-[1.05]">
-                            Help & <span className="text-blue-600 dark:text-blue-400">Documentation</span>
+                            Help & Documentation
                         </h1>
                         <p className="text-zinc-500 dark:text-zinc-400 text-base mt-2">
                             Guides for secure asset delivery, payments, and client access.
@@ -110,7 +110,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
                     </div>
                     <input
                         type="text"
-                        className="block w-full pl-12 pr-4 py-4 bg-white dark:bg-[#1a1a23] border border-zinc-200/50 dark:border-white/10 rounded-2xl leading-5 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-zinc-900 dark:text-white font-medium"
+                        className="block w-full pl-12 pr-4 py-4 bg-white dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] rounded-2xl leading-5 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-zinc-900 dark:text-white font-medium"
                         placeholder="Search for answers..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -209,4 +209,3 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
         </div>
     );
 }
-

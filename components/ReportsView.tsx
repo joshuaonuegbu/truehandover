@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 import {
     TrendingUp, Download, Lock, CheckCircle,
@@ -16,6 +16,7 @@ import { GRADIENT_TEXT, Card, InlineErrorBanner } from './Shared';
 import { useStore } from '../context/StoreContext';
 import { DB } from '../services/supabaseClient';
 import { playClick } from '../utils/sound';
+import { useUiAccentHex } from '../utils/useUiAccentHex';
 import { isMockMode } from '../config/mockMode';
 import {
     createAuditTrailPdf,
@@ -123,6 +124,7 @@ const PrivacyBlur = ({ children, className = "", strength = 'normal' }: { childr
 };
 
 const ReportsView = () => {
+    const accentHex = useUiAccentHex();
     const { projects, user } = useStore();
     const navigate = useNavigate();
     const location = useLocation();
@@ -334,8 +336,8 @@ const ReportsView = () => {
                     projectName,
                     projectId,
                     evidenceId: (evidenceItem as any)?.evidenceId || (evidenceItem as any)?.hash || `EV-${projectId.slice(0, 8).toUpperCase()}`,
-                    creatorName: user?.name || 'Heartflair Demo Studio',
-                    creatorEmail: user?.email || 'studio@Heartflair.demo',
+                    creatorName: user?.name || 'Heartifact Demo Studio',
+                    creatorEmail: user?.email || 'studio@heartifact.demo',
                     clientName: project?.client?.name || evidenceItem?.client || 'Client',
                     clientEmail: project?.client?.email || '',
                     status: evidenceItem?.status || project?.status || 'Secured',
@@ -357,13 +359,13 @@ const ReportsView = () => {
                         ],
                     timeline,
                 });
-                downloadBlobFile(`Heartflair_AuditTrail_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
+                downloadBlobFile(`Heartifact_AuditTrail_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
                 return;
             }
 
             const { blob, error } = await DB.downloadAuditTrail(projectId);
             if (error || !blob) { setReportError(`Could not generate PDF: ${error ?? 'Unknown error'}`); return; }
-            downloadBlobFile(`Heartflair_AuditTrail_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
+            downloadBlobFile(`Heartifact_AuditTrail_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
         } finally { setDownloadingPdf(null); }
     };
 
@@ -393,8 +395,8 @@ const ReportsView = () => {
                     certificateId: `RT-${projectId.slice(0, 8).toUpperCase()}`,
                     projectName,
                     projectId,
-                    creatorName: user?.name || 'Heartflair Demo Studio',
-                    creatorEmail: user?.email || 'studio@Heartflair.demo',
+                    creatorName: user?.name || 'Heartifact Demo Studio',
+                    creatorEmail: user?.email || 'studio@heartifact.demo',
                     clientName: project?.client?.name || 'Client',
                     clientEmail: project?.client?.email || '',
                     amountUsd: project?.amount || 0,
@@ -404,16 +406,16 @@ const ReportsView = () => {
                     scope: [
                         'Final approved deliverables listed in the vault',
                         'Commercial use rights as defined in the client agreement',
-                        'Operational record of payment-cleared release through Heartflair',
+                        'Operational record of payment-cleared release through Heartifact',
                     ],
                 });
-                downloadBlobFile(`Heartflair_RightsTransfer_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
+                downloadBlobFile(`Heartifact_RightsTransfer_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
                 return;
             }
 
             const { blob, error } = await DB.downloadRightsTransfer(projectId);
             if (error || !blob) { setReportError(`Could not generate rights certificate: ${error ?? 'Unknown error'}`); return; }
-            downloadBlobFile(`Heartflair_RightsTransfer_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
+            downloadBlobFile(`Heartifact_RightsTransfer_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
         } finally {
             setDownloadingRights(null);
         }
@@ -423,8 +425,8 @@ const ReportsView = () => {
         setReportError(null);
         const blob = await createPortfolioOverviewPdf({
             rangeLabel: timeRange === 'ALL' ? 'All Activity' : timeRange,
-            creatorName: user?.name || 'Heartflair Demo Studio',
-            creatorEmail: user?.email || 'studio@Heartflair.demo',
+            creatorName: user?.name || 'Heartifact Demo Studio',
+            creatorEmail: user?.email || 'studio@heartifact.demo',
             totalVolumeUsd: totalVolume,
             securedVolumeUsd: securedVolume,
             lockedVolumeUsd: lockedVolume,
@@ -448,7 +450,7 @@ const ReportsView = () => {
                     createdAt: project.createdAt,
                 }))).slice(0, 8),
         });
-        downloadBlobFile(`Heartflair_PortfolioOverview_${new Date().toISOString().slice(0, 10)}.pdf`, blob);
+        downloadBlobFile(`Heartifact_PortfolioOverview_${new Date().toISOString().slice(0, 10)}.pdf`, blob);
     };
 
     const handleDownloadICS = () => {
@@ -460,16 +462,16 @@ const ReportsView = () => {
         const lines = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
-            'PRODID:-//Heartflair//Delivery Calendar//EN',
+            'PRODID:-//Heartifact//Delivery Calendar//EN',
             'CALSCALE:GREGORIAN',
             'METHOD:PUBLISH',
-            'X-WR-CALNAME:Heartflair Projects',
-            'X-WR-CALDESC:Project due dates and payment deadlines from Heartflair',
+            'X-WR-CALNAME:Heartifact Projects',
+            'X-WR-CALDESC:Project due dates and payment deadlines from Heartifact',
         ];
 
         projects.forEach(p => {
             if (!p.dueDate) return;
-            const uid = `Heartflair-${p.id}@heartflair.com`;
+            const uid = `Heartifact-${p.id}@heartifact.com`;
             const statusLabel = {
                 draft: 'Draft',
                 awaiting_signature: 'Awaiting Signature',
@@ -487,7 +489,7 @@ const ReportsView = () => {
                 `DTEND;VALUE=DATE:${new Date(p.dueDate).toISOString().slice(0, 10).replace(/-/g, '')}`,
                 `SUMMARY:${escIcs(`${p.name} — ${statusLabel}`)}`,
                 `DESCRIPTION:${escIcs(`Client: ${p.client.name}\nValue: $${p.amount.toLocaleString()}\nStatus: ${statusLabel}\nProject ID: ${p.id}`)}`,
-                `CATEGORIES:Heartflair`,
+                `CATEGORIES:Heartifact`,
                 `STATUS:${['paid', 'completed'].includes(p.status) ? 'COMPLETED' : 'CONFIRMED'}`,
                 'END:VEVENT',
             );
@@ -500,7 +502,7 @@ const ReportsView = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Heartflair_Calendar_${new Date().toISOString().slice(0, 10)}.ics`;
+        a.download = `Heartifact_Calendar_${new Date().toISOString().slice(0, 10)}.ics`;
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -520,7 +522,7 @@ const ReportsView = () => {
                 due_date: p.dueDate || '',
             }));
         const label = timeRange === 'ALL' ? 'ALL' : timeRange;
-        downloadTextFile(`Heartflair_Ledger_${label}_${new Date().toISOString().slice(0, 10)}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
+        downloadTextFile(`Heartifact_Ledger_${label}_${new Date().toISOString().slice(0, 10)}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
     };
 
     const handleExportTaxLedgerCsv = () => {
@@ -541,18 +543,18 @@ const ReportsView = () => {
                 amount_usd: p.amount,
                 created_at: p.createdAt,
             }));
-        downloadTextFile(`Heartflair_TaxLedger_${year}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
+        downloadTextFile(`Heartifact_TaxLedger_${year}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
     };
 
     const handleDownloadTaxLedgerPdf = async () => {
         const year = now.getFullYear();
         const blob = await createTaxLedgerPdf({
             statementLabel: String(year),
-            creatorName: user?.name || 'Heartflair Demo Studio',
-            creatorEmail: user?.email || 'studio@Heartflair.demo',
+            creatorName: user?.name || 'Heartifact Demo Studio',
+            creatorEmail: user?.email || 'studio@heartifact.demo',
             rows: getTaxLedgerRows(year),
         });
-        downloadBlobFile(`Heartflair_TaxLedger_${year}.pdf`, blob);
+        downloadBlobFile(`Heartifact_TaxLedger_${year}.pdf`, blob);
     };
 
     const handleExportMonthlyStatementCsv = () => {
@@ -576,19 +578,19 @@ const ReportsView = () => {
                 due_date: p.dueDate || '',
             }));
         const safe = selected.replace(/[^a-z0-9]+/gi, '_');
-        downloadTextFile(`Heartflair_Statement_${safe}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
+        downloadTextFile(`Heartifact_Statement_${safe}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
     };
 
     const handleDownloadMonthlyStatementPdf = async () => {
         const selected = statementMonth;
         const blob = await createMonthlyStatementPdf({
             statementLabel: selected,
-            creatorName: user?.name || 'Heartflair Demo Studio',
-            creatorEmail: user?.email || 'studio@Heartflair.demo',
+            creatorName: user?.name || 'Heartifact Demo Studio',
+            creatorEmail: user?.email || 'studio@heartifact.demo',
             rows: getStatementRows(selected),
         });
         const safe = selected.replace(/[^a-z0-9]+/gi, '_');
-        downloadBlobFile(`Heartflair_Statement_${safe}.pdf`, blob);
+        downloadBlobFile(`Heartifact_Statement_${safe}.pdf`, blob);
     };
 
     // --- DATA PROCESSING ---
@@ -596,8 +598,15 @@ const ReportsView = () => {
     // 1. Chart Data (Capital Flow)
     const processChartData = () => {
         const monthMap = new Map();
+        
+        let maxDate = new Date();
+        const latestTime = Math.max(...scopedProjects.map(p => new Date(p.createdAt).getTime()));
+        if (latestTime > 0 && (latestTime < maxDate.getTime() - 1000 * 60 * 60 * 24 * 90 || latestTime > maxDate.getTime())) {
+            maxDate = new Date(latestTime);
+        }
+
         for (let i = 5; i >= 0; i--) {
-            const d = new Date();
+            const d = new Date(maxDate);
             d.setMonth(d.getMonth() - i);
             const key = d.toLocaleString('default', { month: 'short' });
             monthMap.set(key, { name: key, liquid: 0, frozen: 0, total: 0 });
@@ -668,7 +677,7 @@ const ReportsView = () => {
         return `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
     });
 
-    const COLORS = ['#84cc16', '#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
+    const COLORS = useMemo(() => [accentHex, '#10b981', '#3b82f6', '#94a3b8', '#64748b'], [accentHex]);
 
     // 4. Evidence Locker Data (Recent Transactions)
     const mappedProjects = scopedProjects.map(p => ({
@@ -726,20 +735,20 @@ const ReportsView = () => {
             <div className="flex flex-col gap-6 border-b border-zinc-200/50 dark:border-white/5 pb-8 mb-12">
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                     <div>
-                        <h2 className={`text-4xl font-sans tracking-tight font-medium tracking-tight ${GRADIENT_TEXT}`}>
-                            Financial <span className="text-blue-600 dark:text-brand">Reports</span>
+                        <h2 className="text-4xl font-sans tracking-tight font-medium tracking-tight text-zinc-900 dark:text-white">
+                            Financial Reports
                         </h2>
                         <p className="text-zinc-500 dark:text-zinc-400 text-base mt-1">
                             Fiscal performance, pipeline analysis, and compliance records.
                         </p>
                     </div>
                     <div className="flex gap-4 items-center">
-                        <div className="flex gap-1 bg-zinc-200 dark:bg-white/5 p-1 rounded-xl border border-zinc-200/50 dark:border-white/5">
+                        <div className="flex gap-1 bg-zinc-200 dark:bg-white/5 p-1 rounded-2xl border border-zinc-200/50 dark:border-white/5">
                             {['6M', 'YTD', 'ALL'].map(range => (
                                 <button
                                     key={range}
                                     onClick={() => { playClick(); setTimeRange(range); }}
-                                    className={`px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all ${timeRange === range ? 'bg-white dark:bg-white/10 shadow-sm text-obsidian dark:text-white' : 'text-zinc-500 hover:text-obsidian dark:hover:text-white'}`}
+                                    className={`px-4 py-1.5 rounded-2xl text-[10px] font-bold transition-all ${timeRange === range ? 'bg-white dark:bg-white/10 shadow-sm text-obsidian dark:text-white' : 'text-zinc-500 hover:text-obsidian dark:hover:text-white'}`}
                                 >
                                     {range}
                                 </button>
@@ -747,7 +756,7 @@ const ReportsView = () => {
                         </div>
                         <button
                             onClick={() => { playClick(); demoMode ? handleDownloadPortfolioOverviewPdf() : handleExportLedgerCsv(); }}
-                            className="px-5 py-2.5 rounded-xl bg-obsidian dark:bg-white text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg flex items-center gap-2"
+                            className="px-5 py-2.5 rounded-2xl bg-obsidian dark:bg-white text-white dark:text-zinc-950 text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg flex items-center gap-2"
                         >
                             <Download className="w-3.5 h-3.5" /> {demoMode ? 'Preview PDF' : 'Export'}
                         </button>
@@ -767,7 +776,7 @@ const ReportsView = () => {
                 {/* Subtle grain texture */}
                 <div className="absolute inset-0 pointer-events-none rounded-2xl opacity-[0.02] dark:opacity-[0.04]" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
                 {/* Ambient glow */}
-                <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-300/10 dark:bg-brand/5 rounded-full blur-[80px] pointer-events-none" />
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-zinc-900/5 dark:bg-white/5 rounded-full blur-[80px] pointer-events-none" />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 relative z-10">
                     <div className="flex flex-col justify-end">
@@ -824,7 +833,7 @@ const ReportsView = () => {
                     <h3 className={`font-sans tracking-tight text-3xl tracking-tight ${GRADIENT_TEXT}`}>Analysis & Projections</h3>
                     <div className="hidden md:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                         <div className="flex items-center gap-2"><div className="w-2 h-2 bg-blue-600 dark:bg-brand rounded-full" /> Cleared (Paid)</div>
-                        <div className="flex items-center gap-2"><div className="w-2 h-2 bg-amber-500 rounded-full" /> Frozen (Locked)</div>
+                        <div className="flex items-center gap-2"><div className="w-2 h-2 bg-zinc-400 dark:bg-zinc-500 rounded-full" /> Frozen (Locked)</div>
                     </div>
                 </div>
 
@@ -832,7 +841,7 @@ const ReportsView = () => {
 
                     {/* Capital Flow Engine (Area Chart) */}
                     <div className="lg:col-span-2">
-                        <div className="h-[400px] w-full bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/5 rounded-none lg:rounded-[2rem] p-6 relative overflow-hidden group mb-8 shadow-sm dark:shadow-md">
+                        <div className="h-[400px] w-full bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] rounded-none lg:rounded-[2rem] p-6 relative overflow-hidden group mb-8 shadow-sm dark:shadow-md">
                             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: NOISE_SVG }}></div>
 
                             {/* Header within Graph for Context */}
@@ -845,12 +854,12 @@ const ReportsView = () => {
                                 <AreaChart data={chartData} margin={{ top: 60, right: 10, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorLiquid" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#84cc16" stopOpacity={0.4} />
-                                            <stop offset="95%" stopColor="#84cc16" stopOpacity={0} />
+                                            <stop offset="5%" stopColor={accentHex} stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor={accentHex} stopOpacity={0} />
                                         </linearGradient>
                                         <linearGradient id="colorFrozen" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.28} />
+                                            <stop offset="95%" stopColor="#94a3b8" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.1} />
@@ -868,7 +877,7 @@ const ReportsView = () => {
                                         type="monotone"
                                         dataKey="liquid"
                                         stackId="1"
-                                        stroke="#84cc16"
+                                        stroke={accentHex}
                                         strokeWidth={3}
                                         fill="url(#colorLiquid)"
                                         animationDuration={1500}
@@ -877,7 +886,7 @@ const ReportsView = () => {
                                         type="monotone"
                                         dataKey="frozen"
                                         stackId="1"
-                                        stroke="#f59e0b"
+                                        stroke="#94a3b8"
                                         strokeWidth={2}
                                         fill="url(#colorFrozen)"
                                         strokeDasharray="4 4"
@@ -931,13 +940,13 @@ const ReportsView = () => {
                             <div className="mb-8">
                                 <div className="flex justify-between items-end mb-2">
                                     <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Portfolio Diversity</span>
-                                    <span className={`text-lg font-bold ${diversityScore > 70 ? 'text-blue-600 dark:text-brand' : diversityScore > 40 ? 'text-amber-500' : 'text-red-500'}`}>
+                                    <span className={`text-lg font-bold ${diversityScore > 70 ? 'text-blue-600 dark:text-brand' : 'text-zinc-500 dark:text-zinc-400'}`}>
                                         {diversityScore}/100
                                     </span>
                                 </div>
                                 <div className="w-full h-2 bg-zinc-200 dark:bg-white/10 rounded-full overflow-hidden flex">
                                     <div
-                                        className={`h-full transition-all duration-1000 ease-out ${diversityScore > 70 ? 'bg-blue-500' : diversityScore > 40 ? 'bg-amber-500' : 'bg-red-500'}`}
+                                        className={`h-full transition-all duration-1000 ease-out ${diversityScore > 70 ? 'bg-blue-500' : 'bg-zinc-500 dark:bg-zinc-400'}`}
                                         style={{ width: `${diversityScore}%` }}
                                     />
                                 </div>
@@ -1002,7 +1011,7 @@ const ReportsView = () => {
                     </button>
                 </div>
 
-                <div className="rounded-[2rem] border border-zinc-200/50 dark:border-white/5 shadow-sm dark:shadow-md overflow-hidden bg-white dark:bg-charcoal">
+                <div className="hf-surface rounded-[2rem] border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md overflow-hidden bg-white dark:bg-charcoal">
                     <div className="overflow-y-auto max-h-[400px]">
                         <table className="w-full text-left border-collapse">
                             <thead className="sticky top-0 z-10 bg-editorial dark:bg-charcoal shadow-sm">
@@ -1039,7 +1048,7 @@ const ReportsView = () => {
                                                         title="Download Audit Trail PDF"
                                                         disabled={downloadingPdf === item.id}
                                                         onClick={() => handleDownloadAuditTrail(item.id, item.name)}
-                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:bg-editorial dark:hover:bg-white/10 hover:text-obsidian dark:hover:text-white transition-colors shadow-sm group/btn w-full justify-center disabled:opacity-50 disabled:cursor-wait"
+                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:bg-editorial dark:hover:bg-white/10 hover:text-obsidian dark:hover:text-white transition-colors shadow-sm group/btn w-full justify-center disabled:opacity-50 disabled:cursor-wait"
                                                     >
                                                         <FileText className="w-3.5 h-3.5 text-zinc-400 group-hover/btn:text-obsidian dark:group-hover/btn:text-white" />
                                                         {downloadingPdf === item.id ? 'Generating…' : 'Audit Trail PDF'}
@@ -1048,7 +1057,7 @@ const ReportsView = () => {
                                                     <button
                                                         title="Demo row — no PDF"
                                                         disabled
-                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition-colors shadow-sm group/btn w-full justify-center opacity-40 cursor-not-allowed"
+                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition-colors shadow-sm group/btn w-full justify-center opacity-40 cursor-not-allowed"
                                                     >
                                                         <FileText className="w-3.5 h-3.5" />
                                                         Demo Row
@@ -1059,7 +1068,7 @@ const ReportsView = () => {
                                                         title="Send payment reminder to client"
                                                         disabled={sendingNudge === item.id}
                                                         onClick={() => handleSendNudge(item.id)}
-                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm group/btn w-full justify-center disabled:opacity-50 disabled:cursor-wait bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40"
+                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm group/btn w-full justify-center disabled:opacity-50 disabled:cursor-wait bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40"
                                                     >
                                                         {sendingNudge === item.id ? 'Sending…' : nudgeMsg?.id === item.id ? (nudgeMsg.ok ? '✓ Sent!' : '✗ Failed') : 'Send Reminder'}
                                                     </button>
@@ -1069,7 +1078,7 @@ const ReportsView = () => {
                                                         title="Download Rights Transfer Certificate"
                                                         disabled={downloadingRights === item.id}
                                                         onClick={() => handleDownloadRightsTransfer(item.id, item.name)}
-                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm group/btn w-full justify-center disabled:opacity-50 disabled:cursor-wait bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/30 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm group/btn w-full justify-center disabled:opacity-50 disabled:cursor-wait bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/30 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40"
                                                     >
                                                         <FileCheck className="w-3.5 h-3.5" />
                                                         {downloadingRights === item.id ? 'Generating…' : 'Rights Certificate'}
@@ -1091,7 +1100,7 @@ const ReportsView = () => {
                         <h4 className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wide">Chain of Custody</h4>
                         <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed max-w-3xl">
                             Evidence Packs contain a tamper-evident summary of project events, timestamps, and any recorded file hashes.
-                            While Heartflair provides this data to support dispute resolution, we do not guarantee its admissibility in legal proceedings.
+                            While Heartifact provides this data to support dispute resolution, we do not guarantee its admissibility in legal proceedings.
                             Consult with a legal professional regarding specific jurisdiction requirements.
                         </p>
                     </div>
@@ -1104,7 +1113,7 @@ const ReportsView = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
                     {/* Monthly Statements */}
-                    <div className="p-8 border border-zinc-200/50 dark:border-white/5 rounded-[2rem] shadow-sm dark:shadow-md flex flex-col justify-between bg-white dark:bg-charcoal relative overflow-hidden group">
+                    <div className="hf-surface p-8 border border-zinc-200/50 dark:border-white/[0.06] rounded-[2rem] shadow-sm dark:shadow-md flex flex-col justify-between bg-white dark:bg-charcoal relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-6 opacity-50"><FileDigit className="w-12 h-12 text-zinc-100 dark:text-white/5 -rotate-12" /></div>
                         <div className="relative z-10">
                             <h4 className="font-sans tracking-tight text-xl font-bold text-obsidian dark:text-white mb-2">Monthly Statement</h4>
@@ -1124,7 +1133,7 @@ const ReportsView = () => {
                                 </div>
                                 <button
                                     onClick={() => { playClick(); demoMode ? handleDownloadMonthlyStatementPdf() : handleExportMonthlyStatementCsv(); }}
-                                    className="flex items-center gap-2 px-5 py-3 bg-obsidian dark:bg-white text-white dark:text-black rounded-xl text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg"
+                                    className="flex items-center gap-2 px-5 py-3 bg-obsidian dark:bg-white text-white dark:text-zinc-950 rounded-2xl text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg"
                                 >
                                     {demoMode ? 'Preview PDF' : 'Download'} <Download className="w-3.5 h-3.5" />
                                 </button>
@@ -1133,7 +1142,7 @@ const ReportsView = () => {
                     </div>
 
                     {/* Tax Ledger */}
-                    <div className="p-8 border border-zinc-200/50 dark:border-white/5 rounded-[2rem] shadow-sm dark:shadow-md flex flex-col justify-between bg-white dark:bg-charcoal relative overflow-hidden group">
+                    <div className="hf-surface p-8 border border-zinc-200/50 dark:border-white/[0.06] rounded-[2rem] shadow-sm dark:shadow-md flex flex-col justify-between bg-white dark:bg-charcoal relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-6 opacity-50"><Landmark className="w-12 h-12 text-zinc-100 dark:text-white/5 -rotate-12" /></div>
                         <div className="relative z-10">
                             <div className="flex justify-between items-start">
@@ -1145,7 +1154,7 @@ const ReportsView = () => {
                             </div>
                             <button
                                 onClick={() => { playClick(); demoMode ? handleDownloadTaxLedgerPdf() : handleExportTaxLedgerCsv(); }}
-                                className="w-full flex items-center justify-center gap-2 px-5 py-3 border border-zinc-200/50 dark:border-white/10 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-editorial dark:hover:bg-white/5 transition-colors group/btn"
+                                className="w-full flex items-center justify-center gap-2 px-5 py-3 border border-zinc-200/50 dark:border-white/10 rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-editorial dark:hover:bg-white/5 transition-colors group/btn"
                             >
                                 {demoMode ? 'Preview Annual PDF' : 'Export Annual Ledger'} <Download className="w-3.5 h-3.5 group-hover/btn:translate-y-0.5 transition-transform" />
                             </button>
@@ -1153,7 +1162,7 @@ const ReportsView = () => {
                     </div>
 
                     {/* Calendar Feed */}
-                    <div className="p-8 border border-zinc-200/50 dark:border-white/5 rounded-[2rem] shadow-sm dark:shadow-md flex flex-col justify-between bg-white dark:bg-charcoal relative overflow-hidden group col-span-full md:col-span-1">
+                    <div className="hf-surface p-8 border border-zinc-200/50 dark:border-white/[0.06] rounded-[2rem] shadow-sm dark:shadow-md flex flex-col justify-between bg-white dark:bg-charcoal relative overflow-hidden group col-span-full md:col-span-1">
                         <div className="absolute top-0 right-0 p-6 opacity-50"><Calendar className="w-12 h-12 text-zinc-100 dark:text-white/5 -rotate-12" /></div>
                         <div className="relative z-10">
                             <h4 className="font-sans tracking-tight text-xl font-bold text-obsidian dark:text-white mb-2">Calendar Feed</h4>
@@ -1168,7 +1177,7 @@ const ReportsView = () => {
                             </div>
                             <button
                                 onClick={handleDownloadICS}
-                                className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-obsidian dark:bg-white text-white dark:text-black rounded-xl text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg group/btn"
+                                className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-obsidian dark:bg-white text-white dark:text-zinc-950 rounded-2xl text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg group/btn"
                             >
                                 <Calendar className="w-3.5 h-3.5" />
                                 Download .ics File
@@ -1183,11 +1192,11 @@ const ReportsView = () => {
             <div className="mt-24 pt-8 border-t border-zinc-200/50 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-zinc-400">
                 <div className="flex items-center gap-2 font-bold uppercase tracking-widest">
                     <ShieldCheck className="w-3 h-3" />
-                    Generated by Heartflair Financial Engine
+                    Generated by Heartifact Financial Engine
                 </div>
                 <div className="max-w-md text-right opacity-60">
                     <p className="leading-tight">
-                        Heartflair Ltd. acts as a technical intermediary and does not provide legal, tax, or financial advice.
+                        Heartifact Ltd. acts as a technical intermediary and does not provide legal, tax, or financial advice.
                         Users are responsible for their own tax compliance and contract enforcement.
                     </p>
                 </div>

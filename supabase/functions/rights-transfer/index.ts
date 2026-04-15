@@ -18,9 +18,9 @@ async function buildCertificate(input: {
 
   const doc = await PDFDocument.create();
   doc.setTitle(`Rights Transfer Certificate — ${project.name}`);
-  doc.setAuthor("Heartflair");
+  doc.setAuthor("Heartifact");
   doc.setSubject("Official Rights Transfer Certificate");
-  doc.setCreator("Heartflair Platform");
+  doc.setCreator("Heartifact Platform");
   doc.setCreationDate(new Date());
 
   const [reg, bold, italic] = await Promise.all([
@@ -44,7 +44,7 @@ async function buildCertificate(input: {
 
   page.drawRectangle({ x: 0, y: H - 80, width: W, height: 80, color: C.black });
   page.drawRectangle({ x: W - 8, y: H - 80, width: 8, height: 80, color: C.accent });
-  page.drawText("Heartflair", { x: margin, y: H - 40, size: 18, font: bold, color: C.white });
+  page.drawText("Heartifact", { x: margin, y: H - 40, size: 18, font: bold, color: C.white });
   page.drawText("Official Rights Transfer Certificate", { x: margin, y: H - 60, size: 9, font: reg, color: rgb(0.72, 0.76, 0.79) });
 
   let y = H - 120;
@@ -87,7 +87,7 @@ async function buildCertificate(input: {
 
   const paragraph = [
     "This certificate records that payment for the above project has been received through",
-    "the Heartflair workflow, and rights in the delivered work product are transferred",
+    "the Heartifact workflow, and rights in the delivered work product are transferred",
     "from the creator to the client in accordance with the parties' agreement.",
     "This document is an operational record and not legal advice.",
   ];
@@ -105,7 +105,7 @@ async function buildCertificate(input: {
   page.drawText("Client Acceptance (digital)", { x: W - margin - 220, y, size: 8, font: reg, color: C.slate });
 
   y -= 42;
-  page.drawText("Certified by Heartflair", { x: margin, y, size: 10, font: italic, color: C.slate });
+  page.drawText("Certified by Heartifact", { x: margin, y, size: 10, font: italic, color: C.slate });
 
   page.drawText(certId, { x: margin, y: 24, size: 7, font: reg, color: C.slate });
   page.drawText("Page 1 of 1", { x: W - margin - 45, y: 24, size: 7, font: reg, color: C.slate });
