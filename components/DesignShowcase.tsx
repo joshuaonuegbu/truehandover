@@ -143,7 +143,7 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
                 ].map(k => (
                     <div key={k.label} className={`${cardBg} border rounded-2xl p-5`}>
                         <p className={`text-[10px] font-bold uppercase tracking-widest ${subText} mb-2`}>{k.label}</p>
-                        <p className={`font-sans tracking-tight text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>{k.value}</p>
+                        <p className={`font-sans tracking-wide text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>{k.value}</p>
                         <p className={`text-xs mt-1 flex items-center gap-1 ${k.up ? accentText : 'text-amber-500'}`}>
                             {k.up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />} {k.change}
                         </p>
@@ -193,7 +193,7 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
                                 </div>
                             </div>
                             <div className="flex items-center gap-4">
-                                <p className={`font-mono text-sm font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>${p.amount.toLocaleString()}</p>
+                                <p className={`font-mono text-sm font-bold tracking-wide ${isDark ? 'text-white' : 'text-obsidian'}`}>${p.amount.toLocaleString()}</p>
                                 <StatusBadge status={p.status} />
                                 <span className={`text-[10px] ${subText} font-mono`}>{p.due}</span>
                             </div>

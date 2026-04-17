@@ -155,42 +155,44 @@ export default function QuotesPage({ onBack }: { onBack: () => void }) {
     };
 
     return (
-        <div className="space-y-8 animate-slide-up relative z-10 pb-24 lg:pb-12 w-full">
-            <section className="rounded-[2.4rem] border border-zinc-200/55 dark:border-white/[0.08] bg-white dark:bg-charcoal shadow-sm p-5 sm:p-6 lg:p-8">
-                <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
-                    <div className="space-y-3">
-                        <button
-                            onClick={() => {
-                                playClick();
-                                onBack();
-                            }}
-                            className="w-10 h-10 rounded-full border border-zinc-200/70 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-zinc-50 dark:hover:bg-white/10 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center justify-center"
-                            title="Back"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                        </button>
-                        <h2 className="text-4xl lg:text-5xl font-sans tracking-tight font-medium text-zinc-900 dark:text-white">Quote Builder</h2>
-                        <p className="text-zinc-500 dark:text-zinc-400 max-w-2xl leading-relaxed">
-                            Build and send professional quotes in minutes. Add line items, taxes, and notes, then copy or download.
+        <div className="space-y-6 animate-slide-up relative z-10 pb-16 lg:pb-10 w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-start gap-3 min-w-0">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            playClick();
+                            onBack();
+                        }}
+                        className="mt-0.5 w-10 h-10 shrink-0 rounded-full border border-zinc-200/70 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-zinc-50 dark:hover:bg-white/10 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center justify-center"
+                        title="Back"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                    </button>
+                    <div className="min-w-0">
+                        <h2 className="text-3xl sm:text-4xl font-sans tracking-tight font-medium text-zinc-900 dark:text-white">Quote Builder</h2>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+                            Line items, tax, and notes — copy or download when ready.
                         </p>
                     </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                        <button
-                            onClick={copyQuote}
-                            className="h-11 px-4 rounded-full border border-zinc-200/70 dark:border-white/10 bg-zinc-100 dark:bg-white/10 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-white/20 text-[10px] font-bold uppercase tracking-[0.14em] flex items-center gap-2"
-                        >
-                            <Copy className="w-3.5 h-3.5" /> Copy
-                        </button>
-                        <button
-                            onClick={downloadQuote}
-                            className="h-11 px-4 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-black dark:hover:bg-zinc-200 text-[10px] font-bold uppercase tracking-[0.14em] flex items-center gap-2"
-                        >
-                            <Save className="w-3.5 h-3.5" /> Download
-                        </button>
-                    </div>
                 </div>
-            </section>
+                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                    <button
+                        type="button"
+                        onClick={copyQuote}
+                        className="h-10 px-4 rounded-xl border border-zinc-200/70 dark:border-white/10 bg-zinc-100 dark:bg-white/10 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-white/20 text-[10px] font-bold uppercase tracking-[0.14em] flex items-center gap-2"
+                    >
+                        <Copy className="w-3.5 h-3.5" /> Copy
+                    </button>
+                    <button
+                        type="button"
+                        onClick={downloadQuote}
+                        className="h-10 px-4 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-black dark:hover:bg-zinc-200 text-[10px] font-bold uppercase tracking-[0.14em] flex items-center gap-2"
+                    >
+                        <Save className="w-3.5 h-3.5" /> Download
+                    </button>
+                </div>
+            </div>
 
             <section className="grid grid-cols-1 xl:grid-cols-[1.25fr_0.75fr] gap-4">
                 <div className="rounded-[2rem] border border-zinc-200/55 dark:border-white/[0.08] bg-white dark:bg-charcoal shadow-sm p-5 sm:p-6 space-y-5">

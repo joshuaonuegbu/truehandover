@@ -2,11 +2,12 @@ import React, { useState, useMemo } from 'react';
 import {
     Trash2, RotateCcw, Search, LayoutGrid, List as ListIcon,
     FileText, Image as ImageIcon, Film, FileArchive, FolderOpen,
-    Clock, AlertTriangle, ChevronRight, X, Layers,
+    Clock, AlertTriangle, X, Layers, ChevronLeft, HardDrive, Calendar,
 } from 'lucide-react';
 import { playClick, playSuccess } from '../utils/sound';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
+
 interface DeletedItem {
     id: string;
     name: string;
@@ -26,32 +27,34 @@ const MOCK_DELETED: DeletedItem[] = [
     { id: '5', name: 'raw_footage_take_04.mp4', type: 'file', originalPath: 'Commercial / Raw', deletedAt: 'Sep 28', daysLeft: 2, size: '4.8 GB', ext: 'mp4' },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 function getFileIcon(item: DeletedItem) {
-    if (item.type === 'project') return <FolderOpen className="w-5 h-5" />;
+    if (item.type === 'project') return <FolderOpen className="h-5 w-5" />;
     const ext = (item.ext || '').toLowerCase();
-    if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(ext)) return <ImageIcon className="w-5 h-5" />;
-    if (['mp4', 'mov', 'avi', 'webm'].includes(ext)) return <Film className="w-5 h-5" />;
-    if (['zip', 'rar', '7z'].includes(ext)) return <FileArchive className="w-5 h-5" />;
-    return <FileText className="w-5 h-5" />;
+    if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(ext)) return <ImageIcon className="h-5 w-5" />;
+    if (['mp4', 'mov', 'avi', 'webm'].includes(ext)) return <Film className="h-5 w-5" />;
+    if (['zip', 'rar', '7z'].includes(ext)) return <FileArchive className="h-5 w-5" />;
+    return <FileText className="h-5 w-5" />;
 }
 
 function urgencyClass(days: number) {
-    if (days <= 3) return { ring: 'ring-red-500/40', badge: 'bg-red-500/10 text-red-500 border-red-500/20', bar: 'bg-red-500', label: 'text-red-500', dot: 'bg-red-500 animate-pulse' };
-    if (days <= 10) return { ring: 'ring-amber-500/30', badge: 'bg-amber-500/10 text-amber-500 border-amber-500/20', bar: 'bg-amber-500', label: 'text-amber-500', dot: 'bg-amber-500' };
-    return { ring: 'ring-zinc-200/50 dark:ring-white/[0.07]', badge: 'bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 border-zinc-200/50 dark:border-white/10', bar: 'bg-emerald-500', label: 'text-zinc-500 dark:text-zinc-400', dot: 'bg-emerald-500' };
+    if (days <= 3) return { bar: 'bg-red-500', label: 'text-red-600 dark:text-red-400', dot: 'bg-red-500 animate-pulse', chip: 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-500/15 border-red-200/60 dark:border-red-500/25', glow: 'bg-red-400/10' };
+    if (days <= 10) return { bar: 'bg-amber-500', label: 'text-amber-600 dark:text-amber-400', dot: 'bg-amber-500', chip: 'text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/15 border-amber-200/60 dark:border-amber-500/25', glow: 'bg-amber-400/10' };
+    return { bar: 'bg-emerald-500', label: 'text-zinc-500 dark:text-zinc-400', dot: 'bg-emerald-500', chip: 'text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/10 border-zinc-200/60 dark:border-white/10', glow: 'bg-emerald-400/10' };
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
-export default function TrashPage({ onBack }: { onBack: () => void }) {
+function shortId(id: string) {
+    return id.length > 6 ? `${id.slice(0, 4)}…${id.slice(-2)}` : id;
+}
+
+export default function TrashPage({ onBack }: { onBack?: () => void }) {
     const [items, setItems] = useState<DeletedItem[]>(MOCK_DELETED);
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [searchTerm, setSearchTerm] = useState('');
     const [confirmId, setConfirmId] = useState<string | null>(null);
     const [confirmEmptyAll, setConfirmEmptyAll] = useState(false);
 
-    const filtered = useMemo(() =>
-        items.filter(i => i.name.toLowerCase().includes(searchTerm.toLowerCase())),
+    const filtered = useMemo(
+        () => items.filter((i) => i.name.toLowerCase().includes(searchTerm.toLowerCase())),
         [items, searchTerm]
     );
 
@@ -63,13 +66,23 @@ export default function TrashPage({ onBack }: { onBack: () => void }) {
     }, 0);
     const totalSizeLabel = totalSize >= 1024 ? `${(totalSize / 1024).toFixed(1)} GB` : `${totalSize.toFixed(0)} MB`;
 
+    const projectCount = items.filter((i) => i.type === 'project').length;
+    const fileCount = items.filter((i) => i.type === 'file').length;
+    const urgentCount = items.filter((i) => i.daysLeft <= 3).length;
+
+    const handleBack = () => {
+        playClick();
+        if (onBack) onBack();
+        else window.history.back();
+    };
+
     const handleRestore = (id: string) => {
         playSuccess();
-        setItems(prev => prev.filter(i => i.id !== id));
+        setItems((prev) => prev.filter((i) => i.id !== id));
     };
     const handleDeleteForever = (id: string) => {
         playClick();
-        setItems(prev => prev.filter(i => i.id !== id));
+        setItems((prev) => prev.filter((i) => i.id !== id));
         setConfirmId(null);
     };
     const handleEmptyAll = () => {
@@ -78,23 +91,22 @@ export default function TrashPage({ onBack }: { onBack: () => void }) {
         setConfirmEmptyAll(false);
     };
 
-    // ── Confirm overlay ──────────────────────────────────────────────────────
     const ConfirmOverlay = ({ id, name, onConfirm, onCancel }: { id: string; name: string; onConfirm: () => void; onCancel: () => void }) => (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-zinc-900/50 dark:bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-            <div className="relative z-10 w-full max-w-sm bg-white dark:bg-[#1a1a23] border border-zinc-200/60 dark:border-white/10 rounded-2xl shadow-2xl p-6 animate-slide-up">
-                <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center mb-4 border border-red-500/20">
-                    <AlertTriangle className="w-5 h-5 text-red-500" />
+            <div className="absolute inset-0 bg-zinc-900/50 backdrop-blur-sm dark:bg-black/60" onClick={onCancel} />
+            <div className="relative z-10 w-full max-w-sm rounded-2xl border border-zinc-200/60 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-[#1a1a23] animate-slide-up">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10">
+                    <AlertTriangle className="h-5 w-5 text-red-500" />
                 </div>
-                <h3 className="font-sans font-bold text-lg text-zinc-900 dark:text-white mb-1 leading-tight">Delete forever?</h3>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
+                <h3 className="mb-1 font-sans text-lg font-bold leading-tight text-zinc-900 dark:text-white">Delete forever?</h3>
+                <p className="mb-6 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
                     <span className="font-semibold text-zinc-700 dark:text-zinc-200">"{name}"</span> will be permanently erased. This cannot be undone.
                 </p>
                 <div className="flex gap-2">
-                    <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest border border-zinc-200/60 dark:border-white/10 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">
+                    <button type="button" onClick={onCancel} className="flex-1 rounded-xl border border-zinc-200/60 py-2.5 text-xs font-bold uppercase tracking-widest text-zinc-500 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-white/5">
                         Cancel
                     </button>
-                    <button onClick={onConfirm} className="flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest bg-red-500 hover:bg-red-600 text-white transition-colors">
+                    <button type="button" onClick={onConfirm} className="flex-1 rounded-xl bg-red-500 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-red-600">
                         Delete Forever
                     </button>
                 </div>
@@ -102,240 +114,281 @@ export default function TrashPage({ onBack }: { onBack: () => void }) {
         </div>
     );
 
-    // ── Grid card ────────────────────────────────────────────────────────────
     const GridCard = ({ item }: { item: DeletedItem }) => {
         const u = urgencyClass(item.daysLeft);
+        const typeLabel = item.type === 'project' ? 'Vault / project' : 'File asset';
+        const extLabel = item.ext ? item.ext.toUpperCase() : item.type === 'project' ? 'PROJECT' : 'MIXED';
+        const pct = Math.min(100, Math.round((item.daysLeft / 30) * 100));
+
         return (
-            <div className={`group relative bg-white dark:bg-[#1c1c26] border rounded-2xl p-5 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg dark:hover:shadow-black/30 ring-1 ${u.ring} border-zinc-200/60 dark:border-white/[0.07]`}>
-                {/* Top row */}
-                <div className="flex items-start justify-between gap-3">
-                    <div className="p-2.5 rounded-xl bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 border border-zinc-200/50 dark:border-white/10">
-                        {getFileIcon(item)}
+            <div
+                className="group relative flex min-h-[300px] flex-col justify-between overflow-hidden rounded-2xl border border-zinc-200/50 bg-editorial shadow-sm transition-all duration-300 hover:border-zinc-200/80 hover:shadow-md dark:border-white/[0.06] dark:bg-white/[0.04] dark:hover:border-white/10 dark:hover:shadow-lg"
+            >
+                <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-[0.035] dark:opacity-[0.06]" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                <div className={`pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full blur-3xl ${u.glow}`} />
+
+                <div className="relative z-10 flex flex-1 flex-col p-6 lg:p-7">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                            <span className="mb-2 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-brand dark:text-zinc-400">
+                                {typeLabel}
+                            </span>
+                            <h3 className="line-clamp-2 font-sans text-lg font-semibold leading-snug tracking-tight text-obsidian dark:text-white" title={item.name}>
+                                {item.name}
+                            </h3>
+                            <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400" title={item.originalPath}>
+                                {item.originalPath}
+                            </p>
+                        </div>
+                        <div className="flex shrink-0 flex-col items-end gap-2">
+                            <div className="rounded-xl bg-zinc-200/80 p-2.5 text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
+                                {getFileIcon(item)}
+                            </div>
+                            <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${u.chip}`}>
+                                {extLabel}
+                            </span>
+                        </div>
                     </div>
-                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border ${u.badge}`}>
-                        {item.daysLeft}d left
-                    </span>
+
+                    <div className="mt-5 grid grid-cols-2 gap-3 text-left">
+                        <div className="rounded-xl border border-zinc-200/50 bg-white/60 px-3 py-2.5 dark:border-white/[0.06] dark:bg-black/20">
+                            <div className="mb-1 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-zinc-400">
+                                <Calendar className="h-3 w-3" /> Removed
+                            </div>
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-white">{item.deletedAt}</p>
+                        </div>
+                        <div className="rounded-xl border border-zinc-200/50 bg-white/60 px-3 py-2.5 dark:border-white/[0.06] dark:bg-black/20">
+                            <div className="mb-1 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-zinc-400">
+                                <HardDrive className="h-3 w-3" /> Size
+                            </div>
+                            <p className="text-sm font-semibold tabular-nums text-zinc-900 dark:text-white">{item.size}</p>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 rounded-xl border border-zinc-200/40 bg-white/40 px-3 py-2.5 dark:border-white/[0.05] dark:bg-white/[0.03]">
+                        <div className="mb-2 flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-zinc-400">
+                            <span className="flex items-center gap-1.5">
+                                <span className={`h-1.5 w-1.5 rounded-full ${u.dot}`} />
+                                Retention window
+                            </span>
+                            <span className={u.label}>{item.daysLeft} days left</span>
+                        </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-200/80 dark:bg-white/10">
+                            <div className={`h-full rounded-full ${u.bar}`} style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className="mt-2 text-[10px] text-zinc-500 dark:text-zinc-400">
+                            Auto-purge after 30 days · ref <span className="font-mono text-zinc-600 dark:text-zinc-300">{shortId(item.id)}</span>
+                        </p>
+                    </div>
                 </div>
 
-                {/* Name */}
-                <div className="min-w-0">
-                    <p className="font-sans font-semibold text-sm text-zinc-900 dark:text-white truncate leading-tight" title={item.name}>{item.name}</p>
-                    <p className="text-[10px] uppercase tracking-wider font-bold text-zinc-400 mt-0.5 truncate">{item.originalPath}</p>
-                </div>
-
-                {/* Timer bar */}
-                <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-1">
-                            <span className={`w-1.5 h-1.5 rounded-full ${u.dot}`} />
-                            Auto-delete
-                        </span>
-                        <span className={`text-[9px] font-bold uppercase tracking-widest ${u.label}`}>{item.size}</span>
-                    </div>
-                    <div className="h-1 w-full rounded-full bg-zinc-100 dark:bg-white/10 overflow-hidden">
-                        <div className={`h-full rounded-full ${u.bar} transition-all duration-1000`} style={{ width: `${(item.daysLeft / 30) * 100}%` }} />
-                    </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 pt-1 border-t border-zinc-100 dark:border-white/[0.06]">
+                <div className="relative z-10 flex gap-2 border-t border-zinc-200/50 bg-white/50 px-5 py-4 dark:border-white/[0.06] dark:bg-black/10">
                     <button
+                        type="button"
                         onClick={() => handleRestore(item.id)}
-                        className="flex-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-zinc-50 dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-zinc-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 border border-zinc-200/50 dark:border-white/10 hover:border-blue-200 dark:hover:border-blue-500/20 transition-all flex items-center justify-center gap-1.5"
+                        className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200/60 bg-white py-2.5 text-[10px] font-bold uppercase tracking-widest text-zinc-700 transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:border-blue-500/30 dark:hover:bg-blue-500/10 dark:hover:text-blue-300"
                     >
-                        <RotateCcw className="w-3 h-3" /> Restore
+                        <RotateCcw className="h-3.5 w-3.5" /> Restore
                     </button>
                     <button
-                        onClick={() => { playClick(); setConfirmId(item.id); }}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-300 dark:text-zinc-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 border border-zinc-200/50 dark:border-white/10 hover:border-red-200 dark:hover:border-red-500/20 transition-all"
+                        type="button"
+                        onClick={() => {
+                            playClick();
+                            setConfirmId(item.id);
+                        }}
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-zinc-200/60 text-zinc-400 transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-white/10 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                         title="Delete forever"
                     >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="h-4 w-4" />
                     </button>
                 </div>
             </div>
         );
     };
 
-    // ── List row ─────────────────────────────────────────────────────────────
     const ListRow = ({ item, isLast }: { item: DeletedItem; isLast: boolean }) => {
         const u = urgencyClass(item.daysLeft);
         return (
-            <div className={`group flex items-center gap-4 px-5 py-4 hover:bg-zinc-50 dark:hover:bg-white/[0.03] transition-colors ${!isLast ? 'border-b border-zinc-100 dark:border-white/[0.06]' : ''}`}>
-                <div className="p-2 rounded-lg bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 shrink-0 border border-zinc-200/50 dark:border-white/10">
+            <div
+                className={`group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-zinc-50 dark:hover:bg-white/[0.03] ${!isLast ? 'border-b border-zinc-100 dark:border-white/[0.06]' : ''}`}
+            >
+                <div className="shrink-0 rounded-lg border border-zinc-200/50 bg-zinc-100 p-2 text-zinc-500 dark:border-white/10 dark:bg-white/5 dark:text-zinc-400">
                     {getFileIcon(item)}
                 </div>
-                <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">{item.name}</p>
-                    <p className="text-[10px] uppercase tracking-wider font-bold text-zinc-400 truncate mt-0.5">{item.originalPath} · {item.size}</p>
+                <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-zinc-900 dark:text-white">{item.name}</p>
+                    <p className="mt-0.5 truncate text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                        {item.originalPath} · {item.size} · {item.deletedAt}
+                    </p>
                 </div>
-                {/* Timer */}
-                <div className="hidden sm:flex flex-col items-end gap-1 w-28 shrink-0">
+                <div className="hidden w-28 shrink-0 flex-col items-end gap-1 sm:flex">
                     <span className={`text-[9px] font-black uppercase tracking-widest ${u.label}`}>{item.daysLeft} days</span>
-                    <div className="w-full h-1 rounded-full bg-zinc-100 dark:bg-white/10 overflow-hidden">
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-white/10">
                         <div className={`h-full rounded-full ${u.bar}`} style={{ width: `${(item.daysLeft / 30) * 100}%` }} />
                     </div>
                 </div>
-                {/* Deleted date */}
-                <div className="hidden md:flex items-center gap-1 text-[10px] font-bold text-zinc-400 uppercase tracking-widest w-20 shrink-0">
-                    <Clock className="w-3 h-3" /> {item.deletedAt}
+                <div className="hidden w-20 shrink-0 items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400 md:flex">
+                    <Clock className="h-3 w-3" /> {item.deletedAt}
                 </div>
-                {/* Actions */}
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex shrink-0 items-center gap-1.5">
                     <button
+                        type="button"
                         onClick={() => handleRestore(item.id)}
-                        className="h-8 px-3 rounded-lg text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 border border-transparent hover:border-blue-200 dark:hover:border-blue-500/20 transition-all flex items-center gap-1.5"
+                        className="flex h-8 items-center gap-1.5 rounded-lg border border-transparent px-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 transition-all hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 dark:text-zinc-400 dark:hover:border-blue-500/20 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
                     >
-                        <RotateCcw className="w-3 h-3" /> Restore
+                        <RotateCcw className="h-3 w-3" /> Restore
                     </button>
                     <button
-                        onClick={() => { playClick(); setConfirmId(item.id); }}
-                        className="h-8 w-8 rounded-lg flex items-center justify-center text-zinc-300 dark:text-zinc-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                        type="button"
+                        onClick={() => {
+                            playClick();
+                            setConfirmId(item.id);
+                        }}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-300 transition-all hover:bg-red-50 hover:text-red-500 dark:text-zinc-600 dark:hover:bg-red-500/10"
                         title="Delete forever"
                     >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="h-3.5 w-3.5" />
                     </button>
                 </div>
             </div>
         );
     };
 
-    // ── Render ───────────────────────────────────────────────────────────────
     return (
         <>
-            {/* Confirm delete single */}
             {confirmId && (() => {
-                const item = items.find(i => i.id === confirmId)!;
+                const item = items.find((i) => i.id === confirmId)!;
                 return <ConfirmOverlay id={confirmId} name={item?.name ?? ''} onConfirm={() => handleDeleteForever(confirmId)} onCancel={() => setConfirmId(null)} />;
             })()}
 
-            {/* Confirm empty all */}
             {confirmEmptyAll && (
                 <ConfirmOverlay id="all" name={`all ${items.length} items`} onConfirm={handleEmptyAll} onCancel={() => setConfirmEmptyAll(false)} />
             )}
 
-            <div className="space-y-6 animate-slide-up relative z-10 pb-24 bg-transparent">
-
-                {/* ── Page Header ── */}
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 border-b border-zinc-200/50 dark:border-white/5 pb-8">
-                    <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500">
-                            <span>Vault</span>
-                            <span className="text-zinc-300 dark:text-zinc-600">·</span>
-                            <span>Trash</span>
+            <div className="relative z-10 w-full animate-slide-up space-y-5 pb-12">
+                {/* Compact chrome — no banner card */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-start gap-3">
+                        <button
+                            type="button"
+                            onClick={handleBack}
+                            className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-200/70 bg-white text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-white/15 dark:bg-white/5 dark:text-zinc-300 dark:hover:border-white/25 dark:hover:text-white"
+                            title="Back"
+                        >
+                            <ChevronLeft className="h-5 w-5" />
+                        </button>
+                        <div className="min-w-0">
+                            <h1 className="font-sans text-2xl font-medium tracking-tight text-zinc-900 dark:text-white sm:text-3xl">Trash</h1>
+                            <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
+                                Restorable for 30 days — then permanently removed.
+                            </p>
                         </div>
-                        <h1 className="font-sans tracking-tight text-3xl md:text-5xl text-zinc-900 dark:text-white leading-[1.05] mb-2">
-                            Trash
-                        </h1>
-                        <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed max-w-lg">
-                            Items are permanently erased after 30 days. Restore anything you still need before the timer runs out.
-                        </p>
                     </div>
-
-                    {/* Stats + empty action */}
-                    <div className="flex flex-col items-start md:items-end gap-3 shrink-0">
+                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                         {items.length > 0 && (
-                            <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                                <span className="flex items-center gap-1.5">
-                                    <Layers className="w-3.5 h-3.5" />
-                                    {items.length} item{items.length !== 1 ? 's' : ''}
-                                </span>
-                                <span className="w-px h-3.5 bg-zinc-200 dark:bg-white/10" />
-                                <span>{totalSizeLabel} total</span>
-                            </div>
+                            <span className="inline-flex items-center gap-2 rounded-full border border-zinc-200/60 bg-white/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:border-white/10 dark:bg-white/5 dark:text-zinc-400">
+                                <Layers className="h-3.5 w-3.5 opacity-80" />
+                                {items.length} items · {totalSizeLabel}
+                                <span className="text-zinc-300 dark:text-zinc-600">·</span>
+                                {projectCount} proj · {fileCount} files
+                                {urgentCount > 0 && (
+                                    <>
+                                        <span className="text-zinc-300 dark:text-zinc-600">·</span>
+                                        <span className="text-amber-600 dark:text-amber-400">{urgentCount} urgent</span>
+                                    </>
+                                )}
+                            </span>
                         )}
                         <button
-                            onClick={() => { playClick(); if (items.length > 0) setConfirmEmptyAll(true); }}
+                            type="button"
+                            onClick={() => {
+                                playClick();
+                                if (items.length > 0) setConfirmEmptyAll(true);
+                            }}
                             disabled={items.length === 0}
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-red-200 dark:border-red-500/20 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            className="inline-flex items-center gap-2 rounded-xl border border-zinc-200/80 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-zinc-600 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-30 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/5"
                         >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            Empty Trash
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Empty all
                         </button>
                     </div>
                 </div>
 
-                {/* ── Toolbar ── */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    {/* Search */}
-                    <div className="relative flex-1 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-zinc-600 dark:group-focus-within:text-zinc-200 transition-colors pointer-events-none" />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="group relative min-w-0 flex-1">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 transition-colors group-focus-within:text-zinc-600 dark:group-focus-within:text-zinc-200" />
                         <input
                             type="text"
                             value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Search deleted items…"
-                            className="w-full h-10 pl-11 pr-10 rounded-xl bg-white dark:bg-white/5 border border-zinc-200/60 dark:border-white/10 text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-zinc-300 dark:focus:border-white/20 transition-colors font-medium"
+                            className="h-11 w-full rounded-2xl border border-zinc-200/60 bg-white pl-10 pr-10 text-sm font-medium text-zinc-900 shadow-sm placeholder:text-zinc-400 transition-colors focus:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-200/50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-white/20 dark:focus:ring-white/10"
                         />
                         {searchTerm && (
-                            <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 dark:hover:text-white transition-colors">
-                                <X className="w-3.5 h-3.5" />
+                            <button
+                                type="button"
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 transition-colors hover:text-zinc-700 dark:hover:text-white"
+                            >
+                                <X className="h-3.5 w-3.5" />
                             </button>
                         )}
                     </div>
-
-                    {/* View toggle */}
-                    <div className="flex items-center gap-1 p-1 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 shrink-0">
+                    <div className="flex shrink-0 items-center gap-1 rounded-2xl border border-zinc-200/50 bg-zinc-100/80 p-1 dark:border-white/10 dark:bg-white/5">
                         <button
-                            onClick={() => setViewMode('list')}
-                            className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'}`}
-                            title="List view"
-                        >
-                            <ListIcon className="w-4 h-4" />
-                        </button>
-                        <button
+                            type="button"
                             onClick={() => setViewMode('grid')}
-                            className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'}`}
+                            className={`rounded-xl p-2 transition-all ${viewMode === 'grid' ? 'bg-white text-zinc-900 shadow-sm dark:bg-white/10 dark:text-white' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'}`}
                             title="Grid view"
                         >
-                            <LayoutGrid className="w-4 h-4" />
+                            <LayoutGrid className="h-4 w-4" />
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('list')}
+                            className={`rounded-xl p-2 transition-all ${viewMode === 'list' ? 'bg-white text-zinc-900 shadow-sm dark:bg-white/10 dark:text-white' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'}`}
+                            title="List view"
+                        >
+                            <ListIcon className="h-4 w-4" />
                         </button>
                     </div>
                 </div>
 
-                {/* ── Content ── */}
                 {items.length === 0 ? (
-                    <div className="py-32 flex flex-col items-center justify-center text-center">
-                        <div className="w-20 h-20 rounded-[1.75rem] bg-zinc-100 dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 flex items-center justify-center mb-6 shadow-sm">
-                            <Trash2 className="w-8 h-8 text-zinc-300 dark:text-zinc-600 stroke-[1.5]" />
+                    <div className="relative overflow-hidden rounded-[2rem] border border-zinc-200/50 bg-white py-20 text-center shadow-sm dark:border-white/[0.06] dark:bg-charcoal dark:shadow-md">
+                        <div className="pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                        <div className="relative z-10 flex flex-col items-center px-6">
+                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-zinc-200/50 bg-zinc-50 dark:border-white/10 dark:bg-white/5">
+                                <Trash2 className="h-7 w-7 stroke-[1.5] text-zinc-400 dark:text-zinc-500" />
+                            </div>
+                            <h3 className="mb-1 font-sans text-lg tracking-tight text-zinc-900 dark:text-white">Nothing in trash</h3>
+                            <p className="max-w-sm text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">Deleted vault items will appear here for 30 days.</p>
                         </div>
-                        <h3 className="font-sans tracking-tight text-2xl text-zinc-900 dark:text-white mb-2">Trash is empty</h3>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-xs leading-relaxed">
-                            No deleted items here. Anything you remove from the vault will appear here for 30 days before permanent erasure.
-                        </p>
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="py-16 flex flex-col items-center justify-center text-center opacity-60">
-                        <Search className="w-8 h-8 text-zinc-300 dark:text-zinc-600 mb-3" />
-                        <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400">No results for "{searchTerm}"</p>
+                    <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-zinc-200/50 py-14 text-center dark:border-white/10">
+                        <Search className="mb-2 h-7 w-7 text-zinc-400" />
+                        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">No results for "{searchTerm}"</p>
                     </div>
                 ) : viewMode === 'grid' ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {filtered.map(item => <GridCard key={item.id} item={item} />)}
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                        {filtered.map((item) => (
+                            <GridCard key={item.id} item={item} />
+                        ))}
                     </div>
                 ) : (
-                    <div className="rounded-2xl overflow-hidden border border-zinc-200/60 dark:border-white/[0.07] bg-white dark:bg-[#1c1c26]">
-                        {/* List header */}
-                        <div className="flex items-center gap-4 px-5 py-3 bg-zinc-50 dark:bg-white/[0.03] border-b border-zinc-100 dark:border-white/[0.06]">
+                    <div className="relative overflow-hidden rounded-[2rem] border border-zinc-200/50 bg-white shadow-sm dark:border-white/[0.06] dark:bg-charcoal dark:shadow-md">
+                        <div className="pointer-events-none absolute inset-0 opacity-[0.02] dark:opacity-[0.04]" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                        <div className="relative z-10 flex items-center gap-4 border-b border-zinc-100 bg-zinc-50/90 px-5 py-3 dark:border-white/[0.06] dark:bg-white/[0.03]">
                             <div className="w-9" />
                             <span className="flex-1 text-[9px] font-black uppercase tracking-widest text-zinc-400">Asset</span>
-                            <span className="hidden sm:block w-28 text-right text-[9px] font-black uppercase tracking-widest text-zinc-400">Timer</span>
-                            <span className="hidden md:block w-20 text-[9px] font-black uppercase tracking-widest text-zinc-400">Deleted</span>
+                            <span className="hidden w-28 text-right text-[9px] font-black uppercase tracking-widest text-zinc-400 sm:block">Timer</span>
+                            <span className="hidden w-20 text-[9px] font-black uppercase tracking-widest text-zinc-400 md:block">Deleted</span>
                             <div className="w-24" />
                         </div>
                         {filtered.map((item, i) => (
                             <ListRow key={item.id} item={item} isLast={i === filtered.length - 1} />
                         ))}
-                    </div>
-                )}
-
-                {/* ── Urgency notice ── */}
-                {items.some(i => i.daysLeft <= 3) && (
-                    <div className="flex items-start gap-3 p-4 rounded-2xl border border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10">
-                        <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                        <p className="text-xs font-bold text-red-700 dark:text-red-300">
-                            {items.filter(i => i.daysLeft <= 3).length} item{items.filter(i => i.daysLeft <= 3).length !== 1 ? 's' : ''} will be permanently deleted within 3 days. Restore them now if needed.
-                        </p>
                     </div>
                 )}
             </div>

@@ -34,7 +34,7 @@ import { createAuditTrailPdf, createRightsCertificatePdf } from './utils/reportP
 // Critical path — loaded eagerly (needed before auth resolves)
 import LandingPage from './components/LandingPage';
 import SignInPage from './components/SignInPage';
-import { Card, Badge, Widget, GRADIENT_TEXT } from './components/Shared';
+import { Card, Badge, Widget } from './components/Shared';
 import ThemeModeDropdown from './components/ThemeModeDropdown';
 import { ClientRolodexContent } from './components/ClientsPage';
 import BrandLogo from './components/BrandLogo';
@@ -451,7 +451,7 @@ const StatusRibbon = ({ projects, user }: { projects: Project[]; user: UserProfi
     const usagePct = Math.max(0, Math.min(100, Math.round((usedNativeStorageBytes / nativeStorageCapacityBytes) * 100)));
 
       return (
-          <div className="hf-surface flex flex-wrap items-center gap-4 md:gap-8 p-4 bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] rounded-[2rem] overflow-hidden mb-8 shadow-sm dark:shadow-md">
+          <div className="hf-surface flex flex-wrap items-center gap-4 md:gap-8 p-4 bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] rounded-[2rem] overflow-hidden mb-4 md:mb-5 shadow-sm dark:shadow-md">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                 <CreditCard className="w-3.5 h-3.5" />
                 <span>Stripe Connect: <span className={stripeConnected ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-400'}>{stripeConnected ? 'Connected' : 'Not connected'}</span></span>
@@ -631,6 +631,8 @@ const Timeline = ({ projects }: { projects: Project[] }) => {
     );
 };
 
+/** Noise + surface treatment aligned with Trash / Reports premium cards */
+const CYCLING_WIDGET_NOISE = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
 
 const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; compact?: boolean }) => {
     const navigate = useNavigate();
@@ -739,7 +741,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                             </div>
                         </div>
                         <div className="flex items-baseline gap-1 mb-6">
-                            <PrivacyBlur strength="strong" className={`font-sans tracking-tight ${compact ? 'text-[clamp(2.1rem,9vw,3.2rem)]' : 'text-5xl md:text-6xl'} tracking-tighter leading-none ${GRADIENT_TEXT}`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
+                            <PrivacyBlur strength="strong" className={`font-sans font-medium tracking-tight text-zinc-900 dark:text-white ${compact ? 'text-[clamp(2.1rem,9vw,3.2rem)]' : 'text-5xl md:text-6xl'} tracking-tighter leading-none`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5">
@@ -770,39 +772,58 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
         {
             id: 'storage',
             render: () => (
-                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-[#23232e] rounded-3xl transition-all duration-700 ease-in-out">
-                    <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-2">
-                            <HardDrive className="w-4 h-4 text-zinc-400" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Vault Storage</span>
-                        </div>
-                        <span className="text-[10px] font-bold text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/10 px-2 py-1 rounded-md">{formatBytes(demoRemainingNativeStorageBytes)} left</span>
-                    </div>
-
-                    <div className="flex-1 flex flex-col justify-center gap-4">
-                        <div className="flex items-baseline gap-2">
-                            <span className="font-sans tracking-tight text-4xl md:text-5xl text-zinc-900 dark:text-white tracking-tight">{Math.round(demoUsedNativeStorageBytes / (1024 ** 3))}</span>
-                            <span className="text-sm font-bold text-zinc-400 uppercase tracking-widest">GB / 30 GB</span>
-                        </div>
-                        
-                        <div className="space-y-2">
-                            <div className="w-full h-2.5 flex rounded-full overflow-hidden gap-0.5 bg-zinc-100 dark:bg-white/5">
-                                <div className="h-full bg-indigo-500 w-[50%]" />
-                                <div className="h-full bg-sky-400 w-[30%]" />
-                                <div className="h-full bg-blue-400 w-[20%]" />
-                            </div>
-                            <div className="flex justify-between text-[9px] font-bold uppercase tracking-wider text-zinc-500">
-                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Video (10GB)</span>
-                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> Images (6GB)</span>
-                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-400" /> Docs (4GB)</span>
+                <div className="absolute inset-0 z-10 flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-zinc-200/50 bg-editorial transition-all duration-700 ease-in-out dark:border-white/[0.06] dark:bg-white/[0.04]">
+                    <div className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.07]" style={{ backgroundImage: CYCLING_WIDGET_NOISE, backgroundRepeat: 'repeat' }} />
+                    <div className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full bg-indigo-400/20 blur-3xl dark:bg-sky-500/10" />
+                    <div className="relative z-10 flex h-full flex-col justify-between p-6 sm:p-8">
+                        <div>
+                            <span className="mb-3 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-brand dark:text-zinc-400">
+                                Vault capacity
+                            </span>
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex min-w-0 items-center gap-3">
+                                    <div className="shrink-0 rounded-xl border border-zinc-200/60 bg-white/80 p-2.5 text-zinc-600 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-zinc-200">
+                                        <HardDrive className="h-4 w-4" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Native vault</p>
+                                        <p className="truncate text-xs font-medium text-zinc-600 dark:text-zinc-300">Mixed assets · 30 GB ceiling</p>
+                                    </div>
+                                </div>
+                                <span className="shrink-0 rounded-lg border border-zinc-200/60 bg-white/90 px-2.5 py-1 text-[10px] font-bold text-zinc-800 dark:border-white/10 dark:bg-white/10 dark:text-white">
+                                    {formatBytes(demoRemainingNativeStorageBytes)} free
+                                </span>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="flex justify-start">
-                        <button className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1.5 transition-colors">
-                            Manage Files <ArrowRight className="w-3 h-3" />
-                        </button>
+                        <div className="flex flex-1 flex-col justify-center gap-5">
+                            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                                <span className="font-sans text-4xl font-medium tracking-tight text-zinc-900 tabular-nums dark:text-white md:text-5xl">
+                                    {Math.round(demoUsedNativeStorageBytes / (1024 ** 3))}
+                                </span>
+                                <span className="text-sm font-bold uppercase tracking-widest text-zinc-400">GB used</span>
+                                <span className="w-full text-[11px] font-medium text-zinc-500 dark:text-zinc-400 sm:w-auto sm:pl-2">of 30 GB provisioned</span>
+                            </div>
+
+                            <div className="space-y-2.5">
+                                <div className="flex h-2.5 w-full gap-0.5 overflow-hidden rounded-full bg-zinc-100 dark:bg-white/5">
+                                    <div className="h-full w-[50%] bg-indigo-500" />
+                                    <div className="h-full w-[30%] bg-sky-400" />
+                                    <div className="h-full w-[20%] bg-blue-400" />
+                                </div>
+                                <div className="flex flex-wrap gap-x-4 gap-y-2 text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                    <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-indigo-500" /> Video ~10 GB</span>
+                                    <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-sky-400" /> Images ~6 GB</span>
+                                    <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-blue-400" /> Docs ~4 GB</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-start border-t border-zinc-200/50 pt-4 dark:border-white/[0.06]">
+                            <button type="button" className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-indigo-600 transition-colors hover:text-indigo-800 dark:text-indigo-300 dark:hover:text-indigo-200">
+                                Manage files <ArrowRight className="h-3 w-3" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             )
@@ -980,7 +1001,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                             </div>
                         </div>
                         <div className="flex items-baseline gap-1 mb-6">
-                            <PrivacyBlur strength="strong" className={`font-sans tracking-tight ${compact ? 'text-[clamp(2.1rem,9vw,3.2rem)]' : 'text-5xl md:text-6xl'} tracking-tighter leading-none ${GRADIENT_TEXT}`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
+                            <PrivacyBlur strength="strong" className={`font-sans font-medium tracking-tight text-zinc-900 dark:text-white ${compact ? 'text-[clamp(2.1rem,9vw,3.2rem)]' : 'text-5xl md:text-6xl'} tracking-tighter leading-none`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
                         </div>
                         <div className="flex items-center gap-3 flex-wrap">
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5">
@@ -1024,46 +1045,66 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
         {
             id: 'storage',
             render: () => (
-                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-[#23232e] rounded-3xl transition-all duration-700 ease-in-out">
-                    <div className="flex justify-between items-start gap-3">
-                        <div className="flex items-center gap-2">
-                            <HardDrive className="w-4 h-4 text-zinc-400" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Project Storage</span>
-                        </div>
-                        <span className="text-[10px] font-bold text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/10 px-2 py-1 rounded-md">{totalFiles} files</span>
-                    </div>
-
-                    <div className="flex-1 flex flex-col justify-center gap-4">
-                        <div className="flex items-baseline gap-2 flex-wrap">
-                            <span className="font-sans tracking-tight text-4xl md:text-5xl text-zinc-900 dark:text-white tracking-tight">{formatBytes(totalBytes)}</span>
-                            <span className="text-sm font-bold text-zinc-400 uppercase tracking-widest">Across {projects.length} project{projects.length === 1 ? '' : 's'}</span>
-                        </div>
-
-                        <div className="space-y-2">
-                            <div className="w-full h-2.5 flex rounded-full overflow-hidden gap-0.5 bg-zinc-100 dark:bg-white/5">
-                                {(storageBreakdown.length > 0 ? storageBreakdown : [{ label: 'Empty', bytes: 1, color: 'bg-zinc-300 dark:bg-white/10' }]).map((item) => (
-                                    <div
-                                        key={item.label}
-                                        className={`h-full ${item.color}`}
-                                        style={{ width: `${storageTotal > 0 ? (item.bytes / storageTotal) * 100 : 100}%` }}
-                                    />
-                                ))}
-                            </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[9px] font-bold uppercase tracking-wider text-zinc-500">
-                                {(storageBreakdown.length > 0 ? storageBreakdown : [{ label: 'No files', bytes: 0, color: 'bg-zinc-300' }]).map((item) => (
-                                    <span key={item.label} className="flex items-center gap-1">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${item.color}`} /> {item.label} ({item.bytes > 0 ? formatBytes(item.bytes) : '0 B'})
-                                    </span>
-                                ))}
+                <div className="absolute inset-0 z-10 flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-zinc-200/50 bg-editorial transition-all duration-700 ease-in-out dark:border-white/[0.06] dark:bg-white/[0.04]">
+                    <div className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.07]" style={{ backgroundImage: CYCLING_WIDGET_NOISE, backgroundRepeat: 'repeat' }} />
+                    <div className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full bg-indigo-400/20 blur-3xl dark:bg-sky-500/10" />
+                    <div className="relative z-10 flex h-full flex-col justify-between p-6 sm:p-8">
+                        <div>
+                            <span className="mb-3 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-brand dark:text-zinc-400">
+                                Project storage
+                            </span>
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex min-w-0 items-center gap-3">
+                                    <div className="shrink-0 rounded-xl border border-zinc-200/60 bg-white/80 p-2.5 text-zinc-600 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-zinc-200">
+                                        <HardDrive className="h-4 w-4" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">All vaults</p>
+                                        <p className="truncate text-xs font-medium text-zinc-600 dark:text-zinc-300">{totalFiles} files indexed</p>
+                                    </div>
+                                </div>
+                                <span className="shrink-0 rounded-lg border border-zinc-200/60 bg-white/90 px-2.5 py-1 text-[10px] font-bold text-zinc-800 dark:border-white/10 dark:bg-white/10 dark:text-white">
+                                    {projects.length} project{projects.length === 1 ? '' : 's'}
+                                </span>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-                        <span>{activeClients} active client{activeClients === 1 ? '' : 's'}</span>
-                        <button onClick={() => { playClick(); navigate('/vault'); }} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1.5 transition-colors">
-                            Manage Files <ArrowRight className="w-3 h-3" />
-                        </button>
+                        <div className="flex flex-1 flex-col justify-center gap-5">
+                            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                                <span className="font-sans text-4xl font-medium tracking-tight text-zinc-900 tabular-nums dark:text-white md:text-5xl">
+                                    {formatBytes(totalBytes)}
+                                </span>
+                                <span className="text-sm font-bold uppercase tracking-widest text-zinc-400">Total bytes</span>
+                                <span className="w-full text-[11px] font-medium text-zinc-500 dark:text-zinc-400 sm:w-auto sm:pl-2">Across your workspace</span>
+                            </div>
+
+                            <div className="space-y-2.5">
+                                <div className="flex h-2.5 w-full gap-0.5 overflow-hidden rounded-full bg-zinc-100 dark:bg-white/5">
+                                    {(storageBreakdown.length > 0 ? storageBreakdown : [{ label: 'Empty', bytes: 1, color: 'bg-zinc-300 dark:bg-white/10' }]).map((item) => (
+                                        <div
+                                            key={item.label}
+                                            className={`h-full ${item.color}`}
+                                            style={{ width: `${storageTotal > 0 ? (item.bytes / storageTotal) * 100 : 100}%` }}
+                                        />
+                                    ))}
+                                </div>
+                                <div className="flex flex-wrap gap-x-4 gap-y-2 text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                    {(storageBreakdown.length > 0 ? storageBreakdown : [{ label: 'No files', bytes: 0, color: 'bg-zinc-300' }]).map((item) => (
+                                        <span key={item.label} className="flex items-center gap-1.5">
+                                            <span className={`h-1.5 w-1.5 rounded-full ${item.color}`} /> {item.label}{' '}
+                                            <span className="font-normal opacity-90">({item.bytes > 0 ? formatBytes(item.bytes) : '0 B'})</span>
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 border-t border-zinc-200/50 pt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">
+                            <span>{activeClients} active client{activeClients === 1 ? '' : 's'}</span>
+                            <button type="button" onClick={() => { playClick(); navigate('/vault'); }} className="flex items-center gap-2 text-indigo-600 transition-colors hover:text-indigo-800 dark:text-indigo-300 dark:hover:text-indigo-200">
+                                Manage files <ArrowRight className="h-3 w-3" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             )
@@ -1435,9 +1476,9 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
             {/* Status Ribbon - Now part of dashboard logic */}
             <StatusRibbon projects={projects} user={user} />
 
-            <div className={`grid grid-cols-1 gap-6 md:gap-8 ${isCompactContent ? '' : 'xl:grid-cols-12'}`}>
-                <div className={`flex flex-col ${isCompactContent ? 'gap-8' : 'xl:col-span-8 gap-6'}`}>
-                    <div className={`grid grid-cols-1 gap-6 ${isCompactContent ? '' : 'lg:grid-cols-2'}`}>
+            <div className={`grid grid-cols-1 gap-4 md:gap-5 ${isCompactContent ? '' : 'xl:grid-cols-12'}`}>
+                <div className={`flex flex-col ${isCompactContent ? 'gap-4 md:gap-5' : 'xl:col-span-8 gap-3 md:gap-4'}`}>
+                    <div className={`grid grid-cols-1 gap-4 md:gap-5 ${isCompactContent ? '' : 'lg:grid-cols-2'}`}>
                         
                         {/* CYCLING WIDGET COMPONENT */}
                         <CyclingWidget projects={projects} compact={isCompactContent} />
@@ -1446,8 +1487,8 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                             title={"Today's Priorities"}
                             titleIcon={Siren}
                             surfaceless
-                            titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2"
-                            headerClassName="px-4 pt-6 pb-3"
+                            titleClassName="font-serif text-2xl md:text-3xl font-medium tracking-tight text-zinc-900 dark:text-white"
+                            headerClassName="px-4 pt-3 pb-2"
                             actions={<span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900">{alerts.length} Actions</span>}
                         >
                             <div className="flex-1 flex flex-col gap-3">
@@ -1486,8 +1527,8 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                         </Widget>
                     </div>
 
-                    {/* Live Client Pulse */}
-                    <Widget title={"Live Client Pulse"} titleIcon={ActivityIcon} surfaceless titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2" headerClassName="px-4 pt-6 pb-3">
+                    {/* Live Client Radar */}
+                    <Widget title={"Live Client Radar"} titleIcon={ActivityIcon} surfaceless titleClassName="font-serif text-2xl md:text-3xl font-medium tracking-tight text-zinc-900 dark:text-white" headerClassName="px-4 pt-2 pb-2">
                         {liveClients.length === 0 ? (
                             <div className="rounded-[2rem] border border-dashed border-zinc-200/50 dark:border-white/15 p-6 text-center bg-white/70 dark:bg-white/[0.02]">
                                 <Monitor className="w-5 h-5 text-zinc-400 mx-auto mb-2" />
@@ -1524,7 +1565,9 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
 
                     <Widget
                         title={"Active Projects"}
-                        titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2"
+                        surfaceless
+                        titleClassName="font-serif text-2xl md:text-3xl font-medium tracking-tight text-zinc-900 dark:text-white"
+                        headerClassName="px-4 pt-2 pb-2"
                         actions={(
                             <div className="flex gap-4">
                                 {['pending', 'draft', 'paid'].map((tab) => (
@@ -1538,11 +1581,11 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                 ))}
                             </div>
                         )}
-                        className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] rounded-[2rem] shadow-sm dark:shadow-md"
+                        className="border-none bg-transparent shadow-none rounded-[2rem]"
                     >
                         <div className="flex flex-col">
                             {filteredProjects.length === 0 ? (
-                                <div className="py-24 flex flex-col items-center justify-center opacity-80 border-2 border-dashed border-zinc-200/50 dark:border-white/10 rounded-3xl m-4 bg-zinc-50 dark:bg-[#23232e]/45">
+                                <div className="py-24 flex flex-col items-center justify-center opacity-80 border-2 border-dashed border-zinc-200/50 dark:border-white/10 rounded-3xl m-4 bg-transparent">
                                     <div className="w-20 h-20 rounded-[2rem] bg-white dark:bg-white/5 flex items-center justify-center mb-6 shadow-sm border border-zinc-100 dark:border-white/10 relative">
                                         <Briefcase className="w-10 h-10 stroke-[1.5] text-zinc-400" />
                                         <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-100 dark:bg-blue-500/20 rounded-xl flex items-center justify-center border-2 border-white dark:border-[#23232e]">
@@ -1581,7 +1624,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                                 <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-[#23232e] ${p.status === 'paid' ? 'bg-blue-500 text-zinc-900 shadow-sm' : 'bg-amber-500'}`} />
                                             </div>
                                             <div>
-                                                <h3 className="font-serif font-bold text-lg tracking-tight text-zinc-900 dark:text-[#bef264] group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{p.name}</h3>
+                                                <h3 className="font-serif font-bold text-lg tracking-tight text-zinc-900 dark:text-zinc-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">{p.name}</h3>
                                                 <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">{p.client.company || p.client.name}</p>
                                             </div>
                                         </div>
@@ -1614,9 +1657,9 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                     </Widget>
                 </div>
                 {/* Briefing Sidebar */}
-                <div className={`${isCompactContent ? 'p-2 md:p-3 flex flex-col h-[calc(100vh-140px)]' : 'xl:col-span-4 p-2 md:p-3 flex flex-col xl:h-[calc(100vh-140px)] xl:sticky xl:top-24'}`}>
-                    <div className={`relative flex-1 h-full overflow-visible ${briefingPulse ? 'widget-highlight-shell widget-highlight-double' : ''}`}>
-                    <div className="flex flex-col flex-1 pb-2 h-full overflow-hidden p-6 transition-[box-shadow,border-color] duration-700">
+                <div className={`${isCompactContent ? 'p-2 md:p-3 flex flex-col h-[calc(100vh-140px)]' : 'xl:col-span-4 p-2 md:p-3 flex flex-col xl:h-[calc(100vh-140px)] xl:sticky xl:top-24'}`}> 
+                    <div className={`relative flex-1 h-full overflow-visible ${briefingPulse ? 'widget-highlight-shell widget-highlight-double' : ''}`}> 
+                    <div className="flex flex-col flex-1 pb-2 h-full overflow-hidden p-6 transition-[box-shadow,border-color] duration-700 xl:ml-[-1.5rem]">
                         <div className="flex items-center justify-between mb-4">
                             <div>
                                 <h3 className="font-serif text-2xl text-zinc-900 dark:text-white">Briefing</h3>
@@ -2097,7 +2140,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                         <button className="h-10 w-10 flex items-center justify-center rounded-full border border-red-200 dark:border-red-500/20 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all" title="Delete"><Trash2 className="w-4 h-4" /></button>
                                         <button
                                             onClick={() => { playClick(); navigate(`/preview/${project.id}`, { state: { from: location.pathname } }); }}
-                                            className="h-12 pl-6 pr-2 lg:pr-3 rounded-full bg-slate-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-black dark:hover:bg-slate-200 font-bold text-[10px] lg:text-xs uppercase tracking-widest flex items-center gap-4 transition-colors shadow-xl group/launch shrink-0"
+                                            className="h-12 pl-6 pr-2 lg:pr-3 rounded-full bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 hover:bg-black dark:hover:bg-slate-200 font-bold text-[10px] lg:text-xs uppercase tracking-widest flex items-center gap-4 transition-colors shadow-xl group/launch shrink-0"
                                         >
                                             <span className="hidden sm:inline">Launch Preview</span>
                                             <span className="sm:hidden">Preview</span>
@@ -4004,8 +4047,17 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                     className="fixed left-0 right-0 bottom-0 z-[30] overflow-hidden"
                     style={{ top: stripOffset + headerHeightPx }}
                 >
-                    <div className="h-full overflow-y-auto px-3 sm:px-5 lg:px-6 xl:px-7 pt-3 sm:pt-4 pb-24 sm:pb-28 lg:pb-6 bg-[#f0f2f5] dark:bg-cosmic">
-                        <div key={location.pathname} className="min-h-full animate-route-in">
+                    <div
+                        className={`h-full px-3 sm:px-5 lg:px-6 xl:px-7 pt-3 sm:pt-4 bg-[#f0f2f5] dark:bg-cosmic ${
+                            currentPath === 'activity'
+                                ? 'overflow-hidden flex flex-col min-h-0 pb-[max(0.75rem,calc(env(safe-area-inset-bottom,0px)*3))] sm:pb-3 lg:pb-3'
+                                : 'overflow-y-auto pb-24 sm:pb-28 lg:pb-6'
+                        }`}
+                    >
+                        <div
+                            key={location.pathname}
+                            className={`animate-route-in ${currentPath === 'activity' ? 'flex-1 min-h-0 flex flex-col overflow-hidden' : 'min-h-full'}`}
+                        >
                             <Outlet context={outletCtx} />
                         </div>
                     </div>
@@ -4105,9 +4157,18 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                 </button>
                             </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto">
-                            <div className="min-h-full px-3 sm:px-5 lg:px-6 xl:px-7 pt-3 sm:pt-4 pb-24 sm:pb-28 lg:pb-6 bg-[#f0f2f5]/40 dark:bg-cosmic/56">
-                                <div key={location.pathname} className="min-h-full animate-route-in">
+                        <div className={currentPath === 'activity' ? 'flex-1 min-h-0 overflow-hidden flex flex-col' : 'flex-1 overflow-y-auto'}>
+                            <div
+                                className={`px-3 sm:px-5 lg:px-6 xl:px-7 pt-3 sm:pt-4 bg-[#f0f2f5]/40 dark:bg-cosmic/56 ${
+                                    currentPath === 'activity'
+                                        ? 'flex-1 min-h-0 flex flex-col overflow-hidden pb-[max(0.75rem,calc(env(safe-area-inset-bottom,0px)*3))] sm:pb-3 lg:pb-3'
+                                        : 'min-h-full pb-24 sm:pb-28 lg:pb-6'
+                                }`}
+                            >
+                                <div
+                                    key={location.pathname}
+                                    className={`animate-route-in ${currentPath === 'activity' ? 'flex-1 min-h-0 flex flex-col overflow-hidden' : 'min-h-full'}`}
+                                >
                                     <Outlet context={outletCtx} />
                                 </div>
                             </div>

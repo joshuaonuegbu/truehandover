@@ -805,7 +805,7 @@ const ReportsView = () => {
                                 </div>
                             </div>
                             <div>
-                                <div className="text-3xl font-sans tracking-tight text-obsidian dark:text-white mb-1"><PrivacyBlur>${lockedVolume.toLocaleString()}</PrivacyBlur></div>
+                                <div className="text-3xl font-sans tabular-nums tracking-wide text-obsidian dark:text-white mb-1 sm:tracking-wider"><PrivacyBlur>${lockedVolume.toLocaleString()}</PrivacyBlur></div>
                                 <div className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400">Locked in Vault</div>
                             </div>
                         </div>

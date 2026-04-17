@@ -221,12 +221,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                         <button
                             onClick={handleSave}
                                 className={`
-                                h-12 px-8 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 transition-all hover:scale-105 shadow-lg
-                                ${isSaving
-                                    ? 'bg-slate-100 dark:bg-white/10 text-slate-400 cursor-wait'
-                                    : 'bg-slate-800 text-white dark:bg-white dark:text-zinc-950 hover:bg-slate-900 dark:hover:bg-slate-200'
-                                }
-                            `}
+                                        h-12 px-8 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 transition-all hover:scale-105 shadow-lg
+                                        ${isSaving
+                                            ? 'bg-slate-100 dark:bg-white/10 text-slate-400 cursor-wait'
+                                            : 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 hover:bg-black dark:hover:bg-slate-200'
+                                        }
+                                    `}
                         >
                             {isSaving ? 'Saving...' : <>Save Changes <CheckCircle className="w-4 h-4" /></>}
                         </button>

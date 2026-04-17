@@ -285,31 +285,27 @@ const ActivityView = () => {
     const awaitingAction = projects.filter(p => p.status === 'awaiting_payment' || p.status === 'awaiting_signature').length;
 
     return (
-        <div className="lg:h-[calc(100vh-140px)] h-auto flex flex-col gap-6 animate-slide-up relative z-10 pb-0">
-            {/* Header */}
-            <div className="shrink-0 flex flex-col gap-4 border-b border-zinc-200/50 dark:border-white/5 pb-6">
-                <div className="flex justify-between items-end">
-                    <div>
-                        <h2 className="text-4xl font-sans tracking-tight font-medium text-obsidian dark:text-white">
-                            Activity & Timeline
-                        </h2>
-                        <p className="text-zinc-500 dark:text-zinc-400 text-base mt-1">
-                            Operational ledger and financial events.
-                        </p>
-                    </div>
-                    <div className="flex gap-2">
-                        <button className="px-4 py-2 bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 rounded-2xl text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:bg-editorial dark:hover:bg-white/10 transition-colors">
-                            Export CSV
-                        </button>
-                    </div>
+        <div className="flex h-full min-h-0 w-full min-w-0 flex-col gap-4 overflow-hidden animate-slide-up relative z-10">
+            {/* Header — fixed height; ledger scrolls below */}
+            <div className="shrink-0 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between border-b border-zinc-200/50 dark:border-white/5 pb-4">
+                <div>
+                    <h2 className="text-3xl sm:text-4xl font-sans tracking-tight font-medium text-obsidian dark:text-white">
+                        Activity & Timeline
+                    </h2>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-sm sm:text-base mt-1">
+                        Operational ledger and financial events.
+                    </p>
                 </div>
+                <button type="button" className="shrink-0 px-4 py-2.5 bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 rounded-2xl text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:bg-editorial dark:hover:bg-white/10 transition-colors w-fit">
+                    Export CSV
+                </button>
             </div>
 
-            {/* Main Layout - Flex Row for Fixed Sidebar + Fluid Content */}
-            <div className="flex-1 flex flex-col lg:flex-row gap-8 lg:overflow-hidden">
+            {/* Main: sidebar + transaction log — only the log body scrolls */}
+            <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-hidden lg:flex-row lg:gap-6">
 
-                {/* Left: Filters & Metrics Sidebar - Scrollable independently if needed */}
-                <div className="lg:w-80 shrink-0 flex flex-col gap-8 lg:overflow-y-auto no-scrollbar pr-2 pb-6 p-6">
+                {/* Left: filters + metrics */}
+                <div className="flex w-full shrink-0 flex-col gap-5 overflow-y-auto pb-1 lg:w-[min(100%,18rem)] xl:w-80 lg:max-h-full lg:shrink-0 lg:overflow-y-auto lg:pb-0 no-scrollbar">
                     {/* Filters */}
                     <div>
                         <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-4 px-1">Ledger Filters</h3>
@@ -356,9 +352,9 @@ const ActivityView = () => {
                     </div>
                 </div>
 
-                {/* Right: Timeline Feed - Fills remaining space, Scrollable internally */}
-                <div className="flex-1 h-full min-h-0">
-                    <Card hoverEffect={false} className="h-full flex flex-col !p-0 overflow-hidden shadow-sm border border-zinc-200/50 dark:border-white/[0.06]">
+                {/* Right: transaction log — scrollbar lives here only */}
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                    <Card hoverEffect={false} className="flex h-full min-h-[280px] flex-col !p-0 overflow-hidden border border-zinc-200/50 shadow-sm dark:border-white/[0.06] lg:min-h-0">
                         <div className="shrink-0 p-6 border-b border-zinc-200/50 dark:border-white/5 bg-editorial/50 dark:bg-white/[0.02]">
                             <div className="flex justify-between items-center gap-4">
                                 <h3 className="font-sans tracking-tight text-lg text-obsidian dark:text-white shrink-0">Transaction Log</h3>
@@ -382,8 +378,7 @@ const ActivityView = () => {
                             </div>
                         </div>
 
-                        {/* VISUAL FIX: Added `my-1 mr-1 rounded-2xl` to float the scrollbar inside */}
-                        <div className="flex-1 overflow-y-auto max-h-[60vh] lg:max-h-none p-6 pr-6 space-y-10 custom-scrollbar relative my-1 mr-1 rounded-2xl">
+                        <div className="custom-scrollbar flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-y-contain p-4 sm:p-6 space-y-10 [scrollbar-gutter:stable]">
                             {filteredGroups.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center opacity-40">
                                     <Search className="w-12 h-12 mb-4 text-zinc-300" />

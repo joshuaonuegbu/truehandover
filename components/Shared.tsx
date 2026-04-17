@@ -95,9 +95,9 @@ export const Widget: React.FC<WidgetProps> = ({ title, titleIcon: TitleIcon, tit
             <div className={className}>
                 {(title || actions) && (
                     <div className={`flex items-start justify-between ${headerPaddingClass}`}>
-                        <div className={`flex items-center gap-3 ${titleClassName}`}>
-                            {TitleIcon && <TitleIcon className="w-4 h-4" />}
-                            {typeof title === 'string' ? <h3 className="text-sm font-bold">{title}</h3> : title}
+                        <div className="flex min-w-0 items-center gap-3">
+                            {TitleIcon && <TitleIcon className="w-5 h-5 shrink-0 opacity-90" />}
+                            {typeof title === 'string' ? <h3 className={titleClassName.trim() ? titleClassName : 'text-sm font-bold'}>{title}</h3> : title}
                         </div>
                         {actions && <div className="flex items-center gap-2">{actions}</div>}
                     </div>
@@ -113,9 +113,9 @@ export const Widget: React.FC<WidgetProps> = ({ title, titleIcon: TitleIcon, tit
         <Card noPadding={compact} className={className}>
             {(title || actions) && (
                 <div className={`flex items-start justify-between ${headerPaddingClass}`}>
-                    <div className={`flex items-center gap-3 ${titleClassName}`}>
-                        {TitleIcon && <TitleIcon className="w-4 h-4" />}
-                        {typeof title === 'string' ? <h3 className="text-sm font-bold">{title}</h3> : title}
+                    <div className="flex min-w-0 items-center gap-3">
+                        {TitleIcon && <TitleIcon className="w-5 h-5 shrink-0 opacity-90" />}
+                        {typeof title === 'string' ? <h3 className={titleClassName.trim() ? titleClassName : 'text-sm font-bold'}>{title}</h3> : title}
                     </div>
                     {actions && <div className="flex items-center gap-2">{actions}</div>}
                 </div>
