@@ -216,33 +216,36 @@ const GetStartedModal = ({
                 aria-hidden
             />
             <div
-                className={`relative z-10 w-full max-w-2xl transform transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${visible ? 'scale-100 opacity-100 translate-y-0' : 'scale-[0.98] opacity-0 translate-y-6'}`}
+                className={`relative z-10 w-full max-w-lg transform transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] sm:max-w-xl ${visible ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-6 scale-[0.98] opacity-0'}`}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="get-started-title"
             >
-                <div className="rounded-[1.75rem] border border-slate-200/80 dark:border-white/[0.1] bg-white dark:bg-charcoal shadow-2xl overflow-hidden">
-                    <div className="px-6 sm:px-10 pt-8 pb-6 border-b border-slate-200/60 dark:border-white/[0.06] flex items-start justify-between gap-4">
-                        <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500 mb-2">TrueHandover</p>
-                            <h2 id="get-started-title" className="font-serif text-2xl sm:text-3xl text-black dark:text-white tracking-tight">
-                                How would you like to begin?
-                            </h2>
-                            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-md">
-                                Start in the workspace right away, or load deliverables first — your choice.
-                            </p>
+                <div className="overflow-hidden rounded-[1.75rem] border border-zinc-200/40 bg-white/90 shadow-[0_24px_80px_-12px_rgba(0,0,0,0.2)] backdrop-blur-2xl dark:border-white/[0.12] dark:bg-[#14141a]/85 dark:shadow-[0_24px_80px_-12px_rgba(0,0,0,0.65)]">
+                    <div className="relative px-6 pb-5 pt-7 sm:px-9 sm:pb-6 sm:pt-8">
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-zinc-300/80 to-transparent dark:via-white/20" />
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0 space-y-2 pr-2">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-400 dark:text-zinc-500">TrueHandover</p>
+                                <h2 id="get-started-title" className="font-serif text-2xl leading-[1.15] tracking-tight text-zinc-950 dark:text-white sm:text-[1.65rem]">
+                                    How would you like to begin?
+                                </h2>
+                                <p className="max-w-md text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                                    Open the workspace now, or add files first — both paths land in Quick delivery.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => { playClick(); handleClose(); }}
+                                className="shrink-0 rounded-full border border-zinc-200/80 p-2 text-zinc-500 transition-colors hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900 dark:border-white/15 dark:hover:bg-white/10 dark:hover:text-white"
+                                aria-label="Close"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => { playClick(); handleClose(); }}
-                            className="shrink-0 p-2.5 rounded-full border border-slate-200 dark:border-white/15 text-slate-500 hover:text-black dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
-                            aria-label="Close"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
                     </div>
 
-                    <div className="p-6 sm:p-10 space-y-4">
+                    <div className="space-y-3 px-6 pb-7 sm:space-y-4 sm:px-9 sm:pb-9">
                         <button
                             type="button"
                             onClick={() => {
@@ -250,18 +253,18 @@ const GetStartedModal = ({
                                 handleClose();
                                 setTimeout(onStartFresh, 200);
                             }}
-                            className="w-full text-left rounded-2xl border border-slate-200 dark:border-white/[0.1] bg-slate-50/80 dark:bg-white/[0.04] hover:border-brand/60 dark:hover:border-brand/40 hover:bg-white dark:hover:bg-white/[0.07] transition-all p-5 sm:p-6 group"
+                            className="group w-full rounded-2xl border border-zinc-200/70 bg-zinc-50/50 p-5 text-left transition-all hover:border-zinc-300 hover:bg-white hover:shadow-md dark:border-white/[0.08] dark:bg-white/[0.03] dark:hover:border-white/20 dark:hover:bg-white/[0.06] sm:p-6"
                         >
                             <div className="flex items-start gap-4">
-                                <div className="w-11 h-11 rounded-xl bg-brand/15 dark:bg-brand/20 flex items-center justify-center text-zinc-900 dark:text-brand shrink-0 group-hover:scale-105 transition-transform">
-                                    <LayoutGrid className="w-5 h-5" />
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-zinc-200/60 bg-white text-zinc-900 shadow-sm dark:border-white/10 dark:bg-white/[0.06] dark:text-brand">
+                                    <LayoutGrid className="h-5 w-5" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <p className="font-bold text-sm uppercase tracking-widest text-black dark:text-white mb-1 flex items-center gap-2">
+                                    <p className="mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-900 dark:text-white">
                                         Open the workspace
-                                        <ArrowRight className="w-4 h-4 opacity-50 group-hover:translate-x-0.5 transition-transform" />
+                                        <ArrowRight className="h-4 w-4 opacity-40 transition-transform group-hover:translate-x-0.5 group-hover:opacity-100" />
                                     </p>
-                                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
                                         Jump in and explore Quick delivery, vault, and settings. Add files whenever you&apos;re ready.
                                     </p>
                                 </div>
@@ -269,16 +272,16 @@ const GetStartedModal = ({
                         </button>
 
                         {filesPathAvailable && (
-                            <div className="rounded-2xl border border-dashed border-slate-300/90 dark:border-white/15 bg-white dark:bg-[#2a2a38]/50 p-5 sm:p-6">
-                                <div className="flex items-start gap-4 mb-4">
-                                    <div className="w-11 h-11 rounded-xl bg-slate-200/80 dark:bg-white/10 flex items-center justify-center text-zinc-800 dark:text-white shrink-0">
-                                        <Upload className="w-5 h-5" />
+                            <div className="rounded-2xl border border-dashed border-zinc-300/70 bg-white/60 p-5 dark:border-white/12 dark:bg-white/[0.02] sm:p-6">
+                                <div className="mb-4 flex items-start gap-4">
+                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-zinc-200/60 bg-zinc-100/80 text-zinc-800 dark:border-white/10 dark:bg-white/[0.06] dark:text-white">
+                                        <Upload className="h-5 w-5" />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="font-bold text-sm uppercase tracking-widest text-black dark:text-white mb-1">
+                                        <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-900 dark:text-white">
                                             Bring files first
                                         </p>
-                                        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
                                             We&apos;ll place them in Quick delivery so you can add the client, publish, and share the vault in a few steps.
                                         </p>
                                     </div>
@@ -290,7 +293,7 @@ const GetStartedModal = ({
                                         handleClose();
                                         setTimeout(onChooseFiles, 200);
                                     }}
-                                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-black text-white dark:bg-white dark:text-zinc-950 text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity"
+                                    className="w-full rounded-xl bg-zinc-950 px-6 py-3 text-xs font-bold uppercase tracking-widest text-white transition-opacity hover:opacity-90 dark:bg-white dark:text-zinc-950 sm:w-auto"
                                 >
                                     Choose files
                                 </button>
@@ -298,8 +301,9 @@ const GetStartedModal = ({
                         )}
 
                         {filesPathAvailable && (
-                            <p className="text-center text-[11px] text-slate-500 dark:text-slate-400 pt-2">
-                                Tip: you can also <span className="text-slate-700 dark:text-slate-300 font-medium">drag files from your desktop</span> onto this page anytime.
+                            <p className="pt-1 text-center text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-500">
+                                You can also{' '}
+                                <span className="font-medium text-zinc-700 dark:text-zinc-300">drag files from your desktop</span> onto this page anytime.
                             </p>
                         )}
                     </div>

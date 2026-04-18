@@ -14,6 +14,8 @@ import { Project } from '../types';
 import { playClick } from '../utils/sound';
 
 // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const CLIENT_NOISE = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
+
 const fmtCurrency = (n: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
 
@@ -277,17 +279,17 @@ function ClientCard({
     };
 
     return (
-        <Card noPadding className={className}>
-            {/* Main row */}
-            <div className="p-6">
-                <div className="flex items-start gap-5">
-                    {/* Avatar */}
+        <Card noPadding className={`relative overflow-hidden ${className}`}>
+            <div className="pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.06]" style={{ backgroundImage: CLIENT_NOISE, backgroundRepeat: 'repeat' }} />
+            <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-blue-400/10 blur-3xl dark:bg-blue-500/10" />
+            <div className="relative z-10 p-5 sm:p-6">
+                <div className="flex items-start gap-4 sm:gap-5">
                     <div className="shrink-0">
                         {client.avatar ? (
                             <img
                                 src={client.avatar}
                                 alt={client.name}
-                                className="w-12 h-12 rounded-xl object-cover border border-zinc-200/50 dark:border-white/10"
+                                className="w-12 h-12 rounded-xl object-cover border border-zinc-200/50 dark:border-white/10 shadow-sm"
                             />
                         ) : (
                             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-white/10 dark:to-white/5 flex items-center justify-center font-sans tracking-tight text-lg font-bold text-zinc-600 dark:text-zinc-300">
@@ -296,15 +298,14 @@ function ClientCard({
                         )}
                     </div>
 
-                    {/* Identity */}
                     <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <h3 className="font-bold text-zinc-900 dark:text-white text-base leading-tight">
+                        <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                            <h3 className="font-serif font-medium text-zinc-900 dark:text-white text-[1.05rem] leading-tight">
                                 {client.name}
                             </h3>
                             <ClientTier ltv={client.ltv} />
                             {client.needsNudge && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-700/30 animate-pulse">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-700/30">
                                     <AlertCircle className="w-2.5 h-2.5" /> Payment Due
                                 </span>
                             )}
@@ -332,10 +333,9 @@ function ClientCard({
                         </div>
                     </div>
 
-                    {/* LTV */}
                     <div className="shrink-0 text-right hidden sm:block">
                         <div className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Lifetime Value</div>
-                        <div className={`font-sans tracking-tight text-2xl font-medium tracking-tight ${GRADIENT_TEXT}`}>
+                        <div className={`font-sans tracking-tight text-[1.8rem] font-medium ${GRADIENT_TEXT}`}>
                             {fmtCurrency(client.ltv)}
                         </div>
                         {client.pendingValue > 0 && (
@@ -346,21 +346,20 @@ function ClientCard({
                     </div>
                 </div>
 
-                {/* Stats row */}
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 mt-5 pt-5 border-t border-zinc-100 dark:border-white/5">
-                    <div>
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="rounded-xl border border-zinc-200/60 bg-zinc-50/70 p-3 dark:border-white/[0.06] dark:bg-white/[0.03]">
                         <div className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Projects</div>
                         <div className="text-xl font-sans tracking-tight font-medium text-zinc-900 dark:text-white">{client.totalProjects}</div>
                     </div>
-                    <div>
+                    <div className="rounded-xl border border-zinc-200/60 p-3 dark:border-white/[0.06]">
                         <div className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Paid</div>
                         <div className="text-xl font-sans tracking-tight font-medium text-blue-600 dark:text-blue-400">{client.paidProjects}</div>
                     </div>
-                    <div>
+                    <div className="rounded-xl border border-zinc-200/60 p-3 dark:border-white/[0.06]">
                         <div className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Avg. Deal</div>
                         <div className="text-xl font-sans tracking-tight font-medium text-zinc-900 dark:text-white">{fmtCurrency(client.avgDeal)}</div>
                     </div>
-                    <div className="hidden sm:block">
+                    <div className="rounded-xl border border-zinc-200/60 p-3 dark:border-white/[0.06]">
                         <div className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Last Active</div>
                         <div className="text-sm font-mono text-zinc-600 dark:text-zinc-300">
                             {client.lastProjectDate ? fmtDate(client.lastProjectDate) : '—'}
@@ -368,7 +367,6 @@ function ClientCard({
                     </div>
                 </div>
 
-                {/* Expand toggle */}
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                     <button
                         onClick={() => { playClick(); setExpanded(e => !e); }}
@@ -468,9 +466,8 @@ function ClientCard({
                 )}
             </div>
 
-            {/* Expanded projects list */}
             {expanded && (
-                <div className="border-t border-zinc-100 dark:border-white/5 px-6 pb-4 pt-2 bg-zinc-50/50 dark:bg-white/[0.02]">
+                <div className="relative z-10 border-t border-zinc-100 dark:border-white/5 px-5 sm:px-6 pb-4 pt-3 bg-zinc-50/65 dark:bg-white/[0.03]">
                     {nudgeResult && (
                         <div className={`mb-3 px-3 py-2 rounded-lg text-xs font-bold ${nudgeResult.ok ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
                             {nudgeResult.ok ? '✓ Reminder sent successfully.' : '✗ Could not send reminder — check Resend API key.'}
@@ -553,53 +550,199 @@ export const ClientRolodexContent: React.FC = () => {
     const navigate = useNavigate();
     const { clients, totalLTV, totalPending, topClient, nudgeCount, filtered, search, setSearch, sortBy, setSortBy, saveBrandKit, user } = useClientRolodexState();
     const silverPlus = clients.filter(c => c.ltv >= 1000).length;
+    const platinumCount = clients.filter(c => c.ltv >= 10000).length;
+    const goldCount = clients.filter(c => c.ltv >= 5000 && c.ltv < 10000).length;
+    const silverCount = clients.filter(c => c.ltv >= 1000 && c.ltv < 5000).length;
+    const newCount = clients.filter(c => c.ltv < 1000).length;
+    const avgClientLtv = clients.length ? totalLTV / clients.length : 0;
+    const totalProjects = clients.reduce((sum, c) => sum + c.totalProjects, 0);
+    const paidProjects = clients.reduce((sum, c) => sum + c.paidProjects, 0);
+    const activeProjects = clients.reduce((sum, c) => sum + c.activeProjects, 0);
+    const paidRate = totalProjects > 0 ? Math.round((paidProjects / totalProjects) * 100) : 0;
+    const atRiskClients = [...clients].filter(c => c.pendingValue > 0).sort((a, b) => b.pendingValue - a.pendingValue).slice(0, 3);
+    const recentClients = [...clients]
+        .filter(c => c.lastProjectDate)
+        .sort((a, b) => new Date(b.lastProjectDate).getTime() - new Date(a.lastProjectDate).getTime())
+        .slice(0, 3);
 
     return (
         <div className="space-y-6 animate-fade-in pb-16">
-            <div className="relative overflow-hidden hf-surface bg-white dark:bg-charcoal rounded-[2rem] border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md bg-gradient-to-br from-white via-white to-zinc-50/95 dark:from-charcoal dark:via-charcoal dark:to-[#18181f]">
-                <div className="absolute left-0 top-5 bottom-5 w-1 rounded-full bg-gradient-to-b from-lime-500 to-brand dark:from-[#bef264] dark:to-[#84cc16] opacity-90" aria-hidden />
-                <div className="px-6 py-7 sm:px-9 sm:py-8 pl-8 sm:pl-10">
-                    <div className="flex flex-wrap items-center gap-2 mb-3">
-                        <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
-                            <span className="w-2 h-2 rounded-full bg-lime-500 dark:bg-[#bef264] shadow-[0_0_10px_rgba(101,163,13,0.45)] dark:shadow-[0_0_12px_rgba(190,242,100,0.35)]" />
-                            Directory
-                        </span>
-                        {clients.length > 0 && (
-                            <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-zinc-100/90 dark:bg-white/[0.06] text-zinc-600 dark:text-zinc-300 border border-zinc-200/70 dark:border-white/[0.08]">
-                                {clients.length} contact{clients.length !== 1 ? 's' : ''}
-                            </span>
-                        )}
-                    </div>
-                    <h2 className="font-serif tracking-tight text-3xl md:text-4xl font-medium text-zinc-900 dark:text-white">
-                        Client roster
-                    </h2>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-2xl leading-relaxed">
-                        Lifetime value, open invoices, and portal tools — one row per contact. Search below, then sort by LTV, name, projects, or recency. Expand a row for reminders and per-client brand kits.
-                    </p>
+            <div className="hf-surface hf-no-glow flex flex-col sm:flex-row gap-3 items-center justify-between bg-white dark:bg-charcoal p-2 rounded-[2rem] overflow-visible border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md">
+                <div className="relative w-full min-w-0 sm:flex-1 group">
+                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 transition-colors group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400" />
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Search clients by name, email, or company…"
+                        className="h-10 sm:h-11 w-full rounded-[1.2rem] border border-transparent bg-transparent pl-11 pr-4 text-sm outline-none transition-all placeholder:text-zinc-500 focus:border-zinc-200/80 focus:bg-zinc-50/75 dark:focus:border-white/[0.08] dark:focus:bg-white/[0.05]"
+                    />
+                </div>
+                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 pl-1 pr-1 sm:shrink-0">
+                    {(['ltv', 'name', 'projects', 'recent'] as const).map(key => (
+                        <button
+                            key={key}
+                            type="button"
+                            onClick={() => { playClick(); setSortBy(key); }}
+                            className={`whitespace-nowrap rounded-[1rem] px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors ${sortBy === key ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-blue-500/25 dark:bg-white/10 dark:text-white dark:ring-blue-400/35' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-white/5 dark:hover:text-white'}`}
+                        >
+                            {key === 'ltv' ? 'LTV' : key === 'recent' ? 'Recent' : key === 'projects' ? 'Projects' : 'Name'}
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            <div className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] rounded-[2rem] shadow-sm dark:shadow-md grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 divide-zinc-200 dark:divide-white/[0.06] lg:divide-x overflow-hidden">
-                <div className="p-5 sm:p-6 bg-lime-500/[0.06] dark:bg-[#bef264]/[0.06]">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-lime-700 dark:text-[#bef264] mb-1">Portfolio LTV</p>
-                    <p className={`font-sans tracking-tight text-2xl font-medium ${GRADIENT_TEXT}`}>{fmtCurrency(totalLTV)}</p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Paid & completed work</p>
-                </div>
-                <div className="p-5 sm:p-6">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Contacts</p>
-                    <p className="font-sans tracking-tight text-2xl font-medium text-zinc-900 dark:text-white">{clients.length}</p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{silverPlus} silver+ tier</p>
-                </div>
-                <div className="p-5 sm:p-6">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Top relationship</p>
-                    <p className="font-sans tracking-tight text-xl font-medium text-zinc-900 dark:text-white truncate">{topClient ? fmtCurrency(topClient.ltv) : '—'}</p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 truncate">{topClient?.name || 'Add projects to rank clients'}</p>
-                </div>
-                <div className="p-5 sm:p-6">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Needs nudge</p>
-                    <p className="font-sans tracking-tight text-2xl font-medium text-zinc-900 dark:text-white">{nudgeCount}</p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{nudgeCount > 0 ? 'Awaiting payment' : 'All clear'}</p>
-                </div>
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+                <Card noPadding className="relative overflow-hidden xl:col-span-7 border-zinc-200/50 dark:border-white/[0.06] bg-editorial dark:bg-white/[0.04]">
+                    <div className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.07]" style={{ backgroundImage: CLIENT_NOISE, backgroundRepeat: 'repeat' }} />
+                    <div className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full bg-blue-400/20 blur-3xl dark:bg-blue-500/10" />
+                    <div className="relative z-10 p-5 sm:p-6 space-y-5">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <p className="mb-1 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500 dark:border-brand dark:text-zinc-400">Client Portfolio</p>
+                                <h3 className="mt-1 font-serif text-2xl font-medium tracking-tight text-zinc-900 dark:text-white">Relationship value overview</h3>
+                            </div>
+                            <span className="rounded-full border border-zinc-200/70 bg-zinc-50 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-zinc-300">
+                                {clients.length} contacts
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                            <div className="rounded-2xl border border-zinc-200/60 bg-zinc-50/80 p-4 dark:border-white/[0.06] dark:bg-white/[0.03]">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Portfolio LTV</p>
+                                <p className={`mt-1 font-sans text-2xl font-medium tracking-tight ${GRADIENT_TEXT}`}>{fmtCurrency(totalLTV)}</p>
+                                <p className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">Paid + completed</p>
+                            </div>
+                            <div className="rounded-2xl border border-zinc-200/60 p-4 dark:border-white/[0.06]">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Avg Client LTV</p>
+                                <p className="mt-1 font-sans text-2xl font-medium tracking-tight text-zinc-900 dark:text-white">{fmtCurrency(avgClientLtv)}</p>
+                                <p className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">{silverPlus} silver+ tier</p>
+                            </div>
+                            <div className="rounded-2xl border border-zinc-200/60 p-4 dark:border-white/[0.06]">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Top Relationship</p>
+                                <p className="mt-1 truncate font-sans text-xl font-medium tracking-tight text-zinc-900 dark:text-white">{topClient ? fmtCurrency(topClient.ltv) : '—'}</p>
+                                <p className="mt-1 truncate text-[11px] text-zinc-500 dark:text-zinc-400">{topClient?.name || 'No clients yet'}</p>
+                            </div>
+                            <div className="rounded-2xl border border-zinc-200/60 p-4 dark:border-white/[0.06]">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Pending Value</p>
+                                <p className="mt-1 font-sans text-2xl font-medium tracking-tight text-amber-600 dark:text-amber-400">{fmtCurrency(totalPending)}</p>
+                                <p className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">{nudgeCount} client{nudgeCount !== 1 ? 's' : ''} need follow-up</p>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                <Card noPadding className="relative overflow-hidden xl:col-span-5 border-zinc-200/50 dark:border-white/[0.06] bg-editorial dark:bg-white/[0.04]">
+                    <div className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.07]" style={{ backgroundImage: CLIENT_NOISE, backgroundRepeat: 'repeat' }} />
+                    <div className="relative z-10 p-5 sm:p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-serif text-xl font-medium tracking-tight text-zinc-900 dark:text-white">Tier distribution</h3>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">By lifetime value</span>
+                        </div>
+                        <div className="space-y-3">
+                            {[
+                                { label: 'Platinum', count: platinumCount, cls: 'bg-amber-400' },
+                                { label: 'Gold', count: goldCount, cls: 'bg-zinc-400' },
+                                { label: 'Silver', count: silverCount, cls: 'bg-blue-500' },
+                                { label: 'New', count: newCount, cls: 'bg-zinc-300 dark:bg-zinc-600' },
+                            ].map((tier) => {
+                                const pct = clients.length ? Math.round((tier.count / clients.length) * 100) : 0;
+                                return (
+                                    <div key={tier.label} className="space-y-1.5">
+                                        <div className="flex items-center justify-between text-[11px]">
+                                            <span className="font-semibold text-zinc-700 dark:text-zinc-200">{tier.label}</span>
+                                            <span className="font-mono text-zinc-500 dark:text-zinc-400">{tier.count} · {pct}%</span>
+                                        </div>
+                                        <div className="h-2 rounded-full bg-zinc-100 dark:bg-white/[0.06] overflow-hidden">
+                                            <div className={`h-full ${tier.cls}`} style={{ width: `${pct}%` }} />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </Card>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+                <Card noPadding className="relative overflow-hidden xl:col-span-4 border-zinc-200/50 dark:border-white/[0.06] bg-editorial dark:bg-white/[0.04]">
+                    <div className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.07]" style={{ backgroundImage: CLIENT_NOISE, backgroundRepeat: 'repeat' }} />
+                    <div className="relative z-10 p-5 sm:p-6">
+                        <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-serif text-xl font-medium tracking-tight text-zinc-900 dark:text-white">Engagement health</h4>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Delivery performance</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-xl border border-zinc-200/60 p-3 dark:border-white/[0.06]">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Total projects</p>
+                                <p className="mt-1 font-sans text-2xl font-medium tracking-tight text-zinc-900 dark:text-white">{totalProjects}</p>
+                            </div>
+                            <div className="rounded-xl border border-zinc-200/60 p-3 dark:border-white/[0.06]">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Paid rate</p>
+                                <p className="mt-1 font-sans text-2xl font-medium tracking-tight text-blue-600 dark:text-blue-400">{paidRate}%</p>
+                            </div>
+                            <div className="rounded-xl border border-zinc-200/60 p-3 dark:border-white/[0.06]">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Active projects</p>
+                                <p className="mt-1 font-sans text-2xl font-medium tracking-tight text-zinc-900 dark:text-white">{activeProjects}</p>
+                            </div>
+                            <div className="rounded-xl border border-zinc-200/60 p-3 dark:border-white/[0.06]">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Pending clients</p>
+                                <p className="mt-1 font-sans text-2xl font-medium tracking-tight text-amber-600 dark:text-amber-400">{nudgeCount}</p>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                <Card noPadding className="relative overflow-hidden xl:col-span-4 border-zinc-200/50 dark:border-white/[0.06] bg-editorial dark:bg-white/[0.04]">
+                    <div className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.07]" style={{ backgroundImage: CLIENT_NOISE, backgroundRepeat: 'repeat' }} />
+                    <div className="relative z-10 p-5 sm:p-6">
+                        <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-serif text-xl font-medium tracking-tight text-zinc-900 dark:text-white">Action queue</h4>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Follow-up now</span>
+                        </div>
+                        {atRiskClients.length === 0 ? (
+                            <p className="text-sm text-zinc-500 dark:text-zinc-400">No overdue payment follow-ups right now.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {atRiskClients.map((client) => (
+                                    <button
+                                        key={client.email || client.name}
+                                        type="button"
+                                        onClick={() => { playClick(); setSearch(client.name); }}
+                                        className="w-full rounded-xl border border-amber-200/70 bg-amber-50/70 p-3 text-left transition-colors hover:bg-amber-100/70 dark:border-amber-700/30 dark:bg-amber-900/20 dark:hover:bg-amber-900/30"
+                                    >
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="truncate text-sm font-semibold text-amber-900 dark:text-amber-200">{client.name}</span>
+                                            <span className="text-xs font-bold text-amber-700 dark:text-amber-300">{fmtCurrency(client.pendingValue)}</span>
+                                        </div>
+                                        <p className="mt-1 text-[11px] text-amber-700/90 dark:text-amber-300/90">{client.activeProjects} active project{client.activeProjects !== 1 ? 's' : ''}</p>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </Card>
+
+                <Card noPadding className="relative overflow-hidden xl:col-span-4 border-zinc-200/50 dark:border-white/[0.06] bg-editorial dark:bg-white/[0.04]">
+                    <div className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.07]" style={{ backgroundImage: CLIENT_NOISE, backgroundRepeat: 'repeat' }} />
+                    <div className="relative z-10 p-5 sm:p-6">
+                        <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-serif text-xl font-medium tracking-tight text-zinc-900 dark:text-white">Recent activity</h4>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Latest client touchpoints</span>
+                        </div>
+                        {recentClients.length === 0 ? (
+                            <p className="text-sm text-zinc-500 dark:text-zinc-400">No recent activity yet.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {recentClients.map((client) => (
+                                    <div key={client.email || client.name} className="rounded-xl border border-zinc-200/60 p-3 dark:border-white/[0.06]">
+                                        <p className="text-sm font-semibold text-zinc-900 dark:text-white">{client.name}</p>
+                                        <p className="mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">{fmtDate(client.lastProjectDate)}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </Card>
             </div>
 
             {totalPending > 0 && (
@@ -611,31 +754,6 @@ export const ClientRolodexContent: React.FC = () => {
                     <span className="text-amber-800/90 dark:text-amber-300/90">across {nudgeCount} client{nudgeCount !== 1 ? 's' : ''} — expand a row to send a reminder.</span>
                 </div>
             )}
-
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-white dark:bg-charcoal p-2 rounded-[2rem] border border-zinc-200 dark:border-white/[0.06]">
-                <div className="relative w-full sm:flex-1 group min-w-0">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Search name, email, or company…"
-                        className="w-full h-12 pl-11 pr-4 rounded-3xl bg-transparent text-sm outline-none transition-all placeholder:text-zinc-500 focus:bg-white dark:focus:bg-white/5"
-                    />
-                </div>
-                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1 pl-1 pr-2 sm:shrink-0">
-                    {(['ltv', 'name', 'projects', 'recent'] as const).map(key => (
-                        <button
-                            key={key}
-                            type="button"
-                            onClick={() => { playClick(); setSortBy(key); }}
-                            className={`px-4 py-2.5 rounded-3xl text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors ${sortBy === key ? 'bg-white dark:bg-white/10 shadow-sm text-zinc-900 dark:text-white ring-1 ring-lime-500/25 dark:ring-[#bef264]/35' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`}
-                        >
-                            {key === 'ltv' ? 'LTV' : key === 'recent' ? 'Recent' : key === 'projects' ? 'Projects' : 'Name'}
-                        </button>
-                    ))}
-                </div>
-            </div>
 
             {filtered.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 py-20 px-6 text-center bg-white dark:bg-charcoal">

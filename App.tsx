@@ -450,36 +450,54 @@ const StatusRibbon = ({ projects, user }: { projects: Project[]; user: UserProfi
     const usedNativeStorageBytes = demoMode ? nativeStorageCapacityBytes - demoRemainingNativeStorageBytes : totalBytes;
     const usagePct = Math.max(0, Math.min(100, Math.round((usedNativeStorageBytes / nativeStorageCapacityBytes) * 100)));
 
-      return (
-          <div className="hf-surface flex flex-wrap items-center gap-4 md:gap-8 p-4 bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] rounded-[2rem] overflow-hidden mb-4 md:mb-5 shadow-sm dark:shadow-md">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                <CreditCard className="w-3.5 h-3.5" />
-                <span>Stripe Connect: <span className={stripeConnected ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-400'}>{stripeConnected ? 'Connected' : 'Not connected'}</span></span>
-            </div>
-
-            <div className="hidden md:block w-px h-4 bg-zinc-200 dark:bg-white/10" />
-
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                <Banknote className="w-3.5 h-3.5" />
-                <span>Next Payout: <span className="text-zinc-900 dark:text-white">{stripeConnected && payoutsEnabled ? 'Managed in Stripe' : 'Unavailable'}</span></span>
-            </div>
-
-            <div className="ml-auto flex items-center gap-4">
-                {/* REVAMPED STORAGE WIDGET: Bigger, bolder, new design */}
-                <div className="hf-surface flex items-center gap-4 pl-2 pr-6 py-2 rounded-[2rem] overflow-hidden bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md transition-all hover:shadow-md group">
-                    <div className="p-2.5 rounded-[2rem] bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">
-                        <HardDrive className="w-5 h-5" />
+    return (
+        <div className="mb-4 md:mb-5 flex flex-col gap-4 border-b border-zinc-200/55 pb-4 dark:border-white/[0.08] sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-x-10 sm:gap-y-3">
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+                <div className="flex items-center gap-2.5">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200/70 text-zinc-500 dark:border-white/[0.12] dark:text-zinc-400">
+                        <CreditCard className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-400 dark:text-zinc-500">Stripe</span>
+                        <span className={`text-sm font-semibold tracking-tight ${stripeConnected ? 'text-zinc-900 dark:text-white' : 'text-zinc-600 dark:text-zinc-300'}`}>
+                            {stripeConnected ? 'Connected' : 'Not connected'}
+                        </span>
                     </div>
-                    <div className="flex flex-col gap-1.5 min-w-[180px]">
-                        <div className="flex justify-between items-center leading-none">
-                            <span className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest">{demoMode ? 'Native Storage' : 'Storage Usage'}</span>
-                            <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-300">
-                                {demoMode ? `${formatBytes(demoRemainingNativeStorageBytes)} left` : <><span>{formatBytes(totalBytes)}</span> <span className="opacity-50">({totalFiles} files)</span></>}
-                            </span>
-                        </div>
-                        <div className="w-full h-2 bg-zinc-100 dark:bg-white/10 rounded-full overflow-hidden">
-                            <div className="h-full bg-blue-500 text-zinc-900 shadow-sm dark:bg-blue-500 rounded-full shadow-[0_0_12px_rgba(101,163,13,0.6)] transition-all" style={{ width: `${usagePct}%` }} />
-                        </div>
+                </div>
+
+                <div className="hidden h-8 w-px bg-zinc-200/80 sm:block dark:bg-white/[0.08]" aria-hidden />
+
+                <div className="flex items-center gap-2.5">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200/70 text-zinc-500 dark:border-white/[0.12] dark:text-zinc-400">
+                        <Banknote className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-400 dark:text-zinc-500">Next payout</span>
+                        <span className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-white">
+                            {stripeConnected && payoutsEnabled ? 'In Stripe' : 'Unavailable'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex min-w-0 flex-1 items-center gap-4 sm:max-w-md sm:justify-end lg:max-w-lg">
+                <HardDrive className="h-4 w-4 shrink-0 text-zinc-400 dark:text-zinc-500" />
+                <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex items-baseline justify-between gap-3">
+                        <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
+                            {demoMode ? 'Vault capacity' : 'Storage'}
+                        </span>
+                        <span className="truncate text-xs font-medium tabular-nums text-zinc-700 dark:text-zinc-200">
+                            {demoMode ? `${formatBytes(demoRemainingNativeStorageBytes)} free` : (
+                                <>{formatBytes(totalBytes)} <span className="text-zinc-400 dark:text-zinc-500">· {totalFiles} files</span></>
+                            )}
+                        </span>
+                    </div>
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-200/80 dark:bg-white/[0.08]">
+                        <div
+                            className="h-full rounded-full bg-gradient-to-r from-blue-600 to-sky-500 transition-[width] duration-500 dark:from-blue-500 dark:to-sky-400"
+                            style={{ width: `${usagePct}%` }}
+                        />
                     </div>
                 </div>
             </div>
@@ -646,6 +664,19 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
     const duration = 10000; // 10 seconds per slide
     const interval = 50; // Update frequency
 
+    /** Scales headline numbers with viewport + compact dock mode so fixed-height cards don’t feel oversized */
+    const revenueAmountClass = compact
+        ? 'text-[clamp(1.2rem,calc(0.55rem+5vw),1.95rem)]'
+        : 'text-[clamp(1.35rem,calc(0.65rem+4.2vw),2.6rem)]';
+    const storageHeroClass = compact
+        ? 'text-[clamp(1.25rem,calc(0.7rem+4vw),2rem)]'
+        : 'text-[clamp(1.35rem,calc(0.8rem+3.2vw),2.5rem)]';
+    const feedbackQuoteClass = (replying: boolean) =>
+        replying
+            ? 'text-[clamp(0.75rem,calc(0.65rem+0.9vw),0.95rem)] leading-snug'
+            : 'text-[clamp(0.8rem,calc(0.62rem+1.35vw),1.1rem)] sm:text-[clamp(0.88rem,calc(0.72rem+1.1vw),1.2rem)] leading-[1.45]';
+    const slidePad = 'p-4 pb-12 sm:p-5 md:p-6 lg:p-8';
+
     const paidProjects = projects.filter((p) => p.status === 'paid' || p.status === 'completed');
     const pendingProjects = projects.filter((p) => p.status === 'awaiting_payment' || p.status === 'awaiting_signature' || p.status === 'payment_verification');
     const activeClients = new Set(
@@ -732,16 +763,16 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
         {
             id: 'revenue',
             render: () => (
-                <div className="absolute inset-0 p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-charcoal rounded-3xl transition-all duration-700 ease-in-out">
-                    <div>
-                        <div className="flex justify-between items-start mb-4">
+                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between bg-white dark:bg-charcoal rounded-3xl transition-all duration-700 ease-in-out`}>
+                    <div className="min-h-0">
+                        <div className="mb-3 flex items-start justify-between gap-2">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Net Revenue</span>
-                            <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[10px] bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded-full border border-blue-500/30 dark:border-blue-500/20">
-                                <ArrowUpRight className="w-3 h-3" /> {demoMode ? '12.5%' : 'Active'}
+                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-blue-500/30 bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-600 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
+                                <ArrowUpRight className="h-3 w-3" /> {demoMode ? '12.5%' : 'Active'}
                             </div>
                         </div>
-                        <div className="flex items-baseline gap-1 mb-6">
-                            <PrivacyBlur strength="strong" className={`font-sans font-medium tracking-tight text-zinc-900 dark:text-white ${compact ? 'text-[clamp(2.1rem,9vw,3.2rem)]' : 'text-5xl md:text-6xl'} tracking-tighter leading-none`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
+                        <div className="mb-4 flex items-baseline gap-1">
+                            <PrivacyBlur strength="strong" className={`font-sans font-medium tracking-tight text-zinc-900 dark:text-white ${revenueAmountClass} tracking-tighter leading-[0.95]`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5">
@@ -775,7 +806,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                 <div className="absolute inset-0 z-10 flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-zinc-200/50 bg-editorial transition-all duration-700 ease-in-out dark:border-white/[0.06] dark:bg-white/[0.04]">
                     <div className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.07]" style={{ backgroundImage: CYCLING_WIDGET_NOISE, backgroundRepeat: 'repeat' }} />
                     <div className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full bg-indigo-400/20 blur-3xl dark:bg-sky-500/10" />
-                    <div className="relative z-10 flex h-full flex-col justify-between p-6 sm:p-8">
+                    <div className={`relative z-10 flex h-full min-h-0 flex-col justify-between ${slidePad}`}>
                         <div>
                             <span className="mb-3 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-brand dark:text-zinc-400">
                                 Vault capacity
@@ -796,9 +827,9 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                             </div>
                         </div>
 
-                        <div className="flex flex-1 flex-col justify-center gap-5">
+                        <div className="flex min-h-0 flex-1 flex-col justify-center gap-3 sm:gap-4">
                             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                                <span className="font-sans text-4xl font-medium tracking-tight text-zinc-900 tabular-nums dark:text-white md:text-5xl">
+                                <span className={`font-sans font-medium tracking-tight text-zinc-900 tabular-nums dark:text-white ${storageHeroClass}`}>
                                     {Math.round(demoUsedNativeStorageBytes / (1024 ** 3))}
                                 </span>
                                 <span className="text-sm font-bold uppercase tracking-widest text-zinc-400">GB used</span>
@@ -837,83 +868,86 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                     return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
                 };
                 return (
-                <div className="absolute inset-0 flex h-full bg-zinc-50 dark:bg-charcoal rounded-3xl transition-all duration-700 ease-in-out overflow-hidden">
-                    
-                    {/* Left Side: Original Feedback */}
-                    <div className={`flex flex-col justify-between p-6 sm:p-8 transition-all duration-500 ${isReplying ? 'w-1/2 border-r border-zinc-200/50 dark:border-white/5' : 'w-full'}`}>
-                        {/* Header: Type + Time */}
-                        <div className="flex justify-between items-start">
-                            <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">New Feedback</span>
-                            </div>
-                            <span className="text-[10px] font-mono text-zinc-400">{rev ? fmtTime(rev.createdAt) : '—'}</span>
-                        </div>
-
-                        {/* Body: Quote */}
-                        <div className="flex-1 flex flex-col justify-center py-2">
-                            {rev ? (
-                                <h3 className={`font-sans tracking-tight leading-snug text-zinc-900 dark:text-white transition-all duration-500 ${isReplying ? 'text-lg md:text-xl' : 'text-xl md:text-2xl'}`}>
-                                    "{rev.message}"
-                                </h3>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center gap-2 opacity-50">
-                                    <span className="text-sm font-bold text-zinc-500 dark:text-zinc-400">No open feedback</span>
-                                    <span className="text-xs text-zinc-400">Client revision requests will appear here</span>
+                <div className="absolute inset-0 flex h-full min-h-0 overflow-hidden rounded-3xl bg-zinc-50 transition-all duration-700 ease-in-out dark:bg-charcoal">
+                    <div className={`flex min-h-0 flex-col transition-all duration-500 ${isReplying ? 'w-1/2 border-r border-zinc-200/50 dark:border-white/5' : 'w-full'}`}>
+                        <div className={`flex min-h-0 flex-1 flex-col ${slidePad}`}>
+                            <div className="flex shrink-0 items-start justify-between gap-2">
+                                <div className="flex min-w-0 items-center gap-2">
+                                    <span className="h-2 w-2 shrink-0 rounded-full bg-indigo-500 animate-pulse" />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">New Feedback</span>
                                 </div>
-                            )}
-                        </div>
+                                <span className="shrink-0 text-[10px] font-mono text-zinc-400">{rev ? fmtTime(rev.createdAt) : '—'}</span>
+                            </div>
 
-                        {/* Footer: User + Actions */}
-                        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-10 sm:pb-7">
-                            <div className="flex items-center gap-3">
-                                {rev?.clientAvatar ? (
-                                    <img src={rev.clientAvatar} alt={rev.clientName} className="w-8 h-8 rounded-full bg-white border border-zinc-200/50 dark:border-white/10" />
+                            <div className="min-h-0 flex-1 overflow-y-auto py-2 sm:py-3">
+                                {rev ? (
+                                    <p className={`font-serif tracking-tight text-zinc-900 transition-all duration-500 dark:text-zinc-100 ${feedbackQuoteClass(isReplying)}`}>
+                                        &ldquo;{rev.message}&rdquo;
+                                    </p>
                                 ) : (
-                                    <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-white/10 border border-zinc-200/50 dark:border-white/10 flex items-center justify-center text-[10px] font-bold text-zinc-500">
-                                        {rev ? rev.clientName.charAt(0) : '?'}
+                                    <div className="flex flex-col items-center justify-center gap-2 py-4 opacity-60">
+                                        <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">No open feedback</span>
+                                        <span className="text-center text-xs text-zinc-400">Client revision requests will appear here</span>
                                     </div>
                                 )}
-                                <div className="flex flex-col">
-                                    <span className="text-xs font-bold text-zinc-900 dark:text-white">{rev?.clientName ?? 'No requests'}</span>
-                                    <span className="text-[9px] font-mono text-zinc-400 uppercase tracking-wider">{rev?.projectName ?? '—'}</span>
-                                </div>
                             </div>
-                            
-                            {!isReplying && rev && (
-                                <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
-                                    <button className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-white dark:hover:bg-white/5 border border-transparent hover:border-zinc-200/50 dark:hover:border-white/10 transition-all">
-                                        Mark Resolved
-                                    </button>
-                                    <button 
-                                        onClick={() => setIsReplying(true)}
-                                        className="px-4 py-2 rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-black text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2"
-                                    >
-                                        Reply <ArrowRight className="w-3 h-3" />
-                                    </button>
+
+                            <div className="mt-auto flex shrink-0 flex-col gap-3 border-t border-zinc-200/60 pt-3 dark:border-white/[0.06] sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex min-w-0 items-center gap-3">
+                                    {rev?.clientAvatar ? (
+                                        <img src={rev.clientAvatar} alt={rev.clientName} className="h-8 w-8 shrink-0 rounded-full border border-zinc-200/50 bg-white dark:border-white/10" />
+                                    ) : (
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-200/50 bg-zinc-200 text-[10px] font-bold text-zinc-500 dark:border-white/10 dark:bg-white/10">
+                                            {rev ? rev.clientName.charAt(0) : '?'}
+                                        </div>
+                                    )}
+                                    <div className="min-w-0">
+                                        <span className="block truncate text-xs font-semibold text-zinc-900 dark:text-white">{rev?.clientName ?? 'No requests'}</span>
+                                        <span className="block truncate text-[9px] font-mono uppercase tracking-wider text-zinc-400">{rev?.projectName ?? '—'}</span>
+                                    </div>
                                 </div>
-                            )}
+                                {!isReplying && rev && (
+                                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                                        <button type="button" className="rounded-lg border border-transparent px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-500 transition-colors hover:border-zinc-200/50 hover:bg-white hover:text-zinc-900 dark:text-zinc-400 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white">
+                                            Mark Resolved
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsReplying(true)}
+                                            className="flex items-center gap-2 rounded-lg bg-zinc-900 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white transition-transform hover:scale-[1.02] dark:bg-white dark:text-zinc-950"
+                                        >
+                                            Reply <ArrowRight className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Right Side: Reply Box */}
-                    <div className={`flex flex-col p-6 sm:p-8 bg-white dark:bg-charcoal transition-all duration-500 ${isReplying ? 'w-1/2 opacity-100 translate-x-0' : 'w-0 opacity-0 translate-x-full p-0 overflow-hidden'}`}>
-                        <div className="flex justify-between items-center mb-4">
+                    <div
+                        className={`flex min-h-0 flex-col bg-white transition-all duration-500 dark:bg-charcoal ${
+                            isReplying ? `h-full w-1/2 min-w-0 translate-x-0 opacity-100 ${slidePad}` : 'w-0 translate-x-full overflow-hidden p-0 opacity-0'
+                        }`}
+                    >
+                        <div className="mb-3 flex items-center justify-between gap-2">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Reply to {rev?.clientName ?? 'Client'}</span>
-                            <button onClick={() => setIsReplying(false)} className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white"><X className="w-4 h-4" /></button>
+                            <button type="button" onClick={() => setIsReplying(false)} className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white">
+                                <X className="h-4 w-4" />
+                            </button>
                         </div>
-                        <textarea 
-                            className="flex-1 w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 rounded-xl p-3 text-sm text-zinc-900 dark:text-white resize-none focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 transition-colors"
+                        <textarea
+                            className="min-h-[100px] w-full flex-1 resize-none rounded-xl border border-zinc-200/50 bg-zinc-50 p-3 text-sm text-zinc-900 transition-colors focus:border-blue-500 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-blue-500"
                             placeholder="Type your reply..."
                             value={replyText}
                             onChange={(e) => setReplyText(e.target.value)}
                         />
-                        <div className="flex justify-start mt-4">
-                            <button 
+                        <div className="mt-3 flex justify-start">
+                            <button
+                                type="button"
                                 onClick={() => { setIsReplying(false); setReplyText(''); playSuccess(); }}
-                                className="px-4 py-2 rounded-lg bg-blue-500 text-zinc-950 shadow-sm text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2"
+                                className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-950 shadow-sm transition-transform hover:scale-[1.02]"
                             >
-                                Send <Send className="w-3 h-3" />
+                                Send <Send className="h-3 w-3" />
                             </button>
                         </div>
                     </div>
@@ -924,19 +958,21 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
         {
             id: 'upgrade',
             render: () => (
-                <div className="absolute inset-0 p-8 z-10 flex flex-col justify-between h-full bg-gradient-to-br from-zinc-900 flex-col via-zinc-800 to-black text-white rounded-3xl animate-fade-in relative overflow-hidden transition-all duration-700 ease-in-out border border-zinc-200/40 dark:border-white/10 shadow-2xl shadow-black/20">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 dark:bg-[#323242]/30 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
-                    <div className="relative h-full flex flex-col justify-between z-10">
+                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between bg-gradient-to-br from-zinc-900 via-zinc-800 to-black text-white dark:border-white/10 rounded-3xl border border-zinc-200/40 shadow-2xl shadow-black/20 transition-all duration-700 ease-in-out`}>
+                    <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-3xl dark:bg-[#323242]/30" />
+                    <div className="relative z-10 flex h-full min-h-0 flex-col justify-between">
                         <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-blue-500 text-zinc-950 shadow-sm">Upgrade</span>
-                                <span className="text-[10px] font-bold uppercase tracking-widest opacity-60 text-white dark:text-white/60">Business Tier</span>
+                            <div className="mb-3 flex flex-wrap items-center gap-2">
+                                <span className="rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-blue-500 text-zinc-950 shadow-sm">Upgrade</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Business Tier</span>
                             </div>
-                            <h3 className="font-sans tracking-tight text-3xl md:text-4xl leading-tight mb-2 text-white dark:text-white">Unlock unlimited project history.</h3>
-                            <p className="text-sm opacity-80 max-w-[80%] text-zinc-300 dark:text-zinc-400">Get advanced reporting and client portals.</p>
+                            <h3 className="mb-2 font-sans font-medium leading-tight tracking-tight text-[clamp(1.1rem,calc(0.85rem+1.8vw),1.85rem)] text-white sm:text-[clamp(1.2rem,calc(0.95rem+1.5vw),2.15rem)]">
+                                Unlock unlimited project history.
+                            </h3>
+                            <p className="max-w-[95%] text-xs leading-relaxed text-zinc-300 opacity-90 sm:text-sm dark:text-zinc-400">Get advanced reporting and client portals.</p>
                         </div>
-                        <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:gap-4 transition-all mt-4 text-blue-400 dark:text-blue-400">
-                            View Plans <ArrowRight className="w-4 h-4" />
+                        <button type="button" className="mt-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-blue-400 transition-all hover:gap-3 dark:text-blue-400">
+                            View Plans <ArrowRight className="h-4 w-4" />
                         </button>
                     </div>
                 </div>
@@ -945,7 +981,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
         {
             id: 'live_activity',
             render: () => (
-                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-zinc-900 dark:bg-[#23232e] rounded-3xl transition-all duration-700 ease-in-out relative overflow-hidden">
+                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between overflow-hidden rounded-3xl bg-zinc-900 transition-all duration-700 ease-in-out dark:bg-[#23232e]`}>
                     {/* Subtle grid background */}
                     <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
                     
@@ -968,19 +1004,19 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                                     <Monitor className="w-3 h-3 text-blue-400" />
                                 </div>
                             </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-white leading-tight">Mike Ross</h3>
-                                <p className="text-xs text-white/60">Vertex Corp</p>
+                            <div className="min-w-0">
+                                <h3 className="truncate text-[clamp(0.95rem,calc(0.82rem+0.6vw),1.15rem)] font-bold leading-tight text-white">Mike Ross</h3>
+                                <p className="truncate text-xs text-white/60">Vertex Corp</p>
                             </div>
                         </div>
-                        <p className="font-sans tracking-tight text-xl text-white/90 leading-snug">
-                            Currently viewing <span className="text-blue-400 font-sans font-medium">Q4_Financial_Report.pdf</span>
+                        <p className="font-sans text-[clamp(0.85rem,calc(0.72rem+0.9vw),1.05rem)] leading-snug tracking-tight text-white/90">
+                            Currently viewing <span className="font-medium text-blue-400">Q4_Financial_Report.pdf</span>
                         </p>
                     </div>
 
                     <div className="relative z-10 flex justify-start">
-                        <button className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2 backdrop-blur-md border border-white/10">
-                            Join Session <ArrowRight className="w-3 h-3" />
+                        <button type="button" className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-md transition-colors hover:bg-white/20">
+                            Join Session <ArrowRight className="h-3 w-3" />
                         </button>
                     </div>
                 </div>
@@ -992,16 +1028,16 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
         {
             id: 'revenue',
             render: () => (
-                <div className="absolute inset-0 p-8 z-10 flex flex-col justify-between h-full bg-white dark:bg-charcoal rounded-3xl transition-all duration-700 ease-in-out">
-                    <div>
-                        <div className="flex justify-between items-start mb-4 gap-3">
+                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between bg-white dark:bg-charcoal rounded-3xl transition-all duration-700 ease-in-out`}>
+                    <div className="min-h-0">
+                        <div className="mb-3 flex items-start justify-between gap-3">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Net Revenue</span>
-                            <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[10px] bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded-full border border-blue-500/30 dark:border-blue-500/20 shrink-0">
-                                <ArrowUpRight className="w-3 h-3" /> {paidProjects.length} closed
+                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-blue-500/30 bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-600 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
+                                <ArrowUpRight className="h-3 w-3" /> {paidProjects.length} closed
                             </div>
                         </div>
-                        <div className="flex items-baseline gap-1 mb-6">
-                            <PrivacyBlur strength="strong" className={`font-sans font-medium tracking-tight text-zinc-900 dark:text-white ${compact ? 'text-[clamp(2.1rem,9vw,3.2rem)]' : 'text-5xl md:text-6xl'} tracking-tighter leading-none`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
+                        <div className="mb-4 flex items-baseline gap-1">
+                            <PrivacyBlur strength="strong" className={`font-sans font-medium tracking-tight text-zinc-900 dark:text-white ${revenueAmountClass} tracking-tighter leading-[0.95]`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
                         </div>
                         <div className="flex items-center gap-3 flex-wrap">
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5">
@@ -1048,7 +1084,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                 <div className="absolute inset-0 z-10 flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-zinc-200/50 bg-editorial transition-all duration-700 ease-in-out dark:border-white/[0.06] dark:bg-white/[0.04]">
                     <div className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.07]" style={{ backgroundImage: CYCLING_WIDGET_NOISE, backgroundRepeat: 'repeat' }} />
                     <div className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full bg-indigo-400/20 blur-3xl dark:bg-sky-500/10" />
-                    <div className="relative z-10 flex h-full flex-col justify-between p-6 sm:p-8">
+                    <div className={`relative z-10 flex h-full min-h-0 flex-col justify-between ${slidePad}`}>
                         <div>
                             <span className="mb-3 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-brand dark:text-zinc-400">
                                 Project storage
@@ -1069,9 +1105,9 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                             </div>
                         </div>
 
-                        <div className="flex flex-1 flex-col justify-center gap-5">
+                        <div className="flex min-h-0 flex-1 flex-col justify-center gap-3 sm:gap-4">
                             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                                <span className="font-sans text-4xl font-medium tracking-tight text-zinc-900 tabular-nums dark:text-white md:text-5xl">
+                                <span className={`font-sans font-medium tracking-tight text-zinc-900 tabular-nums dark:text-white ${storageHeroClass}`}>
                                     {formatBytes(totalBytes)}
                                 </span>
                                 <span className="text-sm font-bold uppercase tracking-widest text-zinc-400">Total bytes</span>
@@ -1112,10 +1148,10 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
         {
             id: 'activity',
             render: () => (
-                <div className="absolute inset-0 p-6 sm:p-8 z-10 flex flex-col justify-between h-full bg-zinc-900 dark:bg-[#23232e] rounded-3xl transition-all duration-700 ease-in-out relative overflow-hidden">
-                    <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between overflow-hidden rounded-3xl bg-zinc-900 transition-all duration-700 ease-in-out dark:bg-[#23232e]`}>
+                    <div className="pointer-events-none absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
 
-                    <div className="relative z-10 flex justify-between items-start gap-3">
+                    <div className="relative z-10 flex items-start justify-between gap-3">
                         <div className="flex items-center gap-2 px-2 py-1 rounded bg-white/10 border border-white/10 backdrop-blur-md">
                             <span className="relative flex h-2 w-2">
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -1142,29 +1178,30 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                                             <Monitor className="w-3 h-3 text-blue-400" />
                                         </div>
                                     </div>
-                                    <div>
-                                        <h3 className="text-lg font-bold text-white leading-tight">{recentProject.client.name || recentProject.client.company || 'Client'}</h3>
-                                        <p className="text-xs text-white/60">{recentProject.client.company || recentProject.name}</p>
+                                    <div className="min-w-0">
+                                        <h3 className="truncate text-[clamp(0.95rem,calc(0.82rem+0.6vw),1.15rem)] font-bold leading-tight text-white">{recentProject.client.name || recentProject.client.company || 'Client'}</h3>
+                                        <p className="truncate text-xs text-white/60">{recentProject.client.company || recentProject.name}</p>
                                     </div>
                                 </div>
-                                <p className="font-sans tracking-tight text-xl text-white/90 leading-snug">
-                                    {recentProject.clientViewedAt ? 'Last viewed' : 'Most recent project'} <span className="text-blue-400 font-sans font-medium">{recentProject.name}</span>
+                                <p className="font-sans text-[clamp(0.85rem,calc(0.72rem+0.9vw),1.05rem)] leading-snug tracking-tight text-white/90">
+                                    {recentProject.clientViewedAt ? 'Last viewed' : 'Most recent project'}{' '}
+                                    <span className="font-medium text-blue-400">{recentProject.name}</span>
                                 </p>
-                                <p className="text-xs uppercase tracking-widest text-white/50 mt-3">
+                                <p className="mt-2 text-[10px] uppercase tracking-widest text-white/50">
                                     {recentProject.status.replace(/_/g, ' ')} • ${recentProject.amount.toLocaleString()}
                                 </p>
                             </>
                         ) : (
                             <div>
-                                <h3 className="font-sans tracking-tight text-3xl text-white mb-2">No project activity yet.</h3>
-                                <p className="text-sm text-white/70 max-w-sm">Create your first project to start tracking client views, payments, and delivery activity here.</p>
+                                <h3 className="mb-2 font-sans text-[clamp(1.1rem,calc(0.95rem+1vw),1.65rem)] font-medium tracking-tight text-white">No project activity yet.</h3>
+                                <p className="max-w-sm text-xs leading-relaxed text-white/70 sm:text-sm">Create your first project to start tracking client views, payments, and delivery activity here.</p>
                             </div>
                         )}
                     </div>
 
                     <div className="relative z-10 flex justify-start">
-                        <button onClick={() => { playClick(); navigate(recentProject ? '/activity' : '/create'); }} className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2 backdrop-blur-md border border-white/10">
-                            {recentProject ? 'Open Activity' : 'Create Project'} <ArrowRight className="w-3 h-3" />
+                        <button type="button" onClick={() => { playClick(); navigate(recentProject ? '/activity' : '/create'); }} className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-md transition-colors hover:bg-white/20">
+                            {recentProject ? 'Open Activity' : 'Create Project'} <ArrowRight className="h-3 w-3" />
                         </button>
                     </div>
                 </div>
@@ -1476,8 +1513,8 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
             {/* Status Ribbon - Now part of dashboard logic */}
             <StatusRibbon projects={projects} user={user} />
 
-            <div className={`grid grid-cols-1 gap-4 md:gap-5 ${isCompactContent ? '' : 'xl:grid-cols-12'}`}>
-                <div className={`flex flex-col ${isCompactContent ? 'gap-4 md:gap-5' : 'xl:col-span-8 gap-3 md:gap-4'}`}>
+            <div className={`grid grid-cols-1 gap-4 md:gap-5 ${isCompactContent ? '' : 'lg:grid-cols-12'}`}>
+                <div className={`flex flex-col ${isCompactContent ? 'gap-4 md:gap-5' : 'lg:col-span-7 gap-3 md:gap-4 min-w-0'}`}>
                     <div className={`grid grid-cols-1 gap-4 md:gap-5 ${isCompactContent ? '' : 'lg:grid-cols-2'}`}>
                         
                         {/* CYCLING WIDGET COMPONENT */}
@@ -1487,7 +1524,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                             title={"Today's Priorities"}
                             titleIcon={Siren}
                             surfaceless
-                            titleClassName="font-serif text-2xl md:text-3xl font-medium tracking-tight text-zinc-900 dark:text-white"
+                            titleClassName="font-serif text-[0.975rem] md:text-[1.22rem] font-medium tracking-tight text-zinc-900 dark:text-white"
                             headerClassName="px-4 pt-3 pb-2"
                             actions={<span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900">{alerts.length} Actions</span>}
                         >
@@ -1528,7 +1565,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                     </div>
 
                     {/* Live Client Radar */}
-                    <Widget title={"Live Client Radar"} titleIcon={ActivityIcon} surfaceless titleClassName="font-serif text-2xl md:text-3xl font-medium tracking-tight text-zinc-900 dark:text-white" headerClassName="px-4 pt-2 pb-2">
+                    <Widget title={"Live Client Radar"} titleIcon={ActivityIcon} surfaceless titleClassName="font-serif text-[0.975rem] md:text-[1.22rem] font-medium tracking-tight text-zinc-900 dark:text-white" headerClassName="px-4 pt-2 pb-2">
                         {liveClients.length === 0 ? (
                             <div className="rounded-[2rem] border border-dashed border-zinc-200/50 dark:border-white/15 p-6 text-center bg-white/70 dark:bg-white/[0.02]">
                                 <Monitor className="w-5 h-5 text-zinc-400 mx-auto mb-2" />
@@ -1566,7 +1603,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                     <Widget
                         title={"Active Projects"}
                         surfaceless
-                        titleClassName="font-serif text-2xl md:text-3xl font-medium tracking-tight text-zinc-900 dark:text-white"
+                        titleClassName="font-serif text-[0.975rem] md:text-[1.22rem] font-medium tracking-tight text-zinc-900 dark:text-white"
                         headerClassName="px-4 pt-2 pb-2"
                         actions={(
                             <div className="flex gap-4">
@@ -1624,7 +1661,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                                 <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-[#23232e] ${p.status === 'paid' ? 'bg-blue-500 text-zinc-900 shadow-sm' : 'bg-amber-500'}`} />
                                             </div>
                                             <div>
-                                                <h3 className="font-serif font-bold text-lg tracking-tight text-zinc-900 dark:text-zinc-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">{p.name}</h3>
+                                                <h3 className="font-serif text-lg font-normal tracking-tight text-zinc-900 dark:text-zinc-100 transition-[font-weight] group-hover:font-semibold">{p.name}</h3>
                                                 <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">{p.client.company || p.client.name}</p>
                                             </div>
                                         </div>
@@ -1641,7 +1678,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                                     {new Date(p.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                                 </div>
                                             </div>
-                                            <div className="w-8 h-8 rounded-full border border-zinc-200/50 dark:border-white/10 flex items-center justify-center text-zinc-400 dark:text-white/70 group-hover:bg-blue-500 group-hover:text-white group-hover:border-blue-600 transition-all">
+                                            <div className="w-8 h-8 rounded-full border border-zinc-200/50 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-200 group-hover:bg-blue-500 group-hover:border-blue-600 group-hover:text-white dark:group-hover:bg-zinc-100 dark:group-hover:border-zinc-200 dark:group-hover:text-zinc-900 transition-all">
                                                 <ArrowUpRight className="w-4 h-4" />
                                             </div>
                                         </div>
@@ -1656,10 +1693,10 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                         </div>
                     </Widget>
                 </div>
-                {/* Briefing Sidebar */}
-                <div className={`${isCompactContent ? 'p-2 md:p-3 flex flex-col h-[calc(100vh-140px)]' : 'xl:col-span-4 p-2 md:p-3 flex flex-col xl:h-[calc(100vh-140px)] xl:sticky xl:top-24'}`}> 
-                    <div className={`relative flex-1 h-full overflow-visible ${briefingPulse ? 'widget-highlight-shell widget-highlight-double' : ''}`}> 
-                    <div className="flex flex-col flex-1 pb-2 h-full overflow-hidden p-6 transition-[box-shadow,border-color] duration-700 xl:ml-[-1.5rem]">
+                {/* Briefing Sidebar — wider column (5/12) from lg so it isn’t squeezed next to main */}
+                <div className={`${isCompactContent ? 'p-2 md:p-3 flex flex-col h-[calc(100vh-140px)]' : 'lg:col-span-5 p-2 md:p-3 flex flex-col lg:min-w-0 lg:max-w-none lg:h-[calc(100vh-140px)] lg:sticky lg:top-24'}`}> 
+                    <div className={`relative flex-1 h-full overflow-visible min-w-0 ${briefingPulse ? 'widget-highlight-shell widget-highlight-double' : ''}`}> 
+                    <div className="flex flex-col flex-1 pb-2 h-full overflow-hidden p-4 sm:p-5 lg:p-6 transition-[box-shadow,border-color] duration-700 lg:ml-[-0.75rem] xl:ml-[-1.5rem]">
                         <div className="flex items-center justify-between mb-4">
                             <div>
                                 <h3 className="font-serif text-2xl text-zinc-900 dark:text-white">Briefing</h3>
