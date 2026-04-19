@@ -588,7 +588,7 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                     )
                                 )}
                             </div>
-                        </div>
+                            </div>
                         </div>
                     </div>
                 );
@@ -1984,7 +1984,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                     <div className="absolute inset-0 pointer-events-none z-0">
                         <div
                             className={`w-full h-full transition-all duration-500 ${patternColorClass} ${patternOpacityClass}`}
-                            style={{
+                        style={{
                                 maskImage: maskImage,
                                 WebkitMaskImage: maskImage,
                                 maskSize: maskSize,
@@ -1993,7 +1993,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 WebkitMaskRepeat: maskRepeat,
                             }}
                         />
-                    </div>
+                            </div>
                 )}
 
                 {showAlternativePreviewChrome ? (
@@ -2015,7 +2015,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                     onChange={onSetThemeMode}
                                 />
                             ) : null}
-                        </div>
+                    </div>
                     </div>
                 ) : null}
 
@@ -2025,14 +2025,14 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             message={paymentError}
                             onDismiss={onDismissPaymentError}
                         />
-                    </div>
-                )}
+                                </div>
+                            )}
 
                 <div className={`relative z-10 h-full w-full min-h-0 ${alternativeLayoutManagesOwnScroll ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden'} ${showAlternativePreviewChrome && useJournalChromePadding ? 'pt-[84px]' : ''} custom-scrollbar`}>
                     <div className={alternativeLayoutManagesOwnScroll ? 'w-full h-full min-h-0' : 'w-full min-h-full'}>
                         {renderAlternativeLayout()}
+                        </div>
                     </div>
-                </div>
             </div>
         );
     }
@@ -2804,7 +2804,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             isEmbedded={isEmbedded}
                                 isLandscapeCompact={isLandscapeSplit && isPhoneLike}
                             creatorName={creatorName}
-                                onPaymentComplete={(method) => { setIsMobilePaymentOpen(false); onPaymentComplete(method); }}
+                            onPaymentComplete={(method) => { setIsMobilePaymentOpen(false); onPaymentComplete(method); }}
                             canVerifyManualPayment={canVerifyManualPayment}
                             onMockVerify={canVerifyManualPayment ? () => { setIsMobilePaymentOpen(false); onPaymentComplete(); } : undefined}
                         />
@@ -2821,14 +2821,14 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                         <div className="hidden lg:flex absolute top-8 left-8 right-8 z-40 items-center justify-between pointer-events-none">
                             <div className="flex items-center gap-2 pointer-events-auto">
                                 {!isEmbedded ? (
-                                    <button
+                            <button
                                         type="button"
                                         onClick={() => { playClick(); onBack(); }}
                                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${isDarkMode ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-zinc-50 text-zinc-700 border border-zinc-200'}`}
                                         aria-label="Back"
-                                    >
-                                        <ChevronLeft className="w-5 h-5" />
-                                    </button>
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
                                 ) : reserveCollapsedHeaderBackSlot > 0 ? (
                                     <div className="flex-shrink-0 flex items-center gap-2" aria-hidden="true">
                                         {Array.from({ length: reserveCollapsedHeaderBackSlot }, (_, i) => (
@@ -2836,7 +2836,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                         ))}
                                     </div>
                                 ) : null}
-                                <button
+                            <button
                                     type="button"
                                     onClick={() => { playClick(); setIsSplitSidebarCollapsed(false); }}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15' : 'bg-white border border-zinc-200/50 text-zinc-600 hover:bg-zinc-50'}`}
@@ -2844,8 +2844,8 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                     title="Show Details"
                                 >
                                     <PanelRightOpen className="w-3.5 h-3.5" />
-                                    <span>Details</span>
-                                </button>
+                                <span>Details</span>
+                            </button>
                             </div>
 
                             <div className="flex items-center gap-3 pointer-events-auto">
@@ -2853,8 +2853,8 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                     <div className={`px-3 py-1.5 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-700'}`}>
                                         <Eye className="w-3.5 h-3.5" />
                                         <span>Creator Preview</span>
-                                    </div>
-                                )}
+                        </div>
+                    )}
                             </div>
                         </div>
                     )}
@@ -2886,7 +2886,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             </>
                         )}
                 </main>
-            </div>
+                            </div>
 
             {/* Canvas simulation: Learn More modal must overlay BOTH the docked sidebar and the gallery (landscape too). */}
             {isCanvasSim && isLearnMoreOpen && (
@@ -2943,7 +2943,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 <p className={`mt-2 text-[9px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
                                     Opens in new tab (exits simulation)
                                 </p>
-                            </div>
+                                </div>
                             <div className={`rounded-2xl p-4 border ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-zinc-50 border-zinc-200'}`}>
                                 <p className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>Tip</p>
                                 <p className={`text-xs mt-1 ${isDarkMode ? 'text-zinc-300' : 'text-zinc-600'}`}>
@@ -2961,7 +2961,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             </button>
                         </div>
                     </div>
-                </div>
+            </div>
             )}
         </div>
     );

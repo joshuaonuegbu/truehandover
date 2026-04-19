@@ -49,7 +49,7 @@ class AppErrorBoundary extends React.Component<React.PropsWithChildren, AppError
                         <button
                             type="button"
                             onClick={() => window.location.reload()}
-                            className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest bg-brand text-black hover:bg-brand-hover transition-colors inline-flex items-center gap-2"
+                            className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest bg-lime-400 text-black hover:bg-lime-400 transition-colors inline-flex items-center gap-2"
                         >
                             <RefreshCw className="w-3.5 h-3.5" />
                             Reload Page

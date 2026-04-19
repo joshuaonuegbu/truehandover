@@ -64,8 +64,8 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
     const borderColor = isDarkMode ? 'border-white/5' : 'border-zinc-200';
     
     // Brand colors - Consistent with App
-    const brandGreenBg = isDarkMode ? 'bg-brand' : 'bg-brand';
-    const brandGreenText = isDarkMode ? 'text-brand' : 'text-brand';
+    const brandGreenBg = isDarkMode ? 'bg-lime-400' : 'bg-lime-400';
+    const brandGreenText = isDarkMode ? 'text-lime-400' : 'text-lime-400';
     const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#bef264]' : 'shadow-[0_0_10px_rgba(190, 242, 100,0.5)]';
 
     // --- EFFECTS ---
@@ -196,14 +196,14 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
     if (!isLocked && !isPendingVerification) {
         return (
             <div className={`
-                ${isDarkMode ? 'bg-brand/10 border-brand/20' : 'bg-blue-50 border-blue-200'} 
+                ${isDarkMode ? 'bg-lime-400/10 border-lime-400/20' : 'bg-blue-50 border-blue-200'} 
                 border rounded-2xl ${isLandscapeCompact ? 'p-3.5' : 'p-5'} flex flex-col items-center justify-center text-center animate-fade-in
             `}>
                 <div className={`${isLandscapeCompact ? 'w-10 h-10 mb-2' : 'w-11 h-11 mb-2.5'} ${brandGreenBg} rounded-full flex items-center justify-center ${brandGreenShadow}`}>
                     <Check className={`${isLandscapeCompact ? 'w-5 h-5' : 'w-5.5 h-5.5'} ${isDarkMode ? 'text-black' : 'text-white'}`} />
                 </div>
                 <h4 className={`font-bold ${brandGreenText} ${isLandscapeCompact ? 'text-base' : 'text-lg'} tracking-tight`}>Payment Complete</h4>
-                <p className={`${isLandscapeCompact ? 'text-[9px] mt-1' : 'text-[10px] mt-1.5'} font-bold ${isDarkMode ? 'text-brand/70' : 'text-brand-hover/70'} uppercase tracking-widest`}>Vault Unlocked</p>
+                <p className={`${isLandscapeCompact ? 'text-[9px] mt-1' : 'text-[10px] mt-1.5'} font-bold ${isDarkMode ? 'text-lime-400/70' : 'text-lime-400/70'} uppercase tracking-widest`}>Vault Unlocked</p>
                 <div className={`${isLandscapeCompact ? 'mt-2.5' : 'mt-3.5'} flex gap-3`}>
                     <button className={`${isLandscapeCompact ? 'px-2.5 py-1 text-[9px]' : 'px-3 py-1.5 text-[10px]'} rounded-lg font-bold uppercase tracking-wider flex items-center gap-1.5 ${isDarkMode ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white hover:bg-editorial text-zinc-700 border border-zinc-200'}`}>
                         <Receipt className={`${isLandscapeCompact ? 'w-2.5 h-2.5' : 'w-3 h-3'}`} /> Receipt
@@ -375,7 +375,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                                     <span className={`text-[10px] font-bold uppercase tracking-widest ${textSecondary}`}>Total Due</span>
                                     <div className={`text-3xl font-sans tracking-tight font-bold ${textPrimary} leading-none mt-1`}>${totalDue.toLocaleString()}</div>
                                 </div>
-                                {tipAmount > 0 && <span className={`text-xs font-bold ${isDarkMode ? 'text-brand' : 'text-brand'} uppercase bg-blue-500/10 px-2 py-1 rounded`}>+${tipAmount.toLocaleString()} Tip</span>}
+                                {tipAmount > 0 && <span className={`text-xs font-bold ${isDarkMode ? 'text-lime-400' : 'text-lime-400'} uppercase bg-blue-500/10 px-2 py-1 rounded`}>+${tipAmount.toLocaleString()} Tip</span>}
                             </div>
 
                             {project.enableTips && (
@@ -421,8 +421,8 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                                     disabled={isEmbedded}
                                     className={`w-full h-14 flex items-center justify-center gap-2 rounded-xl border text-xs font-bold uppercase tracking-widest transition-all 
                                     ${isDarkMode 
-                                        ? 'bg-transparent border-white/5 text-zinc-400 hover:bg-brand/10 hover:text-brand hover:border-brand' 
-                                        : 'glass-panel text-zinc-600 hover:text-brand hover:border-brand shadow-sm'
+                                        ? 'bg-transparent border-white/5 text-zinc-400 hover:bg-lime-400/10 hover:text-lime-400 hover:border-lime-400' 
+                                        : 'glass-panel text-zinc-600 hover:text-lime-400 hover:border-lime-400 shadow-sm'
                                     }`}
                                 >
                                     <QrCode className="w-4 h-4" /> Manual Transfer

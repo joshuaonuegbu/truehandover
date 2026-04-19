@@ -1145,7 +1145,7 @@ const SyncdeskVariant = ({ activeSection }: { activeSection: string }) => {
             {/* Header */}
             <div className="h-20 bg-white/80 backdrop-blur-md shrink-0 flex items-center px-8 justify-between border-b border-gray-200 z-50">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-[#DBF350] shadow-lg shadow-lime-200/50 hover:scale-105 transition-transform cursor-pointer">
+                    <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-[#DBF350] shadow-lg shadow-lime-400/50 hover:scale-105 transition-transform cursor-pointer">
                         <Zap className="w-6 h-6 fill-current" />
                     </div>
                     <span className="font-bold text-xl tracking-tight hidden md:block">syncdesk</span>
@@ -1473,7 +1473,7 @@ const CallAIVariant = ({ activeSection }: { activeSection: string }) => {
 
             {/* Sidebar (Glass) */}
             <div className="w-20 bg-white/40 backdrop-blur-xl rounded-[32px] flex flex-col items-center py-8 gap-8 border border-white/50 shadow-lg z-20 shrink-0 mr-6">
-                <div className="w-10 h-10 bg-[#bef264] rounded-xl flex items-center justify-center text-black font-bold shadow-lg shadow-lime-200">C</div>
+                <div className="w-10 h-10 bg-[#bef264] rounded-xl flex items-center justify-center text-black font-bold shadow-lg shadow-lime-400/40">C</div>
                 <div className="flex flex-col gap-6 w-full px-2">
                     {[LayoutGrid, MessageSquare, User, Activity, Box].map((I, i) => (
                         <div key={i} className={`h-12 w-12 mx-auto rounded-2xl flex items-center justify-center cursor-pointer transition-all ${i === 1 ? 'bg-white shadow-md text-black scale-105' : 'text-gray-500 hover:bg-white/50 hover:text-black'}`}>
@@ -1497,7 +1497,7 @@ const CallAIVariant = ({ activeSection }: { activeSection: string }) => {
                             </button>
                         ))}
                     </div>
-                    <button className="bg-[#EAFF8C] hover:bg-[#D4FF3F] text-black px-6 py-3 rounded-2xl text-xs font-bold shadow-lg shadow-lime-100 transition-colors flex items-center gap-2">
+                    <button className="bg-[#EAFF8C] hover:bg-[#D4FF3F] text-black px-6 py-3 rounded-2xl text-xs font-bold shadow-lg shadow-lime-400/30 transition-colors flex items-center gap-2">
                         New Chat <Plus className="w-4 h-4" />
                     </button>
                 </div>
@@ -1552,9 +1552,9 @@ const CallAIVariant = ({ activeSection }: { activeSection: string }) => {
                         {/* Top row */}
                         <div className="grid grid-cols-3 gap-6 h-40">
                              {[
-                                 {l:'Total Calls', v:'2.270', c:'Calls: +12%', g:'bg-lime-300'},
+                                 {l:'Total Calls', v:'2.270', c:'Calls: +12%', g:'bg-lime-400'},
                                  {l:'AVG. Duration', v:'1:09', s:'min.', c:'Duration: -8%', g:'bg-gray-300'},
-                                 {l:'AVG. Waiting', v:'00:07', s:'s.', c:'Waiting: +12%', g:'bg-lime-300'}
+                                 {l:'AVG. Waiting', v:'00:07', s:'s.', c:'Waiting: +12%', g:'bg-lime-400'}
                              ].map((stat, i) => (
                                  <div key={stat.l} className="bg-white/60 backdrop-blur-md rounded-[32px] p-6 shadow-sm border border-white/60 flex flex-col justify-between hover:shadow-lg transition-shadow">
                                      <div className="flex justify-between">

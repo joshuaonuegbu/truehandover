@@ -92,7 +92,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     const map: Record<string, string> = {
         pending: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
         active: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400',
-        paid: 'bg-blue-100 text-brand-hover dark:bg-blue-500/15 dark:text-brand',
+        paid: 'bg-blue-100 text-lime-400 dark:bg-blue-500/15 dark:text-lime-400',
         draft: 'bg-zinc-200 text-zinc-500 dark:bg-white/5 dark:text-zinc-400',
     };
     return (
@@ -123,8 +123,8 @@ const SECTIONS: { id: Section; label: string; icon: any }[] = [
 // VARIANT 1 — SIDEBAR CLASSIC  (Payflow / image 1)
 // ══════════════════════════════════════════════════════════════════════════════
 const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: boolean }) => {
-    const accentText = isDark ? 'text-brand' : 'text-brand';
-    const accentBg = isDark ? 'bg-brand text-black' : 'bg-brand text-white';
+    const accentText = isDark ? 'text-lime-400' : 'text-lime-400';
+    const accentBg = isDark ? 'bg-lime-400 text-black' : 'bg-lime-400 text-white';
     const cardBg = isDark ? 'bg-[#1e1e28] border-white/10' : 'glass-panel';
     const subText = isDark ? 'text-zinc-400' : 'text-zinc-500';
     const hrCol = isDark ? 'border-white/10' : 'border-zinc-200';
@@ -213,7 +213,7 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
             <div className="grid grid-cols-5 gap-3">
                 {MOCK_PROJECTS.map((p, i) => (
                     <div key={i} className={`${cardBg} border rounded-2xl p-4 hover:border-blue-500/50 transition-all cursor-pointer group`}>
-                        <div className={`w-10 h-10 rounded-xl mb-3 flex items-center justify-center ${isDark ? 'bg-brand/10' : 'bg-blue-50'} ${accentText}`}><FolderLock className="w-5 h-5" /></div>
+                        <div className={`w-10 h-10 rounded-xl mb-3 flex items-center justify-center ${isDark ? 'bg-lime-400/10' : 'bg-blue-50'} ${accentText}`}><FolderLock className="w-5 h-5" /></div>
                         <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-obsidian'} mb-0.5`}>{p.name}</p>
                         <p className={`text-[10px] ${subText}`}>{p.client}</p>
                         <div className="mt-3 pt-3 border-t border-dashed ${hrCol} flex justify-between items-center">
@@ -299,7 +299,7 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
 const SidebarClassicLayout = ({ section, isDark }: { section: Section; isDark: boolean }) => {
     const bg = isDark ? 'bg-black' : 'bg-[#f4f5f7]';
     const sidebarBg = isDark ? 'bg-[#111118] border-white/10' : 'glass-panel';
-    const activeItem = isDark ? 'bg-brand/10 text-brand' : 'bg-blue-50 text-brand-hover';
+    const activeItem = isDark ? 'bg-lime-400/10 text-lime-400' : 'bg-blue-50 text-lime-400';
     const inactiveItem = isDark ? 'text-zinc-400 hover:text-white hover:bg-white/5' : 'text-zinc-500 hover:text-obsidian hover:bg-editorial';
 
     return (
@@ -307,7 +307,7 @@ const SidebarClassicLayout = ({ section, isDark }: { section: Section; isDark: b
             {/* Sidebar */}
             <div className={`w-52 shrink-0 ${sidebarBg} border-r flex flex-col py-6`}>
                 <div className="px-5 mb-8 flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-brand dark:bg-brand flex items-center justify-center"><Zap className="w-4 h-4 text-white dark:text-black" /></div>
+                    <div className="w-7 h-7 rounded-lg bg-lime-400 dark:bg-lime-400 flex items-center justify-center"><Zap className="w-4 h-4 text-white dark:text-black" /></div>
                     <span className={`font-sans tracking-tight font-bold text-base ${isDark ? 'text-white' : 'text-obsidian'}`}>Heartifact</span>
                 </div>
                 <nav className="flex-1 px-3 space-y-1">
@@ -317,8 +317,8 @@ const SidebarClassicLayout = ({ section, isDark }: { section: Section; isDark: b
                         </div>
                     ))}
                 </nav>
-                <div className={`mx-3 mt-4 p-3 rounded-xl ${isDark ? 'bg-brand/10 border border-brand/20' : 'bg-blue-50 border border-blue-100'}`}>
-                    <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-brand' : 'text-brand-hover'}`}>Storage</p>
+                <div className={`mx-3 mt-4 p-3 rounded-xl ${isDark ? 'bg-lime-400/10 border border-lime-400/20' : 'bg-blue-50 border border-blue-100'}`}>
+                    <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-lime-400' : 'text-lime-400'}`}>Storage</p>
                     <div className={`w-full h-1.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-blue-100'} overflow-hidden`}>
                         <div className="h-full w-[8%] rounded-full bg-blue-500" />
                     </div>
@@ -406,7 +406,7 @@ const BoldDarkContent = ({ section, isDark }: { section: Section; isDark: boolea
             <h1 className="text-3xl font-black text-white">Vault</h1>
             <div className="grid grid-cols-5 gap-3">
                 {MOCK_PROJECTS.map((p, i) => (
-                    <div key={i} className={`${card} border rounded-3xl p-4 cursor-pointer transition-all hover:border-brand/40`} style={{ borderColor: i === 0 ? acc + '40' : undefined }}>
+                    <div key={i} className={`${card} border rounded-3xl p-4 cursor-pointer transition-all hover:border-lime-400/40`} style={{ borderColor: i === 0 ? acc + '40' : undefined }}>
                         <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-3 text-black font-black text-sm" style={{ background: acc }}>{p.name[0]}</div>
                         <p className="text-sm font-black text-white">{p.name}</p>
                         <p className={`text-[10px] ${sub} mt-0.5`}>{p.client}</p>
@@ -617,7 +617,7 @@ const FocusFlowContent = ({ section, isDark }: { section: Section; isDark: boole
             {section === 'settings' && (
                 <div className="space-y-4">
                     {['Profile', 'Payments', 'Security', 'Integrations'].map(g => (
-                        <div key={g} className={`${bgCard} border rounded-[2rem] p-5 shadow-sm flex items-center justify-between cursor-pointer hover:border-brand/30 transition-colors`}>
+                        <div key={g} className={`${bgCard} border rounded-[2rem] p-5 shadow-sm flex items-center justify-between cursor-pointer hover:border-lime-400/30 transition-colors`}>
                             <p className={`font-semibold ${mainText}`}>{g}</p><ChevronRight className={`w-5 h-5 ${sub}`} />
                         </div>
                     ))}
@@ -768,12 +768,12 @@ const CommandCenterLayout = ({ section, isDark }: { section: Section; isDark: bo
     const bg = isDark ? 'bg-[#0e0e14]' : 'bg-[#f2f3f5]';
     const sidebarBg = isDark ? 'bg-[#111117] border-white/8' : 'glass-panel';
     const menuItem = isDark ? 'text-zinc-400 hover:text-white hover:bg-white/5' : 'text-zinc-500 hover:text-obsidian hover:bg-editorial';
-    const activeItem = isDark ? 'bg-brand/10 text-brand' : 'bg-blue-50 text-brand-hover';
+    const activeItem = isDark ? 'bg-lime-400/10 text-lime-400' : 'bg-blue-50 text-lime-400';
     return (
         <div className={`flex h-full w-full ${bg}`}>
             <div className={`w-44 shrink-0 ${sidebarBg} border-r flex flex-col py-5`}>
                 <div className="px-4 mb-6 flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-brand flex items-center justify-center"><Zap className="w-3 h-3 text-white" /></div>
+                    <div className="w-6 h-6 rounded-lg bg-lime-400 flex items-center justify-center"><Zap className="w-3 h-3 text-white" /></div>
                     <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-white' : 'text-obsidian'}`}>Heartifact</span>
                 </div>
                 <nav className="flex-1 px-2 space-y-0.5">
@@ -863,7 +863,7 @@ const AnalyticsHubContent = ({ section, isDark }: { section: Section; isDark: bo
                 {section === 'vault' && (
                     <div className="grid grid-cols-4 gap-3">
                         {MOCK_PROJECTS.map((p, i) => (
-                            <div key={i} className={`${card} border rounded-2xl p-4 cursor-pointer hover:border-brand/30 transition-colors`}>
+                            <div key={i} className={`${card} border rounded-2xl p-4 cursor-pointer hover:border-lime-400/30 transition-colors`}>
                                 <FolderLock className="w-6 h-6 mb-3" style={{ color: acc }} />
                                 <p className={`text-sm font-bold ${mainText}`}>{p.name}</p>
                                 <p className={`text-xs ${sub} mb-3`}>{p.client}</p>
@@ -901,7 +901,7 @@ const AnalyticsHubContent = ({ section, isDark }: { section: Section; isDark: bo
                 {section === 'settings' && (
                     <div className="grid grid-cols-2 gap-3">
                         {[{ l: 'Profile', icon: User }, { l: 'Billing', icon: CreditCard }, { l: 'Security', icon: ShieldCheck }, { l: 'Integrations', icon: Globe }].map(g => (
-                            <div key={g.l} className={`${card} border rounded-2xl p-5 cursor-pointer hover:border-brand/30 transition-colors flex items-center gap-3`}>
+                            <div key={g.l} className={`${card} border rounded-2xl p-5 cursor-pointer hover:border-lime-400/30 transition-colors flex items-center gap-3`}>
                                 <g.icon className="w-5 h-5" style={{ color: acc }} />
                                 <p className={`font-semibold ${mainText}`}>{g.l}</p>
                                 <ChevronRight className={`w-4 h-4 ml-auto ${sub}`} />
@@ -939,13 +939,13 @@ const AnalyticsHubContent = ({ section, isDark }: { section: Section; isDark: bo
 const AnalyticsHubLayout = ({ section, isDark }: { section: Section; isDark: boolean }) => {
     const bg = isDark ? 'bg-[#0d0d13]' : 'bg-[#f4f5f7]';
     const topbarBg = isDark ? 'bg-[#111119] border-white/8' : 'glass-panel';
-    const activeTab = isDark ? 'border-b-2 border-brand text-white font-bold' : 'border-b-2 border-brand text-obsidian font-bold';
+    const activeTab = isDark ? 'border-b-2 border-lime-400 text-white font-bold' : 'border-b-2 border-lime-400 text-obsidian font-bold';
     const inactiveTab = isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-obsidian';
     return (
         <div className={`${bg} h-full w-full flex flex-col`}>
             <div className={`${topbarBg} border-b px-6 flex items-center gap-6 h-14 shrink-0`}>
                 <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-brand dark:bg-brand flex items-center justify-center"><Zap className="w-3.5 h-3.5 text-white dark:text-black" /></div>
+                    <div className="w-7 h-7 rounded-full bg-lime-400 dark:bg-lime-400 flex items-center justify-center"><Zap className="w-3.5 h-3.5 text-white dark:text-black" /></div>
                     <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-obsidian'}`}>Heartifact</span>
                 </div>
                 <div className="flex gap-0.5 h-full ml-4">
@@ -956,7 +956,7 @@ const AnalyticsHubLayout = ({ section, isDark }: { section: Section; isDark: boo
                 <div className="ml-auto flex items-center gap-3">
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs ${isDark ? 'bg-white/5 text-zinc-400' : 'bg-zinc-200 text-zinc-400'}`}><Search className="w-3.5 h-3.5" />Type Client Name or ID</div>
                     <Bell className={`w-4 h-4 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`} />
-                    <div className="w-8 h-8 rounded-full bg-brand dark:bg-brand flex items-center justify-center font-bold text-white dark:text-black text-xs">J</div>
+                    <div className="w-8 h-8 rounded-full bg-lime-400 dark:bg-lime-400 flex items-center justify-center font-bold text-white dark:text-black text-xs">J</div>
                 </div>
             </div>
             <div className="flex-1 overflow-hidden px-5 py-4"><AnalyticsHubContent section={section} isDark={isDark} /></div>
@@ -987,7 +987,7 @@ export const DesignShowcase: React.FC<ShowcaseProps> = ({ isDarkMode, onClose })
             {/* Showcase chrome */}
             <div className={`shrink-0 flex items-center gap-3 px-4 py-2 border-b ${isDarkMode ? 'bg-[#0f0f18] border-white/10' : 'glass-panel'} shadow-sm`}>
                 {/* Brand badge */}
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ${isDarkMode ? 'bg-brand/10 border-brand/20 text-brand' : 'bg-blue-50 border-blue-200 text-brand-hover'} text-[10px] font-black uppercase tracking-widest`}>
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ${isDarkMode ? 'bg-lime-400/10 border-lime-400/20 text-lime-400' : 'bg-blue-50 border-blue-200 text-lime-400'} text-[10px] font-black uppercase tracking-widest`}>
                     <Sparkles className="w-3 h-3" /> Design Lab
                 </div>
                 <div className={`hidden md:block h-5 w-px ${isDarkMode ? 'bg-white/10' : 'bg-zinc-200'}`} />
@@ -998,7 +998,7 @@ export const DesignShowcase: React.FC<ShowcaseProps> = ({ isDarkMode, onClose })
                             key={v.id}
                             onClick={() => setActiveVariant(v.id)}
                             className={`shrink-0 flex flex-col items-start px-3 py-1.5 rounded-xl border text-left transition-all ${activeVariant === v.id
-                                ? (isDarkMode ? 'bg-brand/15 border-brand/30 text-brand' : 'bg-blue-50 border-blue-300 text-brand-hover')
+                                ? (isDarkMode ? 'bg-lime-400/15 border-lime-400/30 text-lime-400' : 'bg-blue-50 border-blue-300 text-lime-400')
                                 : (isDarkMode ? 'bg-white/5 border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/10' : 'bg-editorial border-zinc-200/50 text-zinc-500 hover:text-zinc-700 hover:bg-white')
                             }`}
                         >
@@ -1014,7 +1014,7 @@ export const DesignShowcase: React.FC<ShowcaseProps> = ({ isDarkMode, onClose })
                             key={s.id}
                             onClick={() => setActiveSection(s.id)}
                             className={`h-6 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${activeSection === s.id
-                                ? (isDarkMode ? 'bg-brand text-black' : 'bg-brand text-white')
+                                ? (isDarkMode ? 'bg-lime-400 text-black' : 'bg-lime-400 text-white')
                                 : (isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-800')
                             }`}
                         >
@@ -1035,7 +1035,7 @@ export const DesignShowcase: React.FC<ShowcaseProps> = ({ isDarkMode, onClose })
             <div className={`md:hidden flex gap-1 px-3 py-2 overflow-x-auto no-scrollbar shrink-0 border-b ${isDarkMode ? 'bg-[#0f0f18] border-white/10' : 'glass-panel'}`}>
                 {SECTIONS.map(s => (
                     <button key={s.id} onClick={() => setActiveSection(s.id)}
-                        className={`shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${activeSection === s.id ? (isDarkMode ? 'bg-brand text-black' : 'bg-brand text-white') : (isDarkMode ? 'text-zinc-400' : 'text-zinc-500')}`}>
+                        className={`shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${activeSection === s.id ? (isDarkMode ? 'bg-lime-400 text-black' : 'bg-lime-400 text-white') : (isDarkMode ? 'text-zinc-400' : 'text-zinc-500')}`}>
                         {s.label}
                     </button>
                 ))}

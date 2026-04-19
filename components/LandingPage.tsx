@@ -143,7 +143,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
                 >
                     <button
                         onClick={() => { handleClose(); setTimeout(onStart, 300); }}
-                        className="px-8 py-4 bg-brand text-black rounded-full font-bold text-sm uppercase tracking-widest hover:scale-105 hover:shadow-[0_0_30px_rgba(190, 242, 100,0.4)] transition-all shadow-lg flex items-center gap-3"
+                        className="px-8 py-4 bg-lime-400 text-black rounded-full font-bold text-sm uppercase tracking-widest hover:scale-105 hover:shadow-[0_0_30px_rgba(190, 242, 100,0.4)] transition-all shadow-lg flex items-center gap-3"
                     >
                         Start for Free <ArrowRight className="w-4 h-4" />
                     </button>
@@ -256,7 +256,7 @@ const GetStartedModal = ({
                             className="group w-full rounded-2xl border border-zinc-200/70 bg-zinc-50/50 p-5 text-left transition-all hover:border-zinc-300 hover:bg-white hover:shadow-md dark:border-white/[0.08] dark:bg-white/[0.03] dark:hover:border-white/20 dark:hover:bg-white/[0.06] sm:p-6"
                         >
                             <div className="flex items-start gap-4">
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-zinc-200/60 bg-white text-zinc-900 shadow-sm dark:border-white/10 dark:bg-white/[0.06] dark:text-brand">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-zinc-200/60 bg-white text-zinc-900 shadow-sm dark:border-white/10 dark:bg-white/[0.06] dark:text-lime-400">
                                     <LayoutGrid className="h-5 w-5" />
                                 </div>
                                 <div className="min-w-0 flex-1">
@@ -333,7 +333,7 @@ const NetRevenueStylePanel = ({
 const SectionHeading = ({ badge, title, subtitle, className = "" }: any) => (
     <div className={`mb-20 ${className}`}>
         {badge && (
-            <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-brand uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
+            <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-lime-400 uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
                 {badge}
             </span>
         )}
@@ -354,7 +354,7 @@ const BentoCard = ({ children, className = "", title, subtitle, icon: Icon }: { 
             <div className="p-8 pb-4 shrink-0">
                 <div className="flex items-center gap-3 mb-3">
                     {Icon && (
-                        <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] flex items-center justify-center text-black dark:text-brand">
+                        <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] flex items-center justify-center text-black dark:text-lime-400">
                             <Icon className="w-5 h-5" />
                         </div>
                     )}
@@ -408,7 +408,7 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
 
                     <button
                         onClick={onStart}
-                        className="px-6 py-2.5 bg-black dark:bg-brand text-white dark:text-zinc-950 rounded-2xl font-bold text-xs uppercase tracking-[0.15em] hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_20px_rgba(190, 242, 100,0.5)] transition-all shadow-lg border border-transparent dark:border-brand"
+                        className="px-6 py-2.5 bg-black dark:bg-lime-400 text-white dark:text-zinc-950 rounded-2xl font-bold text-xs uppercase tracking-[0.15em] hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_20px_rgba(190, 242, 100,0.5)] transition-all shadow-lg border border-transparent dark:border-lime-400"
                     >
                         Start for Free
                     </button>
@@ -461,7 +461,7 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
                         </button>
                         <button
                             onClick={() => { setIsMenuOpen(false); onStart(); }}
-                            className="w-full py-4 rounded-2xl bg-black dark:bg-brand text-white dark:text-zinc-950 font-bold text-xs uppercase tracking-widest shadow-lg"
+                            className="w-full py-4 rounded-2xl bg-black dark:bg-lime-400 text-white dark:text-zinc-950 font-bold text-xs uppercase tracking-widest shadow-lg"
                         >
                             Start for Free
                         </button>
@@ -512,7 +512,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                         ></div>
 
                         <div className="p-4 h-full flex flex-col items-center justify-center relative z-10">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-all duration-500 ${isHoveringCTA ? 'bg-brand text-black' : 'bg-slate-200 dark:bg-white/10 text-slate-400'}`}>
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-all duration-500 ${isHoveringCTA ? 'bg-lime-400 text-black' : 'bg-slate-200 dark:bg-white/10 text-slate-400'}`}>
                                 {isHoveringCTA ? <Unlock className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
                             </div>
                             <div className="w-20 h-2 bg-slate-200 dark:bg-white/10 rounded-full mb-2" />
@@ -537,7 +537,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                     </a>
 
                     <div className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-sm shadow-sm transition-all hover:bg-white dark:hover:bg-white/10 cursor-default">
-                        <div className="w-2 h-2 bg-brand rounded-full animate-pulse shadow-[0_0_8px_#bef264]"></div>
+                        <div className="w-2 h-2 bg-lime-400 rounded-full animate-pulse shadow-[0_0_8px_#bef264]"></div>
                         <span className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-none uppercase tracking-wider">
                             Now available in public beta
                         </span>
@@ -555,7 +555,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                             The end of the "You send first" standoff.
                         </p>
                         <p className="text-lg md:text-2xl text-slate-600 dark:text-slate-200 font-light leading-relaxed">
-                            TrueHandover ensures your assets are <span className="border-b-2 border-brand text-black dark:text-white font-medium">securely handed over</span> only when payment clears.
+                            TrueHandover ensures your assets are <span className="border-b-2 border-lime-400 text-black dark:text-white font-medium">securely handed over</span> only when payment clears.
                             We generate watermarked previews automatically, so your client reviews the excellence while you retain the master files.
                         </p>
                     </div>
@@ -565,7 +565,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                             onClick={() => { onStart(); }}
                             onMouseEnter={() => setIsHoveringCTA(true)}
                             onMouseLeave={() => setIsHoveringCTA(false)}
-                            className="group relative h-16 px-10 bg-brand text-zinc-950 rounded-2xl font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(190, 242, 100,0.6)] shadow-xl"
+                            className="group relative h-16 px-10 bg-lime-400 text-zinc-950 rounded-2xl font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(190, 242, 100,0.6)] shadow-xl"
                         >
                             <span className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-cta-sheen" />
@@ -641,7 +641,7 @@ const ComparisonSection = () => {
                 ${hoveredCard === 'old' ? 'opacity-25 scale-110' : 'opacity-8 scale-100'}
                 `}
             />
-            <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-brand/5 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+            <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-lime-400/5 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2 pointer-events-none" />
 
             <div className="max-w-[1200px] mx-auto relative z-10">
                 <SectionHeading
@@ -697,14 +697,14 @@ const ComparisonSection = () => {
                     <div
                         onMouseEnter={() => setHoveredCard('new')}
                         onMouseLeave={() => setHoveredCard(null)}
-                        className="relative p-10 rounded-[2.5rem] bg-brand text-black shadow-2xl shadow-black/25 transform md:-translate-y-4 transition-transform hover:-translate-y-6 duration-500 overflow-hidden"
+                        className="relative p-10 rounded-[2.5rem] bg-lime-400 text-black shadow-2xl shadow-black/25 transform md:-translate-y-4 transition-transform hover:-translate-y-6 duration-500 overflow-hidden"
                     >
                         <div className="absolute top-0 right-0 p-6 opacity-10">
                             <Check className="w-32 h-32 text-black -rotate-12" />
                         </div>
 
                         <div className="flex items-center gap-4 mb-8 relative z-10">
-                            <div className="w-12 h-12 rounded-2xl bg-black text-brand flex items-center justify-center font-bold shadow-xl">
+                            <div className="w-12 h-12 rounded-2xl bg-black text-lime-400 flex items-center justify-center font-bold shadow-xl">
                                 <Check className="w-6 h-6" />
                             </div>
                             <h3 className="text-2xl font-serif font-medium text-black tracking-wide">The New Standard</h3>
@@ -766,7 +766,7 @@ const BentoGrid = () => {
                                 Creators upload final files. We automatically generate secure, watermarked previews.
                                 Clients review the work without accessing the master files.
                             </p>
-                            <div className="flex-1 relative rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 group-hover:border-brand/30 transition-colors">
+                            <div className="flex-1 relative rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 group-hover:border-lime-400/30 transition-colors">
                                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600607686527-6fb886090705?w=500&q=50')] bg-cover bg-center opacity-40 blur-[2px]" />
                                 <div className="absolute inset-0 bg-black/10 dark:bg-[#323242]/40" />
                                 <div className="absolute inset-0 flex items-center justify-center">
@@ -792,23 +792,23 @@ const BentoGrid = () => {
                             <div className="flex-1 bg-white dark:bg-[#3a3b56] rounded-xl border border-slate-200 dark:border-white/10 p-4 font-mono text-[10px] text-slate-500 dark:text-slate-300 overflow-hidden relative shadow-sm">
                                 <div className="space-y-3 opacity-80">
                                     <div className="flex gap-2">
-                                        <span className="text-brand">GET</span>
+                                        <span className="text-lime-400">GET</span>
                                         <span className="text-slate-500 dark:text-slate-600">/v/preview</span>
                                         <span className="ml-auto text-slate-500 dark:text-slate-700">200 OK</span>
                                     </div>
                                     <div className="flex gap-2">
-                                        <span className="text-brand">LOG</span>
+                                        <span className="text-lime-400">LOG</span>
                                         <span className="text-slate-400 dark:text-slate-300">Client Viewing</span>
                                         <span className="ml-auto text-slate-600 dark:text-slate-200">Active</span>
                                     </div>
                                     <div className="flex gap-2">
-                                        <span className="text-brand">LCK</span>
+                                        <span className="text-lime-400">LCK</span>
                                         <span className="text-slate-400 dark:text-slate-300">Asset Download</span>
                                         <span className="ml-auto text-slate-600 dark:text-slate-200">Blocked</span>
                                     </div>
                                 </div>
                                 <div className="absolute bottom-4 right-4">
-                                    <div className="px-3 py-1 bg-brand/10 border border-brand/20 rounded text-brand text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                    <div className="px-3 py-1 bg-lime-400/10 border border-lime-400/20 rounded text-lime-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
                                         <FileCheck className="w-3 h-3" /> Tracking Active
                                     </div>
                                 </div>
@@ -826,10 +826,10 @@ const BentoGrid = () => {
                                 </p>
                                 <ul className="space-y-2">
                                     <li className="flex items-center gap-2 text-xs font-bold text-black dark:text-white">
-                                        <Check className="w-3 h-3 text-brand" /> Instant Availability
+                                        <Check className="w-3 h-3 text-lime-400" /> Instant Availability
                                     </li>
                                     <li className="flex items-center gap-2 text-xs font-bold text-black dark:text-white">
-                                        <Check className="w-3 h-3 text-brand" /> Automated Receipts
+                                        <Check className="w-3 h-3 text-lime-400" /> Automated Receipts
                                     </li>
                                 </ul>
                             </div>
@@ -860,7 +860,7 @@ const BentoGrid = () => {
                                                 <h3 className="font-serif text-2xl text-black dark:text-white tracking-wide">Your Brand</h3>
                                                 <p className="text-sm text-zinc-500 dark:text-zinc-400">Custom Portal</p>
                                             </div>
-                                            <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] flex items-center justify-center text-black dark:text-brand">
+                                            <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] flex items-center justify-center text-black dark:text-lime-400">
                                                 <Palette className="w-5 h-5" />
                                             </div>
                                         </div>
@@ -894,7 +894,7 @@ const BentoGrid = () => {
                                                     w-4 h-4 rounded-full border flex items-center justify-center
                                                     ${accentColor === brand.color ? 'border-zinc-900 dark:border-white' : 'border-zinc-400 dark:border-zinc-500'}
                                                 `}>
-                                                    {accentColor === brand.color && <div className="w-2 h-2 rounded-full bg-brand" />}
+                                                    {accentColor === brand.color && <div className="w-2 h-2 rounded-full bg-lime-400" />}
                                                 </div>
 
                                                 <div className="flex-1 text-left">
@@ -905,7 +905,7 @@ const BentoGrid = () => {
                                                 </div>
 
                                                 {accentColor === brand.color && (
-                                                    <Check className="w-4 h-4 text-brand" />
+                                                    <Check className="w-4 h-4 text-lime-400" />
                                                 )}
                                             </button>
                                         ))}
@@ -998,7 +998,7 @@ const BentoGrid = () => {
                                         </div>
                                         <div className="w-full bg-slate-200 dark:bg-white/5 rounded-full h-1.5 overflow-hidden">
                                             <div
-                                                className="bg-brand h-full shadow-[0_0_10px_#bef264]"
+                                                className="bg-lime-400 h-full shadow-[0_0_10px_#bef264]"
                                                 style={{ width: '34%' }}
                                             />
                                         </div>
@@ -1006,7 +1006,7 @@ const BentoGrid = () => {
                                     {/* Options - Smaller */}
                                     <div className="flex gap-3">
                                         <div className="flex-1 p-2 rounded bg-slate-200 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center gap-2">
-                                            <Server className="w-3 h-3 text-brand" />
+                                            <Server className="w-3 h-3 text-lime-400" />
                                             <span className="text-[10px] font-bold text-black dark:text-white">Native</span>
                                         </div>
                                         <div className="flex-1 p-2 rounded bg-slate-200 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center gap-2">
@@ -1033,7 +1033,7 @@ const BentoGrid = () => {
                                         </div>
                                         <div className="flex justify-between items-center mt-1">
                                             <span className="text-[8px] text-slate-400 uppercase">Signed</span>
-                                            <div className="w-3 h-3 bg-brand rounded-full flex items-center justify-center">
+                                            <div className="w-3 h-3 bg-lime-400 rounded-full flex items-center justify-center">
                                                 <Check className="w-2 h-2 text-black" />
                                             </div>
                                         </div>
@@ -1145,11 +1145,11 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
         <section id="pricing" className="py-32 px-6 bg-white dark:bg-cosmic text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
             <div className="max-w-[1200px] mx-auto">
                 <div className="text-center mb-12">
-                    <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-brand uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
+                    <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-lime-400 uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
                         Plans
                     </span>
                     <h2 className="font-serif text-5xl md:text-6xl mb-6">
-                        Start free. <span className="italic text-brand dark:text-brand">Scale as you succeed.</span>
+                        Start free. <span className="italic text-lime-400 dark:text-lime-400">Scale as you succeed.</span>
                     </h2>
                     <p className="text-slate-500 dark:text-slate-300 text-lg max-w-2xl mx-auto">
                         Simple pricing. Professional features.
@@ -1164,7 +1164,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                         >
                             <div className={`w-6 h-6 rounded-full shadow-md transition-transform duration-300 bg-white dark:bg-zinc-950 ${billingCycle === 'yearly' ? 'translate-x-6' : ''}`} />
                         </button>
-                        <span className={`text-sm font-bold ${billingCycle === 'yearly' ? 'text-black dark:text-white' : 'text-slate-500'}`}>Yearly <span className="text-brand text-[10px] ml-1 uppercase tracking-wider">Save 18%</span></span>
+                        <span className={`text-sm font-bold ${billingCycle === 'yearly' ? 'text-black dark:text-white' : 'text-slate-500'}`}>Yearly <span className="text-lime-400 text-[10px] ml-1 uppercase tracking-wider">Save 18%</span></span>
                     </div>
                 </div>
 
@@ -1189,7 +1189,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                             <div className="space-y-4">
                                 <p className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-200 dark:border-white/5 pb-2">Includes</p>
                                 <ul className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
-                                    <li className="flex gap-3 items-center font-bold text-black dark:text-white"><Check className="w-4 h-4 text-brand shrink-0" /> 2.5% Platform Fee + Processing*</li>
+                                    <li className="flex gap-3 items-center font-bold text-black dark:text-white"><Check className="w-4 h-4 text-lime-400 shrink-0" /> 2.5% Platform Fee + Processing*</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> 5 Active Projects</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> 10GB Total Native Storage</li>
                                     <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Standard Watermarking</li>
@@ -1213,7 +1213,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                         {/* The Card Container - Handling the solid border and positioning */}
                         <div className="
                         relative h-full rounded-[2rem] p-[2px]
-                        bg-brand /* Default Solid Border */
+                        bg-lime-400 /* Default Solid Border */
                         transform transition-all duration-300 ease-out
                         lg:-translate-y-4 /* Default 'Sweet Spot' Lift only on desktop */
                         group-hover:-translate-y-2 lg:group-hover:-translate-y-6 group-hover:shadow-[0_20px_40px_-10px_rgba(190, 242, 100,0.4)] /* Hover Lift + Glow */
@@ -1232,11 +1232,11 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                             <div className="relative h-full rounded-[1.9rem] overflow-hidden flex flex-col bg-white dark:bg-charcoal">
                                 <div className="relative z-10 p-8 flex flex-col flex-1 min-h-0">
                                 <div className="absolute top-0 right-0 p-6">
-                                    <div className="px-3 py-1 bg-brand text-black text-[10px] font-bold uppercase tracking-widest rounded-full">Sweet Spot</div>
+                                    <div className="px-3 py-1 bg-lime-400 text-black text-[10px] font-bold uppercase tracking-widest rounded-full">Sweet Spot</div>
                                 </div>
 
                                 <div className="mb-6">
-                                    <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-brand uppercase tracking-widest border border-black/10 dark:border-white/10 shadow-lg">
+                                    <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-lime-400 uppercase tracking-widest border border-black/10 dark:border-white/10 shadow-lg">
                                         Studio
                                     </span>
                                 </div>
@@ -1249,23 +1249,23 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                                 </div>
                                 <div className="text-sm text-zinc-500 dark:text-zinc-400 mb-8 min-h-[40px]">For consistent delivery & branding.</div>
 
-                                <button onClick={onStart} className="w-full py-4 rounded-2xl bg-brand text-zinc-950 hover:bg-black hover:text-brand dark:hover:bg-white dark:hover:text-zinc-950 font-bold text-xs uppercase tracking-widest transition-all shadow-lg mb-8">
+                                <button onClick={onStart} className="w-full py-4 rounded-2xl bg-lime-400 text-zinc-950 hover:bg-black hover:text-lime-400 dark:hover:bg-white dark:hover:text-zinc-950 font-bold text-xs uppercase tracking-widest transition-all shadow-lg mb-8">
                                     Get Studio
                                 </button>
 
                                 <div className="space-y-4">
                                     <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 border-b border-zinc-200/50 dark:border-white/[0.06] pb-2">Everything in Starter, plus</p>
                                     <ul className="space-y-4 text-sm font-medium text-black dark:text-white">
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> <span className="font-bold">0% Platform Fees (Standard Processing Only*)</span></li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> <span className="font-bold">Unlimited</span> Projects</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> 150GB Total Native Storage</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> <span className="font-bold">10 Active BYOS Storage Links (S3/Drive)</span></li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> Custom Branding (Logo/Colors)</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> Client Library (Recurring Clients)</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> Remove "Powered By" Badge</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> Manual Payments (Zelle/Wire)</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> Contract Signatures</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-brand shrink-0" /> Permanent Links (No Expiry)</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> <span className="font-bold">0% Platform Fees (Standard Processing Only*)</span></li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> <span className="font-bold">Unlimited</span> Projects</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> 150GB Total Native Storage</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> <span className="font-bold">10 Active BYOS Storage Links (S3/Drive)</span></li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Custom Branding (Logo/Colors)</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Client Library (Recurring Clients)</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Remove "Powered By" Badge</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Manual Payments (Zelle/Wire)</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Contract Signatures</li>
+                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Permanent Links (No Expiry)</li>
                                     </ul>
                                 </div>
                                 </div>
@@ -1345,7 +1345,7 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full py-6 flex items-center justify-between text-left group"
             >
-                <span className="text-lg font-serif text-zinc-900 dark:text-white group-hover:text-brand dark:group-hover:text-brand transition-colors pr-8 tracking-wide">
+                <span className="text-lg font-serif text-zinc-900 dark:text-white group-hover:text-lime-400 dark:group-hover:text-lime-400 transition-colors pr-8 tracking-wide">
                     {question}
                 </span>
                 <div className={`shrink-0 w-8 h-8 rounded-full border border-zinc-200/50 dark:border-white/[0.06] flex items-center justify-center transition-all ${isOpen ? 'bg-obsidian text-white dark:bg-white dark:text-black rotate-45' : 'bg-transparent text-zinc-400'}`}>
@@ -1367,7 +1367,7 @@ const FAQSection = () => (
     <section className="py-32 px-6 bg-editorial dark:bg-cosmic transition-colors duration-700">
         <div className="max-w-[800px] mx-auto">
             <div className="text-center mb-16">
-                <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-brand uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
+                <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-lime-400 uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
                     Support
                 </span>
                 <h2 className="font-serif text-4xl md:text-5xl text-obsidian dark:text-white mb-6 tracking-wide">Common Questions</h2>
@@ -1438,7 +1438,7 @@ const CookieConsentBanner = ({ onChoose }: { onChoose: (choice: Exclude<CookieCo
                     </button>
                     <button
                         onClick={() => onChoose('all')}
-                        className="px-4 py-2 rounded-2xl text-xs font-bold uppercase tracking-widest bg-black dark:bg-brand text-white dark:text-zinc-950 hover:opacity-90 transition-opacity"
+                        className="px-4 py-2 rounded-2xl text-xs font-bold uppercase tracking-widest bg-black dark:bg-lime-400 text-white dark:text-zinc-950 hover:opacity-90 transition-opacity"
                     >
                         Accept All
                     </button>
@@ -1553,7 +1553,7 @@ export default function LandingPage({ onGetStarted, onQuickStartWithFiles, curre
 
     return (
         <div
-            className="min-h-screen bg-editorial dark:bg-cosmic text-black dark:text-white font-sans selection:bg-brand selection:text-black transition-colors duration-700"
+            className="min-h-screen bg-editorial dark:bg-cosmic text-black dark:text-white font-sans selection:bg-lime-400 selection:text-black transition-colors duration-700"
             onDragEnter={handleDragEnter}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}

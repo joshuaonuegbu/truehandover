@@ -39,11 +39,11 @@
 /* Give every interactive element a pointer cursor by default */
 @layer base {
   :root {
-    --color-lime-600: #a3e635;
+    --color-lime-400: #a3e635;
   }
 
   .dark {
-    --color-lime-600: #bef264;
+    --color-lime-400: #bef264;
   }
 
   button,
@@ -61,7 +61,7 @@
 
   /* On-brand keyboard focus rings â€” only shown for keyboard navigation */
   :focus-visible {
-    outline: 2px solid var(--color-lime-600);
+    outline: 2px solid var(--color-lime-400);
     outline-offset: 2px;
     border-radius: 6px;
   }
@@ -71,7 +71,7 @@
   textarea:focus-visible,
   select:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px var(--color-lime-600);
+    box-shadow: 0 0 0 2px var(--color-lime-400);
   }
 
   /* Ensure heading typography remains Fraunces even when mutated utility combos exist. */
@@ -261,7 +261,7 @@
   --color-brand-hover: #a3e635;
   --color-brand-glow: rgba(163, 230, 53, 0.22);
 
-  /* Keep all lime utilities aligned to the brand icon accent. */
+  /* Keep all lime utilities aligned to lime-400 (light) / dark lime in .dark. */
   --color-lime-50: #a3e635;
   --color-lime-100: #a3e635;
   --color-lime-200: #a3e635;
@@ -363,6 +363,7 @@
     --color-brand: #a3e635;
     --color-brand-hover: #a3e635;
     --color-brand-glow: rgba(163, 230, 53, 0.22);
+    --color-lime-400: #a3e635;
     --color-lime-500: #a3e635;
     --color-lime-600: #a3e635;
 
@@ -378,6 +379,7 @@
     --color-brand: #bef264;
     --color-brand-hover: #bef264;
     --color-brand-glow: rgba(190, 242, 100, 0.22);
+    --color-lime-400: #bef264;
     --color-lime-500: #bef264;
     --color-lime-600: #bef264;
 

@@ -175,7 +175,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
                 <div className="lg:col-span-4 space-y-6">
                     {/* Contact Card */}
                     <Card className="!p-8 bg-white dark:bg-charcoal text-zinc-900 dark:text-white">
-                        <MessageCircle className="w-10 h-10 mb-6 text-blue-600 dark:text-brand" />
+                        <MessageCircle className="w-10 h-10 mb-6 text-blue-600 dark:text-lime-400" />
                         <h3 className="font-sans tracking-tight text-2xl mb-2">Need assistance?</h3>
                         <p className="text-sm text-zinc-600 dark:text-zinc-200 mb-8 leading-relaxed">
                             Our support team is available Mon-Fri to help with transactions and disputes.
@@ -195,7 +195,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
                                 { label: 'API Documentation', icon: FileText },
                             ].map((item, i) => (
                                 <li key={i} className="flex items-center justify-between group cursor-pointer">
-                                    <div className="flex items-center gap-3 text-zinc-600 dark:text-zinc-300 group-hover:text-brand dark:group-hover:text-brand transition-colors">
+                                    <div className="flex items-center gap-3 text-zinc-600 dark:text-zinc-300 group-hover:text-lime-400 dark:group-hover:text-lime-400 transition-colors">
                                         <item.icon className="w-4 h-4" />
                                         <span className="font-medium text-sm">{item.label}</span>
                                     </div>

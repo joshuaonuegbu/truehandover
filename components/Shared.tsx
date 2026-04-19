@@ -35,8 +35,8 @@ interface BadgeProps {
 
 export const Badge: React.FC<BadgeProps> = ({ children, color = 'lime' }) => {
     const colors = {
-        emerald: 'bg-lime-600 text-white shadow-lg shadow-lime-600/20 dark:bg-[#bef264] dark:text-black dark:shadow-[0_0_15px_rgba(190, 242, 100,0.4)]',
-        lime: 'bg-lime-600 text-white shadow-lg shadow-lime-600/20 dark:bg-[#bef264] dark:text-black dark:shadow-[0_0_15px_rgba(190, 242, 100,0.4)]',
+        emerald: 'bg-lime-400 text-white shadow-lg shadow-lime-400/20 dark:bg-[#bef264] dark:text-black dark:shadow-[0_0_15px_rgba(190, 242, 100,0.4)]',
+        lime: 'bg-lime-400 text-white shadow-lg shadow-lime-400/20 dark:bg-[#bef264] dark:text-black dark:shadow-[0_0_15px_rgba(190, 242, 100,0.4)]',
         orange: 'bg-[#fb923c] text-white shadow-[0_0_15px_rgba(251,146,60,0.4)]',
         white: 'bg-white text-black shadow-lg',
         gray: 'bg-slate-200 dark:bg-[#1E1F30] text-slate-600 dark:text-slate-300',

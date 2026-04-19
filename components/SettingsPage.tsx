@@ -28,13 +28,13 @@ const InputField = ({ label, value, onChange, placeholder, type = "text", icon: 
     <div className={`group space-y-1.5 ${className}`}>
         {label && <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">{label}</label>}
         <div className="relative flex items-center">
-            {Icon && <Icon className="absolute left-4 w-4 h-4 text-slate-400 group-focus-within:text-lime-600 dark:group-focus-within:text-[#bef264] transition-colors" />}
+            {Icon && <Icon className="absolute left-4 w-4 h-4 text-slate-400 transition-colors group-focus-within:text-lime-400 dark:group-focus-within:text-[#bef264]" />}
             <input
                 type={type}
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
-                className={`w-full h-12 ${Icon ? 'pl-11 pr-4' : 'px-4'} bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 hover:border-slate-300 dark:hover:border-white/10`}
+                className={`h-12 w-full ${Icon ? 'pl-11 pr-4' : 'px-4'} rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-900 outline-none ring-0 transition-colors placeholder:text-slate-400 focus:border-lime-400 focus:ring-0 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:focus:border-[#bef264] hover:border-slate-300 dark:hover:border-white/12`}
             />
         </div>
     </div>
@@ -153,18 +153,34 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
         }, 1500);
     }
 
-    const Toggle = ({ checked, onChange, label }: { checked: boolean, onChange: (v: boolean) => void, label?: string }) => (
+    /** `blue` matches DeliveryWidget option toggles (w-9 track, flex thumb). */
+    const Toggle = ({
+        checked,
+        onChange,
+        label,
+        variant = 'lime',
+    }: {
+        checked: boolean;
+        onChange: (v: boolean) => void;
+        label?: string;
+        variant?: 'lime' | 'blue';
+    }) => (
         <button
             role="switch"
             aria-checked={checked}
             aria-label={label}
+            type="button"
             onClick={() => { playClick(); onChange(!checked); }}
-            className={`w-10 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-lime-500 ${checked ? 'bg-lime-600 dark:bg-[#bef264]' : 'bg-slate-200 dark:bg-white/10'}`}
+            className={`flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-charcoal ${
+                variant === 'blue'
+                    ? `${checked ? 'bg-blue-500' : 'bg-slate-200 dark:bg-white/10'} focus:ring-blue-500/40`
+                    : `${checked ? 'bg-lime-400 dark:bg-[#bef264]' : 'bg-slate-200 dark:bg-white/10'} focus:ring-lime-400`
+            }`}
         >
             <div
-                className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow-sm transition-all duration-300 ${checked ? 'translate-x-4' : ''} ${
-                    checked ? 'bg-white dark:bg-zinc-950' : 'bg-white dark:bg-zinc-500'
-                }`}
+                className={`mx-0.5 h-4 w-4 rounded-full shadow-sm transition-transform duration-300 ${
+                    checked ? 'translate-x-4' : ''
+                } ${checked ? 'bg-white dark:bg-zinc-950' : 'bg-white dark:bg-zinc-500'}`}
             />
         </button>
     );
@@ -183,7 +199,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
             <div className={`
                 w-10 h-10 rounded-2xl flex items-center justify-center transition-colors
                 ${activeTab === id
-                    ? 'bg-lime-600 dark:bg-[#bef264] text-white dark:text-zinc-950'
+                    ? 'bg-lime-400 dark:bg-[#bef264] text-white dark:text-zinc-950'
                     : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'
                 }
             `}>
@@ -379,7 +395,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                             <>
                                 <Card>
                                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-white/5">
-                                        <User className="w-5 h-5 text-lime-600 dark:text-[#bef264]" />
+                                        <User className="w-5 h-5 text-lime-400 dark:text-[#bef264]" />
                                         <h3 className="font-sans tracking-tight text-lg text-slate-900 dark:text-white">Basic Information</h3>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -408,84 +424,106 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                     </div>
                                 </Card>
 
-                                <Card className="hf-no-glow group relative overflow-hidden !bg-[#12131b] border-none shadow-[0_20px_60px_-24px_rgba(15,23,42,0.45)] dark:shadow-[0_24px_70px_-26px_rgba(0,0,0,0.65)]" noPadding>
-                                    <div className="absolute inset-0 z-0">
-                                        <img
-                                            src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800&auto=format&fit=crop&q=60"
-                                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-70"
-                                            alt="Office"
-                                            loading="lazy"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-r from-[#081018]/55 via-[#0d111a]/30 to-[#112311]/20" />
-                                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(190,242,100,0.18)_0%,_rgba(190,242,100,0)_38%)]" />
-                                        <div className="absolute inset-0 opacity-[0.1] pointer-events-none mix-blend-soft-light" style={{ backgroundImage: NOISE_SVG }}></div>
-                                    </div>
+                                <Card noPadding className="relative overflow-hidden !rounded-[2rem] border-zinc-200/70 bg-white shadow-[0_1px_0_rgba(15,23,42,0.04)] dark:border-white/[0.08] dark:bg-white/[0.04] dark:shadow-none">
+                                    {/* Light: neutral base + very subtle lime blooms (matches brand / focus accents; avoids strong blue) */}
+                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#f8fafc] via-white to-[#f4f4f5] dark:hidden" />
+                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#ecfccb]/[0.35] via-transparent to-[#d9f99d]/[0.12] dark:hidden" />
+                                    <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-br from-[#bef264]/[0.18] to-[#a3e635]/[0.1] blur-3xl dark:hidden" />
+                                    <div className="pointer-events-none absolute -bottom-16 -left-12 h-40 w-40 rounded-full bg-gradient-to-tr from-[#d9f99d]/[0.14] to-transparent blur-3xl dark:hidden" />
+                                    <div
+                                        className="pointer-events-none absolute inset-0 opacity-[0.14] dark:hidden"
+                                        style={{
+                                            backgroundImage: `linear-gradient(rgba(148,163,184,0.22) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.22) 1px, transparent 1px)`,
+                                            backgroundSize: '32px 32px',
+                                            maskImage: 'linear-gradient(to bottom, black 0%, black 65%, transparent 100%)',
+                                        }}
+                                    />
+                                    <div className="pointer-events-none absolute inset-0 opacity-[0.022] dark:hidden" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
 
-                                    <div className="p-6 relative z-10">
-                                        <div className="flex justify-between items-start mb-5">
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                    <Globe className="w-4 h-4 text-[#bef264]" />
-                                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#d9f99d]">Public Portal</span>
-                                                </div>
-                                                <h3 className="font-sans tracking-tight text-xl text-white">Client Gateway</h3>
-                                                <p className="text-[11px] text-slate-200/85 mt-1 leading-relaxed max-w-lg">
-                                                    This is the link your clients visit to view their project vault, preview deliverables, and complete payment. Share this URL after creating a project.
+                                    {/* Dark: match existing Trash-style depth */}
+                                    <div className="pointer-events-none absolute inset-0 hidden opacity-[0.06] dark:block" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                                    <div className="pointer-events-none absolute inset-0 hidden bg-gradient-to-br from-blue-500/[0.08] via-transparent to-sky-400/[0.07] dark:block" />
+                                    <div className="pointer-events-none absolute -right-10 -top-10 hidden h-44 w-44 rounded-full bg-gradient-to-br from-blue-400/18 to-indigo-500/14 blur-3xl dark:block" />
+                                    <div className="pointer-events-none absolute -bottom-16 -left-12 hidden h-48 w-48 rounded-full bg-gradient-to-tr from-indigo-500/12 to-transparent blur-3xl dark:block" />
+                                    <div
+                                        className="pointer-events-none absolute inset-0 hidden opacity-[0.15] dark:block"
+                                        style={{
+                                            backgroundImage: `linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)`,
+                                            backgroundSize: '28px 28px',
+                                            maskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
+                                        }}
+                                    />
+
+                                    <div className="relative z-10 space-y-6 p-6 md:p-8">
+                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                            <div className="min-w-0">
+                                                <span className="mb-2 block border-l-2 border-lime-400 pl-3 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
+                                                    Public portal
+                                                </span>
+                                                <h3 className="font-serif text-2xl font-medium tracking-tight text-zinc-900 dark:text-white">Client Gateway</h3>
+                                                <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                                                    Share this hostname after you publish — visitors open the vault, review work, and complete checkout here.
                                                 </p>
                                             </div>
-                                            <button aria-label="Open Public Portal" className="p-2 bg-[#bef264]/20 rounded-xl hover:bg-[#bef264]/28 transition-colors text-[#d9f99d] border border-[#d9f99d]/45 shadow-[0_0_0_1px_rgba(190,242,100,0.08)]" title="Preview your client portal">
-                                                <ExternalLink className="w-4 h-4" />
+                                            <button
+                                                type="button"
+                                                aria-label="Open Public Portal"
+                                                title="Preview your client portal"
+                                                className="flex shrink-0 items-center gap-2 rounded-xl border border-zinc-200/80 bg-white px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-zinc-700 shadow-sm transition-all hover:border-[#2563eb]/35 hover:bg-[#eff6ff] hover:text-[#1d4ed8] dark:border-white/12 dark:bg-white/[0.06] dark:text-zinc-200 dark:hover:border-sky-400/40 dark:hover:bg-white/10"
+                                            >
+                                                <ExternalLink className="h-4 w-4" />
+                                                Open
                                             </button>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                            <div className="space-y-1.5">
-                                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Portal Subdomain</label>
-                                                <div className="flex items-center rounded-2xl px-4 py-1 bg-white/12 border border-white/18 backdrop-blur-xl shadow-[0_18px_40px_-28px_rgba(0,0,0,0.6)] focus-within:border-[#d9f99d]/55 focus-within:bg-white/16 transition-all">
-                                                    <span className="text-sm font-mono text-slate-300/70 mr-1">https://</span>
-                                                    <input
-                                                        value={formData.subdomain}
-                                                        onChange={(e) => handleChange('subdomain', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                                                        className="bg-transparent flex-1 text-white font-semibold outline-none placeholder:text-slate-400/55 h-10"
-                                                        placeholder="brand"
-                                                    />
-                                                    <div className="pl-2 text-xs font-mono text-slate-300/70 border-l border-white/12 ml-2 py-1">
-                                                        .heartifact.com
+                                        <div className="rounded-2xl border border-zinc-200/50 bg-white p-5 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.07),0_0_0_1px_rgba(15,23,42,0.03)] dark:border-white/[0.07] dark:bg-black/30 dark:shadow-none">
+                                            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Portal subdomain</label>
+                                                    <div className="flex min-h-[2.75rem] items-center rounded-xl border border-zinc-200/70 bg-[#fafbfc] px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] transition-colors focus-within:border-lime-400 focus-within:ring-0 dark:border-white/[0.1] dark:bg-zinc-950/40 dark:shadow-none dark:focus-within:border-[#bef264]">
+                                                        <span className="mr-1 shrink-0 font-mono text-sm text-zinc-500 dark:text-zinc-500">https://</span>
+                                                        <input
+                                                            value={formData.subdomain}
+                                                            onChange={(e) => handleChange('subdomain', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                                                            className="h-10 min-w-0 flex-1 border-0 bg-transparent font-semibold text-zinc-900 outline-none ring-0 placeholder:text-zinc-400 focus:ring-0 dark:text-white"
+                                                            placeholder="brand"
+                                                        />
+                                                        <div className="ml-2 shrink-0 border-l border-zinc-200 py-1 pl-3 font-mono text-xs text-zinc-500 dark:border-white/10 dark:text-zinc-400">
+                                                            .heartifact.com
+                                                        </div>
                                                     </div>
+                                                    <p className="pl-0.5 text-[10px] text-zinc-500 dark:text-zinc-500">Hostname for deliverables</p>
                                                 </div>
-                                                <p className="text-[10px] text-slate-300/60 pl-1">Your clients will access deliverables at this address</p>
-                                            </div>
 
-                                            <div className="space-y-1.5">
-                                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Exit Redirect URL</label>
-                                                <div className="flex items-center rounded-2xl px-4 py-1 bg-white/12 border border-white/18 backdrop-blur-xl shadow-[0_18px_40px_-28px_rgba(0,0,0,0.6)] focus-within:border-[#d9f99d]/55 focus-within:bg-white/16 transition-all">
-                                                    <input
-                                                        value={formData.website}
-                                                        onChange={(e) => handleChange('website', e.target.value)}
-                                                        className="bg-transparent flex-1 text-white text-sm font-medium outline-none placeholder:text-slate-400/55 h-10"
-                                                        placeholder="https://yourportfolio.com"
-                                                    />
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Exit redirect URL</label>
+                                                    <div className="flex min-h-[2.75rem] items-center rounded-xl border border-zinc-200/70 bg-[#fafbfc] px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] transition-colors focus-within:border-lime-400 focus-within:ring-0 dark:border-white/[0.1] dark:bg-zinc-950/40 dark:shadow-none dark:focus-within:border-[#bef264]">
+                                                        <input
+                                                            value={formData.website}
+                                                            onChange={(e) => handleChange('website', e.target.value)}
+                                                            className="h-10 w-full border-0 bg-transparent text-sm font-medium text-zinc-900 outline-none ring-0 placeholder:text-zinc-400 focus:ring-0 dark:text-white"
+                                                            placeholder="https://yourportfolio.com"
+                                                        />
+                                                    </div>
+                                                    <p className="pl-0.5 text-[10px] text-zinc-500 dark:text-zinc-500">After they leave the vault</p>
                                                 </div>
-                                                <p className="text-[10px] text-slate-300/60 pl-1">Where clients go when they leave the vault (e.g. your website)</p>
                                             </div>
                                         </div>
 
-                                        {/* Visual flow hint */}
-                                        <div className="mt-5 pt-4 border-t border-white/10 flex items-center gap-6 text-[10px] text-slate-300/70 uppercase tracking-wider font-bold">
-                                            <div className="flex items-center gap-1.5">
-                                                <div className="w-5 h-5 rounded bg-white/12 flex items-center justify-center text-[#bef264]"><Globe className="w-3 h-3" /></div>
-                                                <span>Client opens link</span>
-                                            </div>
-                                            <ChevronRight className="w-3 h-3 text-[#bef264]/60" />
-                                            <div className="flex items-center gap-1.5">
-                                                <div className="w-5 h-5 rounded bg-white/12 flex items-center justify-center text-[#bef264]"><Eye className="w-3 h-3" /></div>
-                                                <span>Reviews vault</span>
-                                            </div>
-                                            <ChevronRight className="w-3 h-3 text-[#bef264]/60" />
-                                            <div className="flex items-center gap-1.5">
-                                                <div className="w-5 h-5 rounded bg-white/12 flex items-center justify-center text-[#bef264]"><CreditCard className="w-3 h-3" /></div>
-                                                <span>Pays & unlocks</span>
-                                            </div>
+                                        <div className="flex flex-wrap items-center gap-2 border-t border-zinc-200/60 pt-5 dark:border-white/[0.06]">
+                                            {[
+                                                { icon: Globe, label: 'Opens link' },
+                                                { icon: Eye, label: 'Vault review' },
+                                                { icon: CreditCard, label: 'Checkout' },
+                                            ].map(({ icon: Icon, label }, i) => (
+                                                <React.Fragment key={label}>
+                                                    {i > 0 && <ChevronRight className="hidden h-3.5 w-3.5 text-zinc-400 sm:block dark:text-zinc-600" />}
+                                                    <span className="inline-flex items-center gap-2 rounded-full border border-zinc-200/60 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-600 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-zinc-300 dark:shadow-none">
+                                                        <Icon className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                                        {label}
+                                                    </span>
+                                                </React.Fragment>
+                                            ))}
                                         </div>
                                     </div>
                                 </Card>
@@ -510,8 +548,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                 </div>
                                             </div>
                                             {stripeConnected && (
-                                                <div className="px-3 py-1 bg-lime-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-lime-600 dark:text-[#bef264] border border-lime-400/20 flex items-center gap-1.5">
-                                                    <div className="w-2 h-2 bg-lime-500 rounded-full animate-pulse" />
+                                                <div className="px-3 py-1 bg-lime-400/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-lime-400 dark:text-[#bef264] border border-lime-400/20 flex items-center gap-1.5">
+                                                    <div className="w-2 h-2 bg-lime-400 rounded-full animate-pulse" />
                                                     Connected
                                                 </div>
                                             )}
@@ -643,7 +681,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                                         }
                                                                     });
                                                                 }}
-                                                                className="ml-3 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-lime-500/20 text-white/70 hover:text-lime-300 text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 border border-white/10 hover:border-lime-400/30"
+                                                                className="ml-3 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-lime-400/20 text-white/70 hover:text-lime-400 text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 border border-white/10 hover:border-lime-400/30"
                                                             >
                                                                 <Unlink className="w-3 h-3" />
                                                                 Disconnect
@@ -702,7 +740,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                 value={formData.bankInfo}
                                                 onChange={(e) => handleChange('bankInfo', e.target.value)}
                                                 placeholder="Bank Name, SWIFT, IBAN..."
-                                                className="w-full p-4 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl focus:border-lime-600 dark:focus:border-[#bef264] outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 min-h-[140px] resize-none hover:border-slate-300 dark:hover:border-white/10"
+                                                className="w-full p-4 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl focus:border-lime-400 dark:focus:border-[#bef264] outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 min-h-[140px] resize-none hover:border-slate-300 dark:hover:border-white/10"
                                             />
                                         </div>
                                     </Card>
@@ -759,7 +797,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Host</span>
                                                     <span className="text-slate-900 dark:text-white font-bold">portal</span>
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Value</span>
-                                                    <span className="text-lime-600 dark:text-[#bef264]">cname.heartifact.com</span>
+                                                    <span className="text-lime-400 dark:text-[#bef264]">cname.heartifact.com</span>
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Type</span>
                                                     <span>CNAME</span>
                                                 </div>
@@ -795,7 +833,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-lime-600/10 text-lime-600 dark:bg-[#bef264]/10 dark:text-[#bef264] flex items-center justify-center"><Verified className="w-4 h-4" /></div>
+                                                    <div className="w-8 h-8 rounded-lg bg-lime-400/10 text-lime-400 dark:bg-[#bef264]/10 dark:text-[#bef264] flex items-center justify-center"><Verified className="w-4 h-4" /></div>
                                                     <div>
                                                         <p className="font-bold text-sm text-slate-900 dark:text-white">Remove Logo</p>
                                                         <p className="text-[10px] text-slate-500">Hide "Powered By"</p>
@@ -834,6 +872,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                     </p>
                                                 </div>
                                                 <Toggle
+                                                    variant="blue"
                                                     label="Toggle Demo Mode"
                                                     checked={demoMode}
                                                     onChange={(v) => {
@@ -843,9 +882,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                 />
                                             </div>
 
-                                            <div className={`p-3 rounded-xl flex items-start gap-3 border ${demoMode ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' : 'bg-lime-50 dark:bg-lime-500/10 border-lime-200 dark:border-lime-500/20'}`}>
-                                                <FlaskConical className={`w-4 h-4 mt-0.5 shrink-0 ${demoMode ? 'text-amber-600 dark:text-amber-400' : 'text-lime-600 dark:text-[#bef264]'}`} />
-                                                <p className={`text-[11px] leading-relaxed font-medium ${demoMode ? 'text-amber-800 dark:text-amber-200' : 'text-lime-800 dark:text-[#bef264]'}`}>
+                                            <div className={`p-3 rounded-xl flex items-start gap-3 border ${demoMode ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' : 'bg-lime-400/10 dark:bg-lime-400/10 border-lime-400/20 dark:border-lime-400/20'}`}>
+                                                <FlaskConical className={`w-4 h-4 mt-0.5 shrink-0 ${demoMode ? 'text-amber-600 dark:text-amber-400' : 'text-lime-400 dark:text-[#bef264]'}`} />
+                                                <p className={`text-[11px] leading-relaxed font-medium ${demoMode ? 'text-amber-800 dark:text-amber-200' : 'text-lime-400 dark:text-[#bef264]'}`}>
                                                     {demoMode
                                                         ? 'Demo mode is active. Pre-populated mock data and mock backend services are in use. File uploads and payments are simulated.'
                                                         : 'Live mode is active. The app is connected to your real Supabase backend. Sign in to load your projects.'}
@@ -856,7 +895,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         <div className="hf-surface mt-6 p-4 bg-white dark:bg-charcoal rounded-[2rem] border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md overflow-hidden">
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Runtime Info</p>
                                             <div className="space-y-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                                                <div className="flex justify-between"><span>Mode</span><span className={demoMode ? 'text-amber-500' : 'text-lime-600 dark:text-[#bef264]'}>{demoMode ? 'DEMO' : 'LIVE'}</span></div>
+                                                <div className="flex justify-between"><span>Mode</span><span className={demoMode ? 'text-amber-500' : 'text-lime-400 dark:text-[#bef264]'}>{demoMode ? 'DEMO' : 'LIVE'}</span></div>
                                                 <div className="flex justify-between"><span>VITE_DEMO_MODE</span><span>{import.meta.env.VITE_DEMO_MODE ?? '(not set)'}</span></div>
                                                 <div className="flex justify-between"><span>Environment</span><span>{import.meta.env.MODE}</span></div>
                                                 <div className="flex justify-between"><span>Supabase</span><span>{import.meta.env.VITE_SUPABASE_URL ? '✓ configured' : '✗ missing'}</span></div>
@@ -879,7 +918,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                 <Card className="!p-8 relative overflow-hidden">
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-white/5">
-                                            <HardDrive className="w-5 h-5 text-lime-600 dark:text-[#bef264]" />
+                                            <HardDrive className="w-5 h-5 text-lime-400 dark:text-[#bef264]" />
                                             <div>
                                                 <h3 className="font-sans tracking-tight text-xl text-slate-900 dark:text-white">Storage</h3>
                                                 <p className="text-xs text-slate-500">Choose platform vault storage, or configure links-only imports.</p>
@@ -892,19 +931,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <button
                                                     onClick={() => { playClick(); setConnectionError(null); setStorageSettings(prev => ({ ...prev, mode: 'platform' })); }}
-                                                    className={`px-4 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all ${storageSettings.mode === 'platform' ? 'bg-lime-600 text-white dark:bg-[#bef264] dark:text-zinc-950 shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
+                                                    className={`px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all ${storageSettings.mode === 'platform' ? 'bg-lime-400 text-zinc-950 dark:bg-[#bef264] dark:text-zinc-950' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
                                                 >
                                                     Platform Vault
                                                 </button>
                                                 <button
                                                     onClick={() => { playClick(); setConnectionError(null); setStorageSettings(prev => ({ ...prev, mode: 'drive' })); }}
-                                                    className={`px-4 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all ${storageSettings.mode === 'drive' ? 'bg-lime-600 text-white dark:bg-[#bef264] dark:text-zinc-950 shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
+                                                    className={`px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all ${storageSettings.mode === 'drive' ? 'bg-lime-400 text-zinc-950 dark:bg-[#bef264] dark:text-zinc-950' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
                                                 >
                                                     Cloud Drive
                                                 </button>
                                                 <button
                                                     onClick={() => { playClick(); setConnectionError(null); setStorageSettings(prev => ({ ...prev, mode: 's3' })); }}
-                                                    className={`px-4 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all ${storageSettings.mode === 's3' ? 'bg-lime-600 text-white dark:bg-[#bef264] dark:text-zinc-950 shadow-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
+                                                    className={`px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all ${storageSettings.mode === 's3' ? 'bg-lime-400 text-zinc-950 dark:bg-[#bef264] dark:text-zinc-950' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
                                                 >
                                                     S3 / R2 Bucket
                                                 </button>

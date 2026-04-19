@@ -462,8 +462,8 @@ const StatusRibbon = ({ projects, user }: { projects: Project[]; user: UserProfi
                         <span className={`text-sm font-semibold tracking-tight ${stripeConnected ? 'text-zinc-900 dark:text-white' : 'text-zinc-600 dark:text-zinc-300'}`}>
                             {stripeConnected ? 'Connected' : 'Not connected'}
                         </span>
-                    </div>
-                </div>
+        </div>
+            </div>
 
                 <div className="hidden h-8 w-px bg-zinc-200/80 sm:block dark:bg-white/[0.08]" aria-hidden />
 
@@ -476,9 +476,9 @@ const StatusRibbon = ({ projects, user }: { projects: Project[]; user: UserProfi
                         <span className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-white">
                             {stripeConnected && payoutsEnabled ? 'In Stripe' : 'Unavailable'}
                         </span>
-                    </div>
-                </div>
             </div>
+                    </div>
+                        </div>
 
             <div className="flex min-w-0 flex-1 items-center gap-4 sm:max-w-md sm:justify-end lg:max-w-lg">
                 <HardDrive className="h-4 w-4 shrink-0 text-zinc-400 dark:text-zinc-500" />
@@ -492,7 +492,7 @@ const StatusRibbon = ({ projects, user }: { projects: Project[]; user: UserProfi
                                 <>{formatBytes(totalBytes)} <span className="text-zinc-400 dark:text-zinc-500">· {totalFiles} files</span></>
                             )}
                         </span>
-                    </div>
+                        </div>
                     <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-200/80 dark:bg-white/[0.08]">
                         <div
                             className="h-full rounded-full bg-gradient-to-r from-blue-600 to-sky-500 transition-[width] duration-500 dark:from-blue-500 dark:to-sky-400"
@@ -763,7 +763,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
         {
             id: 'revenue',
             render: () => (
-                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between bg-white dark:bg-charcoal rounded-3xl transition-all duration-700 ease-in-out`}>
+                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between bg-white dark:bg-charcoal transition-all duration-700 ease-in-out`}>
                     <div className="min-h-0">
                         <div className="mb-3 flex items-start justify-between gap-2">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Net Revenue</span>
@@ -803,12 +803,12 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
         {
             id: 'storage',
             render: () => (
-                <div className="absolute inset-0 z-10 flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-zinc-200/50 bg-editorial transition-all duration-700 ease-in-out dark:border-white/[0.06] dark:bg-white/[0.04]">
+                <div className="absolute inset-0 z-10 flex h-full flex-col justify-between overflow-hidden border border-zinc-200/50 bg-editorial transition-all duration-700 ease-in-out dark:border-white/[0.06] dark:bg-white/[0.04]">
                     <div className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.07]" style={{ backgroundImage: CYCLING_WIDGET_NOISE, backgroundRepeat: 'repeat' }} />
                     <div className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full bg-indigo-400/20 blur-3xl dark:bg-sky-500/10" />
                     <div className={`relative z-10 flex h-full min-h-0 flex-col justify-between ${slidePad}`}>
                         <div>
-                            <span className="mb-3 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-brand dark:text-zinc-400">
+                            <span className="mb-3 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-lime-400 dark:text-zinc-400">
                                 Vault capacity
                             </span>
                             <div className="flex items-start justify-between gap-3">
@@ -867,8 +867,8 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                     const d = new Date(iso);
                     return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
                 };
-                return (
-                <div className="absolute inset-0 flex h-full min-h-0 overflow-hidden rounded-3xl bg-zinc-50 transition-all duration-700 ease-in-out dark:bg-charcoal">
+    return (
+                <div className="absolute inset-0 flex h-full min-h-0 overflow-hidden bg-zinc-50 transition-all duration-700 ease-in-out dark:bg-charcoal">
                     <div className={`flex min-h-0 flex-col transition-all duration-500 ${isReplying ? 'w-1/2 border-r border-zinc-200/50 dark:border-white/5' : 'w-full'}`}>
                         <div className={`flex min-h-0 flex-1 flex-col ${slidePad}`}>
                             <div className="flex shrink-0 items-start justify-between gap-2">
@@ -958,14 +958,14 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
         {
             id: 'upgrade',
             render: () => (
-                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between bg-gradient-to-br from-zinc-900 via-zinc-800 to-black text-white dark:border-white/10 rounded-3xl border border-zinc-200/40 shadow-2xl shadow-black/20 transition-all duration-700 ease-in-out`}>
+                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between border border-zinc-200/40 bg-gradient-to-br from-zinc-900 via-zinc-800 to-black text-white shadow-2xl shadow-black/20 transition-all duration-700 ease-in-out dark:border-white/10`}>
                     <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-3xl dark:bg-[#323242]/30" />
                     <div className="relative z-10 flex h-full min-h-0 flex-col justify-between">
-                        <div>
+                    <div>
                             <div className="mb-3 flex flex-wrap items-center gap-2">
                                 <span className="rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-blue-500 text-zinc-950 shadow-sm">Upgrade</span>
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Business Tier</span>
-                            </div>
+                    </div>
                             <h3 className="mb-2 font-sans font-medium leading-tight tracking-tight text-[clamp(1.1rem,calc(0.85rem+1.8vw),1.85rem)] text-white sm:text-[clamp(1.2rem,calc(0.95rem+1.5vw),2.15rem)]">
                                 Unlock unlimited project history.
                             </h3>
@@ -981,7 +981,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
         {
             id: 'live_activity',
             render: () => (
-                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between overflow-hidden rounded-3xl bg-zinc-900 transition-all duration-700 ease-in-out dark:bg-[#23232e]`}>
+                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between overflow-hidden bg-zinc-900 transition-all duration-700 ease-in-out dark:bg-[#23232e]`}>
                     {/* Subtle grid background */}
                     <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
                     
@@ -994,7 +994,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                             <span className="text-[9px] font-bold uppercase tracking-widest text-white">Live Session</span>
                         </div>
                         <span className="text-[10px] font-mono text-white/50">Right Now</span>
-                    </div>
+            </div>
 
                     <div className="relative z-10 flex-1 flex flex-col justify-center">
                         <div className="flex items-center gap-4 mb-3">
@@ -1018,8 +1018,8 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                         <button type="button" className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-md transition-colors hover:bg-white/20">
                             Join Session <ArrowRight className="h-3 w-3" />
                         </button>
-                    </div>
-                </div>
+                                    </div>
+                                </div>
             )
         }
     ];
@@ -1028,30 +1028,30 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
         {
             id: 'revenue',
             render: () => (
-                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between bg-white dark:bg-charcoal rounded-3xl transition-all duration-700 ease-in-out`}>
+                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between bg-white dark:bg-charcoal transition-all duration-700 ease-in-out`}>
                     <div className="min-h-0">
                         <div className="mb-3 flex items-start justify-between gap-3">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Net Revenue</span>
                             <div className="flex shrink-0 items-center gap-1 rounded-full border border-blue-500/30 bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-600 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
                                 <ArrowUpRight className="h-3 w-3" /> {paidProjects.length} closed
-                            </div>
+                                </div>
                         </div>
                         <div className="mb-4 flex items-baseline gap-1">
                             <PrivacyBlur strength="strong" className={`font-sans font-medium tracking-tight text-zinc-900 dark:text-white ${revenueAmountClass} tracking-tighter leading-[0.95]`}>${securedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur>
                         </div>
                         <div className="flex items-center gap-3 flex-wrap">
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                                 <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300"><PrivacyBlur>${pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur> Pending</span>
                             </div>
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5">
                                 <CheckCircle className="w-3 h-3 text-blue-500" />
                                 <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300">{paidProjects.length} paid or completed</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 h-32 opacity-20 dark:opacity-40 pointer-events-none">
-                        <ResponsiveContainer width="100%" height="100%">
+                            <div className="absolute bottom-0 left-0 right-0 h-32 opacity-20 dark:opacity-40 pointer-events-none">
+                                <ResponsiveContainer width="100%" height="100%">
                             <AreaChart
                                 data={[
                                     { v: Math.max(securedRevenue * 0.18, pendingRevenue) },
@@ -1062,18 +1062,18 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                                     { v: Math.max(securedRevenue, pendingRevenue) },
                                 ]}
                             >
-                                <defs>
+                                        <defs>
                                     <linearGradient id="colorHeroMiniLive" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor={chartAccent} stopOpacity={1} />
                                         <stop offset="95%" stopColor={chartAccent} stopOpacity={0} />
-                                    </linearGradient>
+                                            </linearGradient>
                                     <filter id="shadowLive" height="200%">
                                         <feDropShadow dx="0" dy="5" stdDeviation="6" floodColor={chartAccent} floodOpacity="0.8" />
-                                    </filter>
-                                </defs>
+                                            </filter>
+                                        </defs>
                                 <Area type="monotone" dataKey="v" stroke={chartAccent} strokeWidth={3} fill="url(#colorHeroMiniLive)" filter="url(#shadowLive)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                                    </AreaChart>
+                                </ResponsiveContainer>
                     </div>
                 </div>
             )
@@ -1081,12 +1081,12 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
         {
             id: 'storage',
             render: () => (
-                <div className="absolute inset-0 z-10 flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-zinc-200/50 bg-editorial transition-all duration-700 ease-in-out dark:border-white/[0.06] dark:bg-white/[0.04]">
+                <div className="absolute inset-0 z-10 flex h-full flex-col justify-between overflow-hidden border border-zinc-200/50 bg-editorial transition-all duration-700 ease-in-out dark:border-white/[0.06] dark:bg-white/[0.04]">
                     <div className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.07]" style={{ backgroundImage: CYCLING_WIDGET_NOISE, backgroundRepeat: 'repeat' }} />
                     <div className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full bg-indigo-400/20 blur-3xl dark:bg-sky-500/10" />
                     <div className={`relative z-10 flex h-full min-h-0 flex-col justify-between ${slidePad}`}>
                         <div>
-                            <span className="mb-3 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-brand dark:text-zinc-400">
+                            <span className="mb-3 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-lime-400 dark:text-zinc-400">
                                 Project storage
                             </span>
                             <div className="flex items-start justify-between gap-3">
@@ -1148,7 +1148,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
         {
             id: 'activity',
             render: () => (
-                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between overflow-hidden rounded-3xl bg-zinc-900 transition-all duration-700 ease-in-out dark:bg-[#23232e]`}>
+                <div className={`absolute inset-0 ${slidePad} z-10 flex min-h-0 flex-col justify-between overflow-hidden bg-zinc-900 transition-all duration-700 ease-in-out dark:bg-[#23232e]`}>
                     <div className="pointer-events-none absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
 
                     <div className="relative z-10 flex items-start justify-between gap-3">
@@ -1389,7 +1389,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                         {headerVariant === 'greeting' ? (
                             <h1 className="font-serif tracking-tight text-3xl md:text-5xl text-zinc-900 dark:text-white leading-[1.05] mb-2">
                                 {greetingLine}{' '}
-                                <span className="italic text-brand dark:text-blue-400">{greetingName}</span>.
+                                <span className="italic text-lime-400 dark:text-blue-400">{greetingName}</span>.
                             </h1>
                         ) : (
                             <h1 className="font-sans tracking-tight text-3xl md:text-5xl text-zinc-900 dark:text-white leading-[1.05] mb-2">
@@ -1515,10 +1515,12 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
 
             <div className={`grid grid-cols-1 gap-4 md:gap-5 ${isCompactContent ? '' : 'lg:grid-cols-12'}`}>
                 <div className={`flex flex-col ${isCompactContent ? 'gap-4 md:gap-5' : 'lg:col-span-7 gap-3 md:gap-4 min-w-0'}`}>
-                    <div className={`grid grid-cols-1 gap-4 md:gap-5 ${isCompactContent ? '' : 'lg:grid-cols-2'}`}>
+                    <div className={`grid grid-cols-1 items-start gap-4 md:gap-5 ${isCompactContent ? '' : 'lg:grid-cols-2'}`}>
                         
-                        {/* CYCLING WIDGET COMPONENT */}
-                        <CyclingWidget projects={projects} compact={isCompactContent} />
+                        {/* CYCLING WIDGET — Card shell matches ClientCard / dashboard lift on hover; items-start prevents grid stretch “beard” below fixed-height carousel */}
+                        <Card noPadding className="relative h-fit w-full min-w-0 overflow-hidden !rounded-[2rem] shadow-sm">
+                            <CyclingWidget projects={projects} compact={isCompactContent} />
+                        </Card>
 
                         <Widget
                             title={"Today's Priorities"}
@@ -1688,9 +1690,9 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                         </div>
                         <div className="mt-4">
                             <button onClick={() => navigate('/reports?focus=audit')} className="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-2 group transition-colors">
-                                View Full Ledger <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                            </button>
-                        </div>
+                            View Full Ledger <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                    </div>
                     </Widget>
                 </div>
                 {/* Briefing Sidebar — wider column (5/12) from lg so it isn’t squeezed next to main */}
@@ -1710,8 +1712,8 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                             <Timeline projects={projects} />
                         </div>
                     </div>
-                    </div>
                 </div>
+            </div>
             </div>
 
             </>}
@@ -1896,7 +1898,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                 <div className="hf-surface py-24 flex flex-col items-center justify-center opacity-90 border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md rounded-[2rem] overflow-hidden bg-white dark:bg-charcoal m-6">
                     <div className="w-20 h-20 rounded-[2rem] bg-white dark:bg-white/5 flex items-center justify-center mb-6 shadow-sm border border-zinc-100 dark:border-white/10">
                         {searchQuery ? <Search className="w-10 h-10 stroke-[1.5] text-zinc-400" /> : <LockKeyhole className="w-10 h-10 stroke-[1.5] text-zinc-400" />}
-                    </div>
+                                            </div>
                     
                     {searchQuery ? (
                         <>
@@ -1919,7 +1921,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                             </button>
                         </>
                     )}
-                </div>
+                                        </div>
             )}
 
             {/* â”€â”€ List view â”€â”€ */}
@@ -1955,11 +1957,11 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                         <td className="px-5 py-4">
                                             <div className="flex items-center gap-3">
                                                 <img src={project.client.avatar} className="w-8 h-8 rounded-lg object-cover grayscale group-hover:grayscale-0 transition-all shrink-0" />
-                                                <div>
+                                            <div>
                                                     <div className="font-bold text-zinc-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{project.name}</div>
                                                     <div className="text-[10px] font-mono text-zinc-400">#{project.id.toUpperCase()}</div>
-                                                </div>
                                             </div>
+                                        </div>
                                         </td>
                                         <td className="px-5 py-4 text-zinc-600 dark:text-zinc-300 hidden md:table-cell">{project.client.company || project.client.name}</td>
                                         <td className="px-5 py-4 hidden sm:table-cell">
@@ -1977,7 +1979,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                             })}
                         </tbody>
                     </table>
-                </div>
+                                    </div>
             )}
 
             {/* ―― Grid / card view ―― */}
@@ -1997,7 +1999,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                         `}</style>
                         <div className={`absolute inset-0 pointer-events-none overflow-hidden ${isCompactContent ? 'rounded-[1.75rem]' : 'rounded-[2.5rem]'} z-0`}>
                             <div className="absolute top-0 right-1/2 w-3/4 h-[200%] -translate-y-1/4 bg-gradient-to-r from-transparent via-white/35 dark:via-white/20 to-transparent blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 [animation-play-state:paused] group-hover:[animation-play-state:running]" style={{ animation: `glass-sweep ${12 + (projectIndex * 2)}s infinite ease-out` }} />
-                        </div>
+                                    </div>
                         
                         <div className={`relative z-10 flex flex-col ${isCompactContent ? 'min-h-[300px]' : 'lg:flex-row min-h-[360px]'}`}>
                             {/* Left Pillar: Typography & Status */}
@@ -2010,7 +2012,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                             {project.status === 'paid' ? 'Access Granted' : 'Vault Locked'}
                                         </div>
                                         <span className="font-mono text-xs text-zinc-400 dark:text-zinc-600 font-bold tracking-widest uppercase">ID/{project.id.slice(0,6)}</span>
-                                    </div>
+                                        </div>
                                     
                                     <h3 
                                         className={`${isCompactContent ? 'text-3xl' : 'text-4xl lg:text-5xl'} font-sans tracking-tight font-medium text-zinc-900 dark:text-white leading-[1.1] mb-6 cursor-pointer group-hover:font-extrabold transition-all duration-300`}
@@ -2028,42 +2030,42 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                     </div>
                                 </div>
                                 
-                                <div className={`relative z-10 ${isCompactContent ? 'mt-8 flex flex-wrap items-center gap-6' : 'mt-12 flex items-center gap-8'}`}>
-                                    <div className="flex items-center gap-4">
-                                        <div className="relative w-12 h-12 flex items-center justify-center">
-                                            <svg className="absolute inset-0 w-full h-full -rotate-90">
-                                                <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-zinc-100 dark:text-white/5" />
-                                                <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" strokeDasharray="138" strokeDashoffset={138 - (138 * Math.min(project.amount / 10000, 1))} strokeLinecap="round" className="text-blue-500 transition-all duration-1000 ease-out" />
-                                            </svg>
-                                            <DollarSign className="w-4 h-4 text-zinc-400" />
-                                        </div>
-                                        <div>
-                                            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Total Value</div>
-                                            <PrivacyBlur className="text-3xl font-sans tracking-tight font-medium text-zinc-900 dark:text-white">${project.amount.toLocaleString()}</PrivacyBlur>
-                                        </div>
-                                    </div>
-                                    <div className="h-10 w-px bg-zinc-200 dark:bg-white/10" />
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-end gap-[3px] h-10 py-1.5">
-                                            {[40, 70, 100, 50, 80].map((h, idx) => (
-                                                <div key={idx} className="w-1.5 bg-blue-500/10 dark:bg-blue-400/10 rounded-t-sm relative overflow-hidden" style={{ height: '100%' }}>
-                                                    <div className="absolute bottom-0 left-0 w-full bg-blue-500 dark:bg-blue-400" style={{ height: `${h}%`, animation: `pulse-height 2s infinite ease-in-out`, animationDelay: `${idx * 200}ms` }} />
+                                <div className={`relative z-10 mt-8 w-full min-w-0 sm:mt-12`}>
+                                    <div className="grid w-full min-w-0 grid-cols-1 gap-4 min-[480px]:grid-cols-3 sm:gap-6">
+                                        <div className="flex min-w-0 items-center gap-4">
+                                            <div className="relative flex h-12 w-12 shrink-0 items-center justify-center">
+                                                <svg className="absolute inset-0 h-full w-full -rotate-90">
+                                                    <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-zinc-100 dark:text-white/5" />
+                                                    <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" strokeDasharray="138" strokeDashoffset={138 - (138 * Math.min(project.amount / 10000, 1))} strokeLinecap="round" className="text-blue-500 transition-all duration-1000 ease-out" />
+                                                </svg>
+                                                <DollarSign className="relative h-4 w-4 text-zinc-400" />
+                            </div>
+                                            <div className="min-w-0">
+                                                <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Total Value</div>
+                                                <PrivacyBlur className="text-2xl font-sans font-medium tracking-tight text-zinc-900 dark:text-white min-[480px]:text-3xl">${project.amount.toLocaleString()}</PrivacyBlur>
+                                            </div>
                                                 </div>
-                                            ))}
+                                        <div className="flex min-w-0 items-center gap-4 border-t border-zinc-200/50 pt-4 min-[480px]:border-t-0 min-[480px]:border-l min-[480px]:border-zinc-200/50 min-[480px]:pt-0 min-[480px]:pl-6 dark:border-white/10">
+                                            <div className="flex h-10 shrink-0 items-end gap-[3px] py-1.5">
+                                                {[40, 70, 100, 50, 80].map((h, idx) => (
+                                                    <div key={idx} className="relative w-1.5 overflow-hidden rounded-t-sm bg-blue-500/10 dark:bg-blue-400/10" style={{ height: '100%' }}>
+                                                        <div className="absolute bottom-0 left-0 w-full bg-blue-500 dark:bg-blue-400" style={{ height: `${h}%`, animation: `pulse-height 2s infinite ease-in-out`, animationDelay: `${idx * 200}ms` }} />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Assets</div>
+                                                <div className="font-mono text-2xl text-zinc-900 dark:text-white min-[480px]:text-3xl">{project.files.length}</div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Assets</div>
-                                            <div className="text-3xl font-mono text-zinc-900 dark:text-white">{project.files.length}</div>
-                                        </div>
-                                    </div>
-                                    <div className="h-10 w-px bg-zinc-200 dark:bg-white/10" />
-                                    <div className="flex items-center gap-4">
-                                        <div className="relative w-12 h-12 rounded-full border border-zinc-200/70 dark:border-white/10 flex items-center justify-center bg-white/80 dark:bg-white/5">
-                                            <Eye className="w-4 h-4 text-blue-500" />
-                                        </div>
-                                        <div>
-                                            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Views</div>
-                                            <div className="text-3xl font-mono text-zinc-900 dark:text-white">{project.accessConfig?.viewCount ?? (project.clientViewedAt ? 1 : 0)}</div>
+                                        <div className="flex min-w-0 items-center gap-4 border-t border-zinc-200/50 pt-4 min-[480px]:border-t-0 min-[480px]:border-l min-[480px]:border-zinc-200/50 min-[480px]:pt-0 min-[480px]:pl-6 dark:border-white/10">
+                                            <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-zinc-200/70 bg-white/80 dark:border-white/10 dark:bg-white/5">
+                                                <Eye className="h-4 w-4 text-blue-500" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Views</div>
+                                                <div className="font-mono text-2xl text-zinc-900 tabular-nums dark:text-white min-[480px]:text-3xl">{project.accessConfig?.viewCount ?? (project.clientViewedAt ? 1 : 0)}</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2105,7 +2107,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center transition-opacity group-hover/gallery:opacity-0 sm:opacity-100 sm:group-hover/gallery:opacity-100">
                                                     <div className="text-2xl lg:text-3xl font-sans tracking-tight font-medium text-white mb-1">+{project.files.length - 4}</div>
                                                     <div className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">More Assets</div>
-                                                </div>
+                                    </div>
                                                 <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-0 group-hover/gallery:opacity-100 sm:opacity-0 sm:group-hover/gallery:opacity-0">
                                                     {project.files.slice(4, 6).map((f) => (
                                                         <div key={f.id} className="w-8 h-10 rounded-lg overflow-hidden border border-white/20 bg-zinc-800/70">
@@ -2114,7 +2116,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center text-zinc-400">{getFileIcon(f.type)}</div>
                                                             )}
-                                                        </div>
+                                </div>
                                                     ))}
                                                 </div>
                                             </div>
@@ -2724,7 +2726,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
             '--color-green-600': '#bef264',
         } : {
             '--color-brand': '#a3e635',
-            '--color-brand-hover': '#84cc16',
+            '--color-brand-hover': '#a3e635',
             '--color-brand-glow': 'rgba(163, 230, 53, 0.5)',
             '--color-blue-400': '#a3e635',
             '--color-blue-500': '#a3e635',
@@ -3739,7 +3741,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                 <div>
                     <h4 className="font-bold text-zinc-900 dark:text-white leading-tight">{user.name || 'Your Account'}</h4>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-[140px]">{user.email || 'No email on file'}</p>
-                    <span className="text-[10px] font-bold uppercase text-brand tracking-wider mt-1 block">Pro Plan</span>
+                    <span className="text-[10px] font-bold uppercase text-lime-400 tracking-wider mt-1 block">Pro Plan</span>
                 </div>
             </div>
 
@@ -3952,10 +3954,10 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                     <div className="w-full max-w-lg mx-4 rounded-[2rem] border-2 border-dashed border-blue-500 bg-white/10 dark:bg-[#1a1a23]/50 flex flex-col items-center justify-center p-16 text-center shadow-2xl scale-105 animate-pulse">
                         <div className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center mb-6 shadow-xl shadow-blue-900/20">
                             <Plus className="w-10 h-10 text-white" strokeWidth={3} />
-                        </div>
+                            </div>
                         <h2 className="text-2xl font-bold text-white mb-2">Drop to Create Project</h2>
                         <p className="text-zinc-300 text-sm">Release files anywhere to start a new handover instantly.</p>
-                    </div>
+                        </div>
                 </div>
             )}
 
@@ -3983,25 +3985,25 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                     {/* Desktop nav pill */}
                     <nav className={`hidden lg:flex items-center gap-0.5 rounded-full px-2 py-1.5 mr-1 ${topbarGlassCls}`}>
                         {navItems.map((item) => (
-                            <button
-                                key={item.id}
+                                    <button
+                                        key={item.id}
                                 onClick={() => { playClick(); handleTopLevelNavigate(item.id); }}
                                 onMouseEnter={() => routePreloadMap[item.id]?.()}
                                 className={`px-4 py-1.5 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${currentPath === item.id ? 'bg-white/70 text-zinc-900 shadow-sm dark:bg-white/10 dark:text-white' : 'text-zinc-600 dark:text-zinc-200 hover:bg-white/50 dark:hover:bg-white/5'}`}
-                            >
-                                {item.label}
-                            </button>
+                                    >
+                                        {item.label}
+                                    </button>
                         ))}
-                    </nav>
+                        </nav>
 
                     {/* Search */}
-                    <button
-                        onClick={() => { playClick(); setIsSearchOpen(true); }}
+                            <button
+                                onClick={() => { playClick(); setIsSearchOpen(true); }}
                         className={`p-2.5 rounded-xl text-zinc-500 dark:text-zinc-300 transition-all cursor-pointer ${topbarGlassCls} ${topbarGlassHoverCls}`}
                         title="Search (Ctrl K)"
                     >
                         <Search className="w-4 h-4" />
-                    </button>
+                            </button>
 
                     <button
                         onClick={() => {
@@ -4012,16 +4014,16 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                         title={`Layout: ${layoutMode === 'full' ? 'Full workspace' : 'Docked widget'}`}
                     >
                         <ArrowLeftRight className="w-4 h-4" />
-                    </button>
+                            </button>
 
                     {/* Privacy toggle */}
-                    <button
+                            <button
                         onClick={togglePrivacyMode}
                         className={`hidden sm:inline-flex p-2.5 rounded-xl transition-all cursor-pointer ${topbarGlassCls} ${privacyMode ? 'border-blue-700/30 dark:border-blue-400/30 text-blue-700 dark:text-blue-400' : `text-zinc-500 dark:text-zinc-300 ${topbarGlassHoverCls}`}`}
                         title="Privacy Mode"
                     >
                         {privacyMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
+                            </button>
 
                     {/* Theme */}
                     <ThemeModeDropdown
@@ -4033,8 +4035,8 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                     />
 
                     {/* Profile */}
-                    <div className="relative profile-menu-container">
-                        <button
+                            <div className="relative profile-menu-container">
+                                <button
                             onClick={() => {
                                 playClick();
                                 const nextOpen = !isProfileOpen;
@@ -4043,10 +4045,10 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                     notifications.filter((n: any) => !n.read).forEach((n: any) => markNotificationRead(n.id));
                                 }
                             }}
-                            className="flex items-center gap-2 pl-1 cursor-pointer group/profile bg-transparent border-none"
-                            aria-label="Open User Menu"
-                        >
-                            <div className="relative group-hover/profile:scale-105 transition-transform">
+                                    className="flex items-center gap-2 pl-1 cursor-pointer group/profile bg-transparent border-none"
+                                    aria-label="Open User Menu"
+                                >
+                                    <div className="relative group-hover/profile:scale-105 transition-transform">
                                 {user?.avatar ? (
                                     <img src={user.avatar} className="w-9 h-9 rounded-full border border-zinc-200/50 dark:border-white/10 shadow-sm object-cover" alt="Profile" />
                                 ) : (
@@ -4059,11 +4061,11 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                     <div className={`px-3 py-1.5 rounded-lg shadow-xl border border-zinc-200/50 dark:border-white/10 text-right ${isDockMode ? 'bg-white/30 dark:bg-[#1a1a23]/90 backdrop-blur-md' : 'bg-[#f0f2f5] dark:bg-[#1a1a23]'}`}>
                                         <span className="block text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Pro Account</span>
                                         <span className="block text-xs font-bold text-zinc-900 dark:text-white truncate max-w-[120px]">{user.name}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                        </button>
-                        {isProfileOpen && <ProfileMenu />}
+                                </button>
+                                {isProfileOpen && <ProfileMenu />}
                     </div>
                 </div>
             </header>
@@ -4098,7 +4100,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             <Outlet context={outletCtx} />
                         </div>
                     </div>
-                </main>
+            </main>
             )}
 
             {isDockMode && !isPanelOpen && (
@@ -4115,7 +4117,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                         From your landing upload
                                     </p>
                                     <h2 className="font-serif text-5xl 2xl:text-6xl text-zinc-900 dark:text-white tracking-tight leading-[1.05]">
-                                        <span className="italic text-brand dark:text-[#bef264]">
+                                        <span className="italic text-lime-400 dark:text-[#bef264]">
                                             {quickstartDraftFileCount} file{quickstartDraftFileCount !== 1 ? 's' : ''}
                                         </span>
                                         {' '}
@@ -4140,7 +4142,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             <h1 className="font-serif text-7xl 2xl:text-[8.2rem] text-zinc-900 dark:text-white tracking-tight leading-[0.98] max-w-[1040px]">
                                 <span className="block animate-fade-in">
                                     {heroGreetingPrefix}
-                                    <span className="italic text-brand dark:text-[#bef264]">{greetingName}</span>
+                                    <span className="italic text-lime-400 dark:text-[#bef264]">{greetingName}</span>
                                     {heroGreetingSuffix}
                                 </span>
                             </h1>
@@ -4225,15 +4227,15 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                         <X className="w-5 h-5" />
                     </button>
                 ) : (
-                    <Link
-                        to="/help"
+                <Link
+                    to="/help"
                         onClick={() => playSuccess()}
                         onMouseEnter={() => routePreloadMap.help?.()}
                         onTouchStart={() => routePreloadMap.help?.()}
                         className="w-12 h-12 bg-blue-500 hover:bg-blue-600 text-zinc-950 rounded-2xl flex items-center justify-center shadow-lg transition-all hover:scale-110 hover:rotate-6 duration-300 cursor-pointer"
                     >
                         <HelpCircle className="w-5 h-5" />
-                    </Link>
+                </Link>
                 )}
             </div>
 

@@ -130,7 +130,7 @@ export default function TrashPage({ onBack }: { onBack?: () => void }) {
                 <div className="relative z-10 flex flex-1 flex-col p-6 lg:p-7">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
-                            <span className="mb-2 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-brand dark:text-zinc-400">
+                            <span className="mb-2 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-lime-400 dark:text-zinc-400">
                                 {typeLabel}
                             </span>
                             <h3 className="line-clamp-2 font-sans text-lg font-semibold leading-snug tracking-tight text-obsidian dark:text-white" title={item.name}>

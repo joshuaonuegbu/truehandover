@@ -780,7 +780,7 @@ const ReportsView = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 relative z-10">
                     <div className="flex flex-col justify-end">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-3 block border-l-2 border-blue-500 dark:border-brand pl-3">Net Revenue (Secured)</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-3 block border-l-2 border-blue-500 dark:border-lime-400 pl-3">Net Revenue (Secured)</span>
                         <div className="flex items-baseline gap-1 mt-2">
                             <span className="text-2xl lg:text-4xl font-sans tracking-tight text-zinc-400 dark:text-zinc-500 self-start mt-2">$</span>
                             <PrivacyBlur strength="strong" className="text-7xl lg:text-9xl font-sans tracking-tight font-medium text-obsidian dark:text-white tracking-tighter leading-[0.85]">
@@ -788,7 +788,7 @@ const ReportsView = () => {
                             </PrivacyBlur>
                         </div>
                         <div className="mt-6 flex items-center gap-4">
-                            <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${trendIsPositive ? 'text-blue-600 dark:text-brand bg-blue-100 dark:bg-brand/10' : 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/20'}`}>
+                            <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${trendIsPositive ? 'text-blue-600 dark:text-lime-400 bg-blue-100 dark:bg-lime-400/10' : 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/20'}`}>
                                 <ArrowUpRight className={`w-3 h-3 ${trendIsPositive ? '' : 'rotate-90'}`} /> {trendLabel}
                             </span>
                             <span className="text-xs uppercase tracking-wider font-bold text-zinc-500 dark:text-zinc-400">vs Previous Month</span>
@@ -832,7 +832,7 @@ const ReportsView = () => {
                 <div className="flex items-end justify-between mb-8">
                     <h3 className={`font-sans tracking-tight text-3xl tracking-tight ${GRADIENT_TEXT}`}>Analysis & Projections</h3>
                     <div className="hidden md:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                        <div className="flex items-center gap-2"><div className="w-2 h-2 bg-blue-600 dark:bg-brand rounded-full" /> Cleared (Paid)</div>
+                        <div className="flex items-center gap-2"><div className="w-2 h-2 bg-blue-600 dark:bg-lime-400 rounded-full" /> Cleared (Paid)</div>
                         <div className="flex items-center gap-2"><div className="w-2 h-2 bg-zinc-400 dark:bg-zinc-500 rounded-full" /> Frozen (Locked)</div>
                     </div>
                 </div>
@@ -929,7 +929,7 @@ const ReportsView = () => {
                                 </div>
                                 <button
                                     onClick={() => setExcludeOneOffs(!excludeOneOffs)}
-                                    className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded transition-colors ${excludeOneOffs ? 'bg-blue-600 text-white dark:bg-brand dark:text-black' : 'bg-zinc-200 text-zinc-500 dark:bg-white/10'}`}
+                                    className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded transition-colors ${excludeOneOffs ? 'bg-blue-600 text-white dark:bg-lime-400 dark:text-black' : 'bg-zinc-200 text-zinc-500 dark:bg-white/10'}`}
                                     title="Toggle to exclude projects under $500"
                                 >
                                     {excludeOneOffs ? 'Recurring Only' : 'All Sources'}
@@ -940,7 +940,7 @@ const ReportsView = () => {
                             <div className="mb-8">
                                 <div className="flex justify-between items-end mb-2">
                                     <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Portfolio Diversity</span>
-                                    <span className={`text-lg font-bold ${diversityScore > 70 ? 'text-blue-600 dark:text-brand' : 'text-zinc-500 dark:text-zinc-400'}`}>
+                                    <span className={`text-lg font-bold ${diversityScore > 70 ? 'text-blue-600 dark:text-lime-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
                                         {diversityScore}/100
                                     </span>
                                 </div>
@@ -970,7 +970,7 @@ const ReportsView = () => {
                                         <div className="flex items-center gap-3">
                                             <div className="text-[10px] font-mono text-zinc-300 w-3">{i + 1}</div>
                                             <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS[i] }} />
-                                            <span className="text-sm font-bold text-obsidian dark:text-white group-hover:text-blue-600 dark:group-hover:text-brand transition-colors">{item.name}</span>
+                                            <span className="text-sm font-bold text-obsidian dark:text-white group-hover:text-blue-600 dark:group-hover:text-lime-400 transition-colors">{item.name}</span>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <span className="text-xs font-mono font-medium text-zinc-500">${item.value.toLocaleString()}</span>
@@ -1032,7 +1032,7 @@ const ReportsView = () => {
                                         <td className="py-5 px-4 font-bold text-obsidian dark:text-white">{item.name}</td>
                                         <td className="py-5 px-4 text-zinc-600 dark:text-zinc-300">{item.client}</td>
                                         <td className="py-5 px-4">
-                                            <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Secured' ? 'bg-blue-100 text-blue-600 dark:bg-brand/10 dark:text-brand' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
+                                            <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Secured' ? 'bg-blue-100 text-blue-600 dark:bg-lime-400/10 dark:text-lime-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
                                                 {item.status === 'Secured' ? <CheckCircle className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
                                                 {item.status}
                                             </div>
