@@ -91,7 +91,7 @@ export interface Project {
     dueDate: string;
     files: FileAsset[];
     milestones: Milestone[];
-    credentials?: CredentialBlock[]; // NEW: Credential Vault
+    credentials?: CredentialBlock[]; // Encrypted credential blocks for client delivery
     requiresSignature: boolean;
     enableTips?: boolean;
     paymentMethods?: ProjectPaymentMethods;

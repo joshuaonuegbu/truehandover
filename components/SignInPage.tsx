@@ -105,7 +105,7 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
                         <div className="space-y-6">
                             {/* File count + encryption */}
                             <div>
-                                <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-2">Secure Vault</div>
+                                <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-2">Secure delivery</div>
                                 <div className="text-3xl font-sans tracking-tight text-zinc-900 dark:text-white tracking-tight leading-none">8 Assets</div>
                                 <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 font-mono tracking-wider">AES-256 · End-to-End</div>
                             </div>

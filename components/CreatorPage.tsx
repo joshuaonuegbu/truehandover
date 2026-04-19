@@ -84,7 +84,7 @@ const WALLPAPER_PRESETS: ProjectTheme[] = [
         showGrain: true
     },
     {
-        name: 'Concrete Vault',
+        name: 'Concrete Studio',
         wallpaper: 'https://images.unsplash.com/photo-1487700160041-babef9c3cb55?q=80&w=2000&auto=format&fit=crop',
         brightness: 'dark',
         showGrain: true
@@ -186,7 +186,7 @@ const PATTERNS = [
     { id: 'plus', label: 'Blueprint', icon: PlusIcon },
     { id: 'cross', label: 'Cross', icon: PlusIcon },
     { id: 'hex', label: 'Honeycomb', icon: Hexagon },
-    { id: 'rhombus', label: 'Vault', icon: Square },
+    { id: 'rhombus', label: 'Rhombus', icon: Square },
     { id: 'waves', label: 'Waves', icon: Activity },
     { id: 'radar', label: 'Radar', icon: Target },
     { id: 'zigzag', label: 'ZigZag', icon: Activity },
@@ -351,7 +351,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
         if (_initialDraft?.files?.length) return _initialDraft.files.map(normalizeUnknownSize);
         return (existingProject?.files || []).map(normalizeUnknownSize);
     });
-    // Derived live set of URLs currently in the vault — updates automatically when files are removed.
+    // Derived live set of URLs currently in the project — updates automatically when files are removed.
     // Using useMemo instead of a static useState<Set> so that deleting a file immediately unblocks its URL.
     const usedImportUrls = useMemo<Set<string>>(
         () => new Set(files.map(f => f.importSourceUrl || '').filter(Boolean)),
@@ -682,14 +682,14 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
 
         // Duplicate URL — hard block (checks original input AND any previously-normalised importSourceUrl)
         if (usedImportUrls.has(trimmedUrl)) {
-            setLinkError('This exact link is already in your vault.');
+            setLinkError('This exact link is already in this project.');
             return;
         }
         const alsoExistsNormalised = files.some(
             f => (f.externalUrl || '').trim() === trimmedUrl || (f.importSourceUrl || '').trim() === trimmedUrl
         );
         if (alsoExistsNormalised) {
-            setLinkError('This exact link is already in your vault.');
+            setLinkError('This exact link is already in this project.');
             return;
         }
 
@@ -909,7 +909,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                         onClick={() => { playClick(); onBack(); }}
                         className="flex items-center gap-2 text-zinc-500 hover:text-obsidian dark:hover:text-white transition-colors text-xs font-bold uppercase tracking-wider"
                     >
-                        <ChevronLeft className="w-4 h-4" /> Back to Vault
+                        <ChevronLeft className="w-4 h-4" /> Back to Projects
                     </button>
                     <div className="flex items-center gap-4">
                         <button
@@ -1289,7 +1289,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                         <div className="absolute -top-12 -right-12 w-48 h-48 bg-zinc-900/5 dark:bg-white/5 rounded-full blur-[80px] pointer-events-none z-0" />
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                                <Key className="w-3 h-3" /> Credential Vault
+                                <Key className="w-3 h-3" /> Project credentials
                             </h3>
                             <button
                                 onClick={() => setShowCredentialModal(true)}
@@ -1727,7 +1727,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                         </div>
                     </div>
 
-                    {/* Vault Assets */}
+                    {/* Project assets */}
                     <div className="hf-surface bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] p-6 lg:p-8 rounded-[2rem] shadow-sm dark:shadow-md overflow-hidden relative group transition-all">
                         <div className="absolute inset-0 pointer-events-none rounded-[2rem] opacity-[0.04] dark:opacity-[0.04] z-0" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
                         <div className="absolute -top-12 -right-12 w-48 h-48 bg-zinc-900/5 dark:bg-white/5 rounded-full blur-[80px] pointer-events-none z-0" />
@@ -1742,7 +1742,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             )}
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                                    <Cloud className="w-3 h-3" /> Vault Assets
+                                    <Cloud className="w-3 h-3" /> Project assets
                                     {errors.files && <span className="text-red-500 ml-2 text-[9px]">Required</span>}
                                 </h3>
                                 <button
@@ -1810,8 +1810,8 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                 setNewLink({ ...newLink, url: val });
                                                 setDetectedLinkType(detectTypeFromUrl(val));
                                                 if (val.trim() && (usedImportUrls.has(val.trim()) || files.some(f => (f.externalUrl || '') === val.trim() || (f.importSourceUrl || '') === val.trim()))) {
-                                                    setLinkError('This exact link is already in your vault.');
-                                                } else if (linkError === 'This exact link is already in your vault.') {
+                                                    setLinkError('This exact link is already in this project.');
+                                                } else if (linkError === 'This exact link is already in this project.') {
                                                     setLinkError(null);
                                                 }
                                             }}
@@ -1988,8 +1988,8 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                     type="button"
                                     onClick={() => { playClick(); onBack(); }}
                                     className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${isPreviewDark ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-editorial text-zinc-700 border border-zinc-200/50 shadow-sm'}`}
-                                    aria-label="Back to Vault"
-                                    title="Back to Vault"
+                                    aria-label="Back to Projects"
+                                    title="Back to Projects"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
                                 </button>
@@ -2011,8 +2011,8 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                         type="button"
                                         onClick={() => { playClick(); onBack(); }}
                                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-[0_10px_30px_rgba(0,0,0,0.5)] ${isPreviewDark ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' : 'bg-white hover:bg-editorial text-zinc-700 border border-zinc-200/50 shadow-sm'}`}
-                                        aria-label="Back to Vault"
-                                        title="Back to Vault"
+                                        aria-label="Back to Projects"
+                                        title="Back to Projects"
                                     >
                                         <ChevronLeft className="w-5 h-5" />
                                     </button>

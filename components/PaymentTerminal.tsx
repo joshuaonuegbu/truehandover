@@ -203,7 +203,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                     <Check className={`${isLandscapeCompact ? 'w-5 h-5' : 'w-5.5 h-5.5'} ${isDarkMode ? 'text-black' : 'text-white'}`} />
                 </div>
                 <h4 className={`font-bold ${brandGreenText} ${isLandscapeCompact ? 'text-base' : 'text-lg'} tracking-tight`}>Payment Complete</h4>
-                <p className={`${isLandscapeCompact ? 'text-[9px] mt-1' : 'text-[10px] mt-1.5'} font-bold ${isDarkMode ? 'text-lime-400/70' : 'text-lime-400/70'} uppercase tracking-widest`}>Vault Unlocked</p>
+                <p className={`${isLandscapeCompact ? 'text-[9px] mt-1' : 'text-[10px] mt-1.5'} font-bold ${isDarkMode ? 'text-lime-400/70' : 'text-lime-400/70'} uppercase tracking-widest`}>Delivery unlocked</p>
                 <div className={`${isLandscapeCompact ? 'mt-2.5' : 'mt-3.5'} flex gap-3`}>
                     <button className={`${isLandscapeCompact ? 'px-2.5 py-1 text-[9px]' : 'px-3 py-1.5 text-[10px]'} rounded-lg font-bold uppercase tracking-wider flex items-center gap-1.5 ${isDarkMode ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white hover:bg-editorial text-zinc-700 border border-zinc-200'}`}>
                         <Receipt className={`${isLandscapeCompact ? 'w-2.5 h-2.5' : 'w-3 h-3'}`} /> Receipt

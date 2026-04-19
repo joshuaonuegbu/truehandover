@@ -145,7 +145,7 @@ const ActivityView = () => {
                 title: 'Project Created',
                 project: p.name,
                 client,
-                desc: `${p.type || 'General'} vault initialized`,
+                desc: `${p.type || 'General'} project initialized`,
                 icon: Server,
                 status: 'success',
             });
@@ -172,7 +172,7 @@ const ActivityView = () => {
                     title: 'Client Viewed',
                     project: p.name,
                     client,
-                    desc: 'Vault viewed by client',
+                    desc: 'Delivery viewed by client',
                     icon: Eye,
                     status: 'info',
                 });
@@ -194,7 +194,7 @@ const ActivityView = () => {
                     id: `unlock-${p.id}`,
                     dateIso: p.clientViewedAt || p.dueDate || baseDate,
                     type: 'system',
-                    title: 'Vault Unlocked',
+                    title: 'Delivery unlocked',
                     project: p.name,
                     client,
                     desc: 'Assets released to client',
@@ -337,7 +337,7 @@ const ActivityView = () => {
                     <div className="flex flex-col gap-4">
                         <Widget compact title={"Pending Revenue"} titleIcon={Clock} className="group rounded-2xl" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
                             <PrivacyBlur className="text-2xl font-sans tracking-tight font-medium text-obsidian dark:text-white tracking-tight">${pendingRevenue.toLocaleString()}</PrivacyBlur>
-                            <p className="text-[10px] text-amber-600 dark:text-amber-500 mt-1 font-bold">Locked in active vaults</p>
+                            <p className="text-[10px] text-amber-600 dark:text-amber-500 mt-1 font-bold">Locked in active projects</p>
                         </Widget>
 
                         <Widget compact title={"Cleared (MTD)"} titleIcon={CheckCircle} className="group rounded-2xl" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
@@ -345,7 +345,7 @@ const ActivityView = () => {
                             <p className="text-[10px] text-blue-600 dark:text-lime-400 mt-1 font-bold">+12% from last month</p>
                         </Widget>
 
-                        <Widget compact title={"Active Vaults"} titleIcon={FolderLock} className="group rounded-2xl" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+                        <Widget compact title={"Active projects"} titleIcon={FolderLock} className="group rounded-2xl" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
                             <div className="text-2xl font-sans tracking-tight font-medium text-obsidian dark:text-white tracking-tight">{activeVaults}</div>
                             <p className="text-[10px] text-zinc-500 mt-1 font-bold">{awaitingAction} awaiting client action</p>
                         </Widget>

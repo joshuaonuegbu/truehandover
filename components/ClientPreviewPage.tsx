@@ -19,6 +19,7 @@ import { PaymentTerminal } from './PaymentTerminal';
 import { InlineErrorBanner } from './Shared';
 import ThemeModeDropdown from './ThemeModeDropdown';
 import BrandLogo from './BrandLogo';
+import { SelectField } from './SelectField';
 import { LayoutBillboard, LayoutDeck, LayoutJournal, LayoutMasonry, PortalLayoutVariant } from './ClientPreviewLayouts';
 import { PortalLightboxVariant, PortalStyleLightbox } from './ClientPreviewLightboxes';
 
@@ -138,16 +139,20 @@ const ClientLibraryView: React.FC<ClientLibraryViewProps> = ({ projects, isDarkM
                                 className="bg-transparent outline-none text-xs w-40"
                             />
                         </div>
-                        <select
+                        <SelectField
+                            tone="minimal"
+                            size="sm"
                             value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value as any)}
-                            className={`h-10 px-3 rounded-xl border text-xs font-bold uppercase tracking-wider outline-none ${isDarkMode ? 'bg-black/20 border-white/10 text-zinc-300' : 'bg-white/90 border-zinc-200 text-zinc-600 shadow-sm'}`}
-                        >
-                            <option value="recent">Recently Viewed</option>
-                            <option value="newest">Newest Delivery</option>
-                            <option value="oldest">Oldest Delivery</option>
-                            <option value="name">Project Name</option>
-                        </select>
+                            onChange={(v) => setSortBy(v as typeof sortBy)}
+                            buttonClassName="!font-bold !uppercase !tracking-wider shadow-sm"
+                            options={[
+                                { value: 'recent', label: 'Recently viewed' },
+                                { value: 'newest', label: 'Newest delivery' },
+                                { value: 'oldest', label: 'Oldest delivery' },
+                                { value: 'name', label: 'Project name' },
+                            ]}
+                            className="min-w-[11rem]"
+                        />
                     </div>
                 </div>
             </section>
@@ -297,7 +302,7 @@ const CredentialVaultWidget = ({ credentials, isLocked, isDarkMode }: any) => {
                     <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500">
                         <Key className="w-4 h-4" />
                     </div>
-                    <span className={`text-xs font-bold uppercase tracking-widest ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>Credential Vault</span>
+                    <span className={`text-xs font-bold uppercase tracking-widest ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>Project credentials</span>
                 </div>
                 {isLocked ? (
                     <span className="flex items-center gap-1 text-[9px] font-bold uppercase text-amber-500 bg-amber-500/10 px-2 py-1 rounded">
@@ -2360,7 +2365,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                         )}
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 lg:gap-8 mb-6 md:mb-8 lg:mb-12">
                             <div className="hidden lg:block">
-                                <div className="flex items-center gap-2 mb-3"><LayoutGrid className="w-4 h-4 text-zinc-400" /><span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Vault Contents</span></div>
+                                <div className="flex items-center gap-2 mb-3"><LayoutGrid className="w-4 h-4 text-zinc-400" /><span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Project assets</span></div>
                                 <h2 className={`text-4xl md:text-5xl font-serif font-medium ${textPrimary}`}>{libraryEnabled && contentView === 'library' ? 'Client Library' : 'Asset Gallery'}</h2>
                             </div>
 
@@ -2368,7 +2373,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             <div className="lg:hidden mb-2">
                                 <div className="flex items-center gap-2 text-zinc-500">
                                 <LayoutGrid className="w-4 h-4" />
-                                    <span className="text-xs font-bold uppercase tracking-widest">{libraryEnabled && contentView === 'library' ? `Library (${availableLibraryProjects.length})` : `Vault Contents (${filteredFiles.length})`}</span>
+                                    <span className="text-xs font-bold uppercase tracking-widest">{libraryEnabled && contentView === 'library' ? `Library (${availableLibraryProjects.length})` : `Project assets (${filteredFiles.length})`}</span>
                                 </div>
                             </div>
 
@@ -2523,7 +2528,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             <div className="opacity-30 hover:opacity-100 transition-opacity duration-300 max-w-md space-y-3 cursor-default">
                                 <div className="flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
                                     <ShieldCheck className="w-3 h-3" />
-                                    Secure Delivery Vault
+                                    Secure delivery
                         </div>
                                 <p className="text-[10px] text-zinc-400 leading-relaxed font-medium">
                                     Your files stay protected until payment is confirmed. Once it is, you can download the originals instantly, and every view/download is logged for transparency.

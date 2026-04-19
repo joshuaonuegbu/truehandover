@@ -265,7 +265,7 @@ const GetStartedModal = ({
                                         <ArrowRight className="h-4 w-4 opacity-40 transition-transform group-hover:translate-x-0.5 group-hover:opacity-100" />
                                     </p>
                                     <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                                        Jump in and explore Quick delivery, vault, and settings. Add files whenever you&apos;re ready.
+                                        Jump in and explore Quick delivery, projects, and settings. Add files whenever you&apos;re ready.
                                     </p>
                                 </div>
                             </div>
@@ -282,7 +282,7 @@ const GetStartedModal = ({
                                             Bring files first
                                         </p>
                                         <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                                            We&apos;ll place them in Quick delivery so you can add the client, publish, and share the vault in a few steps.
+                                            We&apos;ll place them in Quick delivery so you can add the client, publish, and share the project link in a few steps.
                                         </p>
                                     </div>
                                 </div>
@@ -743,7 +743,7 @@ const BentoGrid = () => {
 
     const brandConfigs = [
         { name: 'Default', color: '#bef264', domain: 'portal.truehandover.com' },
-        { name: 'Onyx', color: '#334155', domain: 'vault.agency.com' },
+        { name: 'Onyx', color: '#334155', domain: 'delivery.agency.com' },
         { name: 'Cobalt', color: '#3b82f6', domain: 'files.studio.io' }
     ];
 
@@ -1385,7 +1385,7 @@ const FAQSection = () => (
                 />
                 <FAQItem
                     question="How do I get paid?"
-                    answer="We integrate with Stripe Connect to handle payouts instantly. We also support a 'Digital Handshake' for manual payments. If a client prefers Zelle, Venmo, or Wire Transfer, they can mark the invoice as 'Paid' manually. The files remain locked in a 'Verification Pending' state until you, the creator, confirm receipt of funds in your banking app. Once confirmed, the vault unlocks automatically."
+                    answer="We integrate with Stripe Connect to handle payouts instantly. We also support a 'Digital Handshake' for manual payments. If a client prefers Zelle, Venmo, or Wire Transfer, they can mark the invoice as 'Paid' manually. The files remain locked in a 'Verification Pending' state until you, the creator, confirm receipt of funds in your banking app. Once confirmed, the delivery unlocks automatically."
                 />
                 <FAQItem
                     question="Can I accept Zelle or Venmo?"
@@ -1577,7 +1577,7 @@ export default function LandingPage({ onGetStarted, onQuickStartWithFiles, curre
                             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3">Quick start</p>
                             <h3 className="font-serif text-3xl sm:text-4xl text-zinc-900 dark:text-white mb-4">Drop to deliver</h3>
                             <p className="text-sm text-zinc-600 dark:text-zinc-300 mb-5 leading-relaxed">
-                                We&apos;ll load your files into <strong className="text-zinc-800 dark:text-white">Quick delivery</strong>. Next you&apos;ll add client details, choose a link or email, publish, then share the vault.
+                                We&apos;ll load your files into <strong className="text-zinc-800 dark:text-white">Quick delivery</strong>. Next you&apos;ll add client details, choose a link or email, publish, then share the project.
                             </p>
                             <ol className="text-xs text-zinc-500 dark:text-zinc-400 space-y-2 list-decimal list-inside border-t border-zinc-200/60 dark:border-white/10 pt-4">
                                 <li>Files land in the left delivery panel (dock layout).</li>

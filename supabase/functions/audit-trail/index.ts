@@ -266,7 +266,7 @@ async function buildAuditPDF(data: {
       payment_received: `Payment received ${log.details?.amount ? fmtCurrency(log.details.amount / 100) : ""} via Stripe`,
       PAYMENT_SESSION_INIT: "Stripe checkout session initiated by client",
       MANUAL_PAYMENT_VERIFIED: "Manual payment verified by creator",
-      file_uploaded: "File uploaded to vault",
+      file_uploaded: "File uploaded to project",
       project_completed: "Project marked as completed",
     };
     const label = actionMap[log.action] || log.action.replace(/_/g, " ");

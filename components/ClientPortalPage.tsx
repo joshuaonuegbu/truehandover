@@ -110,7 +110,7 @@ const ClientPortalPage = ({
                                         href={`/c/${p.clientLink}`}
                                         className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-200/50 bg-zinc-50 hover:bg-zinc-100 text-xs font-bold uppercase tracking-wider"
                                     >
-                                        Open Vault <ExternalLink className="w-3.5 h-3.5" />
+                                        Open delivery <ExternalLink className="w-3.5 h-3.5" />
                                     </a>
                                 </div>
                             </div>

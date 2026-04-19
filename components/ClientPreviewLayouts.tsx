@@ -261,7 +261,7 @@ export const LayoutBillboard: React.FC<LayoutProps> = ({
 
 				<div className="absolute inset-x-0 bottom-0 p-6 md:p-10 z-10">
 					<div className="max-w-5xl">
-						<p className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-200 mb-2 drop-shadow-[0_3px_10px_rgba(0,0,0,0.32)]">Secure Delivery Vault</p>
+						<p className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-200 mb-2 drop-shadow-[0_3px_10px_rgba(0,0,0,0.32)]">Secure delivery</p>
 						<h1 className="text-4xl md:text-6xl font-serif leading-[0.95] text-white mb-4 drop-shadow-[0_5px_14px_rgba(0,0,0,0.34)]">{project.name}</h1>
 						<p className="text-sm md:text-base text-zinc-200 max-w-2xl leading-relaxed drop-shadow-[0_4px_12px_rgba(0,0,0,0.28)]">
 							{project.message || 'Review the curated delivery set below. Each item opens in fullscreen with revision context.'}

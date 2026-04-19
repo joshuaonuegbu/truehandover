@@ -24,7 +24,7 @@ const DEFAULT_PROFILE_PREFERENCES = {
 // --- MOCK DATA CONSTANTS (Moved from App.tsx for Fallback) ---
 
 const DEFAULT_THEME_MOCK: ProjectTheme = {
-  name: 'Concrete Vault',
+  name: 'Concrete Studio',
   // Abstract, non-human background (avoid people in demo thumbnails)
   wallpaper: 'https://images.unsplash.com/photo-1487700160041-babef9c3cb55?auto=format&fit=crop&w=2000&q=80',
   brightness: 'dark',

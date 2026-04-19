@@ -61,7 +61,7 @@ function buildNudgeEmailHtml(opts: {
                 Hi ${clientName || "there"},
               </p>
               <p style="color:#333;font-size:15px;line-height:1.6;margin:0 0 14px 0;">
-                ${creatorName} has completed the work on <strong>"${projectName}"</strong> and it's ready for your review. The files are securely held in your Heartifact vault, awaiting your payment to unlock access.
+                ${creatorName} has completed the work on <strong>"${projectName}"</strong> and it's ready for your review. The files are securely held in your Heartifact project, awaiting your payment to unlock access.
               </p>
               ${dueLine}
               <p style="color:#333;font-size:15px;line-height:1.6;margin:0 0 28px 0;">

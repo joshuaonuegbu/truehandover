@@ -33,7 +33,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
         {
             category: 'delivery',
             q: "What does the client see before paying?",
-            a: "Clients receive a secure link to view watermarked, low-resolution previews of your assets. For documents (PDFs), they see the first page. For videos, they see a short clip. The high-resolution original files remain locked in the vault until payment is confirmed."
+            a: "Clients receive a secure link to view watermarked, low-resolution previews of your assets. For documents (PDFs), they see the first page. For videos, they see a short clip. The high-resolution original files stay locked until payment is confirmed."
         },
         {
             category: 'delivery',

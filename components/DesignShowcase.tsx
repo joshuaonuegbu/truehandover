@@ -2,7 +2,7 @@
  * DesignShowcase.tsx
  * ──────────────────────────────────────────────────────────────────────────────
  * A fully self-contained design playground. 5 premium layout variants, each
- * covering Dashboard / Vault / Activity / Reports / Settings.
+ * covering Dashboard / Projects / Activity / Reports / Settings.
  *
  * Uses Heartifact's own lime accent + dark-mode tokens — only layout, spacing
  * and UI chrome varies between variants.
@@ -50,7 +50,7 @@ const MOCK_ACTIVITY = [
     { icon: CreditCard, label: 'Payment Received', detail: 'Vertex Corp · $4,500', time: '2m ago', color: 'lime' },
     { icon: Eye, label: 'Client Viewed', detail: 'Sarah Chen · Website Redesign', time: '14m ago', color: 'blue' },
     { icon: Upload, label: 'File Uploaded', detail: 'Brand_Final.zip · 47MB', time: '1h ago', color: 'slate' },
-    { icon: Lock, label: 'Vault Locked', detail: 'Mobile App UI · 3 files', time: '3h ago', color: 'amber' },
+    { icon: Lock, label: 'Assets locked', detail: 'Mobile App UI · 3 files', time: '3h ago', color: 'amber' },
     { icon: Send, label: 'Invoice Sent', detail: '#INV-2024-018 · Axis Media', time: '5h ago', color: 'slate' },
     { icon: CheckCircle, label: 'Project Completed', detail: 'Logo Suite · TrendCo', time: 'Yesterday', color: 'lime' },
     { icon: Eye, label: 'Client Viewed', detail: 'Mike Ross · Mobile App UI', time: 'Yesterday', color: 'blue' },
@@ -113,7 +113,7 @@ const VARIANTS: { id: Variant; label: string; desc: string; ref: string }[] = [
 
 const SECTIONS: { id: Section; label: string; icon: any }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'vault', label: 'Vault', icon: LockKeyhole },
+    { id: 'vault', label: 'Projects', icon: LockKeyhole },
     { id: 'activity', label: 'Activity', icon: ActivityIcon },
     { id: 'reports', label: 'Reports', icon: PieChart },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -207,7 +207,7 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
     if (section === 'vault') return (
         <div className="space-y-5">
             <div className="flex items-center justify-between">
-                <h1 className={`font-sans tracking-tight text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>Vault</h1>
+                <h1 className={`font-sans tracking-tight text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>Projects</h1>
                 <button className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider ${accentBg} flex items-center gap-2`}><Plus className="w-3 h-3" />New Project</button>
             </div>
             <div className="grid grid-cols-5 gap-3">
@@ -403,7 +403,7 @@ const BoldDarkContent = ({ section, isDark }: { section: Section; isDark: boolea
 
     if (section === 'vault') return (
         <div className="space-y-5">
-            <h1 className="text-3xl font-black text-white">Vault</h1>
+            <h1 className="text-3xl font-black text-white">Projects</h1>
             <div className="grid grid-cols-5 gap-3">
                 {MOCK_PROJECTS.map((p, i) => (
                     <div key={i} className={`${card} border rounded-3xl p-4 cursor-pointer transition-all hover:border-lime-400/40`} style={{ borderColor: i === 0 ? acc + '40' : undefined }}>
@@ -498,7 +498,7 @@ const BoldDarkLayout = ({ section, isDark }: { section: Section; isDark: boolean
                 <div className="mx-3 p-4 rounded-3xl" style={{ background: 'linear-gradient(135deg,#bef264 0%,#65a30d 100%)' }}>
                     <Crown className="w-5 h-5 text-black mb-2" />
                     <p className="text-black font-black text-sm leading-snug">Upgrade to Pro</p>
-                    <p className="text-black/70 text-[10px] mt-1 mb-3">Unlock unlimited vaults</p>
+                    <p className="text-black/70 text-[10px] mt-1 mb-3">Unlock unlimited projects</p>
                     <div className="w-full py-1.5 rounded-xl bg-black text-white text-center text-[10px] font-black uppercase tracking-wider cursor-pointer">Upgrade Now</div>
                 </div>
             </div>

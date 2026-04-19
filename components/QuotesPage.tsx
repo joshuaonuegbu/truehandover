@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import {
-    ArrowLeft,
     Copy,
     FileDigit,
     Plus,
@@ -11,31 +10,23 @@ import {
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { playClick, playSuccess } from '../utils/sound';
+import {
+    type QuoteLine,
+    makeQuoteLine,
+    quoteCurrency,
+    calcQuoteSubtotal,
+    calcQuoteTaxAmount,
+    buildQuotePlainText,
+} from '../utils/quoteBuilderCore';
+import { SelectField } from './SelectField';
 
-interface QuoteLine {
-    id: string;
-    description: string;
-    qty: number;
-    rate: number;
-}
-
-const makeLine = (): QuoteLine => ({
-    id: crypto.randomUUID(),
-    description: '',
-    qty: 1,
-    rate: 0,
-});
-
-const currency = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 2,
-});
+const currency = quoteCurrency;
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
-export default function QuotesPage({ onBack }: { onBack: () => void }) {
+export default function QuotesPage() {
     const { projects, user } = useStore();
+    const [clientTemplateId, setClientTemplateId] = useState('');
 
     const [quoteNumber] = useState(() => {
         const day = new Date().toISOString().slice(2, 10).replace(/-/g, '');
@@ -51,7 +42,7 @@ export default function QuotesPage({ onBack }: { onBack: () => void }) {
     const [validDays, setValidDays] = useState(14);
     const [taxRate, setTaxRate] = useState(0);
     const [notes, setNotes] = useState('Timeline starts after quote approval and first payment confirmation.');
-    const [lines, setLines] = useState<QuoteLine[]>([makeLine()]);
+    const [lines, setLines] = useState<QuoteLine[]>([makeQuoteLine()]);
 
     const clientTemplates = useMemo(() => {
         const mapped = projects
@@ -73,18 +64,15 @@ export default function QuotesPage({ onBack }: { onBack: () => void }) {
         return Array.from(byLabel.values());
     }, [projects]);
 
-    const subtotal = useMemo(
-        () => lines.reduce((sum, line) => sum + (Number(line.qty) || 0) * (Number(line.rate) || 0), 0),
-        [lines]
-    );
-    const taxAmount = useMemo(() => subtotal * ((Number(taxRate) || 0) / 100), [subtotal, taxRate]);
+    const subtotal = useMemo(() => calcQuoteSubtotal(lines), [lines]);
+    const taxAmount = useMemo(() => calcQuoteTaxAmount(subtotal, taxRate), [subtotal, taxRate]);
     const total = subtotal + taxAmount;
 
     const updateLine = (id: string, patch: Partial<QuoteLine>) => {
         setLines((prev) => prev.map((line) => (line.id === id ? { ...line, ...patch } : line)));
     };
 
-    const addLine = () => setLines((prev) => [...prev, makeLine()]);
+    const addLine = () => setLines((prev) => [...prev, makeQuoteLine()]);
 
     const removeLine = (id: string) => {
         setLines((prev) => {
@@ -99,39 +87,21 @@ export default function QuotesPage({ onBack }: { onBack: () => void }) {
         return base.toISOString().slice(0, 10);
     }, [issueDate, validDays]);
 
-    const buildQuoteText = () => {
-        const lineText = lines
-            .map((line, idx) => {
-                const lineTotal = (Number(line.qty) || 0) * (Number(line.rate) || 0);
-                return `${idx + 1}. ${line.description || 'Line item'} | Qty ${line.qty} | Rate ${currency.format(line.rate || 0)} | Total ${currency.format(lineTotal)}`;
-            })
-            .join('\n');
-
-        return [
-            `Heartifact Quote ${quoteNumber}`,
-            `${quoteTitle}`,
-            '',
-            `From: ${user?.name || 'Freelancer'}`,
-            `Email: ${user?.email || '-'}`,
-            '',
-            `Client: ${clientName || '-'}`,
-            `Client Email: ${clientEmail || '-'}`,
-            `Client Company: ${clientCompany || '-'}`,
-            '',
-            `Issued: ${issueDate}`,
-            `Valid Until: ${formattedExpiry}`,
-            '',
-            'Line Items',
-            lineText,
-            '',
-            `Subtotal: ${currency.format(subtotal)}`,
-            `Tax (${taxRate}%): ${currency.format(taxAmount)}`,
-            `Total: ${currency.format(total)}`,
-            '',
-            'Notes',
-            notes || '-',
-        ].join('\n');
-    };
+    const buildQuoteText = () =>
+        buildQuotePlainText({
+            quoteNumber,
+            quoteTitle,
+            freelancerName: user?.name,
+            freelancerEmail: user?.email,
+            clientName,
+            clientEmail,
+            clientCompany,
+            issueDate,
+            validUntil: formattedExpiry,
+            lines,
+            taxRatePercent: taxRate,
+            notes,
+        });
 
     const downloadQuote = () => {
         playSuccess();
@@ -157,24 +127,11 @@ export default function QuotesPage({ onBack }: { onBack: () => void }) {
     return (
         <div className="space-y-6 animate-slide-up relative z-10 pb-16 lg:pb-10 w-full">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-start gap-3 min-w-0">
-                    <button
-                        type="button"
-                        onClick={() => {
-                            playClick();
-                            onBack();
-                        }}
-                        className="mt-0.5 w-10 h-10 shrink-0 rounded-full border border-zinc-200/70 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-zinc-50 dark:hover:bg-white/10 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center justify-center"
-                        title="Back"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                    </button>
-                    <div className="min-w-0">
-                        <h2 className="text-3xl sm:text-4xl font-sans tracking-tight font-medium text-zinc-900 dark:text-white">Quote Builder</h2>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-                            Line items, tax, and notes — copy or download when ready.
-                        </p>
-                    </div>
+                <div className="min-w-0 flex-1">
+                    <h2 className="text-3xl sm:text-4xl font-sans tracking-tight font-medium text-zinc-900 dark:text-white">Quote Builder</h2>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+                        Line items, tax, and notes — copy or download when ready.
+                    </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                     <button
@@ -209,10 +166,15 @@ export default function QuotesPage({ onBack }: { onBack: () => void }) {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <label className="space-y-1 md:col-span-2">
-                            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Load Existing Client</span>
-                            <select
-                                onChange={(e) => {
-                                    const selected = clientTemplates.find((item) => item.id === e.target.value);
+                            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Load existing client</span>
+                            <SelectField
+                                tone="charcoal"
+                                value={clientTemplateId}
+                                placeholder="Select client template"
+                                onChange={(id) => {
+                                    setClientTemplateId(id);
+                                    if (!id) return;
+                                    const selected = clientTemplates.find((item) => item.id === id);
                                     if (!selected) return;
                                     setClientName(selected.clientName);
                                     setClientEmail(selected.clientEmail);
@@ -224,14 +186,11 @@ export default function QuotesPage({ onBack }: { onBack: () => void }) {
                                         setLines([{ id: crypto.randomUUID(), description: selected.projectName, qty: 1, rate: selected.amount }]);
                                     }
                                 }}
-                                defaultValue=""
-                                className="w-full h-11 rounded-xl bg-white dark:bg-white/5 border border-zinc-200/70 dark:border-white/10 px-3 text-sm text-zinc-900 dark:text-white"
-                            >
-                                <option value="">Select client template</option>
-                                {clientTemplates.map((item) => (
-                                    <option key={item.id} value={item.id}>{item.label}</option>
-                                ))}
-                            </select>
+                                options={[
+                                    { value: '', label: 'Select client template' },
+                                    ...clientTemplates.map((item) => ({ value: item.id, label: item.label })),
+                                ]}
+                            />
                         </label>
                         <label className="space-y-1">
                             <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Client Name</span>
@@ -362,7 +321,7 @@ export default function QuotesPage({ onBack }: { onBack: () => void }) {
                     <div className="rounded-2xl bg-zinc-100/70 dark:bg-white/8 border border-zinc-200/70 dark:border-white/10 p-4">
                         <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400 mb-2">Use Case</p>
                         <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                            Create a quote before building the vault, then convert approved line items into invoice milestones.
+                            Create a quote before you finalize the project delivery, then convert approved line items into invoice milestones.
                         </p>
                     </div>
 

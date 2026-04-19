@@ -5,7 +5,7 @@ import {
     Activity as ActivityIcon, PieChart, ArrowUpRight,
     FileText, Calendar, ArrowRight, Wallet, ShieldCheck,
     AlertTriangle, FileCheck, FileDigit, Landmark, Clock,
-    ChevronDown, Briefcase, FileClock, Filter, Layers,
+    Briefcase, FileClock, Filter, Layers,
     Info, Scale
 } from 'lucide-react';
 import {
@@ -13,6 +13,7 @@ import {
     CartesianGrid, PieChart as RePieChart, Pie, Cell, ReferenceLine
 } from 'recharts';
 import { GRADIENT_TEXT, Card, InlineErrorBanner } from './Shared';
+import { SelectField } from './SelectField';
 import { useStore } from '../context/StoreContext';
 import { DB } from '../services/supabaseClient';
 import { playClick } from '../utils/sound';
@@ -317,7 +318,7 @@ const ReportsView = () => {
                 const timeline = project
                     ? [
                         { timestamp: project.createdAt, title: 'Project opened', detail: 'Workspace initialized and delivery terms recorded.' },
-                        ...(project.files || []).map((file) => ({ timestamp: file.uploadDate || project.createdAt, title: 'Asset added', detail: `${file.name} (${file.size}) attached to the vault.` })),
+                        ...(project.files || []).map((file) => ({ timestamp: file.uploadDate || project.createdAt, title: 'Asset added', detail: `${file.name} (${file.size}) attached to this project.` })),
                         ...(project.clientViewedAt ? [{ timestamp: project.clientViewedAt, title: 'Client view recorded', detail: `${project.client.name} opened the protected preview.` }] : []),
                         {
                             timestamp: project.dueDate || project.createdAt,
@@ -404,7 +405,7 @@ const ReportsView = () => {
                     effectiveAt: new Date().toISOString(),
                     status: project?.status || 'paid',
                     scope: [
-                        'Final approved deliverables listed in the vault',
+                        'Final approved deliverables listed for this project',
                         'Commercial use rights as defined in the client agreement',
                         'Operational record of payment-cleared release through Heartifact',
                     ],
@@ -714,7 +715,7 @@ const ReportsView = () => {
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
                                 <span className="text-xs font-bold text-zinc-700 dark:text-white capitalize">
-                                    {entry.name === 'liquid' ? 'Cash Flow' : entry.name === 'frozen' ? 'Vault Locked' : entry.name}
+                                    {entry.name === 'liquid' ? 'Cash Flow' : entry.name === 'frozen' ? 'Assets locked' : entry.name}
                                 </span>
                             </div>
                             <span className="font-mono text-xs font-bold text-obsidian dark:text-white">
@@ -806,7 +807,7 @@ const ReportsView = () => {
                             </div>
                             <div>
                                 <div className="text-3xl font-sans tabular-nums tracking-wide text-obsidian dark:text-white mb-1 sm:tracking-wider"><PrivacyBlur>${lockedVolume.toLocaleString()}</PrivacyBlur></div>
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400">Locked in Vault</div>
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400">Locked in projects</div>
                             </div>
                         </div>
                         <div className="bg-editorial dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] p-6 lg:p-8 rounded-2xl flex flex-col justify-between h-40 group hover:border-zinc-200/50 dark:hover:border-white/10 transition-all cursor-pointer">
@@ -1119,17 +1120,15 @@ const ReportsView = () => {
                             <h4 className="font-sans tracking-tight text-xl font-bold text-obsidian dark:text-white mb-2">Monthly Statement</h4>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-6 max-w-sm">Consolidated earnings report for accounting and reconciliation purposes.</p>
                             <div className="flex gap-3">
-                                <div className="relative flex-1">
-                                    <select
+                                <div className="relative flex-1 min-w-0">
+                                    <SelectField
+                                        tone="charcoal"
+                                        size="sm"
                                         value={statementMonth}
-                                        onChange={(e) => setStatementMonth(e.target.value)}
-                                        className="w-full appearance-none bg-editorial dark:bg-black/20 border border-zinc-200/50 dark:border-white/10 rounded-xl text-xs font-bold px-4 py-3 outline-none text-obsidian dark:text-white cursor-pointer hover:border-zinc-200/50 transition-colors"
-                                    >
-                                        {statementMonths.map((label) => (
-                                            <option key={label} className="bg-white dark:bg-charcoal text-obsidian dark:text-white">{label}</option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-zinc-400 pointer-events-none" />
+                                        onChange={setStatementMonth}
+                                        options={statementMonths.map((label) => ({ value: label, label }))}
+                                        buttonClassName="!font-bold border-zinc-200/50 dark:border-white/10 bg-editorial dark:bg-black/20"
+                                    />
                                 </div>
                                 <button
                                     onClick={() => { playClick(); demoMode ? handleDownloadMonthlyStatementPdf() : handleExportMonthlyStatementCsv(); }}

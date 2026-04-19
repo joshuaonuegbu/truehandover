@@ -38,6 +38,8 @@ import { Card, Badge, Widget } from './components/Shared';
 import ThemeModeDropdown from './components/ThemeModeDropdown';
 import { ClientRolodexContent } from './components/ClientsPage';
 import BrandLogo from './components/BrandLogo';
+import DeliveryQuickQuote from './components/DeliveryQuickQuote';
+import { makeQuoteLine, type QuoteLine, quoteCurrency } from './utils/quoteBuilderCore';
 
 // Route-level code-splitting — only loaded when the user navigates to that route
 const _importCreator = () => import('./components/CreatorPage');
@@ -164,7 +166,24 @@ const createQuickClientLink = () => {
     return `cl_${hex}_${Date.now().toString(36)}`;
 };
 
-const readQuickDeliveryDraft = (): { formData?: Partial<Project>; files?: FileAsset[] } | null => {
+const normalizeWidgetQuickQuoteLines = (raw: unknown): QuoteLine[] => {
+    if (!Array.isArray(raw) || raw.length === 0) return [makeQuoteLine()];
+    const out: QuoteLine[] = [];
+    for (const row of raw) {
+        if (row && typeof row === 'object') {
+            const o = row as Record<string, unknown>;
+            out.push({
+                id: typeof o.id === 'string' ? o.id : crypto.randomUUID(),
+                description: typeof o.description === 'string' ? o.description : '',
+                qty: Math.max(0, Number(o.qty) || 0),
+                rate: Math.max(0, Number(o.rate) || 0),
+            });
+        }
+    }
+    return out.length ? out : [makeQuoteLine()];
+};
+
+const readQuickDeliveryDraft = (): { formData?: Partial<Project>; files?: FileAsset[]; quickQuoteLines?: QuoteLine[] } | null => {
     try {
         const raw = localStorage.getItem(QUICK_DELIVERY_DRAFT_KEY);
         return raw ? JSON.parse(raw) : null;
@@ -207,7 +226,8 @@ const appendFilesToQuickDraft = (incomingFiles: File[]) => {
     try {
         localStorage.setItem(QUICK_DELIVERY_DRAFT_KEY, JSON.stringify({
             formData: existing?.formData || {},
-            files: nextFiles
+            files: nextFiles,
+            quickQuoteLines: existing?.quickQuoteLines,
         }));
     } catch {
         // Ignore storage failures; widget state still updates in memory.
@@ -485,7 +505,7 @@ const StatusRibbon = ({ projects, user }: { projects: Project[]; user: UserProfi
                 <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex items-baseline justify-between gap-3">
                         <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
-                            {demoMode ? 'Vault capacity' : 'Storage'}
+                            {demoMode ? 'Project storage' : 'Storage'}
                         </span>
                         <span className="truncate text-xs font-medium tabular-nums text-zinc-700 dark:text-zinc-200">
                             {demoMode ? `${formatBytes(demoRemainingNativeStorageBytes)} free` : (
@@ -809,7 +829,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                     <div className={`relative z-10 flex h-full min-h-0 flex-col justify-between ${slidePad}`}>
                         <div>
                             <span className="mb-3 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-lime-400 dark:text-zinc-400">
-                                Vault capacity
+                                Project storage
                             </span>
                             <div className="flex items-start justify-between gap-3">
                                 <div className="flex min-w-0 items-center gap-3">
@@ -817,7 +837,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                                         <HardDrive className="h-4 w-4" />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Native vault</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Native storage</p>
                                         <p className="truncate text-xs font-medium text-zinc-600 dark:text-zinc-300">Mixed assets · 30 GB ceiling</p>
                                     </div>
                                 </div>
@@ -1095,7 +1115,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                                         <HardDrive className="h-4 w-4" />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">All vaults</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">All projects</p>
                                         <p className="truncate text-xs font-medium text-zinc-600 dark:text-zinc-300">{totalFiles} files indexed</p>
                                     </div>
                                 </div>
@@ -2009,7 +2029,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                     <div className="flex items-center gap-4 mb-8">
                                         <div className={`px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 backdrop-blur-md ${project.status === 'paid' ? 'bg-blue-50/50 border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400' : 'bg-zinc-50/50 border-zinc-200 text-zinc-600 dark:bg-white/5 dark:border-white/10 dark:text-zinc-300'}`}>
                                             <div className={`w-2 h-2 rounded-full ${project.status === 'paid' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]' : 'bg-zinc-400'} animate-pulse`} />
-                                            {project.status === 'paid' ? 'Access Granted' : 'Vault Locked'}
+                                            {project.status === 'paid' ? 'Access granted' : 'Assets locked'}
                                         </div>
                                         <span className="font-mono text-xs text-zinc-400 dark:text-zinc-600 font-bold tracking-widest uppercase">ID/{project.id.slice(0,6)}</span>
                                         </div>
@@ -2163,7 +2183,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                                     ? `${window.location.origin}/c/${project.clientLink}`
                                                     : window.location.href;
                                                 const subject = encodeURIComponent(`Your files are ready — ${project.name}`);
-                                                const body = encodeURIComponent(`Hi ${name},\n\nYour project files are ready for review.\n\nAccess your secure vault here:\n${link}\n\nLet me know if you have any questions.`);
+                                                const body = encodeURIComponent(`Hi ${name},\n\nYour project files are ready for review.\n\nAccess your secure delivery link here:\n${link}\n\nLet me know if you have any questions.`);
                                                 window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
                                             }}
                                             className="hidden lg:flex h-12 px-6 rounded-full border border-zinc-200/50 dark:border-white/10 items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-white/10 hover:text-zinc-900 dark:hover:text-white transition-all shadow-sm"
@@ -2209,8 +2229,8 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                         <div className="w-12 h-1.5 bg-zinc-200 dark:bg-white/10 rounded-full mx-auto mb-6 sm:hidden" />
                         <div className="flex items-start justify-between mb-6">
                             <div>
-                                <h3 className="font-sans tracking-tight text-xl font-bold text-zinc-900 dark:text-white">Vault QR Code</h3>
-                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Scan to open the client vault</p>
+                                <h3 className="font-sans tracking-tight text-xl font-bold text-zinc-900 dark:text-white">Project QR code</h3>
+                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Scan to open the client delivery</p>
             </div>
                             <button onClick={() => setQrProjectId(null)} className="p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl transition-colors">
                                 <X className="w-4 h-4 text-zinc-400" />
@@ -2244,7 +2264,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                     onClick={() => navigate(`/preview/${qrProject.id}`)}
                                     className="flex-1 py-3 rounded-xl bg-zinc-900 dark:bg-blue-500 text-white dark:text-zinc-950 text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                                 >
-                                    <Eye className="w-3.5 h-3.5" /> Open Vault
+                                    <Eye className="w-3.5 h-3.5" /> Open delivery
                                 </button>
                             </div>
                         </div>
@@ -2324,6 +2344,9 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
     const toast = useToast();
     const { projects } = useStore();
     const initialDraft = useMemo(() => readQuickDeliveryDraft(), []);
+    const [quickQuoteLines, setQuickQuoteLines] = useState<QuoteLine[]>(() =>
+        normalizeWidgetQuickQuoteLines(initialDraft?.quickQuoteLines)
+    );
     const widgetShellRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const folderInputRef = useRef<HTMLInputElement>(null);
@@ -2348,6 +2371,8 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
     const [publishState, setPublishState] = useState<'idle' | 'publishing' | 'success' | 'error'>('idle');
     const [publishMessage, setPublishMessage] = useState('');
     const [widgetView, setWidgetView] = useState<'create' | 'projects' | 'briefing'>('create');
+    /** When on the Create tab: build a project delivery vs a quote in a dedicated panel */
+    const [createSubView, setCreateSubView] = useState<'project' | 'quote'>('project');
     const [linkReady, setLinkReady] = useState<null | {
         projectId: string;
         projectName: string;
@@ -2565,7 +2590,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
         const intro = linkReady.message?.trim()
             ? linkReady.message.trim()
             : `Hi ${linkReady.clientName || 'there'}, your files are ready for review.`;
-        const body = `${intro}\n\nOpen your vault:\n${linkReady.clientUrl}\n`;
+        const body = `${intro}\n\nOpen your delivery link:\n${linkReady.clientUrl}\n`;
         window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     };
 
@@ -2605,6 +2630,8 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
         setEnableTips(false);
         setMessage('');
         setSendMode('link');
+        setQuickQuoteLines([makeQuoteLine()]);
+        setCreateSubView('project');
         try {
             localStorage.removeItem(QUICK_DELIVERY_DRAFT_KEY);
         } catch {
@@ -2682,14 +2709,15 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                 },
                 type: 'web' as const
             },
-            files
+            files,
+            quickQuoteLines,
         };
         try {
             localStorage.setItem(QUICK_DELIVERY_DRAFT_KEY, JSON.stringify(draft));
         } catch {
             // Ignore storage failures.
         }
-    }, [amount, clientEmail, clientName, enableClientLibrary, enablePayment, enableTips, files, linkLabel, message, projectName, requiresSignature, retention, sendMode, showWatermark]);
+    }, [amount, clientEmail, clientName, enableClientLibrary, enablePayment, enableTips, files, linkLabel, message, projectName, quickQuoteLines, requiresSignature, retention, sendMode, showWatermark]);
 
     useEffect(() => {
         try {
@@ -2763,7 +2791,15 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                         <EditorialIcon className="w-4 h-4 text-black dark:text-white shrink-0" />
                     </div>
                     <span className="text-sm font-semibold text-zinc-900 dark:text-white">
-                        {widgetView === 'create' ? 'Create project' : widgetView === 'projects' ? 'Current projects' : 'Briefing'}
+                        {widgetView === 'create'
+                            ? linkReady
+                                ? 'Link ready'
+                                : createSubView === 'quote'
+                                    ? 'Create quote'
+                                    : 'Create project'
+                            : widgetView === 'projects'
+                                ? 'Current projects'
+                                : 'Briefing'}
                     </span>
                     {widgetView === 'create' ? (
                         <>
@@ -2858,10 +2894,50 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                     </button>
                 </div>
 
-                <div className="mt-4 flex-1 min-h-0">
+                {widgetView === 'create' && !linkReady && (
+                    <div className="mt-3 shrink-0">
+                        <div className={`grid grid-cols-2 gap-1 p-1 rounded-2xl border ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-zinc-200 bg-white/70'}`}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    playClick();
+                                    setCreateSubView('project');
+                                }}
+                                className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                                    createSubView === 'project'
+                                        ? isDarkMode
+                                            ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10'
+                                            : 'bg-white text-zinc-900 shadow-sm'
+                                        : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'
+                                }`}
+                            >
+                                Create project
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    playClick();
+                                    setCreateSubView('quote');
+                                }}
+                                className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                                    createSubView === 'quote'
+                                        ? isDarkMode
+                                            ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10'
+                                            : 'bg-white text-zinc-900 shadow-sm'
+                                        : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'
+                                }`}
+                            >
+                                Create quote
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                <div className="mt-4 flex-1 min-h-0 flex flex-col">
                 {widgetView === 'create' && (
-                <div className="h-full overflow-y-auto pr-1 briefing-scroll">
+                <div className="flex flex-col flex-1 min-h-0 h-full">
                 {linkReady ? (
+                    <div className="h-full overflow-y-auto pr-1 briefing-scroll">
                     <div className={`rounded-2xl border p-4 ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}>
                         <div className="flex items-start gap-3">
                             <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -2893,7 +2969,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                     className={`h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode ? 'bg-white/8 text-white hover:bg-white/12 border border-white/10' : 'bg-white text-zinc-900 hover:bg-zinc-50 border border-zinc-200'}`}
                                 >
                                     <ExternalLink className="w-4 h-4" />
-                                    Open vault
+                                    Open delivery
                                 </button>
                                 <button
                                     onClick={handleEmailClient}
@@ -2917,7 +2993,81 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                             {publishMessage || 'Share the link above with your client.'}
                         </p>
                     </div>
+                    </div>
+                ) : createSubView === 'quote' ? (
+                <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                    <div className="shrink-0 space-y-2 mb-2">
+                        <div>
+                            <label className="block text-sm text-zinc-500 dark:text-zinc-400 mb-1">Title</label>
+                            <input
+                                type="text"
+                                value={projectName}
+                                onChange={(e) => setProjectName(e.target.value)}
+                                placeholder="Quote or project name"
+                                className={inputCls}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm text-zinc-500 dark:text-zinc-400 mb-1">Client name</label>
+                            <input
+                                type="text"
+                                value={clientName}
+                                onChange={(e) => setClientName(e.target.value)}
+                                placeholder="Client or team"
+                                className={inputCls}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm text-zinc-500 dark:text-zinc-400 mb-1">Client email</label>
+                            <input
+                                type="email"
+                                value={clientEmail}
+                                onChange={(e) => setClientEmail(e.target.value)}
+                                placeholder="client@company.com"
+                                className={inputCls}
+                            />
+                        </div>
+                    </div>
+                    <DeliveryQuickQuote
+                        isDarkMode={isDarkMode}
+                        projectTitle={projectName}
+                        clientName={clientName}
+                        clientEmail={clientEmail}
+                        lines={quickQuoteLines}
+                        onLinesChange={setQuickQuoteLines}
+                        onApplyToPayment={(total) => {
+                            const n = Math.max(0, total);
+                            setEnablePayment(true);
+                            setAmount(n > 0 ? n.toFixed(2) : (amount || ''));
+                            toast(
+                                n > 0
+                                    ? `Payment set to ${quoteCurrency.format(n)}`
+                                    : 'Payment on — enter an amount or add quote lines'
+                            );
+                        }}
+                        onOpenFullBuilder={() => {
+                            playClick();
+                            navigate('/quotes');
+                        }}
+                        panelSurfaceCls={panelSurfaceCls}
+                    />
+                    <p className="text-[10px] text-center text-zinc-400 dark:text-zinc-500 mt-2 shrink-0 leading-relaxed px-0.5">
+                        Switch to{' '}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                playClick();
+                                setCreateSubView('project');
+                            }}
+                            className="font-bold text-zinc-600 dark:text-zinc-300 underline underline-offset-2"
+                        >
+                            Create project
+                        </button>
+                        {' '}to add files, set payment, and publish your project.
+                    </p>
+                </div>
                 ) : (
+                <div className="h-full min-h-0 overflow-y-auto pr-1 briefing-scroll">
                 <>
                 <div className="grid grid-cols-2 gap-2">
                     <button
@@ -3255,6 +3405,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                     {publishMessage || 'Draft auto-saves while you work in the widget.'}
                 </p>
                 </>
+                </div>
                 )}
                 </div>
                 )}
@@ -3883,7 +4034,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
         'Name projects by outcome, not file type, for cleaner search.',
         'Batch upload from folders to preserve structure on day one.',
         'Use one-time access for sensitive decks and legal documents.',
-        'Pin high-value deliveries in Vault so they stay front and center.',
+        'Pin high-value deliveries in Projects so they stay front and center.',
     ];
     const [heroTipIndex, setHeroTipIndex] = useState(0);
     const [showHeroGreeting, setShowHeroGreeting] = useState(false);
@@ -4125,7 +4276,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                     </h2>
                                     <p className="text-lg sm:text-xl text-zinc-600 dark:text-zinc-300 leading-relaxed font-medium max-w-2xl">
                                         Name the handover and your client in the panel on the left, choose <span className="text-zinc-800 dark:text-white">Create link</span> or{' '}
-                                        <span className="text-zinc-800 dark:text-white">Send email</span>, then <span className="text-zinc-800 dark:text-white">Publish</span> for a shareable vault link.
+                                        <span className="text-zinc-800 dark:text-white">Send email</span>, then <span className="text-zinc-800 dark:text-white">Publish</span> for a shareable project link.
                                         You can open <span className="text-zinc-800 dark:text-white">Studio</span> there anytime for milestones and advanced options.
                                     </p>
                                     <button
@@ -4294,7 +4445,7 @@ const PreviewWrapper = ({ projects, user, isDarkMode, themeMode, onToggleTheme, 
 
         // 3. HARD FALLBACK: If we are "stuck" or landed directly on this page
         // Since we are inside the App wrapper, we are likely an admin/creator.
-        // Default to Vault.
+        // Default to Projects.
         navigate('/vault');
     };
 
@@ -4819,7 +4970,7 @@ const AppContent = () => {
                             <Route path="/activity" element={<Suspense fallback={<PageLoader />}><ActivityView /></Suspense>} />
                             <Route path="/vault" element={<Suspense fallback={<VaultSkeleton />}><VaultView projects={projects} /></Suspense>} />
                             <Route path="/reports" element={<Suspense fallback={<PageLoader />}><ReportsView /></Suspense>} />
-                            <Route path="/quotes" element={<Suspense fallback={<PageLoader />}><QuotesPage onBack={() => window.history.back()} /></Suspense>} />
+                            <Route path="/quotes" element={<Suspense fallback={<PageLoader />}><QuotesPage /></Suspense>} />
                             <Route
                                 path="/settings"
                                 element={

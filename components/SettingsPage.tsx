@@ -13,6 +13,7 @@ import { canToggleMockMode, isMockMode, setMockMode } from '../config/mockMode';
 import { UserProfile, StorageSettings } from '../types';
 import { playClick, playSuccess } from '../utils/sound';
 import { Card, Badge, InlineErrorBanner } from './Shared';
+import { SelectField } from './SelectField';
 import { StripeConnectService } from '../services/stripeService';
 
 // --- VISUAL CONSTANTS ---
@@ -462,7 +463,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                 </span>
                                                 <h3 className="font-serif text-2xl font-medium tracking-tight text-zinc-900 dark:text-white">Client Gateway</h3>
                                                 <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                                                    Share this hostname after you publish — visitors open the vault, review work, and complete checkout here.
+                                                    Share this hostname after you publish — visitors open the delivery, review work, and complete checkout here.
                                                 </p>
                                             </div>
                                             <button
@@ -505,7 +506,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                             placeholder="https://yourportfolio.com"
                                                         />
                                                     </div>
-                                                    <p className="pl-0.5 text-[10px] text-zinc-500 dark:text-zinc-500">After they leave the vault</p>
+                                                    <p className="pl-0.5 text-[10px] text-zinc-500 dark:text-zinc-500">After they leave the delivery</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -513,7 +514,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         <div className="flex flex-wrap items-center gap-2 border-t border-zinc-200/60 pt-5 dark:border-white/[0.06]">
                                             {[
                                                 { icon: Globe, label: 'Opens link' },
-                                                { icon: Eye, label: 'Vault review' },
+                                                { icon: Eye, label: 'Delivery review' },
                                                 { icon: CreditCard, label: 'Checkout' },
                                             ].map(({ icon: Icon, label }, i) => (
                                                 <React.Fragment key={label}>
@@ -921,7 +922,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                             <HardDrive className="w-5 h-5 text-lime-400 dark:text-[#bef264]" />
                                             <div>
                                                 <h3 className="font-sans tracking-tight text-xl text-slate-900 dark:text-white">Storage</h3>
-                                                <p className="text-xs text-slate-500">Choose platform vault storage, or configure links-only imports.</p>
+                                                <p className="text-xs text-slate-500">Choose hosted platform storage, or configure links-only imports.</p>
                                             </div>
                                         </div>
 
@@ -933,7 +934,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                     onClick={() => { playClick(); setConnectionError(null); setStorageSettings(prev => ({ ...prev, mode: 'platform' })); }}
                                                     className={`px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all ${storageSettings.mode === 'platform' ? 'bg-lime-400 text-zinc-950 dark:bg-[#bef264] dark:text-zinc-950' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'}`}
                                                 >
-                                                    Platform Vault
+                                                    Platform storage
                                                 </button>
                                                 <button
                                                     onClick={() => { playClick(); setConnectionError(null); setStorageSettings(prev => ({ ...prev, mode: 'drive' })); }}
@@ -955,7 +956,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                         <div className="flex items-start gap-3">
                                                             <ShieldCheck className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
                                                             <div>
-                                                                <p className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Platform Vault</p>
+                                                                <p className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Platform storage</p>
                                                                 <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
                                                                     Heartifact uses server-issued presigned URLs for uploads and downloads. No S3/R2 secret keys or cloud OAuth tokens are stored in the browser or in your profile.
                                                                 </p>
@@ -1042,18 +1043,24 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-1.5">
                                                             <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">Provider</label>
-                                                            <div className="h-12 px-4 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl flex items-center">
-                                                                <select
-                                                                    value={storageSettings.byosDriveProvider || ''}
-                                                                    onChange={(e) => setStorageSettings(prev => ({ ...prev, byosDriveProvider: e.target.value as any }))}
-                                                                    className="w-full bg-transparent outline-none text-sm font-medium text-slate-900 dark:text-white"
-                                                                >
-                                                                    <option value="" disabled>Select provider</option>
-                                                                    <option value="google">Google Drive</option>
-                                                                    <option value="dropbox">Dropbox</option>
-                                                                    <option value="onedrive">OneDrive</option>
-                                                                </select>
-                                                            </div>
+                                                            <SelectField
+                                                                tone="slate"
+                                                                value={storageSettings.byosDriveProvider || ''}
+                                                                onChange={(v) =>
+                                                                    setStorageSettings((prev) => ({
+                                                                        ...prev,
+                                                                        byosDriveProvider:
+                                                                            v === '' ? undefined : (v as NonNullable<typeof prev.byosDriveProvider>),
+                                                                    }))
+                                                                }
+                                                                options={[
+                                                                    { value: '', label: 'Select provider', disabled: true },
+                                                                    { value: 'google', label: 'Google Drive' },
+                                                                    { value: 'dropbox', label: 'Dropbox' },
+                                                                    { value: 'onedrive', label: 'OneDrive' },
+                                                                ]}
+                                                                placeholder="Select provider"
+                                                            />
                                                         </div>
                                                         <InputField
                                                             label="Account label"
@@ -1090,7 +1097,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                             onClick={() => {
                                                                 playClick();
                                                                 if (!storageSettings.s3Bucket?.trim()) {
-                                                                    setConnectionError('Please add a bucket name (or switch back to Platform Vault).');
+                                                                    setConnectionError('Please add a bucket name (or switch back to Platform storage).');
                                                                     return;
                                                                 }
                                                                 setConnectionError(null);
@@ -1104,23 +1111,27 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div className="space-y-1.5">
                                                             <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">Provider</label>
-                                                            <div className="h-12 px-4 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl flex items-center">
-                                                                <select
-                                                                    value={storageSettings.s3Provider || 'r2'}
-                                                                    onChange={(e) => setStorageSettings(prev => ({ ...prev, s3Provider: e.target.value as any }))}
-                                                                    className="w-full bg-transparent outline-none text-sm font-medium text-slate-900 dark:text-white"
-                                                                >
-                                                                    <option value="r2">Cloudflare R2</option>
-                                                                    <option value="aws">AWS S3</option>
-                                                                    <option value="custom">Custom S3</option>
-                                                                </select>
-                                                            </div>
+                                                            <SelectField
+                                                                tone="slate"
+                                                                value={storageSettings.s3Provider || 'r2'}
+                                                                onChange={(v) =>
+                                                                    setStorageSettings((prev) => ({
+                                                                        ...prev,
+                                                                        s3Provider: v as NonNullable<typeof prev.s3Provider>,
+                                                                    }))
+                                                                }
+                                                                options={[
+                                                                    { value: 'r2', label: 'Cloudflare R2' },
+                                                                    { value: 'aws', label: 'AWS S3' },
+                                                                    { value: 'custom', label: 'Custom S3' },
+                                                                ]}
+                                                            />
                                                         </div>
                                                         <InputField
                                                             label="Bucket name"
                                                             value={storageSettings.s3Bucket || ''}
                                                             onChange={(e: any) => setStorageSettings(prev => ({ ...prev, s3Bucket: e.target.value }))}
-                                                            placeholder="e.g. heartifact-vault"
+                                                            placeholder="e.g. heartifact-projects"
                                                             icon={Database}
                                                         />
                                                         <InputField
@@ -1151,7 +1162,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                         </p>
                                                     </div>
                                                     <p className="mt-4 text-[10px] text-slate-500 dark:text-slate-400">
-                                                        Paste public S3/R2 URLs into projects. If you need private buckets, keep Platform Vault selected.
+                                                        Paste public S3/R2 URLs into projects. If you need private buckets, keep Platform storage selected.
                                                     </p>
                                                 </div>
                                             )}

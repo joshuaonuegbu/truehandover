@@ -116,7 +116,7 @@ export default function TrashPage({ onBack }: { onBack?: () => void }) {
 
     const GridCard = ({ item }: { item: DeletedItem }) => {
         const u = urgencyClass(item.daysLeft);
-        const typeLabel = item.type === 'project' ? 'Vault / project' : 'File asset';
+        const typeLabel = item.type === 'project' ? 'Project' : 'File asset';
         const extLabel = item.ext ? item.ext.toUpperCase() : item.type === 'project' ? 'PROJECT' : 'MIXED';
         const pct = Math.min(100, Math.round((item.daysLeft / 30) * 100));
 
@@ -362,7 +362,7 @@ export default function TrashPage({ onBack }: { onBack?: () => void }) {
                                 <Trash2 className="h-7 w-7 stroke-[1.5] text-zinc-400 dark:text-zinc-500" />
                             </div>
                             <h3 className="mb-1 font-sans text-lg tracking-tight text-zinc-900 dark:text-white">Nothing in trash</h3>
-                            <p className="max-w-sm text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">Deleted vault items will appear here for 30 days.</p>
+                            <p className="max-w-sm text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">Deleted projects and files appear here for 30 days.</p>
                         </div>
                     </div>
                 ) : filtered.length === 0 ? (
