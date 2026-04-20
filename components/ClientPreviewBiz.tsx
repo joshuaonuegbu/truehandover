@@ -536,7 +536,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                 )}
                 {/* Floating Device Mode Switcher */}
                 {!previewChromeSuppressed && (
-                <div className="fixed bottom-6 right-6 z-[60] flex items-center gap-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
+                <div className="fixed bottom-6 right-6 z-[60] flex items-center gap-1 bg-[#23232e]/88 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-1.5 shadow-[0_16px_40px_-24px_rgba(0,0,0,0.55)]">
                     <span className="px-2 text-[10px] font-bold uppercase tracking-widest text-white/70 select-none">
                         Preview
                     </span>
@@ -544,7 +544,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                     {deviceOptions.map(({ mode, icon: Icon, label }) => (
                         <button key={mode} aria-label={label} title={label}
                             onClick={() => switchDevice(mode)}
-                            className={`p-2.5 rounded-xl transition-all ${deviceMode === mode ? 'bg-white/20 text-white shadow-sm ring-1 ring-white/25' : 'text-white/60 hover:text-white/85 hover:bg-white/10'}`}
+                            className={`p-2.5 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${deviceMode === mode ? 'bg-white/20 text-white shadow-sm ring-1 ring-white/25' : 'text-white/60 hover:text-white/85 hover:bg-white/10'}`}
                         ><Icon className="w-4 h-4" /></button>
                     ))}
                 </div>
@@ -632,7 +632,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                     {canvasDeviceOptions.map(({ mode, icon: Icon, label }) => (
                         <button key={mode} aria-label={label} title={label}
                             onClick={() => switchDevice(mode)}
-                            className={`p-2.5 rounded-xl transition-all duration-200 ${deviceMode === mode
+                            className={`p-2.5 rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${deviceMode === mode
                                 ? canvasActivePillClass
                                 : `${isDarkMode ? 'text-white/55' : 'text-zinc-500'} ${canvasPillHoverClass}`
                                 }`}

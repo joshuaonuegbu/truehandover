@@ -8,6 +8,7 @@ import {
     buildQuickQuoteSnippet,
 } from '../utils/quoteBuilderCore';
 import { playClick, playSuccess } from '../utils/sound';
+import { accentButtonClass } from '../utils/themeTokens';
 
 const MAX_LINES = 5;
 
@@ -21,8 +22,10 @@ type DeliveryQuickQuoteProps = {
     onApplyToPayment: (total: number) => void;
     onOpenFullBuilder: () => void;
     panelSurfaceCls: string;
-    /** Extra classes on the outer wrapper (e.g. flex-1 min-h-0 flex flex-col) */
+    /** Extra classes on the outer wrapper */
     className?: string;
+    /** Renders below the primary actions (e.g. switch-to-project hint), fixed with the footer */
+    footerExtra?: React.ReactNode;
 };
 
 export default function DeliveryQuickQuote({
@@ -36,8 +39,10 @@ export default function DeliveryQuickQuote({
     onOpenFullBuilder,
     panelSurfaceCls,
     className = '',
+    footerExtra,
 }: DeliveryQuickQuoteProps) {
     const subtotal = useMemo(() => calcQuoteSubtotal(lines), [lines]);
+    const accentButton = accentButtonClass(isDarkMode);
 
     const updateLine = (id: string, patch: Partial<QuoteLine>) => {
         onLinesChange(lines.map((line) => (line.id === id ? { ...line, ...patch } : line)));
@@ -80,9 +85,11 @@ export default function DeliveryQuickQuote({
         ? 'bg-white/6 border-white/10 text-zinc-100 placeholder:text-zinc-500'
         : 'bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400';
 
+    const footerBorder = isDarkMode ? 'border-white/10' : 'border-zinc-200';
+
     return (
         <div className={`flex flex-col flex-1 min-h-0 ${className}`}>
-            <div className="flex items-center justify-between gap-2 shrink-0 mb-2">
+            <div className="flex items-center justify-between gap-2 mb-2 shrink-0">
                 <p className="text-[11px] leading-snug text-zinc-500 dark:text-zinc-400 flex-1">
                     Line items add up to your total — apply to sync the payment amount when you switch to{' '}
                     <span className="font-semibold text-zinc-600 dark:text-zinc-300">Create project</span>.
@@ -94,7 +101,8 @@ export default function DeliveryQuickQuote({
                 )}
             </div>
 
-            <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-0.5 briefing-scroll">
+            <div className="flex-1 min-h-0 overflow-y-auto pr-1 briefing-scroll">
+                <div className="space-y-2 pr-0.5">
                 {lines.map((line) => {
                     const lineTotal = (Number(line.qty) || 0) * (Number(line.rate) || 0);
                     return (
@@ -147,9 +155,11 @@ export default function DeliveryQuickQuote({
                         </div>
                     );
                 })}
+                </div>
             </div>
 
-            <div className="flex items-center justify-between gap-2 shrink-0 pt-2">
+            <div className={`shrink-0 pt-3 mt-1 space-y-2 border-t ${footerBorder}`}>
+            <div className="flex items-center justify-between gap-2">
                 <button
                     type="button"
                     onClick={addLine}
@@ -166,15 +176,11 @@ export default function DeliveryQuickQuote({
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 shrink-0 pt-1">
+            <div className="grid grid-cols-2 gap-2">
                 <button
                     type="button"
                     onClick={handleApply}
-                    className={`h-10 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors ${
-                        isDarkMode
-                            ? 'bg-[#bef264] text-zinc-950 hover:bg-[#d4f58f]'
-                            : 'bg-[#a3e635] text-zinc-950 hover:bg-[#84cc16]'
-                    }`}
+                    className={`h-10 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${accentButton}`}
                 >
                     Apply to payment
                 </button>
@@ -196,10 +202,12 @@ export default function DeliveryQuickQuote({
                     playClick();
                     onOpenFullBuilder();
                 }}
-                className="w-full text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 hover:underline shrink-0 pt-1"
+                className="w-full text-[10px] font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 hover:underline pt-0.5"
             >
                 Open full quote builder
             </button>
+            {footerExtra}
+            </div>
         </div>
     );
 }

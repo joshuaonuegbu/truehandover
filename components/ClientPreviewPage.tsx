@@ -22,6 +22,7 @@ import BrandLogo from './BrandLogo';
 import { SelectField } from './SelectField';
 import { LayoutBillboard, LayoutDeck, LayoutJournal, LayoutMasonry, PortalLayoutVariant } from './ClientPreviewLayouts';
 import { PortalLightboxVariant, PortalStyleLightbox } from './ClientPreviewLightboxes';
+import { accentButtonClass, accentDotClass } from '../utils/themeTokens';
 
 const ARCHIVED_PORTAL_LAYOUTS: PortalLayoutVariant[] = ['cinema', 'split', 'portfolio', 'modeler', 'studio'];
 
@@ -202,7 +203,7 @@ const ClientLibraryView: React.FC<ClientLibraryViewProps> = ({ projects, isDarkM
                                     >
                                         <div className="aspect-[16/10] rounded-xl overflow-hidden mb-3 bg-black/10 flex items-center justify-center">
                                             {file.previewUrl ? (
-                                                <img src={file.previewUrl} alt={file.name} className="w-full h-full object-cover" />
+                                                <img src={file.previewUrl} alt={file.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                                             ) : (
                                                 <FileText className={`w-7 h-7 ${textMuted}`} />
                                             )}
@@ -390,7 +391,7 @@ const CredentialVaultWidget = ({ credentials, isLocked, isDarkMode }: any) => {
 // --- SUB-COMPONENT: VISUAL ASSET GRID ---
 const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, onAssetClick, onRequestCorrection, isPhoneLike, onRename, onResize, onRemove }: any) => {
     const textPrimary = isDarkMode ? 'text-white' : 'text-zinc-900';
-    const brandGreenBg = isDarkMode ? 'bg-blue-500' : 'bg-blue-600';
+    const brandGreenBg = accentDotClass(isDarkMode);
     const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#bef264]' : 'shadow-[0_0_10px_rgba(190, 242, 100,0.5)]';
     const borderColor = isDarkMode ? 'border-white/5' : 'border-zinc-200';
     const [expandedSpecs, setExpandedSpecs] = useState<Set<string>>(new Set());
@@ -583,7 +584,7 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                 ) : (
                                     file.downloadUrl ? (
                                         <>
-                                            <a href={file.downloadUrl} target="_blank" rel="noopener noreferrer" className={`flex-1 h-11 md:h-12 ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-blue-600 hover:bg-blue-700 text-white'} font-bold text-[10px] md:text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02]`}>
+                                            <a href={file.downloadUrl} target="_blank" rel="noopener noreferrer" className={`flex-1 h-11 md:h-12 ${accentButtonClass(isDarkMode)} font-bold text-[10px] md:text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-lime-500/20 transition-all hover:scale-[1.02]`}>
                                                 {file.externalUrl ? <ExternalLink className="w-4 h-4" /> : <Download className="w-4 h-4" />} <span className="hidden sm:inline">{file.externalUrl ? "Open Secure Link" : "Download Original"}</span><span className="sm:hidden">{file.externalUrl ? "Open" : "Download"}</span>
                                             </a>
                                             <button aria-label="Request Correction" onClick={() => onRequestCorrection(index)} disabled={isRevisionSent} className={`h-12 w-12 flex items-center justify-center rounded-xl border transition-colors ${isRevisionSent ? (isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500 cursor-default' : 'bg-amber-100 text-amber-600 cursor-default') : (isDarkMode ? 'border-white/5 hover:bg-white/10 text-zinc-400 hover:text-amber-500' : 'border-zinc-200/50 hover:bg-zinc-50 text-zinc-400 hover:text-amber-500')}`}><MessageSquarePlus className="w-5 h-5" /></button>
@@ -605,7 +606,7 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
 // --- SUB-COMPONENT: VISUAL ASSET LIST (PREMIUM) ---
 const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick, onRequestCorrection, revisions, onRename, onResize, onRemove }: any) => {
     const borderColor = isDarkMode ? 'border-white/5' : 'border-zinc-200';
-    const brandGreenBg = isDarkMode ? 'bg-blue-500' : 'bg-blue-600';
+    const brandGreenBg = accentDotClass(isDarkMode);
     const [editingNameId, setEditingNameId] = useState<string | null>(null);
     const [editingNameVal, setEditingNameVal] = useState('');
     const [editingSizeId, setEditingSizeId] = useState<string | null>(null);
@@ -1203,7 +1204,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                                         setImagePreviewError(null);
                                                         setImageRetrySeed((seed) => seed + 1);
                                                     }}
-                                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white dark:text-zinc-950 text-[10px] font-bold uppercase tracking-wider transition-colors"
+                                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-[#a3e635] hover:bg-[#84cc16] dark:bg-[#bef264] dark:hover:bg-[#d9f99d] text-zinc-950 text-[10px] font-bold uppercase tracking-wider transition-colors"
                                                 >
                                                     <RefreshCw className="w-3 h-3" />
                                                     Retry Preview
@@ -1296,7 +1297,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                                                     transition: 'transform 220ms ease'
                                                                 }}
                                                             >
-                                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shadow-lg border border-black/10 cursor-pointer hover:scale-110 transition-transform ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-blue-500 text-white'}`}>
+                                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shadow-lg border border-black/10 cursor-pointer hover:scale-110 transition-transform ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-[#a3e635] text-zinc-950'}`}>
                                                                     {index + 1}
                                                                 </div>
                                                                 <div className="absolute top-full mt-2 w-48 p-3 rounded-xl bg-zinc-900 border border-white/10 text-white text-[10px] shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 flex flex-col gap-1">
@@ -1317,7 +1318,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                                             }}
                                                         >
                                                             <div className="relative">
-                                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shadow-lg animate-pulse ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-blue-500 text-white'}`} />
+                                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shadow-lg animate-pulse ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-[#a3e635] text-zinc-950'}`} />
                                                                 
                                                                 <div 
                                                                         className={`absolute top-full lg:left-1/2 lg:-translate-x-1/2 left-0 mt-3 w-64 p-3 rounded-2xl border shadow-2xl flex flex-col gap-2 cursor-auto ${isDarkMode ? 'bg-zinc-800 border-white/10' : 'bg-white/95 border-zinc-200 text-zinc-900'}`}
@@ -1350,7 +1351,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                                                         >Cancel</button>
                                                                         <button 
                                                                             type="button"
-                                                                            className={`text-[10px] uppercase font-bold tracking-widest rounded-2xl px-3 py-1.5 transition-colors ${isDarkMode ? 'bg-[#bef264] text-zinc-950 hover:bg-[#d9f99d]' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                                                                            className={`text-[10px] uppercase font-bold tracking-widest rounded-2xl px-3 py-1.5 transition-colors ${isDarkMode ? 'bg-[#bef264] text-zinc-950 hover:bg-[#d9f99d]' : 'bg-[#a3e635] text-zinc-950 hover:bg-[#84cc16]'}`}
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
                                                                                 submitDraftPin();
@@ -1380,7 +1381,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                 {!isProtectedPreview && viewerType === 'audio' && (
                                     <div className="w-[min(880px,92vw)] p-6 md:p-10 flex flex-col md:flex-row items-center gap-6">
                                         <div className={`w-full md:w-[360px] aspect-square rounded-2xl overflow-hidden border ${isDarkMode ? 'border-white/10 bg-black/20' : 'border-zinc-200/50 bg-zinc-50'}`}>
-                                            <img src={file.previewUrl} alt={file.name} className="w-full h-full object-cover" />
+                                            <img src={file.previewUrl} alt={file.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                             </div>
                                         <div className="flex-1 w-full">
                                             <div className={`text-xs font-bold uppercase tracking-widest ${isDarkMode ? 'text-white/60' : 'text-zinc-500'}`}>Audio Preview</div>
@@ -1476,7 +1477,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                 className={`relative w-12 h-12 flex-shrink-0 rounded-xl overflow-hidden cursor-pointer transition-all border-2 p-0 ${idx === currentIndex ? (isDarkMode ? 'border-white scale-110' : 'border-zinc-900 scale-110') : 'border-transparent opacity-60 hover:opacity-100'}`}
                                 aria-label={`Switch to ${f.name}`}
                             >
-                                {f.previewUrl ? <img src={f.previewUrl} className="w-full h-full object-cover" alt={f.name} /> : <div className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-white/5' : 'bg-zinc-100'}`}><FileText className="w-4 h-4 text-zinc-400" /></div>}
+                                {f.previewUrl ? <img src={f.previewUrl} className="w-full h-full object-cover" alt={f.name} loading="lazy" decoding="async" /> : <div className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-white/5' : 'bg-zinc-100'}`}><FileText className="w-4 h-4 text-zinc-400" /></div>}
                             </button>
                         ))}</div></div>
                         <button
@@ -1583,7 +1584,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                 </>
                             ) : (
                                 <div className="text-center">
-                                    <a href={file.downloadUrl} target="_blank" rel="noopener noreferrer" className={`w-full py-4 rounded-2xl font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}><Download className="w-4 h-4" /> Download Asset</a>
+                                    <a href={file.downloadUrl} target="_blank" rel="noopener noreferrer" className={`w-full py-4 rounded-2xl font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-[#a3e635] hover:bg-[#84cc16] text-zinc-950'}`}><Download className="w-4 h-4" /> Download Asset</a>
                                     <p className="text-[10px] text-zinc-400 mt-3">Full resolution unlocked.</p>
                                 </div>
                             )}
@@ -1888,7 +1889,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     const glassPanelClass = isDarkMode ? 'bg-[#2a2a35] border-white/5 shadow-black/20' : 'bg-white/60 border-zinc-200/50 shadow-zinc-200/50';
     const textPrimary = isDarkMode ? 'text-white' : 'text-zinc-900';
     const textSecondary = isDarkMode ? 'text-zinc-400' : 'text-zinc-500';
-    const brandGreenBg = isDarkMode ? 'bg-blue-500' : 'bg-blue-600';
+    const brandGreenBg = accentDotClass(isDarkMode);
 
     if (accessDenied) {
         return (
@@ -2050,7 +2051,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                     <div className={`flex-1 overflow-y-auto no-scrollbar px-4 md:px-6 lg:px-8 pt-2 pb-6 min-h-0`}>
                         <div className="mt-8 mb-8 hidden lg:block">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="relative group cursor-pointer"><img src={project.client.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"} className={`w-14 h-14 rounded-full border-2 ${isDarkMode ? 'border-white/10' : 'border-white shadow-sm'} shadow-xl object-cover`} /><div className={`absolute -bottom-1 -right-1 ${isDarkMode ? 'bg-black' : 'bg-white'} rounded-full p-1`}><div className={`w-3 h-3 ${brandGreenBg} rounded-full`} /></div></div>
+                                <div className="relative group cursor-pointer"><img src={project.client.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"} loading="lazy" decoding="async" className={`w-14 h-14 rounded-full border-2 ${isDarkMode ? 'border-white/10' : 'border-white shadow-sm'} shadow-xl object-cover`} /><div className={`absolute -bottom-1 -right-1 ${isDarkMode ? 'bg-black' : 'bg-white'} rounded-full p-1`}><div className={`w-3 h-3 ${brandGreenBg} rounded-full`} /></div></div>
                                 <div><p className={`text-[10px] font-bold uppercase tracking-widest ${textSecondary} mb-1`}>Delivery For</p><h3 className={`font-bold text-lg leading-none ${textPrimary}`}>{project.client.name}</h3></div>
                             </div>
                             <h1 className={`font-sans tracking-tight text-3xl md:text-4xl lg:text-[46px] font-medium ${textPrimary} leading-[0.95] tracking-tight mb-4`}>{project.name}</h1>
@@ -2069,7 +2070,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             <div className={`relative ${glassPanelClass} rounded-xl backdrop-blur-md overflow-hidden`}>
                                 <button onClick={() => toggleSection('client')} className={`w-full flex items-center justify-between p-4 transition-colors ${expandedSections.has('client') ? '' : 'hover:bg-white/5'}`}>
                                     <div className="flex items-center gap-3">
-                                        <img src={project.client.avatar} className="w-9 h-9 rounded-full object-cover" />
+                                        <img src={project.client.avatar} loading="lazy" decoding="async" className="w-9 h-9 rounded-full object-cover" />
                                         <div className="text-left">
                                             <p className={`text-sm font-bold ${textPrimary} leading-tight`}>{project.client.name}</p>
                                             <p className={`text-[10px] ${textSecondary} font-bold uppercase tracking-wider`}>{project.files.length} Assets - ${project.amount.toLocaleString()}</p>

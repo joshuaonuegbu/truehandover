@@ -29,6 +29,7 @@ import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid, Li
 import { QRCodeSVG } from 'qrcode.react';
 import { playClick, playSuccess } from './utils/sound';
 import { useUiAccentHex } from './utils/useUiAccentHex';
+import { accentCssVars } from './utils/themeTokens';
 import { canToggleMockMode, isMockMode, setMockMode, setMockModeAndNavigate } from './config/mockMode';
 import { createAuditTrailPdf, createRightsCertificatePdf } from './utils/reportPdfGenerator';
 // Critical path — loaded eagerly (needed before auth resolves)
@@ -1454,7 +1455,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                             );
                             const colorMap = {
                                 amber: 'text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-200',
-                                blue: 'text-blue-500 dark:text-blue-500 hover:text-blue-600 dark:hover:text-blue-400',
+                                blue: 'text-zinc-900 dark:text-zinc-100 hover:text-zinc-950 dark:hover:text-white',
                                 lime: 'text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200',
                                 slate: 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200',
                             };
@@ -2742,27 +2743,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                 ? 'bg-cosmic border border-white/[0.09]'
                 : 'bg-[#f0f2f5] border border-zinc-200/80'
         }`}
-        style={(isDarkMode ? {
-            '--color-brand': '#bef264',
-            '--color-brand-hover': '#bef264',
-            '--color-brand-glow': 'rgba(190, 242, 100, 0.5)',
-            '--color-blue-400': '#bef264',
-            '--color-blue-500': '#bef264',
-            '--color-blue-600': '#bef264',
-            '--color-green-400': '#bef264',
-            '--color-green-500': '#bef264',
-            '--color-green-600': '#bef264',
-        } : {
-            '--color-brand': '#a3e635',
-            '--color-brand-hover': '#a3e635',
-            '--color-brand-glow': 'rgba(163, 230, 53, 0.5)',
-            '--color-blue-400': '#a3e635',
-            '--color-blue-500': '#a3e635',
-            '--color-blue-600': '#a3e635',
-            '--color-green-400': '#a3e635',
-            '--color-green-500': '#a3e635',
-            '--color-green-600': '#a3e635',
-        }) as React.CSSProperties}>
+        style={accentCssVars(isDarkMode) as React.CSSProperties}>
             <input
                 ref={fileInputRef}
                 type="file"
@@ -2873,7 +2854,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                 <div className={`grid grid-cols-3 gap-1 p-1 rounded-2xl border ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-zinc-200 bg-white/70'}`}>
                     <button
                         onClick={() => { playClick(); setWidgetView('create'); }}
-                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${widgetView === 'create' ? (isDarkMode ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
+                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${widgetView === 'create' ? (isDarkMode ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
                     >
                         Create
                     </button>
@@ -2882,17 +2863,20 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                             playClick();
                             setWidgetView('projects');
                         }}
-                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${widgetView === 'projects' ? (isDarkMode ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
+                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${widgetView === 'projects' ? (isDarkMode ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
                     >
                         Current
                     </button>
                     <button
                         onClick={() => { playClick(); setWidgetView('briefing'); }}
-                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${widgetView === 'briefing' ? (isDarkMode ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
+                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${widgetView === 'briefing' ? (isDarkMode ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
                     >
                         Briefing
                     </button>
                 </div>
+                {widgetView !== 'create' && (
+                    <p className="mt-1 text-[10px] text-zinc-400 dark:text-zinc-500">Use tabs to switch between active work, projects, and briefing updates.</p>
+                )}
 
                 {widgetView === 'create' && !linkReady && (
                     <div className="mt-3 shrink-0">
@@ -2903,7 +2887,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                     playClick();
                                     setCreateSubView('project');
                                 }}
-                                className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                                className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${
                                     createSubView === 'project'
                                         ? isDarkMode
                                             ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10'
@@ -2919,7 +2903,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                     playClick();
                                     setCreateSubView('quote');
                                 }}
-                                className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                                className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${
                                     createSubView === 'quote'
                                         ? isDarkMode
                                             ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10'
@@ -2930,6 +2914,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                 Create quote
                             </button>
                         </div>
+                        <p className="mt-1 text-[10px] text-zinc-400 dark:text-zinc-500">Create project handles delivery setup; Create quote is for quick pricing drafts.</p>
                     </div>
                 )}
 
@@ -2995,7 +2980,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                     </div>
                     </div>
                 ) : createSubView === 'quote' ? (
-                <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                <div className="flex flex-col flex-1 min-h-0 h-full">
                     <div className="shrink-0 space-y-2 mb-2">
                         <div>
                             <label className="block text-sm text-zinc-500 dark:text-zinc-400 mb-1">Title</label>
@@ -3050,24 +3035,27 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                             navigate('/quotes');
                         }}
                         panelSurfaceCls={panelSurfaceCls}
+                        footerExtra={(
+                            <p className="text-[10px] text-center text-zinc-400 dark:text-zinc-500 mt-1 leading-relaxed px-0.5">
+                                Switch to{' '}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        playClick();
+                                        setCreateSubView('project');
+                                    }}
+                                    className="font-bold text-zinc-600 dark:text-zinc-300 underline underline-offset-2"
+                                >
+                                    Create project
+                                </button>
+                                {' '}to add files, set payment, and publish your project.
+                            </p>
+                        )}
                     />
-                    <p className="text-[10px] text-center text-zinc-400 dark:text-zinc-500 mt-2 shrink-0 leading-relaxed px-0.5">
-                        Switch to{' '}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                playClick();
-                                setCreateSubView('project');
-                            }}
-                            className="font-bold text-zinc-600 dark:text-zinc-300 underline underline-offset-2"
-                        >
-                            Create project
-                        </button>
-                        {' '}to add files, set payment, and publish your project.
-                    </p>
                 </div>
                 ) : (
-                <div className="h-full min-h-0 overflow-y-auto pr-1 briefing-scroll">
+                <div className="flex flex-col flex-1 min-h-0 h-full">
+                <div className="flex-1 min-h-0 overflow-y-auto pr-1 briefing-scroll">
                 <>
                 <div className="grid grid-cols-2 gap-2">
                     <button
@@ -3383,8 +3371,10 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                         )}
                     </div>
                 </div>
-
-                <div className="mt-4 grid grid-cols-2 gap-2">
+                </>
+                </div>
+                <div className={`shrink-0 pt-3 border-t ${sectionLineCls}`}>
+                <div className="grid grid-cols-2 gap-2">
                     <button
                         onClick={handleContinue}
                         className={`h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm ${isDarkMode ? 'bg-white/8 text-white hover:bg-white/12 border border-white/10' : 'bg-white text-zinc-900 hover:bg-zinc-50 border border-zinc-200'}`}
@@ -3404,7 +3394,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                 <p className={`mt-3 text-center text-[10px] ${publishState === 'error' ? 'text-red-500' : publishState === 'success' ? 'text-emerald-500' : 'text-zinc-400 dark:text-zinc-500'}`}>
                     {publishMessage || 'Draft auto-saves while you work in the widget.'}
                 </p>
-                </>
+                </div>
                 </div>
                 )}
                 </div>
@@ -3456,7 +3446,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                         <div className="flex items-center justify-between mb-3 gap-2">
                             <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Current Projects</span>
                             <button
-                                onClick={() => { handleWidgetNavigate('/dashboard', 'projects'); }}
+                                onClick={() => { handleWidgetNavigate('/vault', 'projects'); }}
                                 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
                             >
                                 Open full
