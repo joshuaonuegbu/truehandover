@@ -1728,7 +1728,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                     </Widget>
                 </div>
                 {/* Briefing Sidebar — wider column (5/12) from lg so it isn’t squeezed next to main */}
-                <div className={`${isCompactContent ? 'p-2 md:p-3 flex flex-col h-[calc(100vh-140px)]' : 'lg:col-span-5 p-2 md:p-3 flex flex-col lg:min-w-0 lg:max-w-none lg:h-[calc(100vh-140px)] lg:sticky lg:top-24'}`}> 
+                <div className={`${isCompactContent ? 'p-2 md:p-3 flex flex-col h-[calc(100vh-140px)] max-h-[70svh] min-h-[420px]' : 'lg:col-span-5 p-2 md:p-3 flex flex-col lg:min-w-0 lg:max-w-none lg:h-[calc(100vh-140px)] lg:sticky lg:top-24'}`}> 
                     <div className={`relative flex-1 h-full overflow-visible min-w-0 ${briefingPulse ? 'widget-highlight-shell widget-highlight-double' : ''}`}> 
                     <div className="flex flex-col flex-1 pb-2 h-full overflow-hidden p-4 sm:p-5 lg:p-6 transition-[box-shadow,border-color] duration-700 lg:ml-[-0.75rem] xl:ml-[-1.5rem]">
                         <div className="flex items-center justify-between mb-4">
@@ -3423,7 +3423,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                 )}
 
                 {widgetView === 'briefing' && (
-                    <div className={`pt-3 border-t ${sectionLineCls} h-full min-h-0 flex flex-col`}>
+                    <div className={`pt-3 border-t ${sectionLineCls} flex-1 min-h-0 flex flex-col`}>
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Recent Briefing</span>
                             <button
@@ -3464,7 +3464,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                 )}
 
                 {widgetView === 'projects' && (
-                    <div className={`pt-3 border-t ${sectionLineCls} h-full flex flex-col`}>
+                    <div className={`pt-3 border-t ${sectionLineCls} flex-1 min-h-0 flex flex-col`}>
                         <div className="flex items-center justify-between mb-3 gap-2">
                             <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Current Projects</span>
                             <button
@@ -3566,7 +3566,9 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
     // On mobile the widget is always visible as the home backdrop.
     const showDeliveryWidget = isDockMode || isWidgetOnly || showMobileNav;
     const isPanelOpen = isDockMode && currentPath !== 'workspace';
-    const isCompactContent = viewportWidth < 768 || (isDockMode && isPanelOpen && viewportWidth < 1536);
+    // Compact content = any layout where the briefing/sidebar column can't have full desktop real estate.
+    // Includes: all bottom-sheet-mode widths (<880), narrow docked panel, and docked-with-panel below 2xl.
+    const isCompactContent = viewportWidth < 880 || isSmallScreenSheetMode || (isDockMode && isPanelOpen && viewportWidth < 1536);
     const topNavFullThreshold = layoutMode === 'full' ? 900 : 1180;
     const showDesktopNavPill = !showMobileNav && viewportWidth >= topNavFullThreshold;
     const showRouteMenu = !showMobileNav && !showDesktopNavPill;
