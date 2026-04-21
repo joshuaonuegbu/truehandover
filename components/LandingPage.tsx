@@ -126,7 +126,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
                         width="100%"
                         height="100%"
                         src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=0&loop=1&playlist=${videoId}`}
-                        title="TrueHandover Film"
+                        title="Heartifact Film"
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
@@ -226,7 +226,7 @@ const GetStartedModal = ({
                         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-zinc-300/80 to-transparent dark:via-white/20" />
                         <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0 space-y-2 pr-2">
-                                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-400 dark:text-zinc-500">TrueHandover</p>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-400 dark:text-zinc-500">Heartifact</p>
                                 <h2 id="get-started-title" className="font-serif text-2xl leading-[1.15] tracking-tight text-zinc-950 dark:text-white sm:text-[1.65rem]">
                                     How would you like to begin?
                                 </h2>
@@ -389,7 +389,7 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
             <div className="max-w-[1200px] mx-auto bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
                 <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                     <Logo className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
-                    <span className="font-serif text-lg sm:text-xl tracking-tight text-black dark:text-white">TrueHandover</span>
+                    <span className="font-serif text-lg sm:text-xl tracking-tight text-black dark:text-white">Heartifact</span>
                 </div>
 
                 <div className="hidden md:flex items-center gap-8">
@@ -555,7 +555,7 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                             The end of the "You send first" standoff.
                         </p>
                         <p className="text-lg md:text-2xl text-slate-600 dark:text-slate-200 font-light leading-relaxed">
-                            TrueHandover ensures your assets are <span className="border-b-2 border-lime-400 text-black dark:text-white font-medium">securely handed over</span> only when payment clears.
+                            Heartifact ensures your assets are <span className="border-b-2 border-lime-400 text-black dark:text-white font-medium">securely handed over</span> only when payment clears.
                             We generate watermarked previews automatically, so your client reviews the excellence while you retain the master files.
                         </p>
                     </div>
@@ -693,7 +693,7 @@ const ComparisonSection = () => {
                         </div>
                     </div>
 
-                    {/* The TrueHandover Way */}
+                    {/* The Heartifact Way */}
                     <div
                         onMouseEnter={() => setHoveredCard('new')}
                         onMouseLeave={() => setHoveredCard(null)}
@@ -742,7 +742,7 @@ const BentoGrid = () => {
     const [accentColor, setAccentColor] = useState('#bef264');
 
     const brandConfigs = [
-        { name: 'Default', color: '#bef264', domain: 'portal.truehandover.com' },
+        { name: 'Default', color: '#bef264', domain: 'portal.heartifact.com' },
         { name: 'Onyx', color: '#334155', domain: 'delivery.agency.com' },
         { name: 'Cobalt', color: '#3b82f6', domain: 'files.studio.io' }
     ];
@@ -1345,7 +1345,7 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full py-6 flex items-center justify-between text-left group"
             >
-                <span className="text-lg font-serif text-zinc-900 dark:text-white group-hover:text-lime-400 dark:group-hover:text-lime-400 transition-colors pr-8 tracking-wide">
+                <span className="text-lg font-serif text-zinc-900 dark:text-white group-hover:font-bold transition-all pr-8 tracking-wide">
                     {question}
                 </span>
                 <div className={`shrink-0 w-8 h-8 rounded-full border border-zinc-200/50 dark:border-white/[0.06] flex items-center justify-center transition-all ${isOpen ? 'bg-obsidian text-white dark:bg-white dark:text-black rotate-45' : 'bg-transparent text-zinc-400'}`}>
@@ -1376,12 +1376,12 @@ const FAQSection = () => (
             <NetRevenueStylePanel roundedClass="rounded-[2rem]">
                 <div className="p-8 md:p-12">
                 <FAQItem
-                    question="What is TrueHandover?"
-                    answer="TrueHandover is a secure asset gateway designed for the creative economy. Think of it as a 'vending machine' for your business. It automates the final exchange of work for payment. You upload deliverables to a protected portal where clients can review watermarked previews. The high-resolution files are secured and instantly released only after payment is verified."
+                    question="What is Heartifact?"
+                    answer="Heartifact is a secure asset gateway designed for the creative economy. Think of it as a 'vending machine' for your business. It automates the final exchange of work for payment. You upload deliverables to a protected portal where clients can review watermarked previews. The high-resolution files are secured and instantly released only after payment is verified."
                 />
                 <FAQItem
-                    question="Is TrueHandover an escrow platform?"
-                    answer="No. TrueHandover is a technical delivery protocol, not a financial escrow service. We facilitate payments using Stripe Connect. We do not take custody of your funds. The payment is processed by Stripe and routed to your connected account immediately. This reduces liability and keeps you in control."
+                    question="Is Heartifact an escrow platform?"
+                    answer="No. Heartifact is a technical delivery protocol, not a financial escrow service. We facilitate payments using Stripe Connect. We do not take custody of your funds. The payment is processed by Stripe and routed to your connected account immediately. This reduces liability and keeps you in control."
                 />
                 <FAQItem
                     question="How do I get paid?"
@@ -1426,7 +1426,7 @@ const CookieConsentBanner = ({ onChoose }: { onChoose: (choice: Exclude<CookieCo
                 <div className="pr-2">
                     <p className="text-sm font-bold text-obsidian dark:text-white">Cookie settings</p>
                     <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        We use essential cookies to keep TrueHandover secure and working. Optional cookies help us improve performance and product analytics.
+                        We use essential cookies to keep Heartifact secure and working. Optional cookies help us improve performance and product analytics.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1454,18 +1454,18 @@ const Footer = () => (
             <div className="flex flex-col items-start gap-4">
                 <div className="flex items-center gap-3 group cursor-pointer">
                     <Logo className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
-                    <span className="font-serif text-xl tracking-tight">TrueHandover</span>
+                    <span className="font-serif text-xl tracking-tight">Heartifact</span>
                 </div>
                 <p className="text-slate-500 dark:text-slate-400 font-serif italic text-lg tracking-wide">Creative delivery, finally done right.</p>
 
                 <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
-                    <a href="https://youtube.com/@truehandover" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="YouTube">
+                    <a href="https://youtube.com/@heartifact" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="YouTube">
                         <Youtube className="w-4 h-4" />
                     </a>
-                    <a href="https://x.com/TrueHandover" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="X (Twitter)">
+                    <a href="https://x.com/Heartifact" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="X (Twitter)">
                         <BrandXIcon className="w-4 h-4" />
                     </a>
-                    <a href="https://discord.gg/TrueHandover" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="Discord">
+                    <a href="https://discord.gg/Heartifact" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="Discord">
                         <BrandDiscordIcon className="w-4 h-4" />
                     </a>
                 </div>
@@ -1478,7 +1478,7 @@ const Footer = () => (
             </div>
 
             <div className="text-[10px] text-slate-500 font-mono">
-                © 2026 TrueHandover Ltd.
+                © 2026 Heartifact Ltd.
             </div>
         </div>
     </footer>

@@ -135,6 +135,16 @@ const ToastContainer = ({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: nu
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
 // Match the Landing hero dark-mode grain treatment for app shell backgrounds.
 const HERO_NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.7' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
+const isMobileLikeDevice = () => {
+    try {
+        const ua = navigator.userAgent || '';
+        const touchLike = window.matchMedia('(pointer: coarse)').matches;
+        const mobileUa = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(ua);
+        return touchLike || mobileUa;
+    } catch {
+        return false;
+    }
+};
 const QUICK_DELIVERY_DRAFT_KEY = 'th_creator_draft_new';
 const QUICK_DELIVERY_EVENT = 'hf-quick-delivery-files';
 /** Same-tab signal so shell can re-read draft file counts (e.g. after deletes). */
@@ -1398,7 +1408,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
     ].filter(Boolean) as Array<{ id: number; type: 'critical' | 'warning' | 'info'; message: string; icon: React.ElementType }>;
 
     return (
-        <div className="space-y-6 animate-slide-up relative z-10 pb-24 lg:pb-12 bg-[#f0f2f5] dark:bg-cosmic">
+        <div className="space-y-6 animate-slide-up relative z-10 pb-24 lg:pb-12">
             <div className="flex flex-col gap-6 border-b border-zinc-200/50 dark:border-white/5 pb-8">
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8 lg:gap-12">
                     <div className="min-w-0 flex-1">
@@ -1509,7 +1519,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
 
             {/* Projects / Clients toggle */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="inline-flex p-1 rounded-2xl bg-zinc-200/60 dark:bg-black/40 border border-zinc-200/50 dark:border-white/[0.08]">
+                <div className="inline-flex self-start max-w-full p-1 rounded-2xl bg-zinc-200/60 dark:bg-black/40 border border-zinc-200/50 dark:border-white/[0.08]">
                 <button
                     type="button"
                     onClick={() => { playClick(); setDashView('projects'); }}
@@ -1859,7 +1869,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
     };
 
     return (
-        <div className="space-y-6 animate-slide-up relative z-10 pb-24 lg:pb-12 bg-[#f0f2f5] dark:bg-cosmic">
+        <div className="space-y-6 animate-slide-up relative z-10 pb-24 lg:pb-12">
             {/* ... Content same as previously provided, preserving logic ... */}
             <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-5">
                 <div>
@@ -1883,18 +1893,18 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
             </div>
             {/* ... Rest of Vault View ... */}
             {/* overflow-visible: overflow-hidden clipped pill radii on the filter row; hf-no-glow avoids hf-surface ::after artifacts */}
-            <div className="hf-surface hf-no-glow flex flex-col sm:flex-row gap-4 items-center justify-between bg-white dark:bg-charcoal p-2 rounded-[2rem] overflow-visible border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md">
-                <div className="relative w-full sm:flex-1 group min-w-0">
+            <div className={`hf-surface hf-no-glow ${isCompactContent ? 'flex flex-col gap-2 sm:gap-3' : 'flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3'} items-stretch bg-white dark:bg-charcoal p-2 rounded-[2rem] overflow-visible border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md`}>
+                <div className={`relative w-full group min-w-0 ${isCompactContent ? '' : 'lg:flex-1'}`}>
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search projects, clients, or files..."
-                        className="w-full h-12 pl-12 pr-4 rounded-[2rem] bg-transparent text-sm focus:bg-white dark:focus:bg-white/5 outline-none transition-all placeholder:text-zinc-500"
+                        className="w-full h-11 sm:h-12 pl-12 pr-4 rounded-[2rem] bg-transparent text-sm focus:bg-white dark:focus:bg-white/5 outline-none transition-all placeholder:text-zinc-500"
                     />
                 </div>
-                <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto sm:shrink-0 no-scrollbar py-1 pl-1 pr-2 sm:pl-2 sm:pr-1">
+                <div className={`flex items-center gap-2 overflow-x-auto w-full no-scrollbar py-1 pl-1 pr-1 ${isCompactContent ? '' : 'lg:w-auto lg:flex-1 lg:justify-end'}`}>
                     {[
                         { key: 'all', label: 'All Projects' },
                         { key: 'active', label: 'Active' },
@@ -1904,14 +1914,14 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                         <button
                             key={filter.key}
                             onClick={() => setVaultFilter(filter.key as 'all' | 'active' | 'paid' | 'archived')}
-                            className={`px-6 py-2.5 rounded-[2rem] text-sm font-bold whitespace-nowrap transition-colors ${vaultFilter === filter.key ? 'bg-white dark:bg-white/10 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`}
+                            className={`px-4 sm:px-6 py-2.5 rounded-[2rem] text-xs sm:text-sm font-bold whitespace-nowrap transition-colors ${vaultFilter === filter.key ? 'bg-white dark:bg-white/10 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`}
                         >
                             {filter.label}
                         </button>
                     ))}
                     <div className="w-px h-6 bg-zinc-300 dark:bg-white/10 mx-2" />
-                    <button onClick={() => { playClick(); setVaultLayout('grid'); }} className={`p-2.5 rounded-[2rem] transition-colors ${vaultLayout === 'grid' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`} title="Card view"><LayoutGrid className="w-5 h-5" /></button>
-                    <button onClick={() => { playClick(); setVaultLayout('list'); }} className={`p-2.5 rounded-[2rem] transition-colors ${vaultLayout === 'list' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`} title="List view"><ListIcon className="w-5 h-5" /></button>
+                    <button onClick={() => { playClick(); setVaultLayout('grid'); }} className={`p-2.5 rounded-[2rem] transition-colors shrink-0 ${vaultLayout === 'grid' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`} title="Card view"><LayoutGrid className="w-5 h-5" /></button>
+                    <button onClick={() => { playClick(); setVaultLayout('list'); }} className={`p-2.5 rounded-[2rem] transition-colors shrink-0 ${vaultLayout === 'list' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`} title="List view"><ListIcon className="w-5 h-5" /></button>
                 </div>
             </div>
             {/* Empty state */}
@@ -2095,7 +2105,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                             {/* Right Pillar: Visual Showcase */}
                             <div className={`${isCompactContent ? 'relative flex flex-col p-5 border-t border-zinc-200/30 dark:border-white/[0.04]' : 'lg:w-[55%] relative flex flex-col p-8 lg:p-12 border-t lg:border-t-0 lg:border-l border-zinc-200/30 dark:border-white/[0.04]'}`}>
                                 {/* Asset Gallery Stack */}
-                                <div className="flex-1 flex items-center justify-center lg:justify-start mb-8 relative">
+                                <div className="flex-1 flex items-center justify-start mb-8 relative">
                                     <div className={`flex ${isCompactContent ? '-space-x-5' : '-space-x-8 lg:-space-x-12'} group/gallery cursor-pointer hover:space-x-2 transition-all duration-500 ease-out`}
                                          onClick={() => { playClick(); navigate(`/editor/${project.id}`); }}>
                                         {project.files.slice(0, 4).map((f, i) => (
@@ -2276,28 +2286,39 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
     );
 };
 
-const MobileNavBar = ({ navItems, currentPath, onNavigate, layoutMode }: { navItems: any[], currentPath: string, onNavigate: (id: string) => void, layoutMode?: 'dock' | 'full' }) => (
-    <div className={`lg:hidden fixed bottom-0 left-0 right-0 z-[49] pb-[env(safe-area-inset-bottom)] ${layoutMode === 'full' ? 'bg-[#f0f2f5]/95 dark:bg-cosmic/95' : 'bg-white/30 dark:bg-[#1a1a23]/90 backdrop-blur-md'} backdrop-blur-xl border-t border-zinc-200/50 dark:border-white/10`}>
-        <div className="flex justify-around items-center h-16 sm:h-20 max-w-lg mx-auto">
-            {navItems.map((item) => {
-                const isActive = currentPath === item.id;
-                return (
-                    <button
-                        key={item.id}
-                        onClick={() => onNavigate(item.id)}
-                        onMouseEnter={() => routePreloadMap[item.id]?.()}
-                        onTouchStart={() => routePreloadMap[item.id]?.()}
-                        className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-300 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300'}`}
-                    >
-                        <div className={`p-1.5 rounded-2xl transition-all ${isActive ? 'bg-blue-100/50 dark:bg-blue-500/10 -translate-y-1' : ''}`}>
-                            <item.icon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={isActive ? 2.5 : 2} />
-                        </div>
-                        <span className={`text-[9px] font-bold uppercase tracking-wider transition-all ${isActive ? 'opacity-100' : 'opacity-0 scale-0 hidden sm:block'}`}>
-                            {item.label}
-                        </span>
-                    </button>
-                );
-            })}
+const MobileNavBar = ({ navItems, currentPath, onNavigate }: { navItems: any[], currentPath: string, onNavigate: (id: string) => void }) => (
+    <div className="fixed bottom-0 inset-x-0 z-[88] flex justify-center items-end pb-[env(safe-area-inset-bottom)] pointer-events-none">
+        <div className="pointer-events-auto w-full max-w-[22rem] mx-4 mb-3 rounded-[2rem] bg-white/30 dark:bg-cosmic/60 backdrop-blur-xl border border-zinc-200/35 dark:border-white/[0.06] shadow-[0_10px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+            <div className="flex items-center justify-between px-1.5 py-1.5 rounded-[2rem] bg-[#f0f2f5]/40 dark:bg-cosmic/56">
+                {navItems.map((item) => {
+                    const isActive =
+                        currentPath === item.id ||
+                        (item.id === 'workspace' && (currentPath === '' || currentPath === 'app'));
+                    return (
+                        <button
+                            key={item.id}
+                            onClick={() => onNavigate(item.id)}
+                            onMouseEnter={() => routePreloadMap[item.id]?.()}
+                            onTouchStart={() => routePreloadMap[item.id]?.()}
+                            aria-label={item.label}
+                            aria-current={isActive ? 'page' : undefined}
+                            className={`relative flex items-center justify-center w-12 h-11 rounded-[1.375rem] transition-all duration-200 active:scale-90 ${
+                                isActive
+                                    ? 'bg-[#ecfccb] dark:bg-[#bef264]/10 text-[#3f6212] dark:text-[#bef264]'
+                                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
+                            }`}
+                        >
+                            <item.icon
+                                className="w-[1.1rem] h-[1.1rem]"
+                                strokeWidth={isActive ? 2.5 : 1.75}
+                            />
+                            {isActive && (
+                                <span className="absolute bottom-[5px] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#84cc16] dark:bg-[#bef264]" />
+                            )}
+                        </button>
+                    );
+                })}
+            </div>
         </div>
     </div>
 );
@@ -3500,6 +3521,9 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
     const { notifications, markNotificationRead, clearNotifications, saveProject } = useStore();
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false); // NEW State
+    const [isRouteMenuOpen, setIsRouteMenuOpen] = useState(false);
+    const profileMenuRef = useRef<HTMLDivElement | null>(null);
+    const routeMenuRef = useRef<HTMLDivElement | null>(null);
     const [demoMode, setDemoMode] = useState(isMockMode());
 
     const handleDemoModeToggle = (next: boolean) => {
@@ -3517,12 +3541,43 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
     // Determine current view state based on pathname for active highlighting
     const currentPath = location.pathname.split('/')[1] || 'app';
     const headerHeightPx = 64;
-    const isDockMode = layoutMode !== 'full';
-    const isPanelOpen = isDockMode && currentPath !== 'workspace';
     const [searchParams, setSearchParams] = useSearchParams();
     const [draftVersion, setDraftVersion] = useState(0);
     const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
+    const [mobileLikeContext, setMobileLikeContext] = useState(() => isMobileLikeDevice());
+    // DOCK_MIN_WIDTH controls when the docked workspace (widget + side panel side-by-side) can be
+    // rendered. We intentionally go below Tailwind's `lg` breakpoint so mid-sized screens still get
+    // the docked experience; the sidebar CSS uses a matching custom breakpoint below.
+    const DOCK_MIN_WIDTH = 880;
+    const dockCapable = viewportWidth >= DOCK_MIN_WIDTH;
+    // layoutMode stored preference: 'full' | 'dock'. We derive a third `widget-only` state on-screen.
+    const effectiveLayout: 'full' | 'dock' | 'widget' =
+        layoutMode === 'full' ? 'full' : dockCapable ? 'dock' : 'widget';
+    const isDockMode = effectiveLayout === 'dock';
+    const isWidgetOnly = effectiveLayout === 'widget';
+    // Show a bottom icon nav on very narrow viewports; declared early so showDeliveryWidget can use it.
+    const showMobileNav = viewportWidth <= 640;
+    // On mobile, the delivery widget is always the persistent backdrop (even when navigating to
+    // other routes which render as bottom sheets above it).
+    const showBottomSheet = showMobileNav && currentPath !== 'workspace' && currentPath !== 'app' && currentPath !== '' && currentPath !== 'signin' && currentPath !== 'signup';
+    // On mobile the widget is always visible as the home backdrop.
+    const showDeliveryWidget = isDockMode || isWidgetOnly || showMobileNav;
+    const isPanelOpen = isDockMode && currentPath !== 'workspace';
     const isCompactContent = viewportWidth < 768 || (isDockMode && isPanelOpen && viewportWidth < 1536);
+    const topNavFullThreshold = layoutMode === 'full' ? 900 : 1180;
+    const showDesktopNavPill = !showMobileNav && viewportWidth >= topNavFullThreshold;
+    const showRouteMenu = !showMobileNav && !showDesktopNavPill;
+
+    // In widget-only mode, routes other than /workspace have no place to render — redirect so
+    // the delivery widget stays the focus. Users can flip to full mode via the top-bar toggle.
+    useEffect(() => {
+        if (!isWidgetOnly) return;
+        // Mobile uses the bottom-sheet pattern: pages render as sheets above the widget backdrop,
+        // so the redirect must not fire on small screens.
+        if (showMobileNav) return;
+        if (currentPath === 'workspace' || currentPath === 'signin' || currentPath === 'signup') return;
+        navigate('/workspace', { replace: true });
+    }, [isWidgetOnly, currentPath, navigate, showMobileNav]);
 
     useEffect(() => {
         const bump = () => setDraftVersion((v) => v + 1);
@@ -3535,10 +3590,20 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
     }, []);
 
     useEffect(() => {
-        const handleResize = () => setViewportWidth(window.innerWidth);
+        const handleResize = () => {
+            setViewportWidth(window.innerWidth);
+            setMobileLikeContext(isMobileLikeDevice());
+        };
+        handleResize();
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    useEffect(() => {
+        if (!showRouteMenu && isRouteMenuOpen) {
+            setIsRouteMenuOpen(false);
+        }
+    }, [showRouteMenu, isRouteMenuOpen]);
 
     const quickstartDraftFileCount = useMemo(
         () => readQuickDeliveryDraft()?.files?.length ?? 0,
@@ -3613,6 +3678,16 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
         { id: 'settings', label: 'Settings', icon: Settings },
     ];
 
+    // Mobile bottom-nav: core workspace shortcuts. Settings and Help remain in the
+    // profile menu dropdown.
+    const mobileNavItems = [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'vault', label: 'Projects', icon: LockKeyhole },
+        { id: 'activity', label: 'Activity', icon: ActivityIcon },
+        { id: 'quotes', label: 'Quotes', icon: Receipt },
+        { id: 'reports', label: 'Reports', icon: PieChartIcon },
+    ];
+
     // g-chord state for "g+d / g+v / g+r / g+a / g+s" navigation shortcuts
     const gChordRef = useRef(false);
     const gChordTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -3664,14 +3739,44 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
 
     // Close profile menu when clicking outside
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (isProfileOpen && !(event.target as Element).closest('.profile-menu-container')) {
-                setIsProfileOpen(false);
-            }
+        const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+            if (!isProfileOpen) return;
+            const target = event.target as Node | null;
+            if (!target) return;
+            const root = profileMenuRef.current;
+            if (!root) return;
+            const path = (event as any).composedPath?.() as EventTarget[] | undefined;
+            if (path && path.includes(root)) return;
+            if (root.contains(target)) return;
+            setIsProfileOpen(false);
         };
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside, { passive: true });
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
+        };
     }, [isProfileOpen]);
+
+    useEffect(() => {
+        const handleRouteMenuOutside = (event: MouseEvent | TouchEvent) => {
+            if (!isRouteMenuOpen) return;
+            const target = event.target as Node | null;
+            if (!target) return;
+            const root = routeMenuRef.current;
+            if (!root) return;
+            const path = (event as any).composedPath?.() as EventTarget[] | undefined;
+            if (path && path.includes(root)) return;
+            if (root.contains(target)) return;
+            setIsRouteMenuOpen(false);
+        };
+        document.addEventListener('mousedown', handleRouteMenuOutside);
+        document.addEventListener('touchstart', handleRouteMenuOutside, { passive: true });
+        return () => {
+            document.removeEventListener('mousedown', handleRouteMenuOutside);
+            document.removeEventListener('touchstart', handleRouteMenuOutside);
+        };
+    }, [isRouteMenuOpen]);
 
     const SearchCommandPalette = ({ onClose }: { onClose: () => void }) => {
         const [query, setQuery] = useState('');
@@ -3790,51 +3895,66 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
         };
 
         return (
-            <div className="fixed inset-0 z-[100] flex items-end sm:items-start justify-center sm:pt-32 sm:px-4" onKeyDown={handleKeyDown}>
-                <div className="absolute inset-0 bg-zinc-900/40 dark:bg-transparent backdrop-blur-[3px] transition-colors duration-300" onClick={onClose} />
-                <div className="relative w-full sm:max-w-2xl bg-white dark:bg-[#1a1a23] rounded-t-3xl sm:rounded-2xl shadow-2xl border border-zinc-200/50 dark:border-white/10 overflow-hidden animate-slide-up ring-1 ring-black/5 pb-8 sm:pb-0">
+            <div className="fixed inset-0 z-[120] flex items-end sm:items-start justify-center sm:pt-28 sm:px-4" onKeyDown={handleKeyDown}>
+                <div className="absolute inset-0 bg-zinc-900/55 dark:bg-black/55 backdrop-blur-md transition-colors duration-300" onClick={onClose} />
+                <div
+                    className="relative w-full sm:max-w-2xl bg-white/95 dark:bg-[#16161f]/95 backdrop-blur-2xl rounded-t-[2rem] sm:rounded-[2rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.05)] border border-zinc-200/60 dark:border-white/10 overflow-hidden animate-slide-up pb-8 sm:pb-0"
+                >
                     <div className="w-12 h-1.5 bg-zinc-200 dark:bg-white/10 rounded-full mx-auto mt-4 mb-2 sm:hidden" />
-                    <div className="flex items-center gap-3 p-4 border-b border-zinc-100 dark:border-white/5">
-                        <Search className="w-5 h-5 text-zinc-400" />
-                    <input
-                        autoFocus
+                    {/* Subtle ambient glow */}
+                    <div className="pointer-events-none absolute -top-24 -left-24 w-64 h-64 rounded-full bg-[#a3e635]/15 dark:bg-[#bef264]/10 blur-[80px]" />
+                    <div className="pointer-events-none absolute -bottom-32 -right-24 w-72 h-72 rounded-full bg-sky-300/10 dark:bg-indigo-500/10 blur-[90px]" />
+
+                    <div className="relative flex items-center gap-3 px-5 py-4 border-b border-zinc-100/80 dark:border-white/5">
+                        <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200/70 dark:border-white/10 flex items-center justify-center shrink-0">
+                            <Search className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
+                        </div>
+                        <input
+                            autoFocus
                             value={query}
                             onChange={(e) => { setQuery(e.target.value); }}
-                            placeholder="Search projects, files, clients, or routes..."
-                            className="flex-1 bg-transparent outline-none text-lg text-zinc-900 dark:text-white placeholder:text-zinc-400 font-medium"
+                            placeholder="Search projects, files, clients, or routes…"
+                            className="flex-1 bg-transparent outline-none text-[15px] sm:text-base text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 font-medium tracking-tight"
                         />
-                        <kbd className="px-2 py-1 rounded bg-zinc-100 dark:bg-white/5 text-[10px] font-bold text-zinc-400 tracking-wider border border-zinc-200/50 dark:border-white/10">ESC</kbd>
-                </div>
-                    <div ref={listRef} className="p-2 max-h-[420px] overflow-y-auto">
-                        <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                            {query.trim() ? 'Results' : 'Quick Access'}
+                        <kbd className="hidden sm:inline-flex px-2 py-1 rounded-md bg-zinc-100 dark:bg-white/5 text-[10px] font-bold text-zinc-500 dark:text-zinc-400 tracking-wider border border-zinc-200/60 dark:border-white/10">ESC</kbd>
+                    </div>
+
+                    <div ref={listRef} className="relative p-2 max-h-[440px] overflow-y-auto">
+                        <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
+                            {query.trim() ? 'Results' : 'Quick access'}
                         </div>
                         {results.length === 0 && (
-                            <div className="px-4 py-8 text-sm text-zinc-500 dark:text-zinc-400">No matches found. Try another keyword.</div>
+                            <div className="px-4 py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">No matches found. Try another keyword.</div>
                         )}
-                        {results.map((result, idx) => (
-                            <button
-                                key={result.id}
-                                ref={el => { itemRefs.current[idx] = el; }}
-                                onClick={() => executeResult(result.action)}
-                                onMouseEnter={() => setSelectedIndex(idx)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left group ${idx === selectedIndex ? 'bg-zinc-100 dark:bg-white/10' : 'hover:bg-zinc-50 dark:hover:bg-white/5'}`}
-                            >
-                                <result.icon className={`w-4 h-4 transition-colors ${idx === selectedIndex ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'}`} />
-                                <div className="min-w-0 flex-1">
-                                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200 block truncate">{result.title}</span>
-                                    <span className="text-xs text-zinc-400 block truncate">{result.subtitle}</span>
-                                </div>
-                                <span className={`ml-auto text-xs transition-colors ${idx === selectedIndex ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-400'}`}>{result.kind}</span>
-                    </button>
-                        ))}
+                        {results.map((result, idx) => {
+                            const active = idx === selectedIndex;
+                            return (
+                                <button
+                                    key={result.id}
+                                    ref={el => { itemRefs.current[idx] = el; }}
+                                    onClick={() => executeResult(result.action)}
+                                    onMouseEnter={() => setSelectedIndex(idx)}
+                                    className={`w-full flex items-center gap-3 px-3 py-3 my-0.5 rounded-2xl transition-all text-left group ${active ? 'bg-zinc-100/90 dark:bg-white/[0.08] shadow-sm' : 'hover:bg-zinc-50 dark:hover:bg-white/[0.04]'}`}
+                                >
+                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${active ? 'bg-white dark:bg-white/[0.08] border border-zinc-200/70 dark:border-white/10 shadow-sm' : 'bg-zinc-100/70 dark:bg-white/[0.04] border border-transparent'}`}>
+                                        <result.icon className={`w-4 h-4 transition-colors ${active ? 'text-[#65a30d] dark:text-[#bef264]' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200'}`} />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100 block truncate">{result.title}</span>
+                                        <span className="text-xs text-zinc-500 dark:text-zinc-400 block truncate">{result.subtitle}</span>
+                                    </div>
+                                    <span className={`ml-auto shrink-0 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md transition-colors ${active ? 'bg-[#a3e635]/20 dark:bg-[#bef264]/15 text-[#4d7c0f] dark:text-[#bef264] border border-[#a3e635]/35 dark:border-[#bef264]/25' : 'bg-zinc-100 dark:bg-white/5 text-zinc-400 dark:text-zinc-500 border border-zinc-200/70 dark:border-white/10'}`}>{result.kind}</span>
+                                </button>
+                            );
+                        })}
                     </div>
-                    <div className="px-4 py-2.5 bg-zinc-50 dark:bg-[#1a1a23]/50 border-t border-zinc-100 dark:border-white/5 flex flex-wrap gap-x-4 gap-y-1.5 items-center text-[10px] text-zinc-400">
-                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded border border-zinc-200/50 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-500 dark:text-zinc-300">↑↓</kbd> navigate</span>
-                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded border border-zinc-200/50 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-500 dark:text-zinc-300">↵</kbd> open</span>
-                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded border border-zinc-200/50 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-500 dark:text-zinc-300">Esc</kbd> close</span>
+
+                    <div className="relative px-4 py-3 bg-zinc-50/80 dark:bg-black/20 border-t border-zinc-100/80 dark:border-white/5 flex flex-wrap gap-x-4 gap-y-1.5 items-center text-[10px] text-zinc-500 dark:text-zinc-400">
+                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded-md border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-600 dark:text-zinc-300">↑↓</kbd> navigate</span>
+                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded-md border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-600 dark:text-zinc-300">↵</kbd> open</span>
+                        <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded-md border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-600 dark:text-zinc-300">Esc</kbd> close</span>
                         <span className="w-px h-3 bg-zinc-200 dark:bg-white/10 mx-1" />
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-300 dark:text-zinc-600">Jump to —</span>
+                        <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">Jump to</span>
                         {([
                             ['d', 'Dashboard', '/dashboard'],
                             ['v', 'Projects', '/vault'],
@@ -3844,16 +3964,16 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             ['c', 'Create', '/create'],
                             ['q', 'Quotes', '/quotes'],
                         ] as [string, string, string][]).map(([key, label, path]) => (
-                            <button key={key} onClick={() => { navigate(path); onClose(); }} className="flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
-                                <kbd className="px-1.5 py-0.5 rounded border border-zinc-200/50 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-500 dark:text-zinc-300">g</kbd>
-                                <kbd className="px-1.5 py-0.5 rounded border border-zinc-200/50 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-500 dark:text-zinc-300">{key}</kbd>
+                            <button key={key} onClick={() => { navigate(path); onClose(); }} className="flex items-center gap-1 hover:text-zinc-800 dark:hover:text-zinc-100 transition-colors">
+                                <kbd className="px-1.5 py-0.5 rounded-md border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-600 dark:text-zinc-300">g</kbd>
+                                <kbd className="px-1.5 py-0.5 rounded-md border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-600 dark:text-zinc-300">{key}</kbd>
                                 {label}
-                    </button>
+                            </button>
                         ))}
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
     };
 
     const getInitials = (name?: string) => {
@@ -3862,13 +3982,16 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
         if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     };
+    const isDefaultAvatar = (avatar?: string) =>
+        Boolean(avatar && avatar.includes('photo-1507003211169-0a1dd7228f2d'));
+    const hasCustomAvatar = Boolean(user?.avatar && !isDefaultAvatar(user.avatar));
 
     const ProfileMenu = () => (
-        <div className={`absolute top-16 right-0 w-80 border border-zinc-200/50 dark:border-white/10 rounded-2xl shadow-2xl p-4 animate-fade-in z-50 origin-top-right ${isDockMode ? 'bg-white/30 dark:bg-[#1a1a23]/90 backdrop-blur-md' : 'bg-[#f0f2f5] dark:bg-[#1a1a23]'}`}>
+        <div className="absolute top-16 right-0 w-80 border border-zinc-200/60 dark:border-white/12 rounded-2xl shadow-2xl p-4 animate-fade-in z-50 origin-top-right bg-white/86 dark:bg-[#1a1a23]/95 backdrop-blur-xl">
             {/* Header */}
             <div className="flex items-center gap-4 pb-4 border-b border-zinc-100 dark:border-white/5 mb-4">
                 <div className="relative">
-                    {user?.avatar ? (
+                    {hasCustomAvatar ? (
                         <img src={user.avatar} className="w-12 h-12 rounded-xl object-cover shadow-sm" alt="Profile" />
                     ) : (
                         <div className="w-12 h-12 rounded-xl bg-zinc-800 dark:bg-[#1a1a23] text-white flex items-center justify-center font-semibold shadow-sm">
@@ -3928,15 +4051,15 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
 
             {/* Quick Actions */}
             <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => { setIsProfileOpen(false); navigate('/quotes'); }} className="p-3 rounded-xl bg-zinc-50 dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10 border border-transparent hover:border-zinc-200/50 dark:hover:border-white/10 transition-all text-center group">
+                <button onClick={() => { setIsProfileOpen(false); navigate('/quotes'); }} className="p-3 rounded-xl bg-white dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10 border border-zinc-200/80 dark:border-white/10 transition-all text-center group shadow-sm">
                     <FileDigit className="w-5 h-5 mx-auto mb-1 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white">Quotes</span>
                 </button>
-                <button onClick={() => { setIsProfileOpen(false); navigate('/settings'); }} className="p-3 rounded-xl bg-zinc-50 dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10 border border-transparent hover:border-zinc-200/50 dark:hover:border-white/10 transition-all text-center group">
+                <button onClick={() => { setIsProfileOpen(false); navigate('/settings'); }} className="p-3 rounded-xl bg-white dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10 border border-zinc-200/80 dark:border-white/10 transition-all text-center group shadow-sm">
                     <Settings className="w-5 h-5 mx-auto mb-1 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white">Settings</span>
                 </button>
-                <button onClick={() => { setIsProfileOpen(false); routePreloadMap.help?.().finally(() => navigate('/help')); }} className="p-3 rounded-xl bg-zinc-50 dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10 border border-transparent hover:border-zinc-200/50 dark:hover:border-white/10 transition-all text-center group">
+                <button onClick={() => { setIsProfileOpen(false); routePreloadMap.help?.().finally(() => navigate('/help')); }} className="p-3 rounded-xl bg-white dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10 border border-zinc-200/80 dark:border-white/10 transition-all text-center group shadow-sm">
                     <HelpCircle className="w-5 h-5 mx-auto mb-1 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white">Support</span>
                 </button>
@@ -3947,7 +4070,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             setIsProfileOpen(false);
                             handleDemoModeToggle(!demoMode);
                         }}
-                        className="p-3 rounded-xl bg-zinc-50 dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10 border border-transparent hover:border-zinc-200/50 dark:hover:border-white/10 transition-all text-center group"
+                        className="p-3 rounded-xl bg-white dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10 border border-zinc-200/80 dark:border-white/10 transition-all text-center group shadow-sm"
                         title={demoMode ? 'Switch to real backend data' : 'Switch to mock demo data'}
                     >
                         <Database className={`w-5 h-5 mx-auto mb-1 transition-colors ${demoMode ? 'text-amber-600 dark:text-amber-300' : 'text-blue-600 dark:text-blue-300'}`} />
@@ -4031,23 +4154,25 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
     const [heroGreetingPlayed, setHeroGreetingPlayed] = useState(false);
     const [heroGreetingPrefix, heroGreetingSuffix] = (heroGreetingTemplate || 'Hello, {{name}}.').split('{{name}}');
 
+    const heroActive = (isDockMode && !isPanelOpen) || isWidgetOnly;
+
     useEffect(() => {
-        if (!isDockMode || isPanelOpen || workspaceQuickstartActive) return;
+        if (!heroActive || workspaceQuickstartActive) return;
         const timer = window.setInterval(() => {
             setHeroTipIndex((index) => (index + 1) % heroTips.length);
         }, 9000);
         return () => window.clearInterval(timer);
-    }, [isDockMode, isPanelOpen, heroTips.length, workspaceQuickstartActive]);
+    }, [heroActive, heroTips.length, workspaceQuickstartActive]);
 
     useEffect(() => {
-        if (!isDockMode || heroGreetingPlayed || isPanelOpen || workspaceQuickstartActive) return;
+        if (!heroActive || heroGreetingPlayed || workspaceQuickstartActive) return;
         setShowHeroGreeting(true);
         const timer = window.setTimeout(() => {
             setShowHeroGreeting(false);
             setHeroGreetingPlayed(true);
         }, 9000);
         return () => window.clearTimeout(timer);
-    }, [isDockMode, heroGreetingPlayed, isPanelOpen, workspaceQuickstartActive]);
+    }, [heroActive, heroGreetingPlayed, workspaceQuickstartActive]);
 
     useEffect(() => {
         if (!workspaceQuickstartActive) return;
@@ -4066,6 +4191,12 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             return;
         }
 
+        // On desktop in widget-only mode, non-workspace routes need full layout.
+        // On mobile the bottom-sheet pattern renders pages over the widget so no flip needed.
+        if (isWidgetOnly && id !== 'workspace' && !showMobileNav) {
+            onSetLayoutMode?.('full');
+        }
+
         const preloader = routePreloadMap[id];
         const targetPath = `/${id}`;
 
@@ -4077,6 +4208,34 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
         }
 
         navigate(targetPath);
+    };
+
+    const mobileSheetDragStartYRef = useRef<number | null>(null);
+    const mobileSheetDidDragRef = useRef(false);
+
+    const handleMobileSheetHandlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+        mobileSheetDragStartYRef.current = event.clientY;
+        mobileSheetDidDragRef.current = false;
+    };
+
+    const handleMobileSheetHandlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (mobileSheetDragStartYRef.current === null) return;
+        const deltaY = event.clientY - mobileSheetDragStartYRef.current;
+        if (deltaY > 10) {
+            mobileSheetDidDragRef.current = true;
+        }
+    };
+
+    const handleMobileSheetHandlePointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (mobileSheetDragStartYRef.current === null) return;
+        const deltaY = event.clientY - mobileSheetDragStartYRef.current;
+        mobileSheetDragStartYRef.current = null;
+        const shouldDismissSheet = mobileSheetDidDragRef.current && deltaY > 60;
+        mobileSheetDidDragRef.current = false;
+        if (shouldDismissSheet) {
+            playClick();
+            navigate('/workspace');
+        }
     };
 
     return (
@@ -4104,8 +4263,8 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
 
             {/* ── Top bar ── */}
             <header
-                className={`fixed left-0 right-0 z-[85] flex items-center justify-between px-4 sm:px-6 lg:px-8 transition-[top] duration-200 pointer-events-none ${
-                    layoutMode === 'full'
+                className={`fixed left-0 right-0 z-[100] flex items-center justify-between px-4 sm:px-6 lg:px-8 transition-[top] duration-200 pointer-events-none ${
+                    layoutMode === 'full' && !showMobileNav
                         ? 'bg-[#f0f2f5] dark:bg-cosmic border-b border-zinc-200/60 dark:border-white/10'
                         : ''
                 }`}
@@ -4124,7 +4283,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                 {/* Nav pill + controls cluster */}
                 <div className="flex items-center gap-1.5 pointer-events-auto">
                     {/* Desktop nav pill */}
-                    <nav className={`hidden lg:flex items-center gap-0.5 rounded-full px-2 py-1.5 mr-1 ${topbarGlassCls}`}>
+                    <nav className={`${showDesktopNavPill ? 'flex' : 'hidden'} items-center gap-0.5 rounded-full px-2 py-1.5 mr-1 ${topbarGlassCls}`}>
                         {navItems.map((item) => (
                                     <button
                                         key={item.id}
@@ -4136,6 +4295,41 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                     </button>
                         ))}
                         </nav>
+
+                    {/* Compact routes menu for narrower desktop widths */}
+                    <div ref={routeMenuRef} className={`relative ${showRouteMenu ? 'block' : 'hidden'}`}>
+                        <button
+                            type="button"
+                            onClick={() => { playClick(); setIsRouteMenuOpen((open) => !open); }}
+                            className={`p-2.5 rounded-xl text-zinc-500 dark:text-zinc-300 transition-all cursor-pointer ${topbarGlassCls} ${topbarGlassHoverCls}`}
+                            title="More"
+                            aria-label="More navigation"
+                        >
+                            <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                        {isRouteMenuOpen && (
+                            <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-zinc-200/70 dark:border-white/10 bg-white/90 dark:bg-[#1a1a23]/95 backdrop-blur-xl shadow-xl p-2 z-[110] animate-fade-in">
+                                {navItems.map((item) => (
+                                    <button
+                                        key={item.id}
+                                        type="button"
+                                        onClick={() => {
+                                            playClick();
+                                            setIsRouteMenuOpen(false);
+                                            handleTopLevelNavigate(item.id);
+                                        }}
+                                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors ${
+                                            currentPath === item.id
+                                                ? 'bg-zinc-100 dark:bg-white/10 text-zinc-900 dark:text-white'
+                                                : 'text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10'
+                                        }`}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
                     {/* Search */}
                             <button
@@ -4151,8 +4345,15 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             playClick();
                             onSetLayoutMode?.(layoutMode === 'full' ? 'dock' : 'full');
                         }}
-                        className={`hidden sm:inline-flex p-2.5 rounded-xl text-zinc-500 dark:text-zinc-300 transition-all cursor-pointer ${topbarGlassCls} ${topbarGlassHoverCls}`}
-                        title={`Layout: ${layoutMode === 'full' ? 'Full workspace' : 'Docked widget'}`}
+                        className={`inline-flex shrink-0 p-2 sm:p-2.5 rounded-xl text-zinc-500 dark:text-zinc-300 transition-all cursor-pointer ${topbarGlassCls} ${topbarGlassHoverCls}`}
+                        title={
+                            effectiveLayout === 'full'
+                                ? (dockCapable ? 'Switch to docked widget' : 'Switch to delivery widget')
+                                : effectiveLayout === 'widget'
+                                    ? 'Switch to full workspace'
+                                    : 'Switch to full workspace'
+                        }
+                        aria-label="Toggle layout"
                     >
                         <ArrowLeftRight className="w-4 h-4" />
                             </button>
@@ -4176,8 +4377,9 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                     />
 
                     {/* Profile */}
-                            <div className="relative profile-menu-container">
+                            <div ref={profileMenuRef} className="relative profile-menu-container pointer-events-auto">
                                 <button
+                                    type="button"
                             onClick={() => {
                                 playClick();
                                 const nextOpen = !isProfileOpen;
@@ -4190,7 +4392,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                     aria-label="Open User Menu"
                                 >
                                     <div className="relative group-hover/profile:scale-105 transition-transform">
-                                {user?.avatar ? (
+                                {hasCustomAvatar ? (
                                     <img src={user.avatar} className="w-9 h-9 rounded-full border border-zinc-200/50 dark:border-white/10 shadow-sm object-cover" alt="Profile" />
                                 ) : (
                                     <div className="w-9 h-9 rounded-full border border-zinc-200/50 dark:border-white/10 shadow-sm bg-zinc-800 dark:bg-[#1a1a23] text-white flex items-center justify-center text-xs font-semibold">
@@ -4212,7 +4414,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             </header>
 
             {/* ── Delivery Widget: floats left, vertically centered below header ── */}
-            {isDockMode && (
+            {showDeliveryWidget && (
                 <div
                     className="fixed left-4 right-4 sm:left-8 sm:right-auto z-20 flex items-center transition-[opacity,transform] duration-500 bottom-[calc(88px+env(safe-area-inset-bottom))] lg:bottom-20"
                     style={{ top: stripOffset + headerHeightPx }}
@@ -4221,32 +4423,64 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                 </div>
             )}
 
-            {/* ── Main Page Greeting (Hero) ── */}
-            {layoutMode === 'full' && (
+            {/* ── Main Page: desktop full layout ── */}
+            {!showMobileNav && layoutMode === 'full' && (
                 <main
                     className="fixed left-0 right-0 bottom-0 z-[30] overflow-hidden"
                     style={{ top: stripOffset + headerHeightPx }}
                 >
-                    <div
-                        className={`h-full px-3 sm:px-5 lg:px-6 xl:px-7 pt-3 sm:pt-4 bg-[#f0f2f5] dark:bg-cosmic ${
-                            currentPath === 'activity'
-                                ? 'overflow-hidden flex flex-col min-h-0 pb-[max(0.75rem,calc(env(safe-area-inset-bottom,0px)*3))] sm:pb-3 lg:pb-3'
-                                : 'overflow-y-auto pb-24 sm:pb-28 lg:pb-6'
-                        }`}
-                    >
+                    <div className="h-full px-3 sm:px-5 lg:px-6 xl:px-7 pt-3 sm:pt-4 bg-[#f0f2f5] dark:bg-cosmic overflow-y-auto pb-24 sm:pb-28 lg:pb-6">
                         <div
                             key={location.pathname}
-                            className={`animate-route-in ${currentPath === 'activity' ? 'flex-1 min-h-0 flex flex-col overflow-hidden' : 'min-h-full'}`}
+                            className="animate-route-in min-h-full"
                         >
                             <Outlet context={outletCtx} />
                         </div>
                     </div>
-            </main>
+                </main>
+            )}
+
+            {/* ── Mobile bottom sheet: pages slide up over the delivery widget backdrop ── */}
+            {showBottomSheet && (
+                <>
+                    {/* Tap-outside dismiss area (top 15% above the sheet) */}
+                    <button
+                        type="button"
+                        aria-label="Dismiss"
+                        onClick={() => { playClick(); navigate('/workspace'); }}
+                        className="fixed inset-x-0 top-0 z-[39] h-[15svh] bg-transparent cursor-pointer border-0 p-0"
+                    />
+                    <aside
+                        className="fixed left-0 right-0 bottom-0 z-[40] rounded-t-[2rem] bg-white/30 dark:bg-cosmic/60 backdrop-blur-xl border-t border-zinc-200/35 dark:border-white/[0.06] shadow-[0_-24px_60px_-10px_rgba(0,0,0,0.18)] dark:shadow-[0_-24px_60px_-10px_rgba(0,0,0,0.55)] animate-slide-up"
+                        style={{ top: '15svh' }}
+                    >
+                        <div className="h-full flex flex-col rounded-t-[2rem] bg-[#f0f2f5]/40 dark:bg-cosmic/56 overflow-hidden">
+                            {/* Drag handle */}
+                            <div
+                                className="shrink-0 flex justify-center pt-3 pb-1 touch-none cursor-grab active:cursor-grabbing"
+                                onPointerDown={handleMobileSheetHandlePointerDown}
+                                onPointerMove={handleMobileSheetHandlePointerMove}
+                                onPointerUp={handleMobileSheetHandlePointerEnd}
+                                onPointerCancel={handleMobileSheetHandlePointerEnd}
+                            >
+                                <div className="w-9 h-[3px] rounded-full bg-zinc-400/60 dark:bg-white/25" />
+                            </div>
+                            <div className="flex-1 min-h-0 overflow-y-auto scroll-smooth pb-24 px-3 pt-1">
+                                <div key={location.pathname} className="animate-route-in min-h-full">
+                                    <Outlet context={outletCtx} />
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+                </>
             )}
 
             {isDockMode && !isPanelOpen && (
-                <div className="fixed left-[430px] right-6 top-1/2 -translate-y-1/2 hidden xl:flex flex-col items-center justify-center text-center pointer-events-none z-0 px-10 animate-fade-in duration-1000" style={{ top: `calc(50% + ${stripOffset/2}px)` }}>
-                    <div className="relative w-full max-w-[1040px] min-h-[340px]">
+                <div
+                    className="fixed left-[420px] right-8 top-1/2 -translate-y-1/2 flex flex-col items-center justify-center text-center pointer-events-none z-[15] px-4 xl:px-10 animate-fade-in duration-1000"
+                    style={{ top: `calc(50% + ${stripOffset / 2}px)` }}
+                >
+                    <div className="relative w-full max-w-[1040px] min-h-[280px] lg:min-h-[340px]">
                         {workspaceQuickstartActive && (
                             <div
                                 className="absolute inset-0 flex items-center justify-center pointer-events-auto z-[1] transition-opacity duration-700 opacity-100"
@@ -4257,14 +4491,14 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500">
                                         From your landing upload
                                     </p>
-                                    <h2 className="font-serif text-5xl 2xl:text-6xl text-zinc-900 dark:text-white tracking-tight leading-[1.05]">
+                                    <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-4xl 2xl:text-6xl text-zinc-900 dark:text-white tracking-tight leading-[1.05]">
                                         <span className="italic text-lime-400 dark:text-[#bef264]">
                                             {quickstartDraftFileCount} file{quickstartDraftFileCount !== 1 ? 's' : ''}
                                         </span>
                                         {' '}
                                         <span className="text-zinc-800 dark:text-zinc-100">are in Quick delivery.</span>
                                     </h2>
-                                    <p className="text-lg sm:text-xl text-zinc-600 dark:text-zinc-300 leading-relaxed font-medium max-w-2xl">
+                                    <p className="text-xs sm:text-sm md:text-base lg:text-base 2xl:text-xl text-zinc-600 dark:text-zinc-300 leading-relaxed font-medium max-w-2xl">
                                         Name the handover and your client in the panel on the left, choose <span className="text-zinc-800 dark:text-white">Create link</span> or{' '}
                                         <span className="text-zinc-800 dark:text-white">Send email</span>, then <span className="text-zinc-800 dark:text-white">Publish</span> for a shareable project link.
                                         You can open <span className="text-zinc-800 dark:text-white">Studio</span> there anytime for milestones and advanced options.
@@ -4280,7 +4514,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             </div>
                         )}
                         <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-700 ${workspaceQuickstartActive || !showHeroGreeting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                            <h1 className="font-serif text-7xl 2xl:text-[8.2rem] text-zinc-900 dark:text-white tracking-tight leading-[0.98] max-w-[1040px]">
+                            <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl 2xl:text-[8.2rem] text-zinc-900 dark:text-white tracking-tight leading-[0.98] max-w-[1040px] px-1">
                                 <span className="block animate-fade-in">
                                     {heroGreetingPrefix}
                                     <span className="italic text-lime-400 dark:text-[#bef264]">{greetingName}</span>
@@ -4290,7 +4524,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                         </div>
                         <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-700 ${workspaceQuickstartActive || showHeroGreeting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                             <div className="max-w-lg space-y-1">
-                                <p key={heroTipIndex} className="text-xl text-zinc-500 dark:text-zinc-200 leading-relaxed font-medium animate-fade-in">
+                                <p key={heroTipIndex} className="text-base lg:text-lg 2xl:text-xl text-zinc-500 dark:text-zinc-200 leading-relaxed font-medium animate-fade-in px-1">
                                     {heroTips[heroTipIndex]}
                                 </p>
                                 <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-400 dark:text-zinc-300 font-bold">
@@ -4302,10 +4536,39 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                 </div>
             )}
 
-            {/* ── Panel backdrop ── */}
+            {/* ── Widget-only hero (beside widget on wider, below on narrow) ── */}
+            {isWidgetOnly && currentPath === 'workspace' && !workspaceQuickstartActive && (
+                <div
+                    className="fixed pointer-events-none z-[15] animate-fade-in duration-1000 hidden min-[700px]:flex items-center justify-start"
+                    style={{
+                        top: stripOffset + headerHeightPx,
+                        bottom: `calc(88px + env(safe-area-inset-bottom))`,
+                        left: `calc(32px + 372px + 24px)`,
+                        right: '24px',
+                    }}
+                >
+                    <div className="relative w-full max-w-md">
+                        <h2 className={`font-serif text-2xl md:text-3xl text-zinc-900 dark:text-white tracking-tight leading-[1.1] transition-opacity duration-500 ${showHeroGreeting ? 'opacity-100' : 'opacity-0 pointer-events-none absolute inset-0'}`}>
+                            {heroGreetingPrefix}
+                            <span className="italic text-lime-400 dark:text-[#bef264]">{greetingName}</span>
+                            {heroGreetingSuffix}
+                        </h2>
+                        <div className={`space-y-1 transition-opacity duration-500 ${showHeroGreeting ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100'}`}>
+                            <p key={`wo-tip-${heroTipIndex}`} className="text-sm md:text-base text-zinc-500 dark:text-zinc-200 leading-relaxed font-medium animate-fade-in">
+                                {heroTips[heroTipIndex]}
+                            </p>
+                            <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-400 dark:text-zinc-300 font-bold">
+                                Quick tip {heroTipIndex + 1} of {heroTips.length}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Panel backdrop ── spans header area too so clicking the nav strip also closes the panel ── */}
             {isDockMode && (
                 <div
-                    className={`fixed inset-0 z-[60] transition-opacity duration-300 ${isPanelOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                    className={`fixed left-0 right-0 bottom-0 z-[60] transition-opacity duration-300 ${isPanelOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
                     style={{ top: stripOffset, background: 'rgba(0,0,0,0.12)' }}
                     onClick={() => { playClick(); navigate('/workspace'); }}
                 />
@@ -4314,12 +4577,12 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             {/* ── Side panel ── */}
             {isDockMode && (
                 <aside
-                    className={`fixed right-0 bottom-0 z-[70] w-full max-w-[960px] lg:w-auto lg:max-w-none lg:left-[420px] xl:left-[440px] bg-white/30 dark:bg-cosmic/60 backdrop-blur-xl transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                    className={`fixed right-0 bottom-0 z-[70] w-full max-w-[960px] min-[880px]:w-auto min-[880px]:max-w-none min-[880px]:left-[420px] xl:left-[440px] bg-white/30 dark:bg-cosmic/60 backdrop-blur-xl transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}
                     style={{ top: stripOffset }}
                     aria-hidden={!isPanelOpen}
                 >
-                    <div className="h-full bg-white/30 dark:bg-cosmic/60 border-l border-zinc-200/35 dark:border-white/[0.06] shadow-lg overflow-hidden flex flex-col transition-[box-shadow,border-color] duration-700 backdrop-blur-sm">
-                        <div className="shrink-0 h-[4.25rem] px-5 pt-4 flex items-start border-b border-zinc-200/35 dark:border-white/[0.06] bg-[#f0f2f5]/40 dark:bg-cosmic/60 backdrop-blur-md">
+                    <div className="h-full bg-[#f0f2f5]/40 dark:bg-cosmic/56 border-l border-zinc-200/35 dark:border-white/[0.06] shadow-lg overflow-hidden flex flex-col transition-[box-shadow,border-color] duration-700">
+                        <div className="shrink-0 h-[4.25rem] px-5 pt-4 flex items-start border-b border-zinc-200/35 dark:border-white/[0.06]">
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => { playClick(); navigate('/workspace'); }}
@@ -4337,17 +4600,13 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                 </button>
                             </div>
                         </div>
-                        <div className={currentPath === 'activity' ? 'flex-1 min-h-0 overflow-hidden flex flex-col' : 'flex-1 overflow-y-auto'}>
+                        <div className="flex-1 overflow-y-auto">
                             <div
-                                className={`px-3 sm:px-5 lg:px-6 xl:px-7 pt-3 sm:pt-4 bg-[#f0f2f5]/40 dark:bg-cosmic/56 ${
-                                    currentPath === 'activity'
-                                        ? 'flex-1 min-h-0 flex flex-col overflow-hidden pb-[max(0.75rem,calc(env(safe-area-inset-bottom,0px)*3))] sm:pb-3 lg:pb-3'
-                                        : 'min-h-full pb-24 sm:pb-28 lg:pb-6'
-                                }`}
+                                className="px-3 sm:px-5 lg:px-6 xl:px-7 pt-3 sm:pt-4 min-h-full pb-24 sm:pb-28 lg:pb-6"
                             >
                                 <div
                                     key={location.pathname}
-                                    className={`animate-route-in ${currentPath === 'activity' ? 'flex-1 min-h-0 flex flex-col overflow-hidden' : 'min-h-full'}`}
+                                    className="animate-route-in min-h-full"
                                 >
                                     <Outlet context={outletCtx} />
                                 </div>
@@ -4358,7 +4617,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             )}
 
             {/* ── Help FAB ── */}
-            <div className="fixed right-4 lg:right-8 z-[96] bottom-[calc(96px+env(safe-area-inset-bottom))] lg:bottom-8">
+            <div className={`fixed right-4 lg:right-8 z-[110] ${showMobileNav ? 'bottom-[calc(88px+env(safe-area-inset-bottom))]' : 'bottom-[calc(16px+env(safe-area-inset-bottom))] lg:bottom-8'}`}>
                 {currentPath === 'help' ? (
                     <button
                         onClick={() => { playClick(); navigate(layoutMode === 'full' ? '/dashboard' : '/workspace'); }}
@@ -4381,7 +4640,9 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             </div>
 
             {/* ── Mobile bottom navigation ── */}
-            <MobileNavBar navItems={navItems} currentPath={currentPath} layoutMode={layoutMode} onNavigate={(id) => { playClick(); handleTopLevelNavigate(id); }} />
+            {showMobileNav && (
+                <MobileNavBar navItems={mobileNavItems} currentPath={currentPath} onNavigate={(id) => { playClick(); handleTopLevelNavigate(id); }} />
+            )}
 
             {/* ── Search overlay (above everything including strip) ── */}
             {isSearchOpen && <SearchCommandPalette onClose={() => setIsSearchOpen(false)} />}
@@ -4390,22 +4651,22 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
 }
 
 // Wrapper to handle project lookup for Editor routes
-const EditorWrapper = ({ projects, onSave, user }: { projects: Project[], onSave: (p: Project) => void, user: UserProfile }) => {
+const EditorWrapper = ({ projects, onSave, user, themeMode }: { projects: Project[], onSave: (p: Project) => void, user: UserProfile, themeMode: 'light' | 'dark' | 'system' }) => {
     const { id } = useParams();
     const navigate = useNavigate();
     const project = projects.find(p => p.id === id) || projects[0];
     return (
         <div className="animate-editor-in" style={{ animation: 'var(--animate-editor-in)' }}>
-            <CreatorPage existingProject={project} allProjects={projects} user={user} onSave={onSave} onBack={() => navigate('/vault')} />
+            <CreatorPage existingProject={project} allProjects={projects} user={user} themeMode={themeMode} onSave={onSave} onBack={() => navigate('/vault')} />
         </div>
     );
 };
 
-const CreatorWrapper = ({ projects, onSave, user }: { projects: Project[], onSave: (p: Project) => void, user: UserProfile }) => {
+const CreatorWrapper = ({ projects, onSave, user, themeMode }: { projects: Project[], onSave: (p: Project) => void, user: UserProfile, themeMode: 'light' | 'dark' | 'system' }) => {
     const navigate = useNavigate();
     return (
         <div className="animate-editor-in" style={{ animation: 'var(--animate-editor-in)' }}>
-            <CreatorPage allProjects={projects} user={user} onSave={onSave} onBack={() => navigate('/vault')} />
+            <CreatorPage allProjects={projects} user={user} themeMode={themeMode} onSave={onSave} onBack={() => navigate('/vault')} />
         </div>
     );
 };
@@ -4604,8 +4865,36 @@ const AppContent = () => {
         }
         return 'dock';
     });
+    const [layoutPreference, setLayoutPreference] = useState<'dock' | 'full'>(() => {
+        try {
+            const stored = localStorage.getItem('hf_layout_mode');
+            if (stored === 'dock' || stored === 'full') return stored;
+        } catch {
+        }
+        return 'dock';
+    });
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [firstVisitThemeNotice, setFirstVisitThemeNotice] = useState<string | null>(null);
+
+    const handleSetLayoutMode = useCallback((next: 'dock' | 'full') => {
+        setLayoutPreference(next);
+        setLayoutMode(next);
+    }, []);
+
+    useEffect(() => {
+        // The widget can gracefully collapse to full-width on very narrow screens, so we no longer
+        // force full mode. Users can toggle between widget-only (dock preference) and full layout
+        // on any screen size.
+        const restoreDockIfPreferred = () => {
+            if (isMobileLikeDevice()) return;
+            if (layoutPreference === 'dock' && layoutMode === 'full') {
+                setLayoutMode('dock');
+            }
+        };
+        restoreDockIfPreferred();
+        window.addEventListener('resize', restoreDockIfPreferred);
+        return () => window.removeEventListener('resize', restoreDockIfPreferred);
+    }, [layoutMode, layoutPreference]);
 
     // â”€â”€ Offline / SW-update awareness â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -4948,7 +5237,7 @@ const AppContent = () => {
                             themeMode={themeMode}
                             onSetThemeMode={setThemeMode}
                             layoutMode={layoutMode}
-                            onSetLayoutMode={setLayoutMode}
+                            onSetLayoutMode={handleSetLayoutMode}
                             setIsDarkMode={setIsDarkMode}
                             togglePrivacyMode={togglePrivacyMode}
                             privacyMode={privacyMode}
@@ -4979,8 +5268,8 @@ const AppContent = () => {
                                 }
                             />
                         </Route>
-                        <Route path="/create" element={protectLiveRoute(<CreatorWrapper projects={projects} onSave={saveProject} user={user} />)} />
-                        <Route path="/editor/:id" element={protectLiveRoute(<EditorWrapper projects={projects} onSave={saveProject} user={user} />)} />
+                        <Route path="/create" element={protectLiveRoute(<CreatorWrapper projects={projects} onSave={saveProject} user={user} themeMode={themeMode} />)} />
+                        <Route path="/editor/:id" element={protectLiveRoute(<EditorWrapper projects={projects} onSave={saveProject} user={user} themeMode={themeMode} />)} />
                         <Route path="/preview/:id" element={protectLiveRoute(<PreviewWrapper projects={projects} user={user} isDarkMode={isDarkMode} themeMode={themeMode} onToggleTheme={cycleTheme} onSetThemeMode={setThemeMode} />)} />
                     </Routes>
                     </Suspense>

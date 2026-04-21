@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
     Fingerprint, CreditCard, Crown, Cloud,
     ShieldCheck, Mail, Globe, ArrowRight, Wallet, DollarSign,
@@ -42,6 +42,14 @@ const InputField = ({ label, value, onChange, placeholder, type = "text", icon: 
 );
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignOut }) => {
+    const getInitials = (name?: string) => {
+        if (!name) return 'U';
+        const parts = name.trim().split(/\s+/);
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    };
+    const isDefaultAvatar = (avatar?: string) =>
+        Boolean(avatar && avatar.includes('photo-1507003211169-0a1dd7228f2d'));
     // State
     const [formData, setFormData] = useState({
         name: user.name || '',
@@ -61,7 +69,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
     });
 
     // Avatar Upload State
-    const [avatarPreview, setAvatarPreview] = useState(user.avatar || '');
+    const [avatarPreview, setAvatarPreview] = useState(
+        user.avatar && !user.avatar.startsWith('blob:') && !isDefaultAvatar(user.avatar) ? user.avatar : ''
+    );
     const avatarInputRef = useRef<HTMLInputElement>(null);
 
     // Agency Settings State
@@ -107,13 +117,25 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
         handleChange('subdomain', slug);
     };
 
-    const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            const url = URL.createObjectURL(file);
-            setAvatarPreview(url);
-            playSuccess();
+    useEffect(() => {
+        if (!user.avatar || user.avatar.startsWith('blob:') || isDefaultAvatar(user.avatar)) {
+            setAvatarPreview('');
+            return;
         }
+        setAvatarPreview(user.avatar);
+    }, [user.avatar]);
+
+    const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !e.target.files[0]) return;
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = typeof reader.result === 'string' ? reader.result : '';
+            if (!result) return;
+            setAvatarPreview(result);
+            playSuccess();
+        };
+        reader.readAsDataURL(file);
     };
 
     const handleSave = () => {
@@ -252,10 +274,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
             </div>
 
             {/* Layout Container - Wider Margins (gap-12) and Full Width */}
-            <div className="flex flex-col lg:flex-row gap-12">
+            <div className="flex flex-col xl:flex-row gap-8 xl:gap-12">
 
                 {/* --- LEFT SIDEBAR (NAVIGATION) --- */}
-                <div className="lg:w-80 shrink-0 flex flex-col gap-6">
+                <div className="xl:w-80 shrink-0 flex flex-col gap-6">
 
                     {/* Profile "Passport" Card */}
                     <div className="p-6 bg-white dark:bg-charcoal border border-slate-200 dark:border-white/5 rounded-[2rem] shadow-sm relative overflow-hidden group">
@@ -271,7 +293,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         <img src={avatarPreview} className="w-full h-full rounded-full object-cover" alt="Profile" />
                                     ) : (
                                         <div className="w-full h-full rounded-full bg-slate-800 dark:bg-slate-900 text-white flex items-center justify-center text-lg font-semibold">
-                                            {(formData.name || 'U').trim()[0]?.toUpperCase()}
+                                            {getInitials(formData.name)}
                                         </div>
                                     )}
                                 </div>
@@ -299,8 +321,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                     </div>
 
                     {/* Navigation Menu — horizontal sticky on mobile, vertical on desktop */}
-                    <div className="lg:hidden sticky top-0 z-30 -mx-4 px-4 py-3 bg-white/95 dark:bg-[#0f0f15]/95 backdrop-blur-xl border-b border-slate-200 dark:border-white/5">
-                        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                    <div className="xl:hidden -mx-2 px-2 py-2">
+                        <div className="flex flex-wrap items-center justify-center gap-2">
                             {([
                                 { id: 'profile', label: 'Profile', icon: Fingerprint },
                                 { id: 'payments', label: 'Payments', icon: Wallet },
@@ -311,7 +333,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                 <button
                                     key={tab.id}
                                     onClick={() => { playClick(); setActiveTab(tab.id); }}
-                                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all shrink-0
+                                    className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all
                                         ${activeTab === tab.id
                                             ? 'bg-slate-900 dark:bg-white text-white dark:text-black shadow-sm'
                                             : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
@@ -325,7 +347,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                         </div>
                     </div>
 
-                    <div className="hidden lg:flex flex-col gap-1">
+                    <div className="hidden xl:flex flex-col gap-1">
                         <h3 className="px-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">System</h3>
                         <NavButton id="profile" label="Profile" desc="Personal & Public Info" icon={Fingerprint} />
                         <NavButton id="payments" label="Payments" desc="Stripe & Wallets" icon={Wallet} />

@@ -285,7 +285,7 @@ const ActivityView = () => {
     const awaitingAction = projects.filter(p => p.status === 'awaiting_payment' || p.status === 'awaiting_signature').length;
 
     return (
-        <div className="flex h-full min-h-0 w-full min-w-0 flex-col gap-4 overflow-hidden animate-slide-up relative z-10">
+        <div className="flex h-full min-h-0 w-full min-w-0 flex-col gap-4 overflow-y-auto animate-slide-up relative z-10">
             {/* Header — fixed height; ledger scrolls below */}
             <div className="shrink-0 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between border-b border-zinc-200/50 dark:border-white/5 pb-4">
                 <div>
@@ -302,14 +302,14 @@ const ActivityView = () => {
             </div>
 
             {/* Main: sidebar + transaction log — only the log body scrolls */}
-            <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-hidden lg:flex-row lg:gap-6">
+            <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-hidden xl:flex-row xl:gap-6">
 
                 {/* Left: filters + metrics */}
-                <div className="flex w-full shrink-0 flex-col gap-5 overflow-y-auto pb-1 lg:w-[min(100%,18rem)] xl:w-80 lg:max-h-full lg:shrink-0 lg:overflow-y-auto lg:pb-0 no-scrollbar">
+                <div className="order-1 flex w-full shrink-0 flex-col gap-4 overflow-visible pb-1 xl:order-1 xl:w-[min(100%,18rem)] 2xl:w-80 xl:max-h-full xl:shrink-0 xl:overflow-y-auto xl:pb-0 no-scrollbar">
                     {/* Filters */}
                     <div>
                         <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-4 px-1">Ledger Filters</h3>
-                        <div className="flex flex-col gap-2">
+                        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar xl:flex-col xl:overflow-visible">
                             {[
                                 { id: 'all', label: 'All Activity', icon: ListIcon },
                                 { id: 'financial', label: 'Financial', icon: Banknote },
@@ -319,7 +319,7 @@ const ActivityView = () => {
                                 <button
                                     key={item.id}
                                     onClick={() => setFilter(item.id as any)}
-                                    className={`w-full p-3 rounded-xl border flex items-center gap-3 text-sm font-bold transition-all text-left
+                                    className={`min-w-[132px] xl:min-w-0 xl:w-full px-3 py-2.5 rounded-xl border flex items-center gap-2.5 text-xs xl:text-sm font-bold transition-all text-left
                                         ${filter === item.id
                                             ? 'bg-white dark:bg-white/[0.06] border-zinc-200/50 dark:border-white/[0.12] shadow-sm text-zinc-900 dark:text-white'
                                             : 'bg-transparent border-zinc-200/50 dark:border-white/[0.06] text-zinc-500 hover:bg-white/70 dark:hover:bg-white/[0.04]'
@@ -334,18 +334,18 @@ const ActivityView = () => {
                     </div>
 
                     {/* Metrics Widgets - Stacked vertically under filters */}
-                    <div className="flex flex-col gap-4">
-                        <Widget compact title={"Pending Revenue"} titleIcon={Clock} className="group rounded-2xl" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+                    <div className="flex gap-2.5 overflow-x-auto pb-1 no-scrollbar xl:grid xl:grid-cols-1 xl:overflow-visible xl:pb-0 xl:gap-4">
+                        <Widget compact title={"Pending Revenue"} titleIcon={Clock} className="group rounded-2xl min-w-[190px] xl:min-w-0" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
                             <PrivacyBlur className="text-2xl font-sans tracking-tight font-medium text-obsidian dark:text-white tracking-tight">${pendingRevenue.toLocaleString()}</PrivacyBlur>
                             <p className="text-[10px] text-amber-600 dark:text-amber-500 mt-1 font-bold">Locked in active projects</p>
                         </Widget>
 
-                        <Widget compact title={"Cleared (MTD)"} titleIcon={CheckCircle} className="group rounded-2xl" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+                        <Widget compact title={"Cleared (MTD)"} titleIcon={CheckCircle} className="group rounded-2xl min-w-[190px] xl:min-w-0" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
                             <PrivacyBlur className="text-2xl font-sans tracking-tight font-medium text-obsidian dark:text-white tracking-tight">${clearedMtd.toLocaleString()}</PrivacyBlur>
                             <p className="text-[10px] text-blue-600 dark:text-lime-400 mt-1 font-bold">+12% from last month</p>
                         </Widget>
 
-                        <Widget compact title={"Active projects"} titleIcon={FolderLock} className="group rounded-2xl" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+                        <Widget compact title={"Active projects"} titleIcon={FolderLock} className="group rounded-2xl min-w-[190px] xl:min-w-0" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
                             <div className="text-2xl font-sans tracking-tight font-medium text-obsidian dark:text-white tracking-tight">{activeVaults}</div>
                             <p className="text-[10px] text-zinc-500 mt-1 font-bold">{awaitingAction} awaiting client action</p>
                         </Widget>
@@ -353,14 +353,14 @@ const ActivityView = () => {
                 </div>
 
                 {/* Right: transaction log — scrollbar lives here only */}
-                <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-                    <Card hoverEffect={false} className="flex h-full min-h-[280px] flex-col !p-0 overflow-hidden border border-zinc-200/50 shadow-sm dark:border-white/[0.06] lg:min-h-0">
-                        <div className="shrink-0 p-6 border-b border-zinc-200/50 dark:border-white/5 bg-editorial/50 dark:bg-white/[0.02]">
-                            <div className="flex justify-between items-center gap-4">
+                <div className="order-2 flex min-h-0 min-w-0 flex-1 flex-col xl:order-2">
+                    <Card hoverEffect={false} className="flex w-full min-h-[420px] max-h-[72vh] xl:h-full xl:max-h-[calc(100vh-12.5rem)] flex-col !p-0 overflow-hidden border border-zinc-200/50 shadow-sm dark:border-white/[0.06]">
+                        <div className="shrink-0 p-4 sm:p-6 border-b border-zinc-200/50 dark:border-white/5 bg-editorial/50 dark:bg-white/[0.02]">
+                            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 sm:gap-4">
                                 <h3 className="font-sans tracking-tight text-lg text-obsidian dark:text-white shrink-0">Transaction Log</h3>
 
                                 {/* SEARCH BAR */}
-                                <div className="flex-1 max-w-md relative group">
+                                <div className="w-full sm:flex-1 sm:max-w-md relative group">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 group-focus-within:text-blue-600 dark:group-focus-within:text-lime-400 transition-colors" />
                                     <input
                                         type="text"
@@ -371,14 +371,14 @@ const ActivityView = () => {
                                     />
                                 </div>
 
-                                <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400 hover:text-obsidian dark:hover:text-white transition-colors group">
+                                <button className="self-start sm:self-auto flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400 hover:text-obsidian dark:hover:text-white transition-colors group">
                                     <Download className="w-3.5 h-3.5 group-hover:translate-y-0.5 transition-transform" />
                                     Download Report
                                 </button>
                             </div>
                         </div>
 
-                        <div className="custom-scrollbar flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-y-contain p-4 sm:p-6 space-y-10 [scrollbar-gutter:stable]">
+                        <div className="custom-scrollbar flex-1 min-h-0 overflow-y-auto lg:overflow-y-scroll overflow-x-hidden overscroll-y-contain p-4 sm:p-6 space-y-10 [scrollbar-gutter:stable]">
                             {filteredGroups.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center opacity-40">
                                     <Search className="w-12 h-12 mb-4 text-zinc-300" />

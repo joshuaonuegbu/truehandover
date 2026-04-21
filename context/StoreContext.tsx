@@ -169,7 +169,12 @@ const loadMockUser = (): UserProfile => {
       try { localStorage.setItem(DEMO_SEED_VERSION_KEY, String(DEMO_SEED_VERSION)); } catch { }
       return INITIAL_USER;
     }
-    return stored ? JSON.parse(stored) : INITIAL_USER;
+    if (!stored) return INITIAL_USER;
+    const parsed = JSON.parse(stored) as UserProfile;
+    if (parsed.avatar && typeof parsed.avatar === 'string' && parsed.avatar.startsWith('blob:')) {
+      return { ...parsed, avatar: '' };
+    }
+    return parsed;
   } catch (e) {
     console.error("Failed to load user", e);
     return INITIAL_USER;
@@ -484,21 +489,29 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         };
 
         setUser(prev => ({
-          ...prev,
-          id: dbUser.id,
-          email: dbUser.email,
-          name: (dbUser as any).name || prev.name,
-          avatar: (dbUser as any).avatar || prev.avatar,
-          role: (dbUser as any).role || prev.role,
-          subdomain: (dbUser as any).subdomain || prev.subdomain,
-          stripeConnect,
-          paymentMethods: (dbUser as any).payment_methods || prev.paymentMethods,
-          agencySettings: (dbUser as any).agency_settings || prev.agencySettings,
-          storageSettings: (dbUser as any).storage_settings || prev.storageSettings,
-          profilePreferences: {
-            ...DEFAULT_PROFILE_PREFERENCES,
-            ...((dbUser as any).profile_preferences || prev.profilePreferences || {}),
-          },
+          ...(function () {
+            const safeAvatar = (dbUser as any).avatar;
+            const normalizedAvatar = typeof safeAvatar === 'string' && safeAvatar.startsWith('blob:')
+              ? prev.avatar
+              : (safeAvatar || prev.avatar);
+            return {
+              ...prev,
+              id: dbUser.id,
+              email: dbUser.email,
+              name: (dbUser as any).name || prev.name,
+              avatar: normalizedAvatar,
+              role: (dbUser as any).role || prev.role,
+              subdomain: (dbUser as any).subdomain || prev.subdomain,
+              stripeConnect,
+              paymentMethods: (dbUser as any).payment_methods || prev.paymentMethods,
+              agencySettings: (dbUser as any).agency_settings || prev.agencySettings,
+              storageSettings: (dbUser as any).storage_settings || prev.storageSettings,
+              profilePreferences: {
+                ...DEFAULT_PROFILE_PREFERENCES,
+                ...((dbUser as any).profile_preferences || prev.profilePreferences || {}),
+              },
+            };
+          })(),
         }));
       }
 

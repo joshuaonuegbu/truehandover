@@ -734,7 +734,7 @@ const ReportsView = () => {
 
             {/* Header Area */}
             <div className="flex flex-col gap-6 border-b border-zinc-200/50 dark:border-white/5 pb-8 mb-12">
-                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
                     <div>
                         <h2 className="text-4xl font-sans tracking-tight font-medium tracking-tight text-zinc-900 dark:text-white">
                             Financial Reports
@@ -779,7 +779,7 @@ const ReportsView = () => {
                 {/* Ambient glow */}
                 <div className="absolute -top-20 -right-20 w-64 h-64 bg-zinc-900/5 dark:bg-white/5 rounded-full blur-[80px] pointer-events-none" />
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 relative z-10">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-10 xl:gap-24 relative z-10">
                     <div className="flex flex-col justify-end">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-3 block border-l-2 border-blue-500 dark:border-lime-400 pl-3">Net Revenue (Secured)</span>
                         <div className="flex items-baseline gap-1 mt-2">
@@ -838,10 +838,10 @@ const ReportsView = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-10 xl:gap-12">
 
                     {/* Capital Flow Engine (Area Chart) */}
-                    <div className="lg:col-span-2">
+                    <div className="xl:col-span-2">
                         <div className="h-[400px] w-full bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/[0.06] rounded-none lg:rounded-[2rem] p-6 relative overflow-hidden group mb-8 shadow-sm dark:shadow-md">
                             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: NOISE_SVG }}></div>
 
@@ -921,7 +921,7 @@ const ReportsView = () => {
                     </div>
 
                     {/* Revenue Intelligence Column */}
-                    <div className="lg:col-span-1 border-l border-zinc-200/50 dark:border-white/5 pl-0 lg:pl-12 py-4 flex flex-col justify-between">
+                    <div className="xl:col-span-1 border-l border-zinc-200/50 dark:border-white/5 pl-0 xl:pl-12 py-4 flex flex-col justify-between">
                         <div>
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-2">

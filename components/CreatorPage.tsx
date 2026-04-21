@@ -55,6 +55,7 @@ interface CreatorPageProps {
     onSave: (project: Project) => void;
     onBack: () => void;
     user?: UserProfile;
+    themeMode?: 'light' | 'dark' | 'system';
 }
 
 const createClientLinkToken = () => {
@@ -240,7 +241,7 @@ const Toggle = ({ checked, onChange }: { checked: boolean, onChange: (v: boolean
     </button>
 );
 
-const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects = [], onSave, onBack, user }) => {
+const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects = [], onSave, onBack, user, themeMode = 'system' }) => {
 
     /** Returns `name` uniquified against `existingNames`, e.g. "photo (2).jpg" */
     const deduplicateFileName = (name: string, existingNames: string[]): string => {
@@ -381,7 +382,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
     const [uploadError, setUploadError] = useState<string | null>(null);
 
     // Theme State
-    const [previewTheme, setPreviewTheme] = useState<'light' | 'dark' | 'system'>('system');
+    const [previewTheme, setPreviewTheme] = useState<'light' | 'dark' | 'system'>(themeMode);
     const [systemDark, setSystemDark] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches);
 
     const [showAvatarSelector, setShowAvatarSelector] = useState(false);
@@ -404,6 +405,10 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
         media.addEventListener('change', listener);
         return () => media.removeEventListener('change', listener);
     }, []);
+
+    useEffect(() => {
+        setPreviewTheme(themeMode);
+    }, [themeMode]);
 
     useEffect(() => {
         const email = (formData.client?.email || '').trim().toLowerCase();

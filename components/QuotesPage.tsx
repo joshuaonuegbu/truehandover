@@ -151,7 +151,7 @@ export default function QuotesPage() {
                 </div>
             </div>
 
-            <section className="grid grid-cols-1 xl:grid-cols-[1.25fr_0.75fr] gap-4">
+            <section className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)] 2xl:grid-cols-[1.25fr_0.75fr] gap-4">
                 <div className="rounded-[2rem] border border-zinc-200/55 dark:border-white/[0.08] bg-white dark:bg-charcoal shadow-sm p-5 sm:p-6 space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <label className="space-y-1">
@@ -209,7 +209,12 @@ export default function QuotesPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <label className="space-y-1">
                             <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Issue Date</span>
-                            <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="w-full h-11 rounded-xl bg-white dark:bg-white/5 border border-zinc-200/70 dark:border-white/10 px-3 text-sm text-zinc-900 dark:text-white" />
+                            <input
+                                type="date"
+                                value={issueDate}
+                                onChange={(e) => setIssueDate(e.target.value)}
+                                className="w-full h-11 rounded-xl bg-white dark:bg-white/5 border border-zinc-200/70 dark:border-white/10 px-3 text-sm text-zinc-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-80 [&::-webkit-calendar-picker-indicator]:brightness-0 dark:[&::-webkit-calendar-picker-indicator]:brightness-0 dark:[&::-webkit-calendar-picker-indicator]:invert"
+                            />
                         </label>
                         <label className="space-y-1">
                             <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Valid Days</span>
@@ -233,19 +238,19 @@ export default function QuotesPage() {
                             {lines.map((line) => {
                                 const lineTotal = (Number(line.qty) || 0) * (Number(line.rate) || 0);
                                 return (
-                                    <div key={line.id} className="grid grid-cols-1 md:grid-cols-[1.6fr_0.45fr_0.7fr_auto] gap-2 p-3 rounded-xl bg-zinc-100/70 dark:bg-white/5 border border-zinc-200/70 dark:border-white/10">
+                                    <div key={line.id} className="grid grid-cols-1 md:grid-cols-[minmax(0,1.6fr)_minmax(0,0.55fr)_minmax(0,0.75fr)_minmax(0,auto)] gap-2 p-3 rounded-xl bg-zinc-100/70 dark:bg-white/5 border border-zinc-200/70 dark:border-white/10">
                                         <input
                                             value={line.description}
                                             onChange={(e) => updateLine(line.id, { description: e.target.value })}
                                             placeholder="Description"
-                                            className="h-10 rounded-lg bg-white dark:bg-white/10 border border-zinc-200/70 dark:border-white/10 px-3 text-sm text-zinc-900 dark:text-white"
+                                            className="h-10 min-w-0 w-full rounded-lg bg-white dark:bg-white/10 border border-zinc-200/70 dark:border-white/10 px-3 text-sm text-zinc-900 dark:text-white"
                                         />
                                         <input
                                             type="number"
                                             min={0}
                                             value={line.qty}
                                             onChange={(e) => updateLine(line.id, { qty: Math.max(0, Number(e.target.value) || 0) })}
-                                            className="h-10 rounded-lg bg-white dark:bg-white/10 border border-zinc-200/70 dark:border-white/10 px-3 text-sm text-zinc-900 dark:text-white"
+                                            className="h-10 min-w-0 w-full rounded-lg bg-white dark:bg-white/10 border border-zinc-200/70 dark:border-white/10 px-3 text-sm text-zinc-900 dark:text-white"
                                         />
                                         <input
                                             type="number"
@@ -253,15 +258,15 @@ export default function QuotesPage() {
                                             step="0.01"
                                             value={line.rate}
                                             onChange={(e) => updateLine(line.id, { rate: Math.max(0, Number(e.target.value) || 0) })}
-                                            className="h-10 rounded-lg bg-white dark:bg-white/10 border border-zinc-200/70 dark:border-white/10 px-3 text-sm text-zinc-900 dark:text-white"
+                                            className="h-10 min-w-0 w-full rounded-lg bg-white dark:bg-white/10 border border-zinc-200/70 dark:border-white/10 px-3 text-sm text-zinc-900 dark:text-white"
                                         />
-                                        <div className="flex items-center gap-1">
-                                            <div className="h-10 px-3 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-semibold flex items-center">
-                                                {currency.format(lineTotal)}
+                                        <div className="flex min-w-0 items-center gap-1 justify-end">
+                                            <div className="h-10 min-w-0 flex-1 md:flex-none md:max-w-[100px] px-3 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-semibold tabular-nums flex items-center justify-end overflow-hidden">
+                                                <span className="truncate">{currency.format(lineTotal)}</span>
                                             </div>
                                             <button
                                                 onClick={() => removeLine(line.id)}
-                                                className="h-10 w-10 rounded-lg border border-zinc-200/70 dark:border-white/10 hover:bg-red-50 dark:hover:bg-red-500/12 text-zinc-500 hover:text-red-600 dark:text-zinc-300 dark:hover:text-red-300 flex items-center justify-center"
+                                                className="h-10 w-10 shrink-0 rounded-lg border border-zinc-200/70 dark:border-white/10 hover:bg-red-50 dark:hover:bg-red-500/12 text-zinc-500 hover:text-red-600 dark:text-zinc-300 dark:hover:text-red-300 flex items-center justify-center"
                                                 title="Remove line"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -284,7 +289,7 @@ export default function QuotesPage() {
                     </label>
                 </div>
 
-                <aside className="rounded-[2rem] border border-zinc-200/55 dark:border-white/[0.08] bg-white dark:bg-charcoal shadow-sm p-5 sm:p-6 space-y-4">
+                <aside className="min-w-0 rounded-[2rem] border border-zinc-200/55 dark:border-white/[0.08] bg-white dark:bg-charcoal shadow-sm p-5 sm:p-6 space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="text-lg font-sans tracking-tight font-medium text-zinc-900 dark:text-white">Quote Summary</h3>
                         <FileDigit className="w-5 h-5 text-zinc-500 dark:text-zinc-300" />

@@ -536,7 +536,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                 )}
                 {/* Floating Device Mode Switcher */}
                 {!previewChromeSuppressed && (
-                <div className="fixed bottom-6 right-6 z-[60] flex items-center gap-1 bg-[#23232e]/88 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-1.5 shadow-[0_16px_40px_-24px_rgba(0,0,0,0.55)]">
+                <div className="fixed bottom-6 right-6 z-[60] flex items-center gap-1 bg-[#161722]/94 backdrop-blur-2xl border border-white/[0.12] rounded-2xl p-1.5 shadow-[0_18px_48px_-24px_rgba(0,0,0,0.62)]">
                     <span className="px-2 text-[10px] font-bold uppercase tracking-widest text-white/70 select-none">
                         Preview
                     </span>
@@ -587,9 +587,11 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         canvasDeviceOptions.push({ mode: 'foldable', icon: RectangleHorizontal, label: 'Foldable' });
     }
 
+    const portraitCanvasShadow = 'shadow-[0_10px_24px_-18px_rgba(15,23,42,0.16)]';
+    const defaultCanvasShadow = 'shadow-[0_18px_44px_-24px_rgba(15,23,42,0.2)]';
     const canvasPillClass = isDarkMode
         ? 'bg-[#23232e]/88 border-white/[0.08] text-white/75 shadow-[0_16px_40px_-24px_rgba(0,0,0,0.55)]'
-        : 'bg-white/92 border-zinc-200/60 text-zinc-600 shadow-[0_18px_44px_-24px_rgba(15,23,42,0.2)]';
+        : `bg-white/92 border-zinc-200/60 text-zinc-600 ${orientation === 'portrait' ? portraitCanvasShadow : defaultCanvasShadow}`;
     const canvasPillHoverClass = isDarkMode
         ? 'hover:bg-white/12 hover:text-white'
         : 'hover:bg-white hover:text-zinc-900';
@@ -616,7 +618,6 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
             <div className={`relative z-10 flex flex-col w-full h-full transition-all duration-300 ease-out ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
 
             {/* === FLOATING TOOLBAR === */}
-            {!previewChromeSuppressed && (
             <div className="relative z-50 flex items-center justify-center pt-4 pb-2 gap-2 px-4 shrink-0 flex-nowrap overflow-x-auto no-scrollbar">
                 {/* Back button */}
                 {!isEmbedded && (
@@ -687,10 +688,9 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
                     title="Refresh Preview"
                 ><RefreshCw className="w-4 h-4" /></button>
             </div>
-            )}
 
             {/* Frame Options Dropdown (mobile only) */}
-            {showFrameSettings && isMobile && !previewChromeSuppressed && (
+            {showFrameSettings && isMobile && (
                 <div className="relative z-50 flex justify-center -mt-1 mb-1 px-4 animate-fade-in">
                     <div className={`flex items-center gap-1 backdrop-blur-xl border rounded-xl p-1 shadow-lg ${canvasPillClass}`}>
                         <button onClick={() => { playClick(); setFrameOption('dynamicIsland'); }}

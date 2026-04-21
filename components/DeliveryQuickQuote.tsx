@@ -116,7 +116,7 @@ export default function DeliveryQuickQuote({
                                 placeholder="Description"
                                 className={`w-full h-9 rounded-lg px-2.5 text-xs border outline-none transition-colors ${lineInputExtra}`}
                             />
-                            <div className="flex items-center gap-1.5">
+                            <div className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto_auto] items-center gap-1.5">
                                 <input
                                     type="number"
                                     min={0}
@@ -125,7 +125,6 @@ export default function DeliveryQuickQuote({
                                     className={`w-14 h-9 rounded-lg px-1.5 text-xs border text-center ${lineInputExtra}`}
                                     title="Qty"
                                 />
-                                <span className="text-zinc-400 text-xs">×</span>
                                 <input
                                     type="number"
                                     min={0}

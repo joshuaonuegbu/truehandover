@@ -85,7 +85,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
             <div className="shrink-0 flex flex-col gap-5 border-b border-zinc-200/50 dark:border-white/5 pb-7">
                 <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-5">
                     <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-3">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#a3e635]/15 dark:bg-[#bef264]/12 text-[#4d7c0f] dark:text-[#bef264] border border-[#a3e635]/35 dark:border-[#bef264]/30 backdrop-blur-sm text-[10px] font-bold uppercase tracking-widest mb-3">
                             <LifeBuoy className="w-3 h-3" /> Heartifact Support
                         </div>
                         <h1 className="font-sans tracking-tight text-4xl md:text-5xl font-medium text-zinc-900 dark:text-white leading-[1.05]">
@@ -127,10 +127,10 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
             </div>
 
             {/* Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 xl:gap-12">
 
                 {/* Main FAQ Column */}
-                <div className="lg:col-span-8 space-y-4">
+                <div className="xl:col-span-8 space-y-4">
                     {filteredFaqs.length > 0 ? (
                         filteredFaqs.map((faq, index) => (
                             <div
@@ -172,7 +172,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
                 </div>
 
                 {/* Sidebar Column */}
-                <div className="lg:col-span-4 space-y-6">
+                <div className="xl:col-span-4 space-y-6">
                     {/* Contact Card */}
                     <Card className="!p-8 bg-white dark:bg-charcoal text-zinc-900 dark:text-white">
                         <MessageCircle className="w-10 h-10 mb-6 text-blue-600 dark:text-lime-400" />
