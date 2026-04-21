@@ -1349,6 +1349,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
         if (hour < 18) return 'Good afternoon,';
         return 'Good evening,';
     }, []);
+    const shouldUseGreetingHeader = headerVariant === 'greeting' || window.innerWidth < 880;
     const [projectTab, setProjectTab] = useState<'pending' | 'draft' | 'paid'>('pending');
     const [briefingPulse, setBriefingPulse] = useState(false);
     const briefingPulseLocationKeyRef = useRef<string | null>(null);
@@ -1417,7 +1418,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                             <span className="text-zinc-300 dark:text-zinc-600">.</span>
                             <span className="font-mono font-normal tracking-normal normal-case text-zinc-500 dark:text-zinc-400">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</span>
                         </div>
-                        {headerVariant === 'greeting' ? (
+                        {shouldUseGreetingHeader ? (
                             <h1 className="font-serif tracking-tight text-3xl md:text-5xl text-zinc-900 dark:text-white leading-[1.05] mb-2">
                                 {greetingLine}{' '}
                                 <span className="italic text-lime-400 dark:text-blue-400">{greetingName}</span>.
@@ -2290,14 +2291,14 @@ const MobileNavBar = ({ navItems, currentPath, onNavigate }: { navItems: any[], 
     <div className="fixed bottom-0 inset-x-0 z-[88] flex justify-center items-end pb-[env(safe-area-inset-bottom)] pointer-events-none">
         <div className="pointer-events-auto w-full max-w-[22rem] mx-4 mb-3 rounded-[2rem] bg-white/30 dark:bg-cosmic/60 backdrop-blur-xl border border-zinc-200/35 dark:border-white/[0.06] shadow-[0_10px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
             <div className="flex items-center justify-between px-1.5 py-1.5 rounded-[2rem] bg-[#f0f2f5]/40 dark:bg-cosmic/56">
-                {navItems.map((item) => {
+            {navItems.map((item) => {
                     const isActive =
                         currentPath === item.id ||
                         (item.id === 'workspace' && (currentPath === '' || currentPath === 'app'));
-                    return (
-                        <button
-                            key={item.id}
-                            onClick={() => onNavigate(item.id)}
+                return (
+                    <button
+                        key={item.id}
+                        onClick={() => onNavigate(item.id)}
                             onMouseEnter={() => routePreloadMap[item.id]?.()}
                             onTouchStart={() => routePreloadMap[item.id]?.()}
                             aria-label={item.label}
@@ -2318,7 +2319,7 @@ const MobileNavBar = ({ navItems, currentPath, onNavigate }: { navItems: any[], 
                         </button>
                     );
                 })}
-            </div>
+                        </div>
         </div>
     </div>
 );
@@ -2802,7 +2803,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                             : widgetView === 'projects'
                                 ? 'Current projects'
                                 : 'Briefing'}
-                    </span>
+                        </span>
                     {widgetView === 'create' ? (
                         <>
                             <button
@@ -2815,7 +2816,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                 title="Widget options"
                             >
                                 <MoreHorizontal className="w-4 h-4" />
-                            </button>
+                    </button>
                             {showMoreMenu && (
                         <div className={`absolute right-0 top-11 w-48 rounded-2xl border shadow-xl z-20 p-2 ${isDarkMode ? 'bg-[#151521] border-white/10' : 'bg-white border-zinc-200'}`}>
                             <button
@@ -2896,7 +2897,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                     </button>
                 </div>
                 {widgetView !== 'create' && (
-                    <p className="mt-1 text-[10px] text-zinc-400 dark:text-zinc-500">Use tabs to switch between active work, projects, and briefing updates.</p>
+                    <p className="mt-1 text-[10px] text-zinc-400 dark:text-zinc-500 text-center px-1">Use tabs to switch between active work, projects, and briefing updates.</p>
                 )}
 
                 {widgetView === 'create' && !linkReady && (
@@ -2935,7 +2936,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                 Create quote
                             </button>
                         </div>
-                        <p className="mt-1 text-[10px] text-zinc-400 dark:text-zinc-500">Create project handles delivery setup; Create quote is for quick pricing drafts.</p>
+                        <p className="mt-1 text-[10px] text-zinc-400 dark:text-zinc-500 text-center px-1">Create project handles delivery setup; Create quote is for quick pricing drafts.</p>
                     </div>
                 )}
 
@@ -3422,7 +3423,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                 )}
 
                 {widgetView === 'briefing' && (
-                    <div className={`pt-3 border-t ${sectionLineCls} h-full flex flex-col`}>
+                    <div className={`pt-3 border-t ${sectionLineCls} h-full min-h-0 flex flex-col`}>
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Recent Briefing</span>
                             <button
@@ -3455,8 +3456,8 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                             </div>
                                             <span className="text-[10px] font-mono text-zinc-400 shrink-0">{formatWidgetTime(item.ts)}</span>
                                         </div>
-                                    );
-                                })}
+                );
+            })}
                             </div>
                         )}
                     </div>
@@ -3504,8 +3505,8 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                 )}
             </div>
         </div>
-        </div>
-    );
+    </div>
+);
 };
 
 /** When layout is full, `/workspace` redirects here — keep ?quickstart= so onboarding copy still applies. */
@@ -3550,13 +3551,15 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
     // the docked experience; the sidebar CSS uses a matching custom breakpoint below.
     const DOCK_MIN_WIDTH = 880;
     const dockCapable = viewportWidth >= DOCK_MIN_WIDTH;
+    // Small-screen mode uses the mobile bottom-sheet interaction model.
+    const isSmallScreenSheetMode = !dockCapable;
     // layoutMode stored preference: 'full' | 'dock'. We derive a third `widget-only` state on-screen.
     const effectiveLayout: 'full' | 'dock' | 'widget' =
         layoutMode === 'full' ? 'full' : dockCapable ? 'dock' : 'widget';
     const isDockMode = effectiveLayout === 'dock';
     const isWidgetOnly = effectiveLayout === 'widget';
-    // Show a bottom icon nav on very narrow viewports; declared early so showDeliveryWidget can use it.
-    const showMobileNav = viewportWidth <= 640;
+    // In small-screen sheet mode, always show the bottom nav.
+    const showMobileNav = isSmallScreenSheetMode;
     // On mobile, the delivery widget is always the persistent backdrop (even when navigating to
     // other routes which render as bottom sheets above it).
     const showBottomSheet = showMobileNav && currentPath !== 'workspace' && currentPath !== 'app' && currentPath !== '' && currentPath !== 'signin' && currentPath !== 'signup';
@@ -3748,7 +3751,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             const path = (event as any).composedPath?.() as EventTarget[] | undefined;
             if (path && path.includes(root)) return;
             if (root.contains(target)) return;
-            setIsProfileOpen(false);
+                setIsProfileOpen(false);
         };
         document.addEventListener('mousedown', handleClickOutside);
         document.addEventListener('touchstart', handleClickOutside, { passive: true });
@@ -3909,15 +3912,15 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                         <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200/70 dark:border-white/10 flex items-center justify-center shrink-0">
                             <Search className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
                         </div>
-                        <input
-                            autoFocus
+                    <input
+                        autoFocus
                             value={query}
                             onChange={(e) => { setQuery(e.target.value); }}
                             placeholder="Search projects, files, clients, or routes…"
                             className="flex-1 bg-transparent outline-none text-[15px] sm:text-base text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 font-medium tracking-tight"
                         />
                         <kbd className="hidden sm:inline-flex px-2 py-1 rounded-md bg-zinc-100 dark:bg-white/5 text-[10px] font-bold text-zinc-500 dark:text-zinc-400 tracking-wider border border-zinc-200/60 dark:border-white/10">ESC</kbd>
-                    </div>
+                </div>
 
                     <div ref={listRef} className="relative p-2 max-h-[440px] overflow-y-auto">
                         <div className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
@@ -3944,7 +3947,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                         <span className="text-xs text-zinc-500 dark:text-zinc-400 block truncate">{result.subtitle}</span>
                                     </div>
                                     <span className={`ml-auto shrink-0 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md transition-colors ${active ? 'bg-[#a3e635]/20 dark:bg-[#bef264]/15 text-[#4d7c0f] dark:text-[#bef264] border border-[#a3e635]/35 dark:border-[#bef264]/25' : 'bg-zinc-100 dark:bg-white/5 text-zinc-400 dark:text-zinc-500 border border-zinc-200/70 dark:border-white/10'}`}>{result.kind}</span>
-                                </button>
+                    </button>
                             );
                         })}
                     </div>
@@ -3968,12 +3971,12 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                 <kbd className="px-1.5 py-0.5 rounded-md border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-600 dark:text-zinc-300">g</kbd>
                                 <kbd className="px-1.5 py-0.5 rounded-md border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-600 dark:text-zinc-300">{key}</kbd>
                                 {label}
-                            </button>
+                    </button>
                         ))}
-                    </div>
                 </div>
             </div>
-        );
+        </div>
+    );
     };
 
     const getInitials = (name?: string) => {
@@ -4340,23 +4343,25 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                         <Search className="w-4 h-4" />
                             </button>
 
-                    <button
-                        onClick={() => {
-                            playClick();
-                            onSetLayoutMode?.(layoutMode === 'full' ? 'dock' : 'full');
-                        }}
-                        className={`inline-flex shrink-0 p-2 sm:p-2.5 rounded-xl text-zinc-500 dark:text-zinc-300 transition-all cursor-pointer ${topbarGlassCls} ${topbarGlassHoverCls}`}
-                        title={
-                            effectiveLayout === 'full'
-                                ? (dockCapable ? 'Switch to docked widget' : 'Switch to delivery widget')
-                                : effectiveLayout === 'widget'
-                                    ? 'Switch to full workspace'
-                                    : 'Switch to full workspace'
-                        }
-                        aria-label="Toggle layout"
-                    >
-                        <ArrowLeftRight className="w-4 h-4" />
-                            </button>
+                    {!isSmallScreenSheetMode && (
+                        <button
+                            onClick={() => {
+                                playClick();
+                                onSetLayoutMode?.(layoutMode === 'full' ? 'dock' : 'full');
+                            }}
+                            className={`inline-flex shrink-0 p-2 sm:p-2.5 rounded-xl text-zinc-500 dark:text-zinc-300 transition-all cursor-pointer ${topbarGlassCls} ${topbarGlassHoverCls}`}
+                            title={
+                                effectiveLayout === 'full'
+                                    ? (dockCapable ? 'Switch to docked widget' : 'Switch to delivery widget')
+                                    : effectiveLayout === 'widget'
+                                        ? 'Switch to full workspace'
+                                        : 'Switch to full workspace'
+                            }
+                            aria-label="Toggle layout"
+                        >
+                            <ArrowLeftRight className="w-4 h-4" />
+                        </button>
+                    )}
 
                     {/* Privacy toggle */}
                             <button
@@ -4437,7 +4442,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             <Outlet context={outletCtx} />
                         </div>
                     </div>
-                </main>
+            </main>
             )}
 
             {/* ── Mobile bottom sheet: pages slide up over the delivery widget backdrop ── */}
@@ -4880,6 +4885,14 @@ const AppContent = () => {
         setLayoutPreference(next);
         setLayoutMode(next);
     }, []);
+
+    useEffect(() => {
+        const width = window.innerWidth;
+        if (width < 880 && (layoutMode !== 'dock' || layoutPreference !== 'dock')) {
+            setLayoutMode('dock');
+            setLayoutPreference('dock');
+        }
+    }, [layoutMode, layoutPreference]);
 
     useEffect(() => {
         // The widget can gracefully collapse to full-width on very narrow screens, so we no longer
