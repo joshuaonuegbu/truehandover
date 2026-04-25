@@ -1962,7 +1962,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                         <button onClick={() => { playClick(); setVaultLayout('list'); }} className={`p-2.5 rounded-[2rem] transition-colors shrink-0 ${vaultLayout === 'list' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`} title="List view"><ListIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
-                <div className={`grid gap-2 ${isCompactContent ? 'grid-cols-1 min-[560px]:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'}`}>
+                <div className={`grid gap-2 ${isCompactContent ? 'grid-cols-1 min-[560px]:grid-cols-2 min-[760px]:grid-cols-3' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'}`}>
                     <SelectField
                         value={statusFilter}
                         onChange={(value) => setStatusFilter(value as 'all' | 'unpaid' | 'paid' | 'pending' | 'failed' | 'archived')}
@@ -1976,7 +1976,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                         ]}
                         tone="charcoal"
                         size="sm"
-                        buttonClassName="!rounded-[1rem]"
+                        buttonClassName="!rounded-[1rem] min-[560px]:!text-[12px] min-[560px]:!px-2.5 min-[760px]:!text-[11px] min-[760px]:!px-2"
                     />
                     <SelectField
                         value={dateRangeFilter}
@@ -1990,7 +1990,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                         ]}
                         tone="charcoal"
                         size="sm"
-                        buttonClassName="!rounded-[1rem]"
+                        buttonClassName="!rounded-[1rem] min-[560px]:!text-[12px] min-[560px]:!px-2.5 min-[760px]:!text-[11px] min-[760px]:!px-2"
                     />
                     <SelectField
                         value={amountRangeFilter}
@@ -2004,7 +2004,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                         ]}
                         tone="charcoal"
                         size="sm"
-                        buttonClassName="!rounded-[1rem]"
+                        buttonClassName="!rounded-[1rem] min-[560px]:!text-[12px] min-[560px]:!px-2.5 min-[760px]:!text-[11px] min-[760px]:!px-2"
                     />
                 </div>
             </div>
@@ -4909,7 +4909,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500">
                                         From your landing upload
                                     </p>
-                                    <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-4xl 2xl:text-6xl text-zinc-900 dark:text-white tracking-tight leading-[1.05]">
+                                    <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-5xl 2xl:text-[6.5rem] text-zinc-900 dark:text-white tracking-tight leading-[1.12]">
                                         <span className="italic text-lime-400 dark:text-[#bef264]">
                                             {quickstartDraftFileCount} file{quickstartDraftFileCount !== 1 ? 's' : ''}
                                         </span>
@@ -4960,7 +4960,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             </div>
                         )}
                         <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-700 ${workspaceQuickstartActive || !showHeroGreeting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                            <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-[5.6rem] 2xl:text-[8.2rem] text-zinc-900 dark:text-white tracking-tight leading-[0.94] max-w-[11ch] px-1">
+                            <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-[5.9rem] 2xl:text-[8.5rem] text-zinc-900 dark:text-white tracking-tight leading-[1.03] max-w-[11ch] px-1">
                                 <span className="block animate-fade-in">
                                     {heroGreetingPrefix}
                                     <span className="italic text-lime-400 dark:text-[#bef264]">{greetingName}</span>
@@ -4994,7 +4994,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                     }}
                 >
                     <div className="relative w-full max-w-md">
-                        <h2 className={`max-w-[11ch] font-serif text-4xl md:text-5xl lg:text-[3.2rem] text-zinc-900 dark:text-white tracking-tight leading-[1.02] transition-opacity duration-500 ${showHeroGreeting ? 'opacity-100' : 'opacity-0 pointer-events-none absolute inset-0'}`}>
+                        <h2 className={`max-w-[11ch] font-serif text-5xl md:text-6xl lg:text-[3.9rem] text-zinc-900 dark:text-white tracking-tight leading-[1.1] transition-opacity duration-500 ${showHeroGreeting ? 'opacity-100' : 'opacity-0 pointer-events-none absolute inset-0'}`}>
                             {heroGreetingPrefix}
                             <span className="italic text-lime-400 dark:text-[#bef264]">{greetingName}</span>
                             {heroGreetingSuffix}
