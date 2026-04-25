@@ -326,7 +326,7 @@ const ActivityView = () => {
                                         }
                                     `}
                                 >
-                                    <item.icon className={`w-4 h-4 ${filter === item.id ? 'text-blue-600 dark:text-lime-400' : 'text-zinc-400'}`} />
+                                    <item.icon className={`w-4 h-4 ${filter === item.id ? 'text-[#4d7c0f] dark:text-lime-400' : 'text-zinc-400'}`} />
                                     {item.label}
                                 </button>
                             ))}
@@ -342,7 +342,7 @@ const ActivityView = () => {
 
                         <Widget compact title={"Cleared (MTD)"} titleIcon={CheckCircle} className="group rounded-2xl min-w-[190px] xl:min-w-0" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
                             <PrivacyBlur className="text-2xl font-sans tracking-tight font-medium text-obsidian dark:text-white tracking-tight">${clearedMtd.toLocaleString()}</PrivacyBlur>
-                            <p className="text-[10px] text-blue-600 dark:text-lime-400 mt-1 font-bold">+12% from last month</p>
+                            <p className="text-[10px] text-[#4d7c0f] dark:text-lime-400 mt-1 font-bold">+12% from last month</p>
                         </Widget>
 
                         <Widget compact title={"Active projects"} titleIcon={FolderLock} className="group rounded-2xl min-w-[190px] xl:min-w-0" titleClassName="font-serif text-sm font-medium tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
@@ -361,7 +361,7 @@ const ActivityView = () => {
 
                                 {/* SEARCH BAR */}
                                 <div className="w-full sm:flex-1 sm:max-w-md relative group">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 group-focus-within:text-blue-600 dark:group-focus-within:text-lime-400 transition-colors" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 group-focus-within:text-[#4d7c0f] dark:group-focus-within:text-lime-400 transition-colors" />
                                     <input
                                         type="text"
                                         value={search}
@@ -391,7 +391,7 @@ const ActivityView = () => {
                                             <div className="flex items-baseline gap-2">
                                                 <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-400 whitespace-nowrap">{group.date}</h4>
                                                 {group.total && (
-                                                    <span className="text-[10px] font-bold text-blue-600 dark:text-lime-400 bg-blue-50 dark:bg-lime-400/10 px-1.5 py-0.5 rounded border border-blue-100 dark:border-lime-400/20">
+                                                    <span className="text-[10px] font-bold text-[#4d7c0f] dark:text-lime-400 bg-[#a3e635]/15 dark:bg-lime-400/10 px-1.5 py-0.5 rounded border border-[#a3e635]/35 dark:border-lime-400/20">
                                                         {group.total}
                                                     </span>
                                                 )}
@@ -405,7 +405,7 @@ const ActivityView = () => {
                                                     <div className="flex flex-col items-center mr-6 relative">
                                                         <div className={`
                                                             w-10 h-10 rounded-full flex items-center justify-center z-10 border-2 border-white dark:border-[#23232e] shadow-sm transition-colors
-                                                            ${event.type === 'financial' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-editorial text-zinc-500 dark:bg-white/5 dark:text-zinc-400'}
+                                                            ${event.type === 'financial' ? 'bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-blue-900/30 dark:text-blue-400' : 'bg-editorial text-zinc-500 dark:bg-white/5 dark:text-zinc-400'}
                                                         `}>
                                                             <event.icon className="w-4 h-4" />
                                                         </div>
@@ -420,7 +420,7 @@ const ActivityView = () => {
                                                             <div>
                                                                 <div className="flex items-center gap-2 mb-1">
                                                                     <h5 className="font-bold text-obsidian dark:text-white text-sm">{event.title}</h5>
-                                                                    {event.status === 'cleared' && <span className="text-[9px] font-bold uppercase bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">Cleared</span>}
+                                                                    {event.status === 'cleared' && <span className="text-[9px] font-bold uppercase bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-blue-500/12 dark:text-blue-300 px-1.5 py-0.5 rounded">Cleared</span>}
                                                                     {event.status === 'pending' && <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Pending</span>}
                                                                 </div>
                                                                 <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">{event.desc || `${event.project} • ${event.client}`}</p>
@@ -429,7 +429,7 @@ const ActivityView = () => {
 
                                                             {event.amount ? (
                                                                 <div className="text-right">
-                                                                    <span className={`font-sans tracking-tight text-lg font-medium ${event.amount.startsWith('+') ? 'text-blue-600 dark:text-lime-400' : 'text-obsidian dark:text-white'}`}>
+                                                                    <span className={`font-sans tracking-tight text-lg font-medium ${event.amount.startsWith('+') ? 'text-[#4d7c0f] dark:text-lime-400' : 'text-obsidian dark:text-white'}`}>
                                                                         <PrivacyBlur>{event.amount}</PrivacyBlur>
                                                                     </span>
                                                                     <div className="flex justify-end mt-1">
@@ -440,7 +440,7 @@ const ActivityView = () => {
                                                                 </div>
                                                             ) : (
                                                                 <div className="flex items-center h-full">
-                                                                    <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-blue-600 dark:group-hover:text-lime-400 transition-colors" />
+                                                                    <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-[#4d7c0f] dark:group-hover:text-lime-400 transition-colors" />
                                                                 </div>
                                                             )}
                                                         </div>

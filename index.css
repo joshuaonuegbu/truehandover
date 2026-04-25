@@ -237,6 +237,7 @@ html.dark *::-moz-selection {
 .briefing-scroll {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
+  scrollbar-gutter: stable both-edges;
 }
 
 .briefing-scroll::-webkit-scrollbar {

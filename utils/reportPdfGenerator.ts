@@ -124,6 +124,27 @@ export interface PortfolioOverviewPdfInput {
   projects: Array<{ name: string; clientName: string; status: string; amountUsd: number; createdAt: string }>;
 }
 
+export interface QuotePdfLine {
+  description: string;
+  qty: number;
+  rate: number;
+}
+
+export interface QuotePdfInput {
+  quoteNumber: string;
+  quoteTitle: string;
+  freelancerName?: string;
+  freelancerEmail?: string;
+  clientName: string;
+  clientEmail: string;
+  clientCompany: string;
+  issueDate: string;
+  validUntil: string;
+  lines: QuotePdfLine[];
+  taxRatePercent: number;
+  notes: string;
+}
+
 // --- Page constants ------------------------------------------------------------
 const PAGE_W  = 612;
 const PAGE_H  = 792;
@@ -677,4 +698,68 @@ export const createPortfolioOverviewPdf = async (input: PortfolioOverviewPdfInpu
   ], input.projects as unknown as object[]);
 
   return toBlob(ctx, `portfolio_${input.rangeLabel.replace(/\s+/g, '_')}`);
+};
+
+export const createQuotePdf = async (input: QuotePdfInput) => {
+  const subtotal = input.lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.rate) || 0), 0);
+  const taxRate = Number(input.taxRatePercent) || 0;
+  const tax = subtotal * (taxRate / 100);
+  const total = subtotal + tax;
+
+  const ctx = await createCtx('Client Quote', input.quoteNumber);
+  drawText(ctx, input.quoteTitle || 'Quote', { size: 10, font: 'bold' });
+  ctx.y -= 2;
+  drawText(ctx, `Issued ${fmtDate(input.issueDate, true)}  —  Valid through ${fmtDate(input.validUntil, true)}`, {
+    size: 7.5,
+    color: C.slate,
+  });
+  ctx.y -= 4;
+  drawRule(ctx);
+
+  drawSection(ctx, 'From');
+  drawKeyValue(ctx, 'Name', input.freelancerName?.trim() || '—');
+  drawKeyValue(ctx, 'Email', input.freelancerEmail?.trim() || '—');
+
+  drawSection(ctx, 'Bill To');
+  drawKeyValue(ctx, 'Client', input.clientName?.trim() || '—');
+  drawKeyValue(ctx, 'Email', input.clientEmail?.trim() || '—');
+  drawKeyValue(ctx, 'Company', input.clientCompany?.trim() || '—');
+
+  drawSection(ctx, 'Line Items');
+  type LineRow = { idx: string; desc: string; qty: string; rate: string; lineTotal: string };
+  const rows: LineRow[] = input.lines.map((l, i) => ({
+    idx: String(i + 1),
+    desc: l.description?.trim() || 'Line item',
+    qty: String(Number(l.qty) || 0),
+    rate: fmt$(Number(l.rate) || 0),
+    lineTotal: fmt$((Number(l.qty) || 0) * (Number(l.rate) || 0)),
+  }));
+  // # 36 + Description 220 + Qty 80 + Rate 90 + Total 90 = 516
+  drawTable(ctx, [
+    { key: 'idx', header: '#', width: 36, mono: true },
+    { key: 'desc', header: 'Description', width: 220 },
+    { key: 'qty', header: 'Qty', width: 80, align: 'right' },
+    { key: 'rate', header: 'Rate', width: 90, align: 'right', mono: true },
+    { key: 'lineTotal', header: 'Total', width: 90, align: 'right', mono: true },
+  ], rows as unknown as object[]);
+
+  drawMetricCards(ctx, [
+    { label: 'Subtotal', value: fmt$(subtotal), tone: 'neutral' },
+    { label: taxRate > 0 ? `Tax (${taxRate}%)` : 'Tax', value: fmt$(tax), tone: 'neutral' },
+    { label: 'Total Due', value: fmt$(total), tone: 'accent' },
+  ]);
+
+  const notes = (input.notes || '').trim();
+  if (notes) {
+    drawSection(ctx, 'Notes');
+    for (const line of wrap(notes, CONTENT, ctx.fonts.reg, 8)) {
+      ensureSpace(ctx, 14);
+      ctx.page.drawText(line, { x: ctx.margin, y: ctx.y, size: 8, font: ctx.fonts.reg, color: C.ink });
+      ctx.y -= 12;
+    }
+    ctx.y -= 4;
+  }
+
+  const safeId = input.quoteNumber.replace(/[^\w.-]+/g, '_');
+  return toBlob(ctx, `Heartifact_${safeId}`);
 };

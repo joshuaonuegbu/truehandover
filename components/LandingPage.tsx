@@ -386,7 +386,7 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
             className={`fixed top-0 left-0 right-0 z-50 px-6 pb-6 transition-all duration-500 ${isHidden ? 'opacity-0 -translate-y-full pointer-events-none' : 'opacity-100 translate-y-0'}`}
             style={{ paddingTop: 'max(32px, calc(env(safe-area-inset-top, 0px) + 18px))' }}
         >
-            <div className="max-w-[1200px] mx-auto bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
+            <div className="max-w-[1200px] mx-auto bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-4 sm:px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
                 <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                     <Logo className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
                     <span className="font-serif text-lg sm:text-xl tracking-tight text-black dark:text-white">Heartifact</span>
@@ -659,7 +659,7 @@ const ComparisonSection = () => {
                     <div
                         onMouseEnter={() => setHoveredCard('old')}
                         onMouseLeave={() => setHoveredCard(null)}
-                        className={`p-10 rounded-[2.5rem] bg-white/60 dark:bg-[#2D2E45]/60 backdrop-blur-sm border border-dashed border-slate-300/80 dark:border-white/15 relative group transition-all duration-500 shadow-sm dark:shadow-md hover:bg-white/80 dark:hover:bg-[#2D2E45]/80 hover:border-slate-400/80 dark:hover:border-white/20 ${hoveredCard !== 'old' ? 'animate-old-way-breathe' : ''}`}
+                        className={`p-10 rounded-[2.5rem] bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 relative group transition-all duration-500 shadow-2xl hover:bg-white/80 dark:hover:bg-[#323242]/80 ${hoveredCard !== 'old' ? 'animate-old-way-breathe' : ''}`}
                     >
                         <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                             <X className="w-32 h-32 text-red-500 rotate-12" />
@@ -792,23 +792,23 @@ const BentoGrid = () => {
                             <div className="flex-1 bg-white dark:bg-[#3a3b56] rounded-xl border border-slate-200 dark:border-white/10 p-4 font-mono text-[10px] text-slate-500 dark:text-slate-300 overflow-hidden relative shadow-sm">
                                 <div className="space-y-3 opacity-80">
                                     <div className="flex gap-2">
-                                        <span className="text-lime-400">GET</span>
+                                        <span className="text-[#4d7c0f] dark:text-lime-400">GET</span>
                                         <span className="text-slate-500 dark:text-slate-600">/v/preview</span>
                                         <span className="ml-auto text-slate-500 dark:text-slate-700">200 OK</span>
                                     </div>
                                     <div className="flex gap-2">
-                                        <span className="text-lime-400">LOG</span>
+                                        <span className="text-[#4d7c0f] dark:text-lime-400">LOG</span>
                                         <span className="text-slate-400 dark:text-slate-300">Client Viewing</span>
                                         <span className="ml-auto text-slate-600 dark:text-slate-200">Active</span>
                                     </div>
                                     <div className="flex gap-2">
-                                        <span className="text-lime-400">LCK</span>
+                                        <span className="text-[#4d7c0f] dark:text-lime-400">LCK</span>
                                         <span className="text-slate-400 dark:text-slate-300">Asset Download</span>
                                         <span className="ml-auto text-slate-600 dark:text-slate-200">Blocked</span>
                                     </div>
                                 </div>
                                 <div className="absolute bottom-4 right-4">
-                                    <div className="px-3 py-1 bg-lime-400/10 border border-lime-400/20 rounded text-lime-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                    <div className="px-3 py-1 bg-[#a3e635]/15 border border-[#a3e635]/35 rounded text-[#4d7c0f] dark:text-lime-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
                                         <FileCheck className="w-3 h-3" /> Tracking Active
                                     </div>
                                 </div>
@@ -843,7 +843,7 @@ const BentoGrid = () => {
                                         <div className="text-black font-bold text-lg">$2,450.00</div>
                                     </div>
                                 </div>
-                                <div className="px-2 py-1 bg-green-100 text-green-700 text-[9px] font-bold uppercase rounded">Paid</div>
+                                <div className="px-2 py-1 bg-[#a3e635]/15 text-[#4d7c0f] text-[9px] font-bold uppercase rounded">Paid</div>
                             </div>
                         </div>
                     </BentoCard>
@@ -1421,7 +1421,7 @@ type CookieConsentChoice = 'unknown' | 'essential' | 'all';
 
 const CookieConsentBanner = ({ onChoose }: { onChoose: (choice: Exclude<CookieConsentChoice, 'unknown'>) => void }) => (
     <div className="fixed bottom-4 left-4 right-4 z-[70] md:left-6 md:right-6">
-        <div className="max-w-[1200px] mx-auto rounded-2xl border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#2D2E45]/95 backdrop-blur-xl shadow-2xl p-4 md:p-5">
+        <div className="max-w-[1200px] mx-auto rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl shadow-2xl p-4 md:p-5">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="pr-2">
                     <p className="text-sm font-bold text-obsidian dark:text-white">Cookie settings</p>
@@ -1591,11 +1591,11 @@ export default function LandingPage({ onGetStarted, onQuickStartWithFiles, curre
 
             {/* Floating Theme Toggle — desktop only, aligned to the right edge of the nav pill */}
             <div
-                className="fixed left-0 right-0 z-[999] hidden md:flex pointer-events-none px-6"
+                className="fixed left-0 right-0 z-[999] hidden md:flex pointer-events-none px-4 sm:px-6"
                 style={{ paddingTop: 'max(32px, calc(env(safe-area-inset-top, 0px) + 18px))' }}
             >
                 <div className="max-w-[1200px] mx-auto w-full flex justify-end pointer-events-none">
-                    <div className="translate-x-14 py-3 pointer-events-auto">
+                    <div className="py-3 pointer-events-auto xl:translate-x-14">
                         <ThemeModeDropdown
                             themeMode={currentTheme}
                             onChange={onSetThemeMode || (() => toggleTheme?.())}

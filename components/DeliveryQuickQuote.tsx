@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Copy, Plus, Trash2 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Copy, FileText, Mail, Plus, Trash2 } from 'lucide-react';
 import {
     type QuoteLine,
     calcQuoteSubtotal,
@@ -7,6 +7,7 @@ import {
     quoteCurrency,
     buildQuickQuoteSnippet,
 } from '../utils/quoteBuilderCore';
+import { createQuotePdf } from '../utils/reportPdfGenerator';
 import { playClick, playSuccess } from '../utils/sound';
 import { accentButtonClass } from '../utils/themeTokens';
 
@@ -22,6 +23,9 @@ type DeliveryQuickQuoteProps = {
     onApplyToPayment: (total: number) => void;
     onOpenFullBuilder: () => void;
     panelSurfaceCls: string;
+    /** Shown on PDF “From” block */
+    freelancerName?: string;
+    freelancerEmail?: string;
     /** Extra classes on the outer wrapper */
     className?: string;
     /** Renders below the primary actions (e.g. switch-to-project hint), fixed with the footer */
@@ -38,11 +42,14 @@ export default function DeliveryQuickQuote({
     onApplyToPayment,
     onOpenFullBuilder,
     panelSurfaceCls,
+    freelancerName = '',
+    freelancerEmail = '',
     className = '',
     footerExtra,
 }: DeliveryQuickQuoteProps) {
     const subtotal = useMemo(() => calcQuoteSubtotal(lines), [lines]);
     const accentButton = accentButtonClass(isDarkMode);
+    const [pdfBusy, setPdfBusy] = useState(false);
 
     const updateLine = (id: string, patch: Partial<QuoteLine>) => {
         onLinesChange(lines.map((line) => (line.id === id ? { ...line, ...patch } : line)));
@@ -78,6 +85,56 @@ export default function DeliveryQuickQuote({
             await navigator.clipboard.writeText(text);
         } catch {
             /* ignore */
+        }
+    };
+
+    const handleEmailQuote = () => {
+        playClick();
+        const email = clientEmail.trim();
+        if (!email) return;
+        const subject = `Quote${projectTitle ? ` — ${projectTitle}` : ''}`;
+        const text = buildQuickQuoteSnippet({
+            projectTitle,
+            clientName,
+            clientEmail,
+            lines,
+            subtotal,
+        });
+        window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+    };
+
+    const handleDownloadPdf = async () => {
+        if (pdfBusy) return;
+        setPdfBusy(true);
+        try {
+            const quoteNumber = `QW-${new Date().toISOString().slice(2, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 900 + 100)}`;
+            const validUntil = new Date();
+            validUntil.setDate(validUntil.getDate() + 14);
+            const blob = await createQuotePdf({
+                quoteNumber,
+                quoteTitle: projectTitle.trim() || 'Quick quote',
+                freelancerName: freelancerName.trim() || undefined,
+                freelancerEmail: freelancerEmail.trim() || undefined,
+                clientName: clientName.trim() || '—',
+                clientEmail: clientEmail.trim() || '',
+                clientCompany: '',
+                issueDate: new Date().toISOString().slice(0, 10),
+                validUntil: validUntil.toISOString().slice(0, 10),
+                lines: lines.map(({ description, qty, rate }) => ({ description, qty, rate })),
+                taxRatePercent: 0,
+                notes: '',
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Heartifact_${quoteNumber}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+            playSuccess();
+        } catch {
+            playClick();
+        } finally {
+            setPdfBusy(false);
         }
     };
 
@@ -186,12 +243,41 @@ export default function DeliveryQuickQuote({
                 <button
                     type="button"
                     onClick={handleCopy}
+                    title="Copy a short quote summary to the clipboard (title, client, line totals, subtotal)"
                     className={`h-10 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 border transition-colors ${
                         isDarkMode ? 'border-white/10 text-zinc-200 hover:bg-white/10' : 'border-zinc-200 text-zinc-700 hover:bg-zinc-50'
                     }`}
                 >
                     <Copy className="w-3.5 h-3.5" />
                     Copy
+                </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+                <button
+                    type="button"
+                    onClick={handleDownloadPdf}
+                    disabled={pdfBusy}
+                    title="Download a branded PDF (no tax line — use full builder for tax)"
+                    className={`h-10 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 border transition-colors disabled:opacity-50 ${
+                        isDarkMode ? 'border-white/10 text-zinc-200 hover:bg-white/10' : 'border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                    }`}
+                >
+                    <FileText className="w-3.5 h-3.5" />
+                    {pdfBusy ? 'PDF…' : 'PDF'}
+                </button>
+                <button
+                    type="button"
+                    onClick={handleEmailQuote}
+                    disabled={!clientEmail.trim()}
+                    className={`h-10 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 border transition-colors ${
+                        !clientEmail.trim() ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    } ${
+                        isDarkMode ? 'border-white/10 text-zinc-200 hover:bg-white/10' : 'border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                    }`}
+                >
+                    <Mail className="w-3.5 h-3.5" />
+                    Email
                 </button>
             </div>
 

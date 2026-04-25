@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState, useRef } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import {
     Fingerprint, CreditCard, Crown, Cloud,
     ShieldCheck, Mail, Globe, ArrowRight, Wallet, DollarSign,
@@ -42,6 +43,7 @@ const InputField = ({ label, value, onChange, placeholder, type = "text", icon: 
 );
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignOut }) => {
+    const { isCompactContent = false } = useOutletContext<{ isCompactContent?: boolean }>();
     const getInitials = (name?: string) => {
         if (!name) return 'U';
         const parts = name.trim().split(/\s+/);
@@ -418,7 +420,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                             <>
                                 <Card>
                                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-white/5">
-                                        <User className="w-5 h-5 text-lime-400 dark:text-[#bef264]" />
+                                        <User className="w-5 h-5 text-[#4d7c0f] dark:text-[#bef264]" />
                                         <h3 className="font-sans tracking-tight text-lg text-slate-900 dark:text-white">Basic Information</h3>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -477,7 +479,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         }}
                                     />
 
-                                    <div className="relative z-10 space-y-6 p-6 md:p-8">
+                                    <div className={`relative z-10 space-y-6 ${isCompactContent ? 'p-5 sm:p-6' : 'p-6 md:p-8'}`}>
                                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                             <div className="min-w-0">
                                                 <span className="mb-2 block border-l-2 border-lime-400 pl-3 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
@@ -500,7 +502,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         </div>
 
                                         <div className="rounded-2xl border border-zinc-200/50 bg-white p-5 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.07),0_0_0_1px_rgba(15,23,42,0.03)] dark:border-white/[0.07] dark:bg-black/30 dark:shadow-none">
-                                            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                            <div className={`grid grid-cols-1 gap-5 ${isCompactContent ? 'min-[1180px]:grid-cols-2' : 'md:grid-cols-2'}`}>
                                                 <div className="space-y-1.5">
                                                     <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Portal subdomain</label>
                                                     <div className="flex min-h-[2.75rem] items-center rounded-xl border border-zinc-200/70 bg-[#fafbfc] px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] transition-colors focus-within:border-lime-400 focus-within:ring-0 dark:border-white/[0.1] dark:bg-zinc-950/40 dark:shadow-none dark:focus-within:border-[#bef264]">
@@ -571,7 +573,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                 </div>
                                             </div>
                                             {stripeConnected && (
-                                                <div className="px-3 py-1 bg-lime-400/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-lime-400 dark:text-[#bef264] border border-lime-400/20 flex items-center gap-1.5">
+                                                <div className="px-3 py-1 bg-lime-400/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-[#4d7c0f] dark:text-[#bef264] border border-lime-400/20 flex items-center gap-1.5">
                                                     <div className="w-2 h-2 bg-lime-400 rounded-full animate-pulse" />
                                                     Connected
                                                 </div>
@@ -820,7 +822,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Host</span>
                                                     <span className="text-slate-900 dark:text-white font-bold">portal</span>
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Value</span>
-                                                    <span className="text-lime-400 dark:text-[#bef264]">cname.heartifact.com</span>
+                                                    <span className="text-[#4d7c0f] dark:text-[#bef264]">cname.heartifact.com</span>
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Type</span>
                                                     <span>CNAME</span>
                                                 </div>
@@ -856,7 +858,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-lime-400/10 text-lime-400 dark:bg-[#bef264]/10 dark:text-[#bef264] flex items-center justify-center"><Verified className="w-4 h-4" /></div>
+                                                    <div className="w-8 h-8 rounded-lg bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-[#bef264]/10 dark:text-[#bef264] flex items-center justify-center"><Verified className="w-4 h-4" /></div>
                                                     <div>
                                                         <p className="font-bold text-sm text-slate-900 dark:text-white">Remove Logo</p>
                                                         <p className="text-[10px] text-slate-500">Hide "Powered By"</p>
@@ -906,8 +908,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                             </div>
 
                                             <div className={`p-3 rounded-xl flex items-start gap-3 border ${demoMode ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' : 'bg-lime-400/10 dark:bg-lime-400/10 border-lime-400/20 dark:border-lime-400/20'}`}>
-                                                <FlaskConical className={`w-4 h-4 mt-0.5 shrink-0 ${demoMode ? 'text-amber-600 dark:text-amber-400' : 'text-lime-400 dark:text-[#bef264]'}`} />
-                                                <p className={`text-[11px] leading-relaxed font-medium ${demoMode ? 'text-amber-800 dark:text-amber-200' : 'text-lime-400 dark:text-[#bef264]'}`}>
+                                                <FlaskConical className={`w-4 h-4 mt-0.5 shrink-0 ${demoMode ? 'text-amber-600 dark:text-amber-400' : 'text-[#4d7c0f] dark:text-[#bef264]'}`} />
+                                                <p className={`text-[11px] leading-relaxed font-medium ${demoMode ? 'text-amber-800 dark:text-amber-200' : 'text-[#4d7c0f] dark:text-[#bef264]'}`}>
                                                     {demoMode
                                                         ? 'Demo mode is active. Pre-populated mock data and mock backend services are in use. File uploads and payments are simulated.'
                                                         : 'Live mode is active. The app is connected to your real Supabase backend. Sign in to load your projects.'}
@@ -918,7 +920,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         <div className="hf-surface mt-6 p-4 bg-white dark:bg-charcoal rounded-[2rem] border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md overflow-hidden">
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Runtime Info</p>
                                             <div className="space-y-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                                                <div className="flex justify-between"><span>Mode</span><span className={demoMode ? 'text-amber-500' : 'text-lime-400 dark:text-[#bef264]'}>{demoMode ? 'DEMO' : 'LIVE'}</span></div>
+                                                <div className="flex justify-between"><span>Mode</span><span className={demoMode ? 'text-amber-500' : 'text-[#4d7c0f] dark:text-[#bef264]'}>{demoMode ? 'DEMO' : 'LIVE'}</span></div>
                                                 <div className="flex justify-between"><span>VITE_DEMO_MODE</span><span>{import.meta.env.VITE_DEMO_MODE ?? '(not set)'}</span></div>
                                                 <div className="flex justify-between"><span>Environment</span><span>{import.meta.env.MODE}</span></div>
                                                 <div className="flex justify-between"><span>Supabase</span><span>{import.meta.env.VITE_SUPABASE_URL ? '✓ configured' : '✗ missing'}</span></div>
@@ -941,7 +943,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                 <Card className="!p-8 relative overflow-hidden">
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-white/5">
-                                            <HardDrive className="w-5 h-5 text-lime-400 dark:text-[#bef264]" />
+                                            <HardDrive className="w-5 h-5 text-[#4d7c0f] dark:text-[#bef264]" />
                                             <div>
                                                 <h3 className="font-sans tracking-tight text-xl text-slate-900 dark:text-white">Storage</h3>
                                                 <p className="text-xs text-slate-500">Choose hosted platform storage, or configure links-only imports.</p>

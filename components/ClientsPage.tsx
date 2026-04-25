@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import {
     Users,
     ArrowRight, Search,
@@ -107,7 +107,7 @@ function ClientTier({ ltv }: { ltv: number }) {
         </span>
     );
     if (ltv >= 1000) return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-700/30">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-blue-900/30 dark:text-blue-400 border border-[#a3e635]/35 dark:border-blue-700/30">
             <Star className="w-2.5 h-2.5" /> Silver
         </span>
     );
@@ -413,7 +413,7 @@ function ClientCard({
                     <button
                         onClick={handleCreateRetainer}
                         disabled={retainerBusy || !client.email}
-                        className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-blue-300 dark:border-blue-600/40 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 disabled:opacity-50"
+                        className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-[#a3e635]/35 dark:border-blue-600/40 text-[#4d7c0f] dark:text-blue-400 hover:bg-[#a3e635]/15 dark:hover:bg-blue-900/20 disabled:opacity-50"
                         title="Generate recurring Stripe retainer link"
                     >
                         {retainerBusy ? 'Generating…' : 'Retainer Link'}
@@ -564,6 +564,7 @@ function useClientRolodexState() {
 // â”€â”€â”€ Embeddable content — used inside the Dashboard toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const ClientRolodexContent: React.FC = () => {
     const navigate = useNavigate();
+    const { isCompactContent = false } = useOutletContext<{ isCompactContent?: boolean }>();
     const { clients, totalLTV, totalPending, topClient, nudgeCount, filtered, search, setSearch, sortBy, setSortBy, saveBrandKit, user } = useClientRolodexState();
     const silverPlus = clients.filter(c => c.ltv >= 1000).length;
     const platinumCount = clients.filter(c => c.ltv >= 10000).length;
@@ -580,6 +581,12 @@ export const ClientRolodexContent: React.FC = () => {
         .filter(c => c.lastProjectDate)
         .sort((a, b) => new Date(b.lastProjectDate).getTime() - new Date(a.lastProjectDate).getTime())
         .slice(0, 3);
+    const overviewGridClassName = isCompactContent ? 'min-[1120px]:grid-cols-12' : 'md:grid-cols-12';
+    const overviewPrimarySpanClassName = isCompactContent ? 'min-[1120px]:col-span-7' : 'md:col-span-7';
+    const overviewSecondarySpanClassName = isCompactContent ? 'min-[1120px]:col-span-5' : 'md:col-span-5';
+    const overviewMetricGridClassName = isCompactContent ? 'grid-cols-2 min-[1360px]:grid-cols-4' : 'grid-cols-2 xl:grid-cols-4';
+    const statsGridClassName = isCompactContent ? 'min-[1240px]:grid-cols-12' : 'md:grid-cols-12';
+    const statsSpanClassName = isCompactContent ? 'min-[1240px]:col-span-4' : 'md:col-span-4';
 
     return (
         <div className="space-y-6 animate-fade-in pb-16">
@@ -608,8 +615,8 @@ export const ClientRolodexContent: React.FC = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-                <ClientsInsightCard className="xl:col-span-7 min-h-[280px]">
+            <div className={`grid grid-cols-1 gap-4 ${overviewGridClassName}`}>
+                <ClientsInsightCard className={`${overviewPrimarySpanClassName} min-h-[280px]`}>
                     <div className="flex flex-1 flex-col space-y-5 p-5 sm:p-6">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
@@ -620,7 +627,7 @@ export const ClientRolodexContent: React.FC = () => {
                                 {clients.length} contacts
                             </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        <div className={`grid gap-3 ${overviewMetricGridClassName}`}>
                             <div className="rounded-2xl border border-zinc-200/50 bg-white/60 p-4 dark:border-white/[0.06] dark:bg-black/20">
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Portfolio LTV</p>
                                 <p className={`mt-1 font-sans text-2xl font-medium tracking-tight ${GRADIENT_TEXT}`}>{fmtCurrency(totalLTV)}</p>
@@ -645,7 +652,7 @@ export const ClientRolodexContent: React.FC = () => {
                     </div>
                 </ClientsInsightCard>
 
-                <ClientsInsightCard className="xl:col-span-5 min-h-[280px]">
+                <ClientsInsightCard className={`${overviewSecondarySpanClassName} min-h-[280px]`}>
                     <div className="flex flex-1 flex-col space-y-4 p-5 sm:p-6">
                         <div className="min-w-0">
                             <p className={INSIGHT_LABEL}>By lifetime value</p>
@@ -676,8 +683,8 @@ export const ClientRolodexContent: React.FC = () => {
                 </ClientsInsightCard>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-                <ClientsInsightCard className="xl:col-span-4 min-h-[260px]">
+            <div className={`grid grid-cols-1 gap-4 ${statsGridClassName}`}>
+                <ClientsInsightCard className={`${statsSpanClassName} min-h-[260px]`}>
                     <div className="flex flex-1 flex-col p-5 sm:p-6">
                         <div className="mb-4 min-w-0">
                             <p className={INSIGHT_LABEL}>Delivery performance</p>
@@ -704,7 +711,7 @@ export const ClientRolodexContent: React.FC = () => {
                     </div>
                 </ClientsInsightCard>
 
-                <ClientsInsightCard className="xl:col-span-4 min-h-[260px]">
+                <ClientsInsightCard className={`${statsSpanClassName} min-h-[260px]`}>
                     <div className="flex flex-1 flex-col p-5 sm:p-6">
                         <div className="mb-4 min-w-0">
                             <p className={INSIGHT_LABEL}>Follow-up now</p>
@@ -733,7 +740,7 @@ export const ClientRolodexContent: React.FC = () => {
                     </div>
                 </ClientsInsightCard>
 
-                <ClientsInsightCard className="xl:col-span-4 min-h-[260px]">
+                <ClientsInsightCard className={`${statsSpanClassName} min-h-[260px]`}>
                     <div className="flex flex-1 flex-col p-5 sm:p-6">
                         <div className="mb-4 min-w-0">
                             <p className={INSIGHT_LABEL}>Latest client touchpoints</p>

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
     Copy,
     FileDigit,
+    FileText,
     Plus,
     Receipt,
     Save,
@@ -18,6 +19,7 @@ import {
     calcQuoteTaxAmount,
     buildQuotePlainText,
 } from '../utils/quoteBuilderCore';
+import { createQuotePdf } from '../utils/reportPdfGenerator';
 import { SelectField } from './SelectField';
 
 const currency = quoteCurrency;
@@ -43,6 +45,7 @@ export default function QuotesPage() {
     const [taxRate, setTaxRate] = useState(0);
     const [notes, setNotes] = useState('Timeline starts after quote approval and first payment confirmation.');
     const [lines, setLines] = useState<QuoteLine[]>([makeQuoteLine()]);
+    const [pdfBusy, setPdfBusy] = useState(false);
 
     const clientTemplates = useMemo(() => {
         const mapped = projects
@@ -115,6 +118,38 @@ export default function QuotesPage() {
         URL.revokeObjectURL(url);
     };
 
+    const downloadQuotePdf = async () => {
+        if (pdfBusy) return;
+        setPdfBusy(true);
+        try {
+            const blob = await createQuotePdf({
+                quoteNumber,
+                quoteTitle,
+                freelancerName: user?.name,
+                freelancerEmail: user?.email,
+                clientName,
+                clientEmail,
+                clientCompany,
+                issueDate,
+                validUntil: formattedExpiry,
+                lines: lines.map(({ description, qty, rate }) => ({ description, qty, rate })),
+                taxRatePercent: taxRate,
+                notes,
+            });
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = `Heartifact_${quoteNumber}.pdf`;
+            anchor.click();
+            URL.revokeObjectURL(url);
+            playSuccess();
+        } catch {
+            playClick();
+        } finally {
+            setPdfBusy(false);
+        }
+    };
+
     const copyQuote = async () => {
         playClick();
         try {
@@ -130,13 +165,14 @@ export default function QuotesPage() {
                 <div className="min-w-0 flex-1">
                     <h2 className="text-3xl sm:text-4xl font-sans tracking-tight font-medium text-zinc-900 dark:text-white">Quote Builder</h2>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-                        Line items, tax, and notes — copy or download when ready.
+                        Line items, tax, and notes — copy plain text, download a .txt file, or export a branded PDF.
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                     <button
                         type="button"
                         onClick={copyQuote}
+                        title="Copy the full quote as plain text (same as the .txt export)"
                         className="h-10 px-4 rounded-xl border border-zinc-200/70 dark:border-white/10 bg-zinc-100 dark:bg-white/10 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-white/20 text-[10px] font-bold uppercase tracking-[0.14em] flex items-center gap-2"
                     >
                         <Copy className="w-3.5 h-3.5" /> Copy
@@ -144,9 +180,19 @@ export default function QuotesPage() {
                     <button
                         type="button"
                         onClick={downloadQuote}
-                        className="h-10 px-4 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-black dark:hover:bg-zinc-200 text-[10px] font-bold uppercase tracking-[0.14em] flex items-center gap-2"
+                        title="Download quote as a plain .txt file"
+                        className="h-10 px-4 rounded-xl border border-zinc-200/70 dark:border-white/10 bg-white dark:bg-white/5 text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-white/10 text-[10px] font-bold uppercase tracking-[0.14em] flex items-center gap-2"
                     >
-                        <Save className="w-3.5 h-3.5" /> Download
+                        <Save className="w-3.5 h-3.5" /> Text
+                    </button>
+                    <button
+                        type="button"
+                        onClick={downloadQuotePdf}
+                        disabled={pdfBusy}
+                        title="Download quote as PDF"
+                        className="h-10 px-4 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-black dark:hover:bg-zinc-200 disabled:opacity-50 text-[10px] font-bold uppercase tracking-[0.14em] flex items-center gap-2"
+                    >
+                        <FileText className="w-3.5 h-3.5" /> {pdfBusy ? 'PDF…' : 'PDF'}
                     </button>
                 </div>
             </div>

@@ -23,7 +23,7 @@ import {
     ArrowUpRight, Grip, MousePointerClick, Siren, FileWarning, ArrowDownRight,
     FileInput, Wifi, Receipt, ArrowLeftRight, TrendingDown, ShieldAlert,
     BarChart3, FileDigit, Landmark, Printer, PieChart, Users,
-    QrCode
+    QrCode, ZoomIn, ZoomOut, Play, Pause, RotateCcw, Maximize2, Minimize2
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, BarChart, Bar, Cell, Legend, ReferenceLine, YAxis, Pie, PieChart as RePieChart } from 'recharts';
 import { QRCodeSVG } from 'qrcode.react';
@@ -36,6 +36,7 @@ import { createAuditTrailPdf, createRightsCertificatePdf } from './utils/reportP
 import LandingPage from './components/LandingPage';
 import SignInPage from './components/SignInPage';
 import { Card, Badge, Widget } from './components/Shared';
+import { SelectField } from './components/SelectField';
 import ThemeModeDropdown from './components/ThemeModeDropdown';
 import { ClientRolodexContent } from './components/ClientsPage';
 import BrandLogo from './components/BrandLogo';
@@ -225,6 +226,7 @@ const buildQuickDraftAsset = (file: File): FileAsset => ({
     name: file.name,
     size: formatQuickFileSize(file.size),
     type: detectQuickFileType(file),
+    previewUrl: file.type.startsWith('image/') || file.type.startsWith('video/') ? URL.createObjectURL(file) : undefined,
     locked: true,
     version: 1,
     uploadDate: new Date().toISOString(),
@@ -798,7 +800,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                     <div className="min-h-0">
                         <div className="mb-3 flex items-start justify-between gap-2">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Net Revenue</span>
-                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-blue-500/30 bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-600 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
+                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-[#a3e635]/35 bg-[#a3e635]/15 px-2 py-1 text-[10px] font-bold text-[#4d7c0f] dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
                                 <ArrowUpRight className="h-3 w-3" /> {demoMode ? '12.5%' : 'Active'}
                             </div>
                         </div>
@@ -839,7 +841,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                     <div className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full bg-indigo-400/20 blur-3xl dark:bg-sky-500/10" />
                     <div className={`relative z-10 flex h-full min-h-0 flex-col justify-between ${slidePad}`}>
                         <div>
-                            <span className="mb-3 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-lime-400 dark:text-zinc-400">
+                            <span className="mb-3 block border-l-2 border-[#65a30d] pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-lime-400 dark:text-zinc-400">
                                 Project storage
                             </span>
                             <div className="flex items-start justify-between gap-3">
@@ -1063,7 +1065,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                     <div className="min-h-0">
                         <div className="mb-3 flex items-start justify-between gap-3">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Net Revenue</span>
-                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-blue-500/30 bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-600 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
+                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-[#a3e635]/35 bg-[#a3e635]/15 px-2 py-1 text-[10px] font-bold text-[#4d7c0f] dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
                                 <ArrowUpRight className="h-3 w-3" /> {paidProjects.length} closed
                                 </div>
                         </div>
@@ -1117,7 +1119,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
                     <div className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full bg-indigo-400/20 blur-3xl dark:bg-sky-500/10" />
                     <div className={`relative z-10 flex h-full min-h-0 flex-col justify-between ${slidePad}`}>
                         <div>
-                            <span className="mb-3 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-lime-400 dark:text-zinc-400">
+                            <span className="mb-3 block border-l-2 border-[#65a30d] pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-lime-400 dark:text-zinc-400">
                                 Project storage
                             </span>
                             <div className="flex items-start justify-between gap-3">
@@ -1275,7 +1277,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
 
     if (!demoMode && projects.length === 0) {
         return (
-            <div className={`w-full bg-transparent relative ${compact ? 'h-[250px] p-5 sm:p-6' : 'h-[280px] p-6 sm:p-8'}`}>
+            <div className={`w-full bg-transparent relative ${compact ? 'h-[292px] p-5 sm:p-6' : 'h-[316px] p-6 sm:p-8'}`}>
                 <div className="h-full flex flex-col items-center justify-center text-center opacity-90 p-4">
                     <div className="w-16 h-16 rounded-[1.5rem] bg-zinc-50 dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 flex items-center justify-center mb-4 shadow-sm">
                         <Database className="w-8 h-8 text-zinc-400 stroke-[1.5]" />
@@ -1294,7 +1296,7 @@ const CyclingWidget = ({ projects, compact = false }: { projects: Project[]; com
 
     return (
         <div 
-            className={`w-full bg-transparent relative group transition-all ${compact ? 'h-[250px]' : 'h-[280px]'}`}
+            className={`w-full bg-transparent relative group transition-all ${compact ? 'h-[292px]' : 'h-[316px]'}`}
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
         >
@@ -1354,11 +1356,27 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
     const [briefingPulse, setBriefingPulse] = useState(false);
     const briefingPulseLocationKeyRef = useRef<string | null>(null);
 
-    // Projects / Clients toggle G�� reads ?view=clients from URL so command palette can deep-link
-    const [dashView, setDashView] = useState<'projects' | 'clients'>(() => {
+    // Projects / Clients toggle reads ?view=clients from URL so command palette and responsive remounts stay in sync.
+    const dashView = useMemo<'projects' | 'clients'>(() => {
         const params = new URLSearchParams(location.search);
         return params.get('view') === 'clients' ? 'clients' : 'projects';
-    });
+    }, [location.search]);
+
+    const setDashboardView = useCallback((nextView: 'projects' | 'clients') => {
+        const params = new URLSearchParams(location.search);
+        if (nextView === 'clients') {
+            params.set('view', 'clients');
+        } else {
+            params.delete('view');
+        }
+        navigate(
+            {
+                pathname: location.pathname,
+                search: params.toString() ? `?${params.toString()}` : '',
+            },
+            { replace: true }
+        );
+    }, [location.pathname, location.search, navigate]);
 
     useEffect(() => {
         const highlight = (location.state as { widgetPanelHighlight?: string } | null)?.widgetPanelHighlight;
@@ -1419,12 +1437,12 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                             <span className="font-mono font-normal tracking-normal normal-case text-zinc-500 dark:text-zinc-400">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</span>
                         </div>
                         {shouldUseGreetingHeader ? (
-                            <h1 className="font-serif tracking-tight text-3xl md:text-5xl text-zinc-900 dark:text-white leading-[1.05] mb-2">
+                            <h1 className="font-serif tracking-tight text-4xl sm:text-5xl md:text-6xl text-zinc-900 dark:text-white leading-[0.98] mb-2">
                                 {greetingLine}{' '}
                                 <span className="italic text-lime-400 dark:text-blue-400">{greetingName}</span>.
                             </h1>
                         ) : (
-                            <h1 className="font-sans tracking-tight text-3xl md:text-5xl text-zinc-900 dark:text-white leading-[1.05] mb-2">
+                            <h1 className="font-sans tracking-tight text-5xl md:text-6xl text-zinc-900 dark:text-white leading-[0.98] mb-2">
                                 Dashboard
                             </h1>
                         )}
@@ -1523,14 +1541,14 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                 <div className="inline-flex self-start max-w-full p-1 rounded-2xl bg-zinc-200/60 dark:bg-black/40 border border-zinc-200/50 dark:border-white/[0.08]">
                 <button
                     type="button"
-                    onClick={() => { playClick(); setDashView('projects'); }}
+                    onClick={() => { playClick(); setDashboardView('projects'); }}
                     className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${dashView === 'projects' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-white dark:shadow-[0_0_0_1px_rgba(0,0,0,0.08)]' : 'text-zinc-500 hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-200'}`}
                 >
                     <FolderLock className="w-3.5 h-3.5" /> Projects
                 </button>
                 <button
                     type="button"
-                    onClick={() => { playClick(); setDashView('clients'); }}
+                    onClick={() => { playClick(); setDashboardView('clients'); }}
                     className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${dashView === 'clients' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-white dark:shadow-[0_0_0_1px_rgba(0,0,0,0.08)]' : 'text-zinc-500 hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-200'}`}
                 >
                     <Users className="w-3.5 h-3.5" /> Clients
@@ -1547,7 +1565,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
 
             <div className={`grid grid-cols-1 gap-4 md:gap-5 ${isCompactContent ? '' : 'lg:grid-cols-12'}`}>
                 <div className={`flex flex-col ${isCompactContent ? 'gap-4 md:gap-5' : 'lg:col-span-7 gap-3 md:gap-4 min-w-0'}`}>
-                    <div className={`grid grid-cols-1 items-start gap-4 md:gap-5 ${isCompactContent ? '' : 'lg:grid-cols-2'}`}>
+                    <div className={`grid grid-cols-1 items-start gap-4 md:gap-5 ${isCompactContent ? 'min-[700px]:grid-cols-[repeat(auto-fit,minmax(18rem,1fr))]' : 'md:grid-cols-2'}`}>
                         
                         {/* CYCLING WIDGET — Card shell matches ClientCard / dashboard lift on hover; items-start prevents grid stretch “beard” below fixed-height carousel */}
                         <Card noPadding className="relative h-fit w-full min-w-0 overflow-hidden !rounded-[2rem] shadow-sm">
@@ -1561,6 +1579,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                             titleClassName="font-serif text-[0.975rem] md:text-[1.22rem] font-medium tracking-tight text-zinc-900 dark:text-white"
                             headerClassName="px-4 pt-3 pb-2"
                             actions={<span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900">{alerts.length} Actions</span>}
+                            className="h-[292px] md:h-[316px]"
                         >
                             <div className="flex-1 flex flex-col gap-3">
                                 {alerts.length === 0 ? (
@@ -1607,7 +1626,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                 <p className="text-xs text-zinc-400 mt-1">Recent client activity appears here once someone opens a project link.</p>
                             </div>
                         ) : (
-                        <div className={`grid grid-cols-1 gap-4 ${isCompactContent ? '' : 'lg:grid-cols-3'}`}>
+                        <div className={`grid grid-cols-1 gap-4 ${isCompactContent ? 'min-[700px]:grid-cols-[repeat(auto-fit,minmax(15rem,1fr))]' : 'md:grid-cols-2 xl:grid-cols-3'}`}>
                             {liveClients.map((client) => (
                                     <Card key={client.id} className="p-4 flex items-center gap-4 hover:border-blue-500/50 dark:hover:border-blue-500/50 cursor-pointer group" noPadding>
                                     <div className="relative">
@@ -1623,7 +1642,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-center mb-0.5">
                                                 <h4 className="text-sm font-bold text-zinc-900 dark:text-white truncate">{client.name}</h4>
-                                                {client.status === 'viewing' && <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider animate-pulse">Live</span>}
+                                                {client.status === 'viewing' && <span className="text-[9px] font-bold text-[#4d7c0f] dark:text-blue-400 uppercase tracking-wider animate-pulse">Live</span>}
                                         </div>
                                             <p className="text-xs text-zinc-500 truncate">{client.project}</p>
                                     </div>
@@ -1728,7 +1747,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                     </Widget>
                 </div>
                 {/* Briefing Sidebar — wider column (5/12) from lg so it isn’t squeezed next to main */}
-                <div className={`${isCompactContent ? 'p-2 md:p-3 flex flex-col h-[calc(100vh-140px)] max-h-[70svh] min-h-[420px]' : 'lg:col-span-5 p-2 md:p-3 flex flex-col lg:min-w-0 lg:max-w-none lg:h-[calc(100vh-140px)] lg:sticky lg:top-24'}`}> 
+                <div className={`${isCompactContent ? 'p-2 md:p-3 flex min-h-0 flex-col h-[calc(100vh-140px)] max-h-[70svh] min-h-[420px]' : 'md:p-2 md:flex md:min-h-0 md:flex-col md:h-[calc(100vh-150px)] md:max-h-[72svh] md:min-h-[440px] lg:col-span-5 lg:sticky lg:top-24'}`}> 
                     <div className={`relative flex-1 h-full overflow-visible min-w-0 ${briefingPulse ? 'widget-highlight-shell widget-highlight-double' : ''}`}> 
                     <div className="flex flex-col flex-1 pb-2 h-full overflow-hidden p-4 sm:p-5 lg:p-6 transition-[box-shadow,border-color] duration-700 lg:ml-[-0.75rem] xl:ml-[-1.5rem]">
                         <div className="flex items-center justify-between mb-4">
@@ -1740,7 +1759,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                 <Filter className="w-4 h-4 text-zinc-400" />
                             </button>
                         </div>
-                        <div className="flex-1 min-h-0 overflow-y-auto relative pr-2 pl-3 custom-scrollbar briefing-scroll">
+                        <div className="flex-1 min-h-0 overflow-y-scroll [scrollbar-gutter:stable] relative pr-2 pl-3 custom-scrollbar briefing-scroll">
                             <Timeline projects={projects} />
                         </div>
                     </div>
@@ -1759,7 +1778,9 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
     const location = useLocation();
     const { isCompactContent = false } = useOutletContext<{ isCompactContent?: boolean }>();
     const [searchQuery, setSearchQuery] = useState('');
-    const [vaultFilter, setVaultFilter] = useState<'all' | 'active' | 'paid' | 'archived'>('all');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'unpaid' | 'paid' | 'pending' | 'failed' | 'archived'>('all');
+    const [dateRangeFilter, setDateRangeFilter] = useState<'all' | 'today' | 'week' | 'month' | 'quarter'>('all');
+    const [amountRangeFilter, setAmountRangeFilter] = useState<'all' | '0_99' | '100_499' | '500_999' | '1000_plus'>('all');
     const [vaultLayout, setVaultLayout] = useState<'grid' | 'list'>('grid');
     const [qrProjectId, setQrProjectId] = useState<string | null>(null);
     const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
@@ -1823,17 +1844,47 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
     const qrUrl = qrProject ? `${window.location.origin}/c/${qrProject.clientLink}` : '';
 
     const normalizedQuery = searchQuery.trim().toLowerCase();
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStartsOnMondayOffset = (now.getDay() + 6) % 7;
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfWeek.getDate() - weekStartsOnMondayOffset);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfQuarter = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
 
     const visibleProjects = projects.filter((project) => {
         const statusMatch = (() => {
-            if (vaultFilter === 'all') return true;
-            if (vaultFilter === 'active') return ['draft', 'awaiting_signature', 'awaiting_payment', 'payment_verification'].includes(project.status);
-            if (vaultFilter === 'paid') return project.status === 'paid';
-            if (vaultFilter === 'archived') return project.status === 'completed';
+            if (statusFilter === 'all') return true;
+            if (statusFilter === 'paid') return project.status === 'paid';
+            if (statusFilter === 'archived') return project.status === 'completed';
+            if (statusFilter === 'pending') return ['awaiting_signature', 'awaiting_payment', 'payment_verification'].includes(project.status);
+            if (statusFilter === 'unpaid') return !['paid', 'completed'].includes(project.status);
+            if (statusFilter === 'failed') return (project.status as string) === 'failed';
             return true;
         })();
-
         if (!statusMatch) return false;
+
+        const projectCreatedAt = new Date(project.createdAt || project.dueDate || Date.now());
+        const dateRangeMatch = (() => {
+            if (dateRangeFilter === 'all') return true;
+            if (dateRangeFilter === 'today') return projectCreatedAt >= startOfToday;
+            if (dateRangeFilter === 'week') return projectCreatedAt >= startOfWeek;
+            if (dateRangeFilter === 'month') return projectCreatedAt >= startOfMonth;
+            if (dateRangeFilter === 'quarter') return projectCreatedAt >= startOfQuarter;
+            return true;
+        })();
+        if (!dateRangeMatch) return false;
+
+        const amountRangeMatch = (() => {
+            if (amountRangeFilter === 'all') return true;
+            if (amountRangeFilter === '0_99') return project.amount >= 0 && project.amount <= 99;
+            if (amountRangeFilter === '100_499') return project.amount >= 100 && project.amount <= 499;
+            if (amountRangeFilter === '500_999') return project.amount >= 500 && project.amount <= 999;
+            if (amountRangeFilter === '1000_plus') return project.amount >= 1000;
+            return true;
+        })();
+        if (!amountRangeMatch) return false;
+
         if (!normalizedQuery) return true;
 
         const projectFields = [
@@ -1894,35 +1945,67 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
             </div>
             {/* ... Rest of Vault View ... */}
             {/* overflow-visible: overflow-hidden clipped pill radii on the filter row; hf-no-glow avoids hf-surface ::after artifacts */}
-            <div className={`hf-surface hf-no-glow ${isCompactContent ? 'flex flex-col gap-2 sm:gap-3' : 'flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3'} items-stretch bg-white dark:bg-charcoal p-2 rounded-[2rem] overflow-visible border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md`}>
-                <div className={`relative w-full group min-w-0 ${isCompactContent ? '' : 'lg:flex-1'}`}>
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search projects, clients, or files..."
-                        className="w-full h-11 sm:h-12 pl-12 pr-4 rounded-[2rem] bg-transparent text-sm focus:bg-white dark:focus:bg-white/5 outline-none transition-all placeholder:text-zinc-500"
-                    />
+            <div className="hf-surface hf-no-glow flex flex-col gap-3 bg-white dark:bg-charcoal p-2 rounded-[2rem] overflow-visible border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md">
+                <div className="flex items-center gap-3">
+                    <div className="relative w-full flex-1 group min-w-0">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search projects, clients, or files..."
+                            className="w-full h-11 sm:h-12 pl-12 pr-4 rounded-[2rem] bg-transparent text-sm focus:bg-white dark:focus:bg-white/5 outline-none transition-all placeholder:text-zinc-500"
+                        />
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2 py-1 pl-1 pr-1">
+                        <button onClick={() => { playClick(); setVaultLayout('grid'); }} className={`p-2.5 rounded-[2rem] transition-colors shrink-0 ${vaultLayout === 'grid' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`} title="Card view"><LayoutGrid className="w-5 h-5" /></button>
+                        <button onClick={() => { playClick(); setVaultLayout('list'); }} className={`p-2.5 rounded-[2rem] transition-colors shrink-0 ${vaultLayout === 'list' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`} title="List view"><ListIcon className="w-5 h-5" /></button>
+                    </div>
                 </div>
-                <div className={`flex items-center gap-2 overflow-x-auto w-full no-scrollbar py-1 pl-1 pr-1 ${isCompactContent ? '' : 'lg:w-auto lg:flex-1 lg:justify-end'}`}>
-                    {[
-                        { key: 'all', label: 'All Projects' },
-                        { key: 'active', label: 'Active' },
-                        { key: 'paid', label: 'Paid' },
-                        { key: 'archived', label: 'Archived' },
-                    ].map((filter) => (
-                        <button
-                            key={filter.key}
-                            onClick={() => setVaultFilter(filter.key as 'all' | 'active' | 'paid' | 'archived')}
-                            className={`px-4 sm:px-6 py-2.5 rounded-[2rem] text-xs sm:text-sm font-bold whitespace-nowrap transition-colors ${vaultFilter === filter.key ? 'bg-white dark:bg-white/10 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`}
-                        >
-                            {filter.label}
-                        </button>
-                    ))}
-                    <div className="w-px h-6 bg-zinc-300 dark:bg-white/10 mx-2" />
-                    <button onClick={() => { playClick(); setVaultLayout('grid'); }} className={`p-2.5 rounded-[2rem] transition-colors shrink-0 ${vaultLayout === 'grid' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`} title="Card view"><LayoutGrid className="w-5 h-5" /></button>
-                    <button onClick={() => { playClick(); setVaultLayout('list'); }} className={`p-2.5 rounded-[2rem] transition-colors shrink-0 ${vaultLayout === 'list' ? 'bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-white/5'}`} title="List view"><ListIcon className="w-5 h-5" /></button>
+                <div className={`grid gap-2 ${isCompactContent ? 'grid-cols-1 min-[560px]:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'}`}>
+                    <SelectField
+                        value={statusFilter}
+                        onChange={(value) => setStatusFilter(value as 'all' | 'unpaid' | 'paid' | 'pending' | 'failed' | 'archived')}
+                        options={[
+                            { value: 'all', label: 'All statuses' },
+                            { value: 'unpaid', label: 'Unpaid' },
+                            { value: 'paid', label: 'Paid' },
+                            { value: 'pending', label: 'Pending' },
+                            { value: 'failed', label: 'Failed' },
+                            { value: 'archived', label: 'Archived' },
+                        ]}
+                        tone="charcoal"
+                        size="sm"
+                        buttonClassName="!rounded-[1rem]"
+                    />
+                    <SelectField
+                        value={dateRangeFilter}
+                        onChange={(value) => setDateRangeFilter(value as 'all' | 'today' | 'week' | 'month' | 'quarter')}
+                        options={[
+                            { value: 'all', label: 'All time' },
+                            { value: 'today', label: 'Today' },
+                            { value: 'week', label: 'This week' },
+                            { value: 'month', label: 'This month' },
+                            { value: 'quarter', label: 'This quarter' },
+                        ]}
+                        tone="charcoal"
+                        size="sm"
+                        buttonClassName="!rounded-[1rem]"
+                    />
+                    <SelectField
+                        value={amountRangeFilter}
+                        onChange={(value) => setAmountRangeFilter(value as 'all' | '0_99' | '100_499' | '500_999' | '1000_plus')}
+                        options={[
+                            { value: 'all', label: 'All amounts' },
+                            { value: '0_99', label: '$0 - $99' },
+                            { value: '100_499', label: '$100 - $499' },
+                            { value: '500_999', label: '$500 - $999' },
+                            { value: '1000_plus', label: '$1,000+' },
+                        ]}
+                        tone="charcoal"
+                        size="sm"
+                        buttonClassName="!rounded-[1rem]"
+                    />
                 </div>
             </div>
             {/* Empty state */}
@@ -2039,8 +2122,8 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                 <div className="absolute inset-0 opacity-[0.12] dark:opacity-[0.05] pointer-events-none mix-blend-multiply dark:mix-blend-overlay z-0" style={{ backgroundImage: NOISE_SVG, backgroundSize: '360px 360px', filter: 'contrast(104%) brightness(102%)' }} />
                                 <div className="relative z-10">
                                     <div className="flex items-center gap-4 mb-8">
-                                        <div className={`px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 backdrop-blur-md ${project.status === 'paid' ? 'bg-blue-50/50 border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400' : 'bg-zinc-50/50 border-zinc-200 text-zinc-600 dark:bg-white/5 dark:border-white/10 dark:text-zinc-300'}`}>
-                                            <div className={`w-2 h-2 rounded-full ${project.status === 'paid' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]' : 'bg-zinc-400'} animate-pulse`} />
+                                        <div className={`px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 backdrop-blur-md ${project.status === 'paid' ? 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f] dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400' : 'bg-zinc-50/50 border-zinc-200 text-zinc-600 dark:bg-white/5 dark:border-white/10 dark:text-zinc-300'}`}>
+                                            <div className={`w-2 h-2 rounded-full ${project.status === 'paid' ? 'bg-[#4d7c0f] shadow-[0_0_8px_rgba(163,230,53,0.55)] dark:bg-blue-500 dark:shadow-[0_0_8px_rgba(59,130,246,0.6)]' : 'bg-zinc-400'} animate-pulse`} />
                                             {project.status === 'paid' ? 'Access granted' : 'Assets locked'}
                                         </div>
                                         <span className="font-mono text-xs text-zinc-400 dark:text-zinc-600 font-bold tracking-widest uppercase">ID/{project.id.slice(0,6)}</span>
@@ -2068,7 +2151,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                             <div className="relative flex h-12 w-12 shrink-0 items-center justify-center">
                                                 <svg className="absolute inset-0 h-full w-full -rotate-90">
                                                     <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-zinc-100 dark:text-white/5" />
-                                                    <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" strokeDasharray="138" strokeDashoffset={138 - (138 * Math.min(project.amount / 10000, 1))} strokeLinecap="round" className="text-blue-500 transition-all duration-1000 ease-out" />
+                                                    <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" strokeDasharray="138" strokeDashoffset={138 - (138 * Math.min(project.amount / 10000, 1))} strokeLinecap="round" className="text-[#65a30d] dark:text-blue-500 transition-all duration-1000 ease-out" />
                                                 </svg>
                                                 <DollarSign className="relative h-4 w-4 text-zinc-400" />
                             </div>
@@ -2080,8 +2163,8 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                         <div className="flex min-w-0 items-center gap-4 border-t border-zinc-200/50 pt-4 min-[480px]:border-t-0 min-[480px]:border-l min-[480px]:border-zinc-200/50 min-[480px]:pt-0 min-[480px]:pl-6 dark:border-white/10">
                                             <div className="flex h-10 shrink-0 items-end gap-[3px] py-1.5">
                                                 {[40, 70, 100, 50, 80].map((h, idx) => (
-                                                    <div key={idx} className="relative w-1.5 overflow-hidden rounded-t-sm bg-blue-500/10 dark:bg-blue-400/10" style={{ height: '100%' }}>
-                                                        <div className="absolute bottom-0 left-0 w-full bg-blue-500 dark:bg-blue-400" style={{ height: `${h}%`, animation: `pulse-height 2s infinite ease-in-out`, animationDelay: `${idx * 200}ms` }} />
+                                                    <div key={idx} className="relative w-1.5 overflow-hidden rounded-t-sm bg-[#a3e635]/20 dark:bg-blue-400/10" style={{ height: '100%' }}>
+                                                        <div className="absolute bottom-0 left-0 w-full bg-[#65a30d] dark:bg-blue-400" style={{ height: `${h}%`, animation: `pulse-height 2s infinite ease-in-out`, animationDelay: `${idx * 200}ms` }} />
                                                     </div>
                                                 ))}
                                             </div>
@@ -2092,7 +2175,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                         </div>
                                         <div className="flex min-w-0 items-center gap-4 border-t border-zinc-200/50 pt-4 min-[480px]:border-t-0 min-[480px]:border-l min-[480px]:border-zinc-200/50 min-[480px]:pt-0 min-[480px]:pl-6 dark:border-white/10">
                                             <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-zinc-200/70 bg-white/80 dark:border-white/10 dark:bg-white/5">
-                                                <Eye className="h-4 w-4 text-blue-500" />
+                                                <Eye className="h-4 w-4 text-[#65a30d] dark:text-blue-500" />
                                             </div>
                                             <div className="min-w-0">
                                                 <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Views</div>
@@ -2365,7 +2448,7 @@ const StageBackground = ({ isDarkMode }: { isDarkMode: boolean }) => (
 const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPublish: (project: Project) => Promise<void> | void }) => {
     const navigate = useNavigate();
     const toast = useToast();
-    const { projects } = useStore();
+    const { projects, user, updateUser } = useStore();
     const initialDraft = useMemo(() => readQuickDeliveryDraft(), []);
     const [quickQuoteLines, setQuickQuoteLines] = useState<QuoteLine[]>(() =>
         normalizeWidgetQuickQuoteLines(initialDraft?.quickQuoteLines)
@@ -2404,6 +2487,79 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
         clientEmail: string;
         message: string;
     }>(null);
+    const [showQrCode, setShowQrCode] = useState(false);
+    const [storageExpanded, setStorageExpanded] = useState(false);
+    const [storageDraftUrl, setStorageDraftUrl] = useState('');
+    const [storageDraftBucket, setStorageDraftBucket] = useState('');
+    const [storageDraftEndpoint, setStorageDraftEndpoint] = useState('');
+    const [stripeExpanded, setStripeExpanded] = useState(false);
+
+    const stripeConnected = !!user?.stripeConnect?.connected;
+    const storageMode = user?.storageSettings?.mode || 'platform';
+
+    const handleConnectStripe = () => {
+        playSuccess();
+        updateUser({
+            stripeConnect: {
+                accountId: `acct_${Math.random().toString(36).slice(2, 12)}`,
+                connected: true,
+                displayName: (user?.name || 'Your studio'),
+                chargesEnabled: true,
+                payoutsEnabled: true,
+            },
+        });
+        toast('Stripe Connect ready — payouts enabled.');
+    };
+
+    const handleDisconnectStripe = () => {
+        playClick();
+        updateUser({
+            stripeConnect: {
+                accountId: '',
+                connected: false,
+                displayName: '',
+                chargesEnabled: false,
+                payoutsEnabled: false,
+            },
+        });
+    };
+
+    const setStorageMode = (mode: 'platform' | 'drive' | 's3') => {
+        playClick();
+        const current = user?.storageSettings || { mode: 'platform' as const };
+        updateUser({
+            storageSettings: {
+                ...current,
+                mode,
+            },
+        });
+    };
+
+    const saveStorageDetails = () => {
+        playSuccess();
+        const current = user?.storageSettings || { mode: 'platform' as const };
+        if (current.mode === 'drive') {
+            updateUser({
+                storageSettings: {
+                    ...current,
+                    byosDriveAccountLabel: storageDraftUrl.trim() || current.byosDriveAccountLabel,
+                },
+            });
+            toast('External storage link saved.');
+        } else if (current.mode === 's3') {
+            updateUser({
+                storageSettings: {
+                    ...current,
+                    s3Bucket: storageDraftBucket.trim() || current.s3Bucket,
+                    s3Endpoint: storageDraftEndpoint.trim() || current.s3Endpoint,
+                    s3PublicBaseUrl: storageDraftUrl.trim() || current.s3PublicBaseUrl,
+                },
+            });
+            toast('S3 details saved.');
+        } else {
+            toast('Native storage selected.');
+        }
+    };
 
     const formatWidgetTime = (iso: string) => {
         const ms = Date.now() - new Date(iso).getTime();
@@ -2484,6 +2640,19 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
     const currentProjects = useMemo(
         () => projects.slice(0, 8),
         [projects]
+    );
+
+    const currentProjectsWithLive = useMemo(() =>
+        currentProjects.map((project) => {
+            const viewedMs = project.clientViewedAt ? Date.now() - new Date(project.clientViewedAt).getTime() : Number.POSITIVE_INFINITY;
+            const viewedRecently = Number.isFinite(viewedMs) && viewedMs >= 0 && viewedMs < 1000 * 60 * 60;
+            const isMockBrandIdentity = project.name.toLowerCase().includes('brand identity');
+            return {
+                project,
+                isLive: viewedRecently || isMockBrandIdentity,
+            };
+        }),
+        [currentProjects]
     );
 
     const handleContinue = () => {
@@ -2661,6 +2830,18 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
             // Ignore storage failures.
         }
     };
+
+    useEffect(() => {
+        const s = user?.storageSettings;
+        if (!s) return;
+        if (s.mode === 's3') {
+            setStorageDraftBucket(s.s3Bucket || '');
+            setStorageDraftEndpoint(s.s3Endpoint || '');
+            setStorageDraftUrl(s.s3PublicBaseUrl || '');
+        } else if (s.mode === 'drive') {
+            setStorageDraftUrl(s.byosDriveAccountLabel || '');
+        }
+    }, [user?.storageSettings?.mode]);
 
     useEffect(() => {
         const handleQuickFiles = (event: Event) => {
@@ -2987,13 +3168,37 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                     Email
                                 </button>
                                 <button
-                                    onClick={handleCreateAnother}
-                                    className={`h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-blue-600 hover:bg-blue-700 text-zinc-950'}`}
+                                    onClick={() => { playClick(); setShowQrCode((v) => !v); }}
+                                    className={`h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${showQrCode ? (isDarkMode ? 'bg-[#bef264] text-zinc-950 border border-[#bef264]' : 'bg-[#a3e635]/15 text-[#4d7c0f] border border-[#a3e635]/35') : (isDarkMode ? 'bg-white/8 text-white hover:bg-white/12 border border-white/10' : 'bg-white text-zinc-900 hover:bg-zinc-50 border border-zinc-200')}`}
                                 >
-                                    <Plus className="w-4 h-4" />
-                                    New
+                                    <QrCode className="w-4 h-4" />
+                                    QR code
                                 </button>
                             </div>
+
+                            {showQrCode && (
+                                <div className={`rounded-2xl border p-4 flex flex-col items-center gap-3 ${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white border-zinc-200'}`}>
+                                    <div className="p-2.5 bg-white rounded-xl border border-zinc-200/70 shadow-sm">
+                                        <QRCodeSVG
+                                            value={linkReady.clientUrl}
+                                            size={156}
+                                            bgColor="#ffffff"
+                                            fgColor="#0e0e12"
+                                            level="M"
+                                            includeMargin={false}
+                                        />
+                                    </div>
+                                    <p className="text-[10px] font-mono text-zinc-400 text-center break-all max-w-[240px]">{linkReady.clientUrl}</p>
+                                </div>
+                            )}
+
+                            <button
+                                onClick={handleCreateAnother}
+                                className={`w-full h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-[#4d7c0f] hover:bg-[#3f6d0b] text-white'}`}
+                            >
+                                <Plus className="w-4 h-4" />
+                                New delivery
+                            </button>
                         </div>
 
                         <p className="mt-3 text-center text-[10px] text-zinc-400 dark:text-zinc-500">
@@ -3040,6 +3245,8 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                         projectTitle={projectName}
                         clientName={clientName}
                         clientEmail={clientEmail}
+                        freelancerName={user?.name}
+                        freelancerEmail={user?.email}
                         lines={quickQuoteLines}
                         onLinesChange={setQuickQuoteLines}
                         onApplyToPayment={(total) => {
@@ -3171,6 +3378,162 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                             />
                         </div>
                     </div>
+                </div>
+
+                {/* Onboarding accelerators — Stripe Connect + Storage */}
+                <div className={`mt-4 pt-3 border-t ${sectionLineCls} space-y-2.5`}>
+                    {(stripeConnected || storageMode !== 'platform') && (
+                        <div className="flex items-center justify-end">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#4d7c0f] dark:text-[#bef264]">Synced to settings</span>
+                        </div>
+                    )}
+
+                    {/* Stripe Connect card */}
+                    <button
+                        type="button"
+                        onClick={() => { playClick(); setStripeExpanded((v) => !v); }}
+                        className={`w-full rounded-2xl px-3.5 py-2.5 border flex items-center gap-3 text-left cursor-pointer ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}
+                    >
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${stripeConnected ? 'bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-[#bef264]/15 dark:text-[#bef264]' : (isDarkMode ? 'bg-white/10 text-zinc-200' : 'bg-white text-zinc-500 border border-zinc-200')}`}>
+                            <CreditCard className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">
+                                {stripeConnected ? 'Stripe Connect' : 'Connect Stripe'}
+                            </p>
+                            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+                                {stripeConnected ? (user?.stripeConnect?.displayName || 'Payouts enabled') : 'Accept card + ACH payments fast'}
+                            </p>
+                        </div>
+                        {stripeConnected ? (
+                            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-[#4d7c0f] dark:text-[#bef264]">Active</span>
+                        ) : (
+                            <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${stripeExpanded ? 'rotate-180' : ''}`} />
+                        )}
+                    </button>
+                    {stripeExpanded && !stripeConnected && (
+                        <div className={`rounded-2xl border p-3 ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}>
+                            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed mb-2.5">
+                                Clients pay you directly on Stripe. We never touch the funds — payouts go straight to your bank.
+                            </p>
+                            <button
+                                type="button"
+                                onClick={handleConnectStripe}
+                                className={`w-full h-10 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-[#4d7c0f] hover:bg-[#3f6d0b] text-white'}`}
+                            >
+                                <Zap className="w-3.5 h-3.5" />
+                                Connect Stripe
+                            </button>
+                        </div>
+                    )}
+                    {stripeConnected && stripeExpanded && (
+                        <div className={`rounded-2xl border p-3 space-y-2 ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}>
+                            <div className="flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+                                <Check className="w-3.5 h-3.5 text-[#4d7c0f] dark:text-[#bef264]" /> Charges enabled
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+                                <Check className="w-3.5 h-3.5 text-[#4d7c0f] dark:text-[#bef264]" /> Payouts enabled
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleDisconnectStripe}
+                                className="w-full h-9 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-red-200 dark:border-red-500/20 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors cursor-pointer"
+                            >
+                                Disconnect
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Storage setup card */}
+                    <button
+                        type="button"
+                        onClick={() => { playClick(); setStorageExpanded((v) => !v); }}
+                        className={`w-full rounded-2xl px-3.5 py-2.5 border flex items-center gap-3 text-left cursor-pointer ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}
+                    >
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${storageMode !== 'platform' ? 'bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-[#bef264]/15 dark:text-[#bef264]' : (isDarkMode ? 'bg-white/10 text-zinc-200' : 'bg-white text-zinc-500 border border-zinc-200')}`}>
+                            <HardDrive className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">Storage</p>
+                            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+                                {storageMode === 'platform' ? 'Native (Heartifact hosted)' : storageMode === 'drive' ? `External link · ${user?.storageSettings?.byosDriveAccountLabel || 'paste URL'}` : `S3 · ${user?.storageSettings?.s3Bucket || 'configure'}`}
+                            </p>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${storageExpanded ? 'rotate-180' : ''}`} />
+                    </button>
+                    {storageExpanded && (
+                        <div className={`rounded-2xl border p-3 space-y-2.5 ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}>
+                            <div className="grid grid-cols-3 gap-1 p-1 rounded-xl border border-zinc-200 dark:border-white/10 bg-white/60 dark:bg-white/[0.03]">
+                                {([
+                                    { id: 'platform', label: 'Native' },
+                                    { id: 'drive', label: 'Paste URL' },
+                                    { id: 's3', label: 'S3' },
+                                ] as const).map((opt) => (
+                                    <button
+                                        key={opt.id}
+                                        type="button"
+                                        onClick={() => setStorageMode(opt.id)}
+                                        className={`h-8 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${storageMode === opt.id ? (isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                ))}
+                            </div>
+                            {storageMode === 'drive' && (
+                                <>
+                                    <input
+                                        type="url"
+                                        value={storageDraftUrl}
+                                        onChange={(e) => setStorageDraftUrl(e.target.value)}
+                                        placeholder="https://drive.google.com/…  ·  Dropbox  ·  OneDrive"
+                                        className={inputCls}
+                                    />
+                                    <p className="text-[10px] text-zinc-400 leading-snug px-0.5">Links-only workflow — we never store any tokens in the browser.</p>
+                                </>
+                            )}
+                            {storageMode === 's3' && (
+                                <div className="space-y-2">
+                                    <input
+                                        type="text"
+                                        value={storageDraftBucket}
+                                        onChange={(e) => setStorageDraftBucket(e.target.value)}
+                                        placeholder="Bucket name"
+                                        className={inputCls}
+                                    />
+                                    <input
+                                        type="text"
+                                        value={storageDraftEndpoint}
+                                        onChange={(e) => setStorageDraftEndpoint(e.target.value)}
+                                        placeholder="Endpoint (AWS / R2 / custom)"
+                                        className={inputCls}
+                                    />
+                                    <input
+                                        type="url"
+                                        value={storageDraftUrl}
+                                        onChange={(e) => setStorageDraftUrl(e.target.value)}
+                                        placeholder="Public base URL (optional)"
+                                        className={inputCls}
+                                    />
+                                    <p className="text-[10px] text-zinc-400 leading-snug px-0.5">Metadata only — configure signed URLs server-side.</p>
+                                </div>
+                            )}
+                            {storageMode === 'platform' && (
+                                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                                    Files ride on our private, signed-URL delivery. Nothing to configure.
+                                </p>
+                            )}
+                            {storageMode !== 'platform' && (
+                                <button
+                                    type="button"
+                                    onClick={saveStorageDetails}
+                                    className={`w-full h-10 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-[#4d7c0f] hover:bg-[#3f6d0b] text-white'}`}
+                                >
+                                    <Check className="w-3.5 h-3.5" />
+                                    Save & sync
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {files.length > 0 && (
@@ -3481,7 +3844,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                             </div>
                         ) : (
                             <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1 briefing-scroll">
-                                {currentProjects.map((project) => (
+                                {currentProjectsWithLive.map(({ project, isLive }) => (
                                     <button
                                         key={project.id}
                                         onClick={() => {
@@ -3492,7 +3855,18 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0">
-                                                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">{project.name}</p>
+                                                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                                                    <span className="truncate">{project.name}</span>
+                                                    {isLive && (
+                                                        <span className="inline-flex items-center gap-1 rounded-full border border-[#a3e635]/35 bg-[#a3e635]/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#4d7c0f] dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
+                                                            <span className="relative flex h-2 w-2">
+                                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#65a30d] opacity-70 dark:bg-blue-400" />
+                                                                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#65a30d] dark:bg-blue-400" />
+                                                            </span>
+                                                            Live
+                                                        </span>
+                                                    )}
+                                                </p>
                                                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">{project.client?.name || 'Client'} · {project.status.replace(/_/g, ' ')}</p>
                                             </div>
                                             <span className="text-[10px] font-mono text-zinc-400 shrink-0">{formatWidgetTime(project.createdAt)}</span>
@@ -3523,6 +3897,11 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false); // NEW State
     const [isRouteMenuOpen, setIsRouteMenuOpen] = useState(false);
+    const [assetViewerIndex, setAssetViewerIndex] = useState<number | null>(null);
+    const [assetZoom, setAssetZoom] = useState(1);
+    const [assetFitMode, setAssetFitMode] = useState<'cover' | 'contain'>('cover');
+    const [assetVideoPlaying, setAssetVideoPlaying] = useState(true);
+    const assetVideoRef = useRef<HTMLVideoElement | null>(null);
     const profileMenuRef = useRef<HTMLDivElement | null>(null);
     const routeMenuRef = useRef<HTMLDivElement | null>(null);
     const [demoMode, setDemoMode] = useState(isMockMode());
@@ -3614,6 +3993,37 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
         () => readQuickDeliveryDraft()?.files?.length ?? 0,
         [draftVersion, location.search]
     );
+    const quickstartDraftAssets = useMemo(
+        () => (readQuickDeliveryDraft()?.files ?? []).slice(0, 6),
+        [draftVersion, location.search]
+    );
+    const quickstartDraftFiles = useMemo(
+        () => quickstartDraftAssets.slice(0, 4).map((file) => file.name),
+        [quickstartDraftAssets]
+    );
+    const activeStagedAsset = assetViewerIndex !== null ? quickstartDraftAssets[assetViewerIndex] ?? null : null;
+    const handleRemoveStagedAsset = useCallback((assetId: string) => {
+        const draft = readQuickDeliveryDraft();
+        if (!draft?.files?.length) return;
+        const nextFiles = draft.files.filter((f) => f.id !== assetId);
+        try {
+            localStorage.setItem(QUICK_DELIVERY_DRAFT_KEY, JSON.stringify({
+                formData: draft.formData || {},
+                files: nextFiles,
+                quickQuoteLines: draft.quickQuoteLines,
+            }));
+        } catch {
+            // Ignore storage failures.
+        }
+        setAssetViewerIndex((idx) => {
+            if (idx === null) return null;
+            const current = quickstartDraftAssets[idx];
+            if (!current || current.id === assetId) return null;
+            const nextIdx = nextFiles.findIndex((f) => f.id === current.id);
+            return nextIdx >= 0 ? nextIdx : null;
+        });
+        setDraftVersion((v) => v + 1);
+    }, [quickstartDraftAssets]);
 
     const handleOpenQuickDelivery = useCallback(() => {
         playClick();
@@ -3641,6 +4051,8 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             e.preventDefault();
             // Don't show global dropzone if we are in creator/editor where they have specific dropzones
             if (location.pathname.includes('/create') || location.pathname.includes('/editor')) return;
+            const target = e.target as HTMLElement | null;
+            if (target?.closest?.('[data-ignore-global-drop="true"]')) return;
             if (e.dataTransfer?.types.includes('Files')) {
                 setIsDraggingGlobal(true);
             }
@@ -3655,6 +4067,8 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             e.preventDefault();
             setIsDraggingGlobal(false);
             if (location.pathname.includes('/create') || location.pathname.includes('/editor')) return;
+            const target = e.target as HTMLElement | null;
+            if (target?.closest?.('[data-ignore-global-drop="true"]')) return;
             
             if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
                 const droppedFiles = Array.from(e.dataTransfer.files);
@@ -3901,14 +4315,11 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
 
         return (
             <div className="fixed inset-0 z-[120] flex items-end sm:items-start justify-center sm:pt-28 sm:px-4" onKeyDown={handleKeyDown}>
-                <div className="absolute inset-0 bg-zinc-900/55 dark:bg-black/55 backdrop-blur-md transition-colors duration-300" onClick={onClose} />
+                <div className="absolute inset-0 bg-zinc-900/55 dark:bg-black/55 backdrop-blur-[5px] transition-colors duration-300" onClick={onClose} />
                 <div
-                    className="relative w-full sm:max-w-2xl bg-white/95 dark:bg-[#16161f]/95 backdrop-blur-2xl rounded-t-[2rem] sm:rounded-[2rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.05)] border border-zinc-200/60 dark:border-white/10 overflow-hidden animate-slide-up pb-8 sm:pb-0"
+                    className="relative w-full sm:max-w-2xl bg-white dark:bg-charcoal rounded-t-[2rem] sm:rounded-[2rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.05)] border border-zinc-200/60 dark:border-white/10 overflow-hidden animate-slide-up pb-8 sm:pb-0"
                 >
                     <div className="w-12 h-1.5 bg-zinc-200 dark:bg-white/10 rounded-full mx-auto mt-4 mb-2 sm:hidden" />
-                    {/* Subtle ambient glow */}
-                    <div className="pointer-events-none absolute -top-24 -left-24 w-64 h-64 rounded-full bg-[#a3e635]/15 dark:bg-[#bef264]/10 blur-[80px]" />
-                    <div className="pointer-events-none absolute -bottom-32 -right-24 w-72 h-72 rounded-full bg-sky-300/10 dark:bg-indigo-500/10 blur-[90px]" />
 
                     <div className="relative flex items-center gap-3 px-5 py-4 border-b border-zinc-100/80 dark:border-white/5">
                         <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200/70 dark:border-white/10 flex items-center justify-center shrink-0">
@@ -3954,7 +4365,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                         })}
                     </div>
 
-                    <div className="relative px-4 py-3 bg-zinc-50/80 dark:bg-black/20 border-t border-zinc-100/80 dark:border-white/5 flex flex-wrap gap-x-4 gap-y-1.5 items-center text-[10px] text-zinc-500 dark:text-zinc-400">
+                    <div className="relative px-4 py-3 bg-white dark:bg-charcoal border-t border-zinc-100/80 dark:border-white/5 flex flex-wrap gap-x-4 gap-y-1.5 items-center text-[10px] text-zinc-500 dark:text-zinc-400">
                         <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded-md border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-600 dark:text-zinc-300">↑↓</kbd> navigate</span>
                         <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded-md border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-600 dark:text-zinc-300">↵</kbd> open</span>
                         <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded-md border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-white/5 font-mono text-zinc-600 dark:text-zinc-300">Esc</kbd> close</span>
@@ -4010,7 +4421,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                 <div>
                     <h4 className="font-bold text-zinc-900 dark:text-white leading-tight">{user.name || 'Your Account'}</h4>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-[140px]">{user.email || 'No email on file'}</p>
-                    <span className="text-[10px] font-bold uppercase text-lime-400 tracking-wider mt-1 block">Pro Plan</span>
+                    <span className="text-[10px] font-bold uppercase text-[#4d7c0f] dark:text-lime-400 tracking-wider mt-1 block">Pro Plan</span>
                 </div>
             </div>
 
@@ -4510,6 +4921,34 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                         <span className="text-zinc-800 dark:text-white">Send email</span>, then <span className="text-zinc-800 dark:text-white">Publish</span> for a shareable project link.
                                         You can open <span className="text-zinc-800 dark:text-white">Studio</span> there anytime for milestones and advanced options.
                                     </p>
+                                    {quickstartDraftFiles.length > 0 && (
+                                        <div className="rounded-2xl border border-zinc-200/70 dark:border-white/10 bg-white/70 dark:bg-white/[0.04] p-3 sm:p-4 max-w-2xl">
+                                            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400 mb-2">
+                                                New files staged for Brand Identity Package
+                                            </p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {quickstartDraftFiles.map((name) => (
+                                                    <div
+                                                        key={name}
+                                                        className="rounded-xl border border-[#a3e635]/35 bg-[#a3e635]/15 dark:border-blue-500/20 dark:bg-blue-500/10 px-3 py-2.5 text-left"
+                                                    >
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#4d7c0f] dark:text-blue-300">
+                                                                New asset
+                                                            </span>
+                                                            <span className="relative flex h-2 w-2 shrink-0">
+                                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#65a30d] opacity-70 dark:bg-blue-400" />
+                                                                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#65a30d] dark:bg-blue-400" />
+                                                            </span>
+                                                        </div>
+                                                        <p className="mt-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-100 truncate">
+                                                            {name}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                     <button
                                         type="button"
                                         onClick={dismissWorkspaceQuickstart}
@@ -4521,7 +4960,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             </div>
                         )}
                         <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-700 ${workspaceQuickstartActive || !showHeroGreeting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                            <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl 2xl:text-[8.2rem] text-zinc-900 dark:text-white tracking-tight leading-[0.98] max-w-[1040px] px-1">
+                            <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-[5.6rem] 2xl:text-[8.2rem] text-zinc-900 dark:text-white tracking-tight leading-[0.94] max-w-[11ch] px-1">
                                 <span className="block animate-fade-in">
                                     {heroGreetingPrefix}
                                     <span className="italic text-lime-400 dark:text-[#bef264]">{greetingName}</span>
@@ -4555,7 +4994,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                     }}
                 >
                     <div className="relative w-full max-w-md">
-                        <h2 className={`font-serif text-2xl md:text-3xl text-zinc-900 dark:text-white tracking-tight leading-[1.1] transition-opacity duration-500 ${showHeroGreeting ? 'opacity-100' : 'opacity-0 pointer-events-none absolute inset-0'}`}>
+                        <h2 className={`max-w-[11ch] font-serif text-4xl md:text-5xl lg:text-[3.2rem] text-zinc-900 dark:text-white tracking-tight leading-[1.02] transition-opacity duration-500 ${showHeroGreeting ? 'opacity-100' : 'opacity-0 pointer-events-none absolute inset-0'}`}>
                             {heroGreetingPrefix}
                             <span className="italic text-lime-400 dark:text-[#bef264]">{greetingName}</span>
                             {heroGreetingSuffix}
@@ -4567,6 +5006,163 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-400 dark:text-zinc-300 font-bold">
                                 Quick tip {heroTipIndex + 1} of {heroTips.length}
                             </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {(isDockMode || isWidgetOnly) && !isPanelOpen && currentPath === 'workspace' && quickstartDraftAssets.length > 0 && !showHeroGreeting && (
+                <div
+                    className={`fixed z-[16] pointer-events-auto ${isWidgetOnly ? 'left-[24px] right-[24px] min-[700px]:left-[404px] min-[700px]:right-[24px]' : 'left-[404px] right-8 xl:left-[424px]'}`}
+                    style={{ bottom: 'calc(26px + env(safe-area-inset-bottom))' }}
+                    data-ignore-global-drop="true"
+                >
+                    <div className="mx-auto max-w-[1040px]">
+                        <div className="mb-2 flex items-center justify-between">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">
+                                Staged assets
+                            </p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#4d7c0f] dark:text-[#bef264]">
+                                {quickstartDraftAssets.length} ready
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                            {quickstartDraftAssets.map((file) => (
+                                <button
+                                    key={file.id}
+                                    type="button"
+                                    onClick={() => {
+                                        setAssetViewerIndex(quickstartDraftAssets.findIndex((f) => f.id === file.id));
+                                        setAssetZoom(1);
+                                        setAssetFitMode('cover');
+                                        setAssetVideoPlaying(true);
+                                    }}
+                                    onDragStart={(e) => e.preventDefault()}
+                                    className="group relative rounded-[2rem] border border-zinc-200/80 dark:border-white/[0.08] bg-[#f0f2f5] dark:bg-cosmic/56 overflow-hidden backdrop-blur-sm text-left shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
+                                    title={file.name}
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleRemoveStagedAsset(file.id);
+                                        }}
+                                        className="absolute top-2 right-2 z-20 h-7 w-7 rounded-full border border-zinc-200/80 dark:border-white/20 bg-white/85 dark:bg-black/45 text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center shadow-sm"
+                                        title="Remove staged asset"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                    <div className="relative h-32 bg-white/65 dark:bg-black/20 flex items-center justify-center overflow-hidden rounded-t-[2rem]">
+                                        {file.previewUrl ? (
+                                            file.type === 'video' ? (
+                                                <video src={file.previewUrl} className="w-full h-full object-cover" muted playsInline draggable={false} onDragStart={(e) => e.preventDefault()} />
+                                            ) : (
+                                                <img src={file.previewUrl} alt={file.name} className="w-full h-full object-cover" draggable={false} onDragStart={(e) => e.preventDefault()} />
+                                            )
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-1 text-zinc-600 dark:text-blue-300">
+                                                {file.type === 'image' ? <ImageIcon className="w-4 h-4" /> : file.type === 'video' ? <Film className="w-4 h-4" /> : file.type === 'pdf' ? <FileText className="w-4 h-4" /> : <File className="w-4 h-4" />}
+                                                <span className="text-[9px] font-bold uppercase">{file.type}</span>
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/18 transition-colors duration-300 pointer-events-none" />
+                                    </div>
+                                    <div className="p-3 md:p-4">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className="flex-1 min-w-0 pr-2">
+                                                <h3 className="font-bold text-sm text-zinc-900 dark:text-white truncate">{file.name}</h3>
+                                                <div className="flex items-center gap-2 text-[10px] font-medium text-zinc-500 dark:text-zinc-400">
+                                                    <span>{file.size}</span>
+                                                    <span>VERSION 1.0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="hidden md:block p-2.5 rounded-xl border transition-all bg-white/65 border-zinc-200/70 dark:bg-black/25 dark:border-white/10 shadow-inner shadow-black/5 dark:shadow-black/20">
+                                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-300 mb-1.5">Technical Specs</p>
+                                            <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
+                                                <span>Type {file.type.toUpperCase()}</span>
+                                                <span>Size {file.size}</span>
+                                                <span>Source STAGED</span>
+                                                <span>Date {new Date(file.uploadDate).toLocaleDateString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeStagedAsset && (
+                <div className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-[5px] flex items-center justify-center p-4" onClick={() => setAssetViewerIndex(null)}>
+                    <div className="w-full max-w-6xl h-[88vh] rounded-3xl border border-zinc-200/20 dark:border-white/10 bg-[#f0f2f5]/95 dark:bg-cosmic/95 shadow-2xl overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+                        <div className="h-14 px-4 border-b border-zinc-200/60 dark:border-white/10 flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                                <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">{activeStagedAsset.name}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{activeStagedAsset.type} · {activeStagedAsset.size}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button type="button" onClick={() => setAssetViewerIndex((i) => i === null ? null : Math.max(0, i - 1))} disabled={assetViewerIndex === 0} className="h-9 px-3 rounded-xl border border-zinc-200/70 dark:border-white/10 text-xs font-bold disabled:opacity-40">Prev</button>
+                                <button type="button" onClick={() => setAssetViewerIndex((i) => i === null ? null : Math.min(quickstartDraftAssets.length - 1, i + 1))} disabled={assetViewerIndex === quickstartDraftAssets.length - 1} className="h-9 px-3 rounded-xl border border-zinc-200/70 dark:border-white/10 text-xs font-bold disabled:opacity-40">Next</button>
+                                <button type="button" onClick={() => setAssetFitMode((m) => m === 'cover' ? 'contain' : 'cover')} className="h-9 px-3 rounded-xl border border-zinc-200/70 dark:border-white/10 text-xs font-bold inline-flex items-center gap-1">
+                                    {assetFitMode === 'cover' ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
+                                    {assetFitMode}
+                                </button>
+                                <button type="button" onClick={() => setAssetViewerIndex(null)} className="h-9 w-9 rounded-xl border border-zinc-200/70 dark:border-white/10 inline-flex items-center justify-center"><X className="w-4 h-4" /></button>
+                            </div>
+                        </div>
+                        <div className="flex-1 min-h-0 relative flex items-center justify-center bg-white/40 dark:bg-black/20">
+                            {activeStagedAsset.previewUrl ? (
+                                activeStagedAsset.type === 'video' ? (
+                                    <video
+                                        ref={assetVideoRef}
+                                        src={activeStagedAsset.previewUrl}
+                                        className={`w-full h-full ${assetFitMode === 'cover' ? 'object-cover' : 'object-contain'}`}
+                                        controls
+                                        autoPlay={assetVideoPlaying}
+                                        playsInline
+                                    />
+                                ) : (
+                                    <img
+                                        src={activeStagedAsset.previewUrl}
+                                        alt={activeStagedAsset.name}
+                                        className={`w-full h-full ${assetFitMode === 'cover' ? 'object-cover' : 'object-contain'} transition-transform duration-200`}
+                                        style={{ transform: `scale(${assetZoom})` }}
+                                    />
+                                )
+                            ) : (
+                                <div className="flex flex-col items-center gap-3 text-zinc-500 dark:text-zinc-300">
+                                    {activeStagedAsset.type === 'image' ? <ImageIcon className="w-10 h-10" /> : activeStagedAsset.type === 'video' ? <Film className="w-10 h-10" /> : activeStagedAsset.type === 'pdf' ? <FileText className="w-10 h-10" /> : <File className="w-10 h-10" />}
+                                    <p className="text-sm font-bold uppercase tracking-wider">No visual preview</p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="h-14 px-4 border-t border-zinc-200/60 dark:border-white/10 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <button type="button" onClick={() => setAssetZoom((z) => Math.max(0.6, z - 0.2))} className="h-9 px-3 rounded-xl border border-zinc-200/70 dark:border-white/10 text-xs font-bold inline-flex items-center gap-1"><ZoomOut className="w-3.5 h-3.5" />Zoom out</button>
+                                <button type="button" onClick={() => setAssetZoom((z) => Math.min(3, z + 0.2))} className="h-9 px-3 rounded-xl border border-zinc-200/70 dark:border-white/10 text-xs font-bold inline-flex items-center gap-1"><ZoomIn className="w-3.5 h-3.5" />Zoom in</button>
+                                <button type="button" onClick={() => setAssetZoom(1)} className="h-9 px-3 rounded-xl border border-zinc-200/70 dark:border-white/10 text-xs font-bold inline-flex items-center gap-1"><RotateCcw className="w-3.5 h-3.5" />Reset</button>
+                            </div>
+                            {activeStagedAsset.type === 'video' && activeStagedAsset.previewUrl && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!assetVideoRef.current) return;
+                                        if (assetVideoRef.current.paused) {
+                                            assetVideoRef.current.play();
+                                            setAssetVideoPlaying(true);
+                                        } else {
+                                            assetVideoRef.current.pause();
+                                            setAssetVideoPlaying(false);
+                                        }
+                                    }}
+                                    className="h-9 px-3 rounded-xl border border-zinc-200/70 dark:border-white/10 text-xs font-bold inline-flex items-center gap-1"
+                                >
+                                    {assetVideoPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                                    {assetVideoPlaying ? 'Pause' : 'Play'}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -4584,11 +5180,11 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             {/* ── Side panel ── */}
             {isDockMode && (
                 <aside
-                    className={`fixed right-0 bottom-0 z-[70] w-full max-w-[960px] min-[880px]:w-auto min-[880px]:max-w-none min-[880px]:left-[420px] xl:left-[440px] bg-white/30 dark:bg-cosmic/60 backdrop-blur-xl transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                    className={`fixed right-0 bottom-0 z-[70] w-full max-w-[960px] min-[880px]:w-auto min-[880px]:max-w-none min-[880px]:left-[420px] xl:left-[440px] bg-white/45 dark:bg-cosmic/60 backdrop-blur-xl transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}
                     style={{ top: stripOffset }}
                     aria-hidden={!isPanelOpen}
                 >
-                    <div className="h-full bg-[#f0f2f5]/40 dark:bg-cosmic/56 border-l border-zinc-200/35 dark:border-white/[0.06] shadow-lg overflow-hidden flex flex-col transition-[box-shadow,border-color] duration-700">
+                    <div className="h-full bg-[#f0f2f5]/55 dark:bg-cosmic/56 border-l border-zinc-200/35 dark:border-white/[0.06] shadow-lg overflow-hidden flex flex-col transition-[box-shadow,border-color] duration-700">
                         <div className="shrink-0 h-[4.25rem] px-5 pt-4 flex items-start border-b border-zinc-200/35 dark:border-white/[0.06]">
                             <div className="flex items-center gap-2">
                                 <button
@@ -5304,4 +5900,3 @@ export default function App() {
         </StoreProvider>
     );
 }
-

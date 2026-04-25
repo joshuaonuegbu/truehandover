@@ -187,7 +187,7 @@ const ClientLibraryView: React.FC<ClientLibraryViewProps> = ({ projects, isDarkM
                                     Delivered {new Date(libraryProject.createdAt).toLocaleDateString()} - {unlockedFiles.length} assets
                                 </p>
                             </div>
-                            <div className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
+                            <div className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f]'}`}>
                                 Library
                             </div>
                         </div>
@@ -211,7 +211,7 @@ const ClientLibraryView: React.FC<ClientLibraryViewProps> = ({ projects, isDarkM
                                         <p className={`text-sm font-bold truncate ${textPrimary}`}>{file.name}</p>
                                         <p className={`text-[10px] uppercase tracking-widest ${textMuted} mt-1`}>{file.type} - {file.size}</p>
                                         {recentViewedAt && (
-                                            <p className={`text-[10px] mt-1 font-bold uppercase tracking-widest ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>
+                                            <p className={`text-[10px] mt-1 font-bold uppercase tracking-widest ${isDarkMode ? 'text-blue-400' : 'text-[#4d7c0f]'}`}>
                                                 Viewed {new Date(recentViewedAt).toLocaleDateString()}
                                             </p>
                                         )}
@@ -310,7 +310,7 @@ const CredentialVaultWidget = ({ credentials, isLocked, isDarkMode }: any) => {
                         <Lock className="w-3 h-3" /> Encrypted
                     </span>
                 ) : (
-                    <span className="flex items-center gap-1 text-[9px] font-bold uppercase text-blue-500 bg-blue-500/10 px-2 py-1 rounded">
+                    <span className="flex items-center gap-1 text-[9px] font-bold uppercase text-[#4d7c0f] bg-[#a3e635]/15 px-2 py-1 rounded">
                         <Unlock className="w-3 h-3" /> Unlocked
                     </span>
                 )}
@@ -441,14 +441,12 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                     <div
                         key={file.id}
                         className={`group relative rounded-[2rem] border overflow-hidden transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-[1.01] ${isDarkMode
-                            ? 'bg-gradient-to-b from-[#1d1d29] via-charcoal to-[#141420] border-white/[0.08] shadow-[0_20px_44px_-12px_rgba(0,0,0,0.55)] hover:border-[#bef264]/28 hover:shadow-[0_30px_65px_-18px_rgba(0,0,0,0.62),0_0_44px_-12px_rgba(190,242,100,0.18)]'
-                            : 'bg-gradient-to-b from-white via-[#fbfdff] to-[#f7fafc] border-zinc-200/70 shadow-[0_20px_52px_-14px_rgba(15,23,42,0.2)] hover:border-lime-300/60 hover:shadow-[0_28px_62px_-18px_rgba(15,23,42,0.26),0_0_38px_-14px_rgba(132,204,22,0.22)]'
+                            ? 'bg-charcoal border-white/[0.08] shadow-[0_20px_44px_-12px_rgba(0,0,0,0.55)] hover:shadow-[0_30px_65px_-18px_rgba(0,0,0,0.62),0_0_44px_-12px_rgba(190,242,100,0.18)]'
+                            : 'bg-white border-zinc-200/70 shadow-[0_20px_52px_-14px_rgba(15,23,42,0.2)] hover:shadow-[0_28px_62px_-18px_rgba(15,23,42,0.26),0_0_38px_-14px_rgba(132,204,22,0.22)]'
                             }`}
                         style={{ animationDelay: `${index * 100}ms` }}
                     >
                         <div className={`absolute inset-0 pointer-events-none rounded-[2rem] ${isDarkMode ? 'opacity-[0.045]' : 'opacity-[0.03]'}`} style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
-                        <div className={`absolute -top-20 -right-20 w-64 h-64 rounded-full blur-[80px] pointer-events-none ${isDarkMode ? 'bg-[#bef264]/12' : 'bg-lime-300/18'}`} />
-                        <div className={`absolute -bottom-16 -left-12 w-52 h-52 rounded-full blur-[72px] pointer-events-none ${isDarkMode ? 'bg-blue-500/10' : 'bg-sky-300/14'}`} />
                         <div className="relative z-10">
                         {/* Inline remove button (editor desktop preview only) */}
                         {onRemove && (
@@ -576,7 +574,7 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                                 title="Copy SHA-256 hash"
                                                 className={`shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border transition-all ${
                                                     copiedHashId === file.id
-                                                        ? (isDarkMode ? 'bg-blue-900/30 border-blue-700 text-blue-400' : 'bg-blue-100 border-blue-300 text-blue-700')
+                                                        ? (isDarkMode ? 'bg-blue-900/30 border-blue-700 text-blue-400' : 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f]')
                                                         : (isDarkMode ? 'border-white/10 text-zinc-400 hover:text-white hover:bg-white/10' : 'border-zinc-200/50 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100')
                                                 }`}
                                             >
@@ -639,8 +637,8 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                         className={`
                             group relative overflow-hidden rounded-3xl border transition-all duration-300 cursor-pointer backdrop-blur-md
                             ${isDarkMode
-                                ? 'bg-[#14141b]/70 border-white/10 hover:border-white/20 shadow-[0_10px_35px_-14px_rgba(0,0,0,0.55)]'
-                                : 'bg-white/70 border-zinc-200/50 hover:border-zinc-200/50 shadow-[0_16px_40px_-18px_rgba(0,0,0,0.18)]'
+                                ? 'bg-[#14141b]/70 border-white/10 shadow-[0_10px_35px_-14px_rgba(0,0,0,0.55)]'
+                                : 'bg-white/70 border-zinc-200/50 shadow-[0_16px_40px_-18px_rgba(0,0,0,0.18)]'
                             }
                             hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-28px_rgba(0,0,0,0.35)]
                         `}
@@ -657,12 +655,6 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                 <X className="w-3.5 h-3.5" />
                             </button>
                         )}
-                        {/* Hover glow */}
-                        <div className={`absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${isDarkMode
-                            ? 'bg-[radial-gradient(circle_at_top_left,_rgba(190, 242, 100,0.10)_0%,_transparent_55%)]'
-                            : 'bg-[radial-gradient(circle_at_top_left,_rgba(190, 242, 100,0.12)_0%,_transparent_55%)]'
-                            }`} />
-
                         <div className="relative flex items-center gap-4 p-4 sm:p-5">
                         {/* Thumbnail */}
                         <button
@@ -719,7 +711,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                             {isFileLocked ? (
                                         <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Locked</span>
                                             ) : (
-                                                <span className={`shrink-0 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${isDarkMode ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' : 'text-blue-700 bg-blue-50 border-blue-200'}`}>Open</span>
+                                                <span className={`shrink-0 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${isDarkMode ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' : 'text-[#4d7c0f] bg-blue-50 border-blue-200'}`}>Open</span>
                                     )}
                                 </div>
 
@@ -776,7 +768,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                         rel="noopener noreferrer"
                                                 className={`flex items-center gap-2 px-3 py-2 rounded-full border transition-all text-[10px] font-bold uppercase tracking-widest ${isDarkMode
                                                     ? 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20'
-                                                    : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100'}`}
+                                                    : 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f] hover:bg-blue-100'}`}
                                         title="Download"
                                     >
                                         <Download className="w-4 h-4" />
@@ -2180,7 +2172,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 </div>
                             </div>
                         ) : (
-                            <div className="mt-10"><div className={`flex justify-between items-end border-b border-zinc-200/50 dark:border-white/5 pb-2 mb-4`}><span className={`text-[10px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-zinc-400' : 'text-blue-700'}`}>Project Value</span></div><div className="flex items-center justify-between"><span className={`text-sm font-bold ${textPrimary}`}>Total Contract</span><span className={`text-xl font-sans tracking-tight font-bold ${isDarkMode ? GRADIENT_TEXT : 'text-zinc-900'}`}>${project.amount.toLocaleString()}</span></div></div>
+                            <div className="mt-10"><div className={`flex justify-between items-end border-b border-zinc-200/50 dark:border-white/5 pb-2 mb-4`}><span className={`text-[10px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-zinc-400' : 'text-[#4d7c0f]'}`}>Project Value</span></div><div className="flex items-center justify-between"><span className={`text-sm font-bold ${textPrimary}`}>Total Contract</span><span className={`text-xl font-sans tracking-tight font-bold ${isDarkMode ? GRADIENT_TEXT : 'text-zinc-900'}`}>${project.amount.toLocaleString()}</span></div></div>
                         )}
                     </div>
 
