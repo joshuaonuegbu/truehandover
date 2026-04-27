@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
+    ChevronLeft,
     Copy,
     FileDigit,
     FileText,
@@ -27,6 +29,7 @@ const currency = quoteCurrency;
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
 export default function QuotesPage() {
+    const navigate = useNavigate();
     const { projects, user } = useStore();
     const [clientTemplateId, setClientTemplateId] = useState('');
 
@@ -163,6 +166,14 @@ export default function QuotesPage() {
         <div className="space-y-6 animate-slide-up relative z-10 pb-16 lg:pb-10 w-full">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="min-w-0 flex-1">
+                    <button
+                        type="button"
+                        onClick={() => { playClick(); navigate(-1); }}
+                        className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors mb-2.5"
+                        title="Back"
+                    >
+                        <ChevronLeft className="w-4 h-4" /> Back
+                    </button>
                     <h2 className="text-3xl sm:text-4xl font-sans tracking-tight font-medium text-zinc-900 dark:text-white">Quote Builder</h2>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 max-w-2xl leading-relaxed">
                         Line items, tax, and notes — copy plain text, download a .txt file, or export a branded PDF.

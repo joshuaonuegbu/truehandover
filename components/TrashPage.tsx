@@ -268,14 +268,14 @@ export default function TrashPage({ onBack }: { onBack?: () => void }) {
             <div className="relative z-10 w-full animate-slide-up space-y-5 pb-12">
                 {/* Compact chrome — no banner card */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex min-w-0 items-start gap-3">
+                    <div className="min-w-0">
                         <button
                             type="button"
                             onClick={handleBack}
-                            className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-200/70 bg-white text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-white/15 dark:bg-white/5 dark:text-zinc-300 dark:hover:border-white/25 dark:hover:text-white"
+                            className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors mb-2.5"
                             title="Back"
                         >
-                            <ChevronLeft className="h-5 w-5" />
+                            <ChevronLeft className="w-4 h-4" /> Back
                         </button>
                         <div className="min-w-0">
                             <h1 className="font-sans text-2xl font-medium tracking-tight text-zinc-900 dark:text-white sm:text-3xl">Trash</h1>

@@ -10,7 +10,7 @@ const initAudio = () => {
 };
 
 export const isSoundEnabled = (): boolean =>
-  localStorage.getItem('th_sound_effects') !== 'false';
+  localStorage.getItem('th_sound_effects') === 'true';
 
 export const playClick = () => {
   if (!isSoundEnabled()) return;

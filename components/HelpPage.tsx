@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import {
-    Search, ChevronDown,
+    Search, ChevronDown, ChevronLeft,
     CreditCard, FileText, User,
     MessageCircle, ExternalLink, HelpCircle,
     Layout, Lock, Box, LifeBuoy
@@ -85,9 +85,12 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
             <div className="shrink-0 flex flex-col gap-5 border-b border-zinc-200/50 dark:border-white/5 pb-7">
                 <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-5">
                     <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#a3e635]/15 dark:bg-[#bef264]/12 text-[#4d7c0f] dark:text-[#bef264] border border-[#a3e635]/35 dark:border-[#bef264]/30 backdrop-blur-sm text-[10px] font-bold uppercase tracking-widest mb-3">
-                            <LifeBuoy className="w-3 h-3" /> Heartifact Support
-                        </div>
+                        <button
+                            onClick={() => { playClick(); onBack(); }}
+                            className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors mb-2.5"
+                        >
+                            <ChevronLeft className="w-4 h-4" /> Back
+                        </button>
                         <h1 className="font-sans tracking-tight text-4xl md:text-5xl font-medium text-zinc-900 dark:text-white leading-[1.05]">
                             Help & Documentation
                         </h1>
@@ -95,12 +98,9 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
                             Guides for secure asset delivery, payments, and client access.
                         </p>
                     </div>
-                    <button
-                        onClick={() => { playClick(); onBack(); }}
-                        className="h-11 px-5 rounded-xl bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 text-xs font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/10 transition-colors"
-                    >
-                        Back
-                    </button>
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#a3e635]/15 dark:bg-[#bef264]/12 text-[#4d7c0f] dark:text-[#bef264] border border-[#a3e635]/35 dark:border-[#bef264]/30 backdrop-blur-sm text-[10px] font-bold uppercase tracking-widest self-start xl:self-auto">
+                        <LifeBuoy className="w-3 h-3" /> Heartifact Support
+                    </div>
                 </div>
 
                 {/* Search */}

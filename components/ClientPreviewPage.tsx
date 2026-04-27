@@ -2172,7 +2172,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 </div>
                             </div>
                         ) : (
-                            <div className="mt-10"><div className={`flex justify-between items-end border-b border-zinc-200/50 dark:border-white/5 pb-2 mb-4`}><span className={`text-[10px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-zinc-400' : 'text-[#4d7c0f]'}`}>Project Value</span></div><div className="flex items-center justify-between"><span className={`text-sm font-bold ${textPrimary}`}>Total Contract</span><span className={`text-xl font-sans tracking-tight font-bold ${isDarkMode ? GRADIENT_TEXT : 'text-zinc-900'}`}>${project.amount.toLocaleString()}</span></div></div>
+                            <div className="mt-10"><div className={`flex justify-between items-end border-b border-zinc-200/50 dark:border-white/5 pb-2 mb-4`}><span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm ${isDarkMode ? 'bg-[#bef264]/12 text-[#bef264] border-[#bef264]/25' : 'bg-[#a3e635]/15 text-[#4d7c0f] border-[#a3e635]/35'}`}><span className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-[#bef264] shadow-[0_0_8px_rgba(190,242,100,0.6)]' : 'bg-[#65a30d] shadow-[0_0_8px_rgba(163,230,53,0.55)]'} animate-pulse`} />Project Value</span></div><div className="flex items-center justify-between"><span className={`text-sm font-bold ${textPrimary}`}>Total Contract</span><span className={`text-xl font-sans tracking-tight font-bold ${isDarkMode ? GRADIENT_TEXT : 'text-zinc-900'}`}>${project.amount.toLocaleString()}</span></div></div>
                         )}
                     </div>
 

@@ -347,14 +347,14 @@ const SectionHeading = ({ badge, title, subtitle, className = "" }: any) => (
 );
 
 const BentoCard = ({ children, className = "", title, subtitle, icon: Icon }: { children?: React.ReactNode, className?: string, title?: string, subtitle?: string, icon?: any }) => (
-    <NetRevenueStylePanel
-        className={`group flex flex-col transition-all duration-500 hover:border-zinc-300/80 dark:hover:border-white/10 ${className}`}
+    <div
+        className={`group relative flex flex-col transition-all duration-500 overflow-hidden rounded-[2rem] bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:border-zinc-300/80 dark:hover:border-white/15 ${className}`}
     >
         {(title || Icon) && (
             <div className="p-8 pb-4 shrink-0">
                 <div className="flex items-center gap-3 mb-3">
                     {Icon && (
-                        <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] flex items-center justify-center text-black dark:text-lime-400">
+                        <div className="w-10 h-10 rounded-xl bg-white/60 dark:bg-white/[0.06] border border-zinc-200/60 dark:border-white/[0.08] flex items-center justify-center text-black dark:text-lime-400 backdrop-blur-sm">
                             <Icon className="w-5 h-5" />
                         </div>
                     )}
@@ -367,7 +367,7 @@ const BentoCard = ({ children, className = "", title, subtitle, icon: Icon }: { 
         )}
 
         <div className="flex-1 flex flex-col min-h-0">{children}</div>
-    </NetRevenueStylePanel>
+    </div>
 );
 
 // --- SECTIONS ---
@@ -386,19 +386,26 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
             className={`fixed top-0 left-0 right-0 z-50 px-6 pb-6 transition-all duration-500 ${isHidden ? 'opacity-0 -translate-y-full pointer-events-none' : 'opacity-100 translate-y-0'}`}
             style={{ paddingTop: 'max(32px, calc(env(safe-area-inset-top, 0px) + 18px))' }}
         >
-            <div className="max-w-[1200px] mx-auto bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-4 sm:px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
+            <div className="max-w-[760px] md:max-w-[900px] xl:max-w-[1080px] 2xl:max-w-[1200px] mx-auto bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-4 sm:px-5 lg:px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
                 <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                     <Logo className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
                     <span className="font-serif text-lg sm:text-xl tracking-tight text-black dark:text-white">Heartifact</span>
                 </div>
 
-                <div className="hidden md:flex items-center gap-8">
+                <div className="hidden md:flex items-center gap-4 lg:gap-6">
                     <button onClick={() => scrollTo('comparison')} className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors">Why Us</button>
                     <button onClick={() => scrollTo('how-it-works')} className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors">Process</button>
                     <button onClick={() => scrollTo('pricing')} className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors">Pricing</button>
                 </div>
 
-                <div className="hidden md:flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-2 lg:gap-3">
+                    <ThemeModeDropdown
+                        themeMode={currentTheme}
+                        onChange={(mode) => { playClick(); onSetThemeMode(mode); }}
+                        isDarkMode={currentTheme === 'dark'}
+                        align="right"
+                        buttonClassName="p-2 rounded-full text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-white/5 transition-all"
+                    />
                     <button
                         onClick={() => { playClick(); window.location.href = '/signin?from=landing'; }}
                         className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors px-3 py-2"
@@ -760,9 +767,9 @@ const BentoGrid = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6">
                     {/* 1. Smart Previews */}
-                    <BentoCard className="md:col-span-3 lg:col-span-4 min-h-[400px]" title="Smart Preview" subtitle="Lossy samples for assessment" icon={Eye}>
+                    <BentoCard className="md:col-span-3 lg:col-span-4 min-h-[400px] shadow-sm dark:shadow-md" title="Smart Preview" subtitle="Lossy samples for assessment" icon={Eye}>
                         <div className="p-8 pt-0 h-full flex flex-col relative">
-                            <p className="text-slate-700 dark:text-slate-100 text-sm leading-relaxed mb-8">
+                            <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed mb-8">
                                 Creators upload final files. We automatically generate secure, watermarked previews.
                                 Clients review the work without accessing the master files.
                             </p>
@@ -783,13 +790,13 @@ const BentoGrid = () => {
                     </BentoCard>
 
                     {/* 2. Dispute Evidence */}
-                    <BentoCard className="md:col-span-3 lg:col-span-4 min-h-[400px]" title="Activity Logs" subtitle="Dispute Shield" icon={ShieldCheck}>
+                    <BentoCard className="md:col-span-3 lg:col-span-4 min-h-[400px] shadow-sm dark:shadow-md" title="Activity Logs" subtitle="Dispute Shield" icon={ShieldCheck}>
                         <div className="p-8 pt-0 h-full flex flex-col relative">
-                            <p className="text-slate-600 dark:text-slate-200 text-sm leading-relaxed mb-6">
+                            <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed mb-6">
                                 We designed this to stop arguments before they start. Since files only unlock after payment,
                                 you never have to chase a client. But just in case, we keep a tidy history log for you.
                             </p>
-                            <div className="flex-1 bg-white dark:bg-[#3a3b56] rounded-xl border border-slate-200 dark:border-white/10 p-4 font-mono text-[10px] text-slate-500 dark:text-slate-300 overflow-hidden relative shadow-sm">
+                            <div className="flex-1 bg-white dark:bg-charcoal rounded-xl border border-zinc-200/50 dark:border-white/[0.06] p-4 font-mono text-[10px] text-zinc-500 dark:text-zinc-300 overflow-hidden relative shadow-sm">
                                 <div className="space-y-3 opacity-80">
                                     <div className="flex gap-2">
                                         <span className="text-[#4d7c0f] dark:text-lime-400">GET</span>
@@ -817,10 +824,10 @@ const BentoGrid = () => {
                     </BentoCard>
 
                     {/* 3. Direct Payments */}
-                    <BentoCard className="md:col-span-6 lg:col-span-4 min-h-[400px]" title="Direct Payouts" subtitle="Seamless Transfers" icon={DollarSign}>
+                    <BentoCard className="md:col-span-6 lg:col-span-4 min-h-[400px] shadow-sm dark:shadow-md" title="Direct Payouts" subtitle="Seamless Transfers" icon={DollarSign}>
                         <div className="p-8 pt-0 h-full flex flex-col justify-between relative">
                             <div className="space-y-4">
-                                <p className="text-slate-600 dark:text-slate-200 text-sm leading-relaxed">
+                                <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed">
                                     A seamless financial bridge. Connect your Stripe account once, and payments flow directly to you.
                                     We facilitate the instant unlocking of assets without holding or delaying your funds.
                                 </p>
@@ -848,8 +855,8 @@ const BentoGrid = () => {
                         </div>
                     </BentoCard>
 
-                    {/* 4. BRAND ORCHESTRATOR */}
-                    <BentoCard className="md:col-span-6 lg:col-span-8 !p-0 min-h-[540px]">
+                    {/* 4. BRAND ORCHESTRATOR — uses own panel base to preserve internal layout */}
+                    <NetRevenueStylePanel className={`md:col-span-6 lg:col-span-8 !p-0 min-h-[540px] group transition-all duration-500`}>
                         <div className="flex flex-col md:flex-row h-full w-full">
                             {/* LEFT: Control Panel */}
                             <div className="w-full md:w-[340px] p-8 border-b md:border-b-0 md:border-r border-zinc-200/50 dark:border-white/[0.06] flex flex-col bg-zinc-50/90 dark:bg-white/[0.03]">
@@ -968,7 +975,7 @@ const BentoGrid = () => {
                                                 className="w-full py-3 rounded-lg font-bold text-xs uppercase tracking-wider text-center transition-all duration-700 shadow-lg"
                                                 style={{
                                                     backgroundColor: accentColor,
-                                                    color: '#fff' // Better contrast for dark onyx
+                                                    color: accentColor === '#bef264' ? '#000' : '#fff' // Black text for lime (light mode), white for others
                                                 }}
                                             >
                                                 Unlock Files
@@ -978,15 +985,15 @@ const BentoGrid = () => {
                                 </div>
                             </div>
                         </div>
-                    </BentoCard>
+                    </NetRevenueStylePanel>
 
                     {/* 5 & 6. VERTICAL STACK: STORAGE FREEDOM & SMART CONTRACTS */}
                     <div className="md:col-span-6 lg:col-span-4 flex flex-col gap-6 min-h-[540px]">
 
                         {/* 5. STORAGE FREEDOM (Compressed) */}
-                        <BentoCard className="min-h-[258px]" title="Storage Freedom" subtitle="BYOS (Bring Your Own Storage)" icon={HardDrive}>
+                        <BentoCard className="min-h-[258px] shadow-sm dark:shadow-md" title="Storage Freedom" subtitle="BYOS (Bring Your Own Storage)" icon={HardDrive}>
                             <div className="p-6 pt-0 flex flex-col justify-between gap-4">
-                                <p className="text-slate-600 dark:text-slate-200 text-xs leading-relaxed mb-4">
+                                <p className="text-zinc-600 dark:text-zinc-300 text-xs leading-relaxed mb-4">
                                     All paid plans support BYOS links (Bring Your Own Storage). Paste your own S3/Drive/Dropbox share links so you keep full custody of the originals. (Connectors coming soon.)
                                 </p>
                                 <div className="space-y-4">
@@ -1019,9 +1026,9 @@ const BentoGrid = () => {
                         </BentoCard>
 
                         {/* 6. SMART CONTRACTS (New) */}
-                        <BentoCard className="min-h-[258px]" title="Formal Sign-off" subtitle="Integrated Signatures" icon={PenTool}>
+                        <BentoCard className="min-h-[258px] shadow-sm dark:shadow-md" title="Formal Sign-off" subtitle="Integrated Signatures" icon={PenTool}>
                             <div className="p-6 pt-0 h-full flex flex-col">
-                                <p className="text-slate-600 dark:text-slate-200 text-xs leading-relaxed mb-4">
+                                <p className="text-zinc-600 dark:text-zinc-300 text-xs leading-relaxed mb-4">
                                     Require a digital signature approval before assets are unlocked.
                                 </p>
                                 <div className="flex-1 bg-zinc-50 dark:bg-white/[0.04] rounded-xl border border-zinc-200/50 dark:border-white/[0.06] p-3 relative flex flex-col justify-center items-center">
@@ -1142,7 +1149,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
     return (
-        <section id="pricing" className="py-32 px-6 bg-white dark:bg-cosmic text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
+        <section id="pricing" className="py-32 px-6 bg-zinc-50/90 dark:bg-white/[0.03] text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
             <div className="max-w-[1200px] mx-auto">
                 <div className="text-center mb-12">
                     <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-lime-400 uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
@@ -1173,7 +1180,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
 
                     {/* Starter - Only visible in Monthly - ENHANCED BORDER */}
                     {billingCycle === 'monthly' && (
-                        <NetRevenueStylePanel className="flex flex-col h-full animate-fade-in hover:border-zinc-300/80 dark:hover:border-white/10 transition-colors duration-300">
+                        <div className="relative overflow-hidden rounded-[2rem] bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:border-zinc-300/80 dark:hover:border-white/15 flex flex-col h-full animate-fade-in transition-all duration-300 shadow-sm dark:shadow-md">
                             <div className="p-8 flex flex-col flex-1 min-h-0">
                             <div className="font-mono text-xs uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-6">Starter</div>
                             <div className="flex items-baseline gap-1 mb-2">
@@ -1205,7 +1212,7 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                                 </ul>
                             </div>
                             </div>
-                        </NetRevenueStylePanel>
+                        </div>
                     )}
 
                     {/* Studio - SOLID DEFAULT BORDER + HOVER ANIMATION & SHIFT */}
@@ -1364,7 +1371,7 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
 };
 
 const FAQSection = () => (
-    <section className="py-32 px-6 bg-editorial dark:bg-cosmic transition-colors duration-700">
+    <section className="py-32 px-6 bg-zinc-50/90 dark:bg-white/[0.03] transition-colors duration-700">
         <div className="max-w-[800px] mx-auto">
             <div className="text-center mb-16">
                 <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-lime-400 uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
@@ -1589,23 +1596,7 @@ export default function LandingPage({ onGetStarted, onQuickStartWithFiles, curre
                 </div>
             )}
 
-            {/* Floating Theme Toggle — desktop only, aligned to the right edge of the nav pill */}
-            <div
-                className="fixed left-0 right-0 z-[999] hidden md:flex pointer-events-none px-4 sm:px-6"
-                style={{ paddingTop: 'max(32px, calc(env(safe-area-inset-top, 0px) + 18px))' }}
-            >
-                <div className="max-w-[1200px] mx-auto w-full flex justify-end pointer-events-none">
-                    <div className="py-3 pointer-events-auto xl:translate-x-14">
-                        <ThemeModeDropdown
-                            themeMode={currentTheme}
-                            onChange={onSetThemeMode || (() => toggleTheme?.())}
-                            isDarkMode={currentTheme === 'dark'}
-                            align="right"
-                            buttonClassName="w-11 h-11 rounded-full flex items-center justify-center text-slate-500 hover:text-black dark:text-slate-300 dark:hover:text-white bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 shadow-2xl transition-all hover:scale-105"
-                        />
-                    </div>
-                </div>
-            </div>
+
             {/* Nav receives isHidden prop to create cinema mode */}
             <Nav onStart={openGetStartedModal} currentTheme={currentTheme} onSetThemeMode={onSetThemeMode || (() => toggleTheme?.())} isHidden={isVideoOpen} />
             <main>
