@@ -394,6 +394,10 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
     const brandGreenBg = accentDotClass(isDarkMode);
     const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#bef264]' : 'shadow-[0_0_10px_rgba(190, 242, 100,0.5)]';
     const borderColor = isDarkMode ? 'border-white/5' : 'border-zinc-200';
+    // Smaller typography on phone-like viewports
+    const titleClass = isPhoneLike ? 'text-xs' : 'text-sm md:text-lg';
+    const metaTextClass = isPhoneLike ? 'text-[9px]' : 'text-[10px] md:text-xs';
+    const actionTextClass = isPhoneLike ? 'text-[9px]' : 'text-[10px] md:text-xs';
     const [expandedSpecs, setExpandedSpecs] = useState<Set<string>>(new Set());
     const [copiedHashId, setCopiedHashId] = useState<string | null>(null);
     const [editingNameId, setEditingNameId] = useState<string | null>(null);
@@ -508,16 +512,16 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                             onBlur={() => { if (editingNameVal.trim()) onRename(file.id, editingNameVal.trim()); setEditingNameId(null); }}
                                             onKeyDown={(e) => { if (e.key === 'Enter') { if (editingNameVal.trim()) onRename(file.id, editingNameVal.trim()); setEditingNameId(null); } if (e.key === 'Escape') setEditingNameId(null); }}
                                             onClick={(e) => e.stopPropagation()}
-                                            className={`w-full font-bold text-sm md:text-lg mb-1 bg-transparent border-b-2 outline-none truncate ${isDarkMode ? 'text-white border-blue-500' : 'text-zinc-900 border-blue-500'}`}
+                                            className={`w-full font-bold ${titleClass} mb-1 bg-transparent border-b-2 outline-none truncate ${isDarkMode ? 'text-white border-blue-500' : 'text-zinc-900 border-blue-500'}`}
                                         />
                                     ) : (
                                         <h3
-                                            className={`font-bold text-sm md:text-lg ${textPrimary} mb-1 transition-colors truncate ${onRename ? 'cursor-text hover:opacity-70' : ''}`}
+                                            className={`font-bold ${titleClass} ${textPrimary} mb-1 transition-colors truncate ${onRename ? 'cursor-text hover:opacity-70' : ''}`}
                                             onClick={onRename ? (e) => { e.stopPropagation(); setEditingNameId(file.id); setEditingNameVal(file.name); } : undefined}
                                             title={onRename ? 'Click to rename' : undefined}
                                         >{file.name}</h3>
                                     )}
-                                    <div className="flex items-center gap-2 text-[10px] md:text-xs font-medium text-zinc-400">
+                                    <div className={`flex items-center gap-2 ${metaTextClass} font-medium text-zinc-400`}>
                                         {onResize && editingSizeId === file.id ? (
                                             <input
                                                 autoFocus
@@ -526,7 +530,7 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                                 onBlur={() => { if (editingSizeVal.trim()) onResize(file.id, editingSizeVal.trim()); setEditingSizeId(null); }}
                                                 onKeyDown={(e) => { if (e.key === 'Enter') { if (editingSizeVal.trim()) onResize(file.id, editingSizeVal.trim()); setEditingSizeId(null); } if (e.key === 'Escape') setEditingSizeId(null); }}
                                                 onClick={(e) => e.stopPropagation()}
-                                                className={`w-20 font-mono bg-transparent border-b outline-none text-[10px] ${isDarkMode ? 'text-zinc-300 border-blue-500/50' : 'text-zinc-600 border-blue-400'}`}
+                                                className={`w-20 font-mono bg-transparent border-b outline-none ${metaTextClass} ${isDarkMode ? 'text-zinc-300 border-blue-500/50' : 'text-zinc-600 border-blue-400'}`}
                                             />
                                         ) : (
                                             <span
@@ -554,7 +558,7 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                             </div>
                             <div className={`${expandedSpecs.has(file.id) ? 'block' : (isPhoneLike ? 'hidden' : 'hidden md:block')} mb-4 md:mb-6 p-3 rounded-xl border transition-all ${isDarkMode ? 'bg-black/25 border-white/10 shadow-inner shadow-black/20' : 'bg-zinc-50/90 border-zinc-200/70 shadow-inner shadow-zinc-200/50'}`}>
                                 <div className="flex justify-between items-center mb-2"><span className="text-[10px] font-bold uppercase text-zinc-500">Technical Specs</span><ShieldCheck className="w-3 h-3 text-zinc-400" /></div>
-                                <div className={`grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px] md:text-xs font-mono ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                                <div className={`grid grid-cols-2 gap-x-3 gap-y-1.5 ${metaTextClass} font-mono ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
                                     <div><span className="opacity-60">Type</span> <span className="uppercase">{file.type}</span></div>
                                     <div><span className="opacity-60">Size</span> {file.size}</div>
                                     <div className="truncate"><span className="opacity-60">Source</span> {file.tag || (file.storageProvider && file.storageProvider !== 'native' ? `${file.storageProvider.charAt(0).toUpperCase()}${file.storageProvider.slice(1)}` : 'Native')}</div>
@@ -588,7 +592,7 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                             <div className={`pt-4 md:pt-6 border-t ${borderColor} flex flex-col sm:flex-row gap-3`}>
                                 {file.locked && isLocked ? (
                                     <>
-                                        <button onClick={() => onRequestCorrection(index)} className={`flex-1 h-12 sm:h-11 flex items-center justify-center gap-2 rounded-lg border text-[10px] md:text-xs font-bold uppercase tracking-wider transition-colors ${isRevisionSent ? (isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20' : 'bg-amber-100 text-amber-600 hover:bg-amber-200') : (isDarkMode ? 'bg-white/5 border-white/5 hover:bg-white/10 text-zinc-400 hover:text-white' : 'bg-zinc-50 border-zinc-100 hover:bg-zinc-100 text-zinc-500')}`}>
+                                        <button onClick={() => onRequestCorrection(index)} className={`flex-1 h-12 sm:h-11 flex items-center justify-center gap-2 rounded-lg border ${actionTextClass} font-bold uppercase tracking-wider transition-colors ${isRevisionSent ? (isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20' : 'bg-amber-100 text-amber-600 hover:bg-amber-200') : (isDarkMode ? 'bg-white/5 border-white/5 hover:bg-white/10 text-zinc-400 hover:text-white' : 'bg-zinc-50 border-zinc-100 hover:bg-zinc-100 text-zinc-500')}`}>
                                             {isRevisionSent ? <CheckCircle className="w-4 h-4" /> : <MessageSquarePlus className="w-4 h-4" />} <span className="hidden sm:inline">{isRevisionSent ? "View Request" : "Request Correction"}</span><span className="sm:hidden">{isRevisionSent ? "View" : "Request"}</span>
                                         </button>
                                         <button aria-label="More Info" onClick={() => setExpandedSpecs(prev => { const next = new Set(prev); if (next.has(file.id)) next.delete(file.id); else next.add(file.id); return next; })} className={`h-12 sm:h-11 w-12 sm:w-11 flex items-center justify-center rounded-lg border transition-colors ${expandedSpecs.has(file.id) ? (isDarkMode ? 'bg-white/10 border-white/10 text-white' : 'bg-zinc-200 border-zinc-200/50 text-zinc-900') : (isDarkMode ? 'border-white/5 text-zinc-400 hover:text-white' : 'border-zinc-100 text-zinc-400 hover:text-zinc-900')}`}><Info className="w-4 h-4" /></button>
@@ -596,7 +600,7 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                 ) : (
                                     file.downloadUrl ? (
                                         <>
-                                            <a href={file.downloadUrl} target="_blank" rel="noopener noreferrer" className={`flex-1 h-11 md:h-12 ${accentButtonClass(isDarkMode)} font-bold text-[10px] md:text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-lime-500/20 transition-all hover:scale-[1.02]`}>
+                                            <a href={file.downloadUrl} target="_blank" rel="noopener noreferrer" className={`flex-1 h-11 md:h-12 ${accentButtonClass(isDarkMode)} font-bold ${actionTextClass} uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-lime-500/20 transition-all hover:scale-[1.02]`}>
                                                 {file.externalUrl ? <ExternalLink className="w-4 h-4" /> : <Download className="w-4 h-4" />} <span className="hidden sm:inline">{file.externalUrl ? "Open Secure Link" : "Download Original"}</span><span className="sm:hidden">{file.externalUrl ? "Open" : "Download"}</span>
                                             </a>
                                             <button aria-label="Request Correction" onClick={() => onRequestCorrection(index)} disabled={isRevisionSent} className={`h-12 w-12 flex items-center justify-center rounded-xl border transition-colors ${isRevisionSent ? (isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500 cursor-default' : 'bg-amber-100 text-amber-600 cursor-default') : (isDarkMode ? 'border-white/5 hover:bg-white/10 text-zinc-400 hover:text-amber-500' : 'border-zinc-200/50 hover:bg-zinc-50 text-zinc-400 hover:text-amber-500')}`}><MessageSquarePlus className="w-5 h-5" /></button>
@@ -616,9 +620,11 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
     );
 };
 // --- SUB-COMPONENT: VISUAL ASSET LIST (PREMIUM) ---
-const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick, onRequestCorrection, revisions, onRename, onResize, onRemove }: any) => {
+const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick, onRequestCorrection, revisions, onRename, onResize, onRemove, isPhoneLike }: any) => {
     const borderColor = isDarkMode ? 'border-white/5' : 'border-zinc-200';
     const brandGreenBg = accentDotClass(isDarkMode);
+    const titleClass = isPhoneLike ? 'text-xs' : 'text-sm sm:text-base';
+    const metaClass = isPhoneLike ? 'text-[9px]' : 'text-[10px] sm:text-xs';
     const [editingNameId, setEditingNameId] = useState<string | null>(null);
     const [editingNameVal, setEditingNameVal] = useState('');
     const [editingSizeId, setEditingSizeId] = useState<string | null>(null);
@@ -699,11 +705,11 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                                     onBlur={() => { if (editingNameVal.trim()) onRename(file.id, editingNameVal.trim()); setEditingNameId(null); }}
                                                     onKeyDown={(e) => { if (e.key === 'Enter') { if (editingNameVal.trim()) onRename(file.id, editingNameVal.trim()); setEditingNameId(null); } if (e.key === 'Escape') setEditingNameId(null); }}
                                                     onClick={(e) => e.stopPropagation()}
-                                                    className={`min-w-0 font-bold text-sm sm:text-base bg-transparent border-b-2 outline-none ${isDarkMode ? 'text-white border-blue-500' : 'text-zinc-900 border-blue-500'}`}
+                                                    className={`min-w-0 font-bold ${titleClass} bg-transparent border-b-2 outline-none ${isDarkMode ? 'text-white border-blue-500' : 'text-zinc-900 border-blue-500'}`}
                                                 />
                                             ) : (
                                                 <h3
-                                                    className={`font-bold text-sm sm:text-base truncate ${isDarkMode ? 'text-white' : 'text-zinc-900'} ${onRename ? 'cursor-text hover:opacity-70' : ''}`}
+                                                    className={`font-bold ${titleClass} truncate ${isDarkMode ? 'text-white' : 'text-zinc-900'} ${onRename ? 'cursor-text hover:opacity-70' : ''}`}
                                                     onClick={onRename ? (e) => { e.stopPropagation(); setEditingNameId(file.id); setEditingNameVal(file.name); } : undefined}
                                                     title={onRename ? 'Click to rename' : undefined}
                                                 >{file.name}</h3>
@@ -715,7 +721,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                     )}
                                 </div>
 
-                                        <div className="mt-2 flex items-center gap-3 text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+                                        <div className={`mt-2 flex items-center gap-3 ${metaClass} text-zinc-500 dark:text-zinc-400 font-mono`}>
                                             <span className="uppercase tracking-wider">{file.type}</span>
                                             <span className={`w-px h-3 ${isDarkMode ? 'bg-white/10' : 'bg-zinc-200'}`} />
                                             {onResize && editingSizeId === file.id ? (
@@ -726,7 +732,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                                     onBlur={() => { if (editingSizeVal.trim()) onResize(file.id, editingSizeVal.trim()); setEditingSizeId(null); }}
                                                     onKeyDown={(e) => { if (e.key === 'Enter') { if (editingSizeVal.trim()) onResize(file.id, editingSizeVal.trim()); setEditingSizeId(null); } if (e.key === 'Escape') setEditingSizeId(null); }}
                                                     onClick={(e) => e.stopPropagation()}
-                                                    className={`w-20 font-mono bg-transparent border-b outline-none text-[10px] ${isDarkMode ? 'text-zinc-300 border-blue-500/50' : 'text-zinc-600 border-blue-400'}`}
+                                                    className={`w-20 font-mono bg-transparent border-b outline-none ${metaClass} ${isDarkMode ? 'text-zinc-300 border-blue-500/50' : 'text-zinc-600 border-blue-400'}`}
                                                 />
                                             ) : (
                                                 <span
@@ -1530,10 +1536,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                     <button
                         aria-label="Close Sidebar"
                         onClick={() => setShowSidebar(false)}
-                        className={`lg:hidden absolute top-4 right-4 w-11 h-11 rounded-full flex items-center justify-center border transition-all duration-300 ${isDarkMode
-                            ? 'bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-2xl text-white/70 hover:text-white'
-                            : 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200/50 text-zinc-800 shadow-lg'
-                            }`}
+                        className={`lg:hidden absolute top-6 right-4 w-11 h-11 rounded-full flex items-center justify-center border transition-all duration-300 ${isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15 shadow-sm' : 'bg-white border border-zinc-200/50 text-zinc-800 hover:bg-zinc-50 shadow-sm'}`}
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -1716,6 +1719,9 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     // below `lg` (this includes phone landscape, where the sidebar can be collapsed).
     const isLandscapeSplit = !isEmbedded && isLandscape && (deviceType ? true : isBelowLg);
     const simCanvasScrollPaddingY = `pt-2 sm:pt-3 ${!isEmbedded && isLocked && !isPaid ? (isLandscapeSplit ? 'pb-8' : 'pb-24 lg:pb-8') : 'pb-2 sm:pb-3'}`;
+    // Header / Details button background helper — keep Details button visually matched to the header
+    const headerBgOnly = isDarkMode ? 'bg-black/20 border-white/10' : 'bg-white/70 border-zinc-200';
+    // `headerBtnClass` depends on whether the sidebar is docked/open; computed below after that state is known.
     // Docked sidebar collapse is supported for:
     // - Split landscape (mobile/tablet/foldable)
     // - Desktop (lg+) where the sidebar is docked
@@ -1727,6 +1733,12 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
     const showInlineSidebar = !isEmbedded && !isLandscapeSplit && isBelowLg && isMobileInfoOpen;
     const isDockedSidebarCollapsed = canCollapseDockedSidebar && isSplitSidebarCollapsed;
     const splitSidebarExpandedWidth = isPhoneLike ? 300 : Math.min(380, Math.max(300, Math.round(viewport.width * 0.35)));
+
+    // When docked and in landscape split, make the Details button match the sidebar background so it reads as part of the column.
+    const sidebarBgOnly = isDarkMode ? 'bg-zinc-800 border-white/10' : 'bg-[#f1f5f9] border-zinc-200';
+    const headerBtnClass = (isLandscapeSplit && showDockedSidebar && !isDockedSidebarCollapsed)
+        ? (isDarkMode ? `${sidebarBgOnly} text-white/80` : `${sidebarBgOnly} text-zinc-600`)
+        : (isDarkMode ? `${headerBgOnly} text-white/80 hover:bg-white/15` : `${headerBgOnly} text-zinc-600 hover:bg-zinc-50`);
 
     // Allow parent containers (Creator/editor embedded previews) to reposition overlay UI when the docked sidebar collapses.
     useEffect(() => {
@@ -2054,7 +2066,10 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                     relative z-20 flex-1 flex flex-col h-full overflow-hidden min-h-0
                     ${!isEmbedded ? ((isMobileInfoOpen || isLandscapeSplit) ? 'flex' : 'hidden lg:flex') : 'flex'}
                 `}>
-                    <div className={`flex-1 overflow-y-auto no-scrollbar px-4 md:px-6 lg:px-8 pt-2 pb-6 min-h-0`}>
+                    <div
+                        className={`flex-1 overflow-y-auto no-scrollbar px-4 md:px-6 lg:px-8 pb-6 min-h-0`}
+                        style={((deviceType === 'mobile' || deviceType === 'foldable' || (deviceType === 'tablet' && !isLandscape)) && !showInlineSidebar) ? { paddingTop: headerChromePadTop } : undefined}
+                    >
                         <div className="mt-8 mb-8 hidden lg:block">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="relative group cursor-pointer"><img src={project.client.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"} loading="lazy" decoding="async" className={`w-14 h-14 rounded-full border-2 ${isDarkMode ? 'border-white/10' : 'border-white shadow-sm'} shadow-xl object-cover`} /><div className={`absolute -bottom-1 -right-1 ${isDarkMode ? 'bg-black' : 'bg-white'} rounded-full p-1`}><div className={`w-3 h-3 ${brandGreenBg} rounded-full`} /></div></div>
@@ -2182,7 +2197,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                         // The full terminal lives in the bottom sheet (opened via the button below).
                         <div className={`relative z-20 py-3 ${isCanvasSim ? 'px-3' : 'pl-6 pr-5'} ${isDarkMode ? 'bg-[#2a2a35]/95 border-t border-white/5' : 'bg-white/60 border-t border-zinc-200'} backdrop-blur-xl shrink-0`}>
                             <div className="flex items-center justify-between gap-3">
-                                <div className="min-w-0">
+                                <div className={`min-w-0 ${isCanvasSim ? 'ml-3' : ''}`}>
                                     <p className={`text-[10px] font-bold uppercase tracking-widest ${textSecondary}`}>Total Due</p>
                                     <p className={`text-lg font-sans tracking-tight font-bold ${textPrimary} leading-tight`}>${project.amount.toLocaleString()}</p>
                                 </div>
@@ -2256,7 +2271,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                                     <button
                                                         type="button"
                                                         onClick={() => { playClick(); setIsSplitSidebarCollapsed(false); }}
-                                                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15' : 'bg-white border border-zinc-200/50 text-zinc-600 hover:bg-zinc-50'}`}
+                                                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${headerBtnClass}`}
                                                         aria-label="Show Details"
                                                         title="Show Details"
                                                     >
@@ -2298,7 +2313,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                                 <button
                                                     type="button"
                                                     onClick={() => { playClick(); setIsSplitSidebarCollapsed(false); }}
-                                                    className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15' : 'bg-white border border-zinc-200/50 text-zinc-600 hover:bg-zinc-50'}`}
+                                                    className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${headerBtnClass}`}
                                                     aria-label="Show Details"
                                                     title="Show Details"
                                                 >
@@ -2319,7 +2334,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
         <>
 {/* Inline Details Panel (Stacked Portrait) */}
                         {showInlineSidebar && (
-                            <section className={`lg:hidden relative overflow-hidden rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.45)] border ${isDarkMode ? 'bg-zinc-800 border-white/10' : 'bg-[#f1f5f9] border-zinc-200'} mb-4 h-[66vh] md:h-[70vh] animate-sheet-up`}>
+                            <section className={`lg:hidden mt-3 relative overflow-hidden rounded-[2rem] shadow-[0_12px_36px_rgba(0,0,0,0.27)] border ${isDarkMode ? 'bg-zinc-800 border-white/10' : 'bg-[#f1f5f9] border-zinc-200'} mb-4 h-[66vh] md:h-[70vh] animate-sheet-up`}>
                                 {/* 85% height vs prior "full" portrait details sheet so the gallery remains discoverable behind it. */}
                                 <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden">
                                     {theme.wallpaper ? (
@@ -2499,6 +2514,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 isLocked={isLocked}
                                 isDarkMode={isDarkMode}
                                 isEmbedded={isEmbedded}
+                                isPhoneLike={isPhoneLike}
                                 revisions={revisions}
                                 onAssetClick={(index: number) => { playClick(); setLightboxIndex(index); }}
                                 onRequestCorrection={handleRequestCorrection}
@@ -2629,17 +2645,17 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             </div>
 
                             {isMobileInfoOpen ? (
-                                <button
-                                    onClick={() => { setIsMobileInfoOpen(false); showMobileHeader(); }}
-                                    className={`shrink-0 p-2.5 rounded-full ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'} transition-colors`}
-                                    aria-label="Close Details"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
+                                    <button
+                                        onClick={() => { setIsMobileInfoOpen(false); showMobileHeader(); }}
+                                        className={`shrink-0 p-2.5 rounded-full ${headerBtnClass} ${isDarkMode ? '' : 'shadow-sm'} transition-colors`}
+                                        aria-label="Close Details"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
                             ) : (
                                 <button
                                     onClick={() => { playClick(); openMobileDetails(); }}
-                                    className={`shrink-0 whitespace-nowrap px-3.5 sm:px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'} transition-colors`}
+                                    className={`shrink-0 whitespace-nowrap px-3.5 sm:px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-colors ${headerBtnClass} ${isDarkMode ? '' : 'shadow-sm'}`}
                                     aria-label="Details"
                                 >
                                     <Menu className="w-3.5 h-3.5" />
@@ -2650,13 +2666,13 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                     </div>
                 )}
 
-                {/* Split Header (Landscape) — docked sidebar with collapse control */}
+                {/* Split Header (Landscape) — docked sidebar with collapse control (flush to sidebar wallpaper) */}
                 {!isEmbedded && isLandscapeSplit && (
                     <div
-                        className={`lg:hidden relative shrink-0 z-50 border-b border-zinc-200/50 dark:border-white/5 ${isDarkMode ? 'bg-[#2b2b38]' : 'bg-[#f1f5f9]'}`}
+                        className={`lg:hidden relative shrink-0 z-50`}
                         style={{ paddingTop: headerChromePadTop }}
                     >
-                        <div className={`flex items-center gap-3 pb-2 ${isCanvasSim ? 'px-2 sm:px-3' : 'px-4'}`}>
+                            <div className={`flex items-center gap-3 pb-2 ${isCanvasSim ? 'px-2 sm:px-3' : 'px-4'}`}>
                             <button
                                 onClick={() => { playClick(); onBack(); }}
                                 className={`shrink-0 p-2 -ml-2 rounded-full hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors`}
@@ -2672,7 +2688,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
 
                             <button
                                 onClick={collapseDockedSidebar}
-                                className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 ${isDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'} transition-colors`}
+                                className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-colors ${headerBtnClass}`}
                                 aria-label="Collapse Details"
                                 title="Hide Details"
                             >
@@ -2752,7 +2768,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                         }),
                 }}>
                     <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
+                        <div className={`min-w-0 ${isCanvasSim ? 'ml-3' : ''}`}>
                             <p className={`text-[10px] font-bold uppercase tracking-widest ${textSecondary}`}>Total Due</p>
                             <p className={`text-xl font-sans tracking-tight font-bold ${textPrimary} leading-tight`} style={{ textShadow: isDarkMode ? '0 1px 4px rgba(0,0,0,0.4)' : 'none' }}>${project.amount.toLocaleString()}</p>
                         </div>
@@ -2851,7 +2867,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             <button
                                     type="button"
                                     onClick={() => { playClick(); setIsSplitSidebarCollapsed(false); }}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isDarkMode ? 'bg-white/10 border border-white/10 text-white/80 hover:bg-white/15' : 'bg-white border border-zinc-200/50 text-zinc-600 hover:bg-zinc-50'}`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${headerBtnClass}`}
                                     aria-label="Show Details"
                                     title="Show Details"
                                 >
@@ -2882,10 +2898,11 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                     >
                         {isCanvasSim ? (
                             <div
-                                ref={mainScrollRef}
-                                onScroll={handleMainScroll}
-                                className={`flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden scroll-smooth pr-0 ${simCanvasScrollPaddingY}`}
-                            >
+                                    ref={mainScrollRef}
+                                    onScroll={handleMainScroll}
+                                    className={`flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden scroll-smooth pr-0 ${simCanvasScrollPaddingY}`}
+                                    style={((deviceType === 'mobile' || deviceType === 'foldable' || (deviceType === 'tablet' && !isLandscape)) && !showInlineSidebar) ? { paddingTop: headerChromePadTop } : undefined}
+                                >
                                 {collapsedDockedGalleryHeader}
                                 <div className="px-2 sm:px-3 min-w-0">
                                 {galleryMainScrollRest}

@@ -68,18 +68,24 @@ const MockStatusBar = ({ width, isDark, heightPx, lightModeStyle }: { width: num
                 // In light mode we usually render a "white" bar like iOS. In some simulated states (landscape + collapsed),
                 // we intentionally go transparent so the bar blends with the vault background beneath.
                 backgroundColor: isDark ? 'transparent' : (isTransparentLight ? 'transparent' : 'rgba(241,245,249,0.96)'),
-                // No glassmorphism in light mode: keep it truly transparent so the vault background shows through.
-                backdropFilter: undefined,
-                textShadow: undefined,
             }}
         >
-            <span>{timeStr}</span>
-            <div className="flex items-center gap-1.5" style={{ fontSize: width < 500 ? '10px' : '11px' }}>
-                <Signal className="w-3.5 h-3.5" strokeWidth={2.5} />
-                <span className="font-bold tracking-wide">5G</span>
-                <Wifi className="w-3.5 h-3.5" strokeWidth={2.5} />
-                <BatteryFull className="w-4.5 h-3.5" strokeWidth={2.5} />
-            </div>
+            {/* Nudge time and the right-side icons slightly inward for simulated device modes */}
+            {/** When width is <= 820 (mobile/tablet/foldable canvas sizes) apply small offsets */}
+            {(() => {
+                const shouldOffset = width <= 820;
+                return (
+                    <>
+                        <span className={shouldOffset ? 'ml-3' : undefined}>{timeStr}</span>
+                        <div className={`flex items-center gap-1.5 ${shouldOffset ? 'mr-3' : ''}`} style={{ fontSize: width < 500 ? '10px' : '11px' }}>
+                            <Signal className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            <span className="font-bold tracking-wide">5G</span>
+                            <Wifi className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            <BatteryFull className="w-4.5 h-3.5" strokeWidth={2.5} />
+                        </div>
+                    </>
+                );
+            })()}
         </div>
     );
 };
@@ -602,9 +608,14 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
     const canvasDisclaimerClass = isDarkMode
         ? 'bg-[#23232e]/88 border-white/10 text-zinc-200'
         : 'bg-white/92 border-zinc-200/60 text-zinc-700';
-    const deviceShadow = isDarkMode
-        ? '0 30px 80px -15px rgba(0,0,0,0.6), 0 15px 40px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03), inset 0 0 0 1px rgba(255,255,255,0.03)'
-        : '0 28px 70px -24px rgba(15,23,42,0.28), 0 16px 34px -20px rgba(15,23,42,0.2), 0 0 0 1px rgba(255,255,255,0.75), inset 0 0 0 1px rgba(255,255,255,0.65)';
+    // Reduce the device shadow intensity for small simulated devices (mobile, foldable, tablet portrait)
+    const deviceShadow = (isMobile || isFoldable || (deviceMode === 'tablet' && isPortrait))
+        ? (isDarkMode
+            ? '0 10px 30px -10px rgba(0,0,0,0.45), 0 6px 12px -8px rgba(0,0,0,0.35)'
+            : '0 10px 30px -10px rgba(15,23,42,0.12), 0 6px 12px -8px rgba(15,23,42,0.08)')
+        : (isDarkMode
+            ? '0 30px 80px -15px rgba(0,0,0,0.6), 0 15px 40px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03), inset 0 0 0 1px rgba(255,255,255,0.03)'
+            : '0 28px 70px -24px rgba(15,23,42,0.28), 0 16px 34px -20px rgba(15,23,42,0.2), 0 0 0 1px rgba(255,255,255,0.75), inset 0 0 0 1px rgba(255,255,255,0.65)');
     const deviceBezelColor = isDarkMode ? '#222230' : '#d9e0e8';
     const deviceBezelBackground = isDarkMode ? '#0a0a0e' : '#f8fafc';
 
