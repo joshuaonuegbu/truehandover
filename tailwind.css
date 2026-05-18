@@ -356,6 +356,44 @@
     0% { opacity: 0; transform: translateX(16px) scale(0.995); }
     100% { opacity: 1; transform: translateX(0) scale(1); }
   }
+
+  /* Hero orb drift animations — Handshake-inspired multi-blob background */
+  --animate-orb-a: orbA 18s ease-in-out infinite;
+  --animate-orb-b: orbB 22s ease-in-out infinite;
+  --animate-orb-c: orbC 16s ease-in-out infinite;
+  --animate-orb-d: orbD 20s ease-in-out infinite;
+  --animate-orb-e: orbE 14s ease-in-out infinite;
+
+  @keyframes orbA {
+    0%, 100% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(28px, -20px) scale(1.04); }
+    66% { transform: translate(-18px, 14px) scale(0.97); }
+  }
+  @keyframes orbB {
+    0%, 100% { transform: translate(0px, 0px) scale(1); }
+    40% { transform: translate(-22px, -16px) scale(1.05); }
+    70% { transform: translate(16px, 22px) scale(0.96); }
+  }
+  @keyframes orbC {
+    0%, 100% { transform: translate(0px, 0px) scale(1); }
+    25% { transform: translate(16px, 20px) scale(1.03); }
+    75% { transform: translate(-24px, -10px) scale(0.98); }
+  }
+  @keyframes orbD {
+    0%, 100% { transform: translate(0px, 0px) scale(1); }
+    50% { transform: translate(20px, -18px) scale(1.06); }
+  }
+  @keyframes orbE {
+    0%, 100% { transform: translate(0px, 0px) scale(1); }
+    45% { transform: translate(-14px, 14px) scale(1.04); }
+    80% { transform: translate(10px, -8px) scale(0.96); }
+  }
+
+  @keyframes cta-sheen {
+    from { transform: translateX(-100%) skewX(-20deg); }
+    to   { transform: translateX(400%) skewX(-20deg); }
+  }
+  --animate-cta-sheen: cta-sheen 1.4s ease-in-out infinite;
 }
 
 @layer base {
@@ -404,10 +442,13 @@
   .bg-lime-700,
   .bg-lime-800,
   .bg-lime-900,
-  .bg-blue-500,
-  .bg-blue-600,
+  .bg-lime-400,
+  .bg-lime-500,
   .bg-blue-700 {
     color: #0f172a !important;
   }
 }
+
+
+
 

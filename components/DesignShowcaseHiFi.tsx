@@ -253,7 +253,7 @@ const PayflowVariant = ({ activeSection }: { activeSection: string }) => {
                                             <td className="py-4 text-xs font-medium text-gray-500">{t.d}</td>
                                             <td className="py-4">
                                                 <div className="flex items-center gap-2">
-                                                    <div className={`w-2 h-2 rounded-full ${t.s === 'Received' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : t.s === 'Payment' ? 'bg-amber-400' : 'bg-blue-500'}`} />
+                                                    <div className={`w-2 h-2 rounded-full ${t.s === 'Received' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : t.s === 'Payment' ? 'bg-amber-400' : 'bg-lime-400'}`} />
                                                     <span className="text-xs font-bold text-[#111]">{t.s}</span>
                                                 </div>
                                             </td>
@@ -682,7 +682,7 @@ const CarRentalVariant = ({ activeSection }: { activeSection: string }) => {
                             <ArrowUpRight className="rotate-180 w-6 h-6 text-black group-hover:text-[#CFF005] transition-colors" />
                         </div>
                         <div>
-                            <h1 className="text-5xl font-black leading-[0.9] tracking-tight text-black">Let's find a suitable <br /> car for you!</h1>
+                            <h1 className="text-5xl font-semibold leading-[0.9] tracking-tight text-black">Let's find a suitable <br /> car for you!</h1>
                         </div>
                     </div>
 
@@ -710,7 +710,7 @@ const CarRentalVariant = ({ activeSection }: { activeSection: string }) => {
 
                         <div className="flex justify-between items-start mb-8 relative z-20">
                             <div>
-                                <h2 className="text-3xl font-black uppercase italic tracking-wide">Volvo EX30</h2>
+                                <h2 className="text-3xl font-semibold uppercase italic tracking-wide">Volvo EX30</h2>
                                 <p className="text-sm text-gray-400 font-bold mt-1 bg-gray-50 px-2 py-1 rounded-lg inline-block">Fully electric crossover</p>
                             </div>
                             <div className="w-12 h-12 rounded-full border border-gray-100 bg-white flex items-center justify-center cursor-pointer hover:bg-black hover:text-white transition-colors shadow-sm"><MoreHorizontal /></div>
@@ -856,7 +856,7 @@ const CarRentalVariant = ({ activeSection }: { activeSection: string }) => {
                     <div className="mt-8 bg-[#333]/90 backdrop-blur-xl rounded-[28px] p-3 flex items-center gap-4 text-white shadow-2xl relative overflow-hidden group hover:scale-[1.02] transition-transform cursor-pointer">
                         <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-gray-800 opacity-100" />
                         <div className="relative z-10 flex w-full items-center gap-4 pr-2">
-                            <button className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center shrink-0 shadow-lg border border-white/10 group-hover:border-[#CFF005] transition-colors"><span className="text-[#CFF005] font-black text-xs tracking-widest">||</span></button>
+                            <button className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center shrink-0 shadow-lg border border-white/10 group-hover:border-[#CFF005] transition-colors"><span className="text-[#CFF005] font-semibold text-xs tracking-widest">||</span></button>
                             <div className="flex-1 min-w-0">
                                 <div className="flex justify-between mb-2">
                                     <span className="text-[10px] font-bold text-gray-300 uppercase tracking-wide">Reservation</span>
@@ -1027,15 +1027,15 @@ const CeloxisVariant = ({ activeSection }: { activeSection: string }) => {
                                     <div className="absolute top-3 left-2 right-2 h-px bg-gray-100 -z-10" />
 
                                     <div className="text-center bg-white/80 p-2 rounded-xl backdrop-blur-sm">
-                                        <span className="text-red-500 font-black text-2xl">• 49</span>
+                                        <span className="text-red-500 font-semibold text-2xl">• 49</span>
                                         <p className="text-[10px] text-red-400 uppercase font-bold mt-1 tracking-wider">Critical</p>
                                     </div>
                                     <div className="text-center bg-white/80 p-2 rounded-xl backdrop-blur-sm">
-                                        <span className="text-orange-400 font-black text-2xl">• 146</span>
+                                        <span className="text-orange-400 font-semibold text-2xl">• 146</span>
                                         <p className="text-[10px] text-orange-400 uppercase font-bold mt-1 tracking-wider">Medium</p>
                                     </div>
                                     <div className="text-center bg-white/80 p-2 rounded-xl backdrop-blur-sm">
-                                        <span className="text-yellow-400 font-black text-2xl">• 27</span>
+                                        <span className="text-yellow-400 font-semibold text-2xl">• 27</span>
                                         <p className="text-[10px] text-yellow-500 uppercase font-bold mt-1 tracking-wider">Low</p>
                                     </div>
                                 </div>
@@ -1225,7 +1225,7 @@ const SyncdeskVariant = ({ activeSection }: { activeSection: string }) => {
                                 </div>
                                 <div className="flex flex-col items-center py-4">
                                     <div className="flex items-baseline">
-                                        <span className="text-5xl font-black tracking-tighter">97,22</span><span className="text-xl text-gray-400 font-bold ml-1">%</span>
+                                        <span className="text-5xl font-semibold tracking-tighter">97,22</span><span className="text-xl text-gray-400 font-bold ml-1">%</span>
                                     </div>
                                 </div>
                                 <div className="flex justify-between text-[11px] text-gray-500 font-bold mb-3 mt-2 px-1">
@@ -1258,7 +1258,7 @@ const SyncdeskVariant = ({ activeSection }: { activeSection: string }) => {
                                     {/* Indicator Dot */}
                                     <div className="absolute top-2 left-[70%] w-5 h-5 bg-[#DBF350] rounded-full shadow-[0_0_10px_#DBF350] border-2 border-white z-20" />
 
-                                    <span className="text-4xl font-black mb-2 tracking-tight">71,74<span className="text-base text-gray-400 font-bold ml-1">%</span></span>
+                                    <span className="text-4xl font-semibold mb-2 tracking-tight">71,74<span className="text-base text-gray-400 font-bold ml-1">%</span></span>
                                 </div>
                             </div>
 
@@ -1270,7 +1270,7 @@ const SyncdeskVariant = ({ activeSection }: { activeSection: string }) => {
                                 </div>
                                 <div className="flex flex-col items-end py-4">
                                     <div className="flex items-baseline">
-                                        <span className="text-5xl font-black tracking-tighter text-red-500">10,12</span><span className="text-xl text-red-200 font-bold ml-1">%</span>
+                                        <span className="text-5xl font-semibold tracking-tighter text-red-500">10,12</span><span className="text-xl text-red-200 font-bold ml-1">%</span>
                                     </div>
                                 </div>
                                 <div className="flex justify-between text-[11px] text-gray-500 font-bold mb-3 mt-2 px-1">
@@ -1302,8 +1302,8 @@ const SyncdeskVariant = ({ activeSection }: { activeSection: string }) => {
                                         <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-gray-300 rounded-full" /> 82% <span className="text-gray-400 font-medium">Fetches</span></p>
                                     </div>
                                     <div className="text-center absolute left-1/2 -translate-x-1/2">
-                                        <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Avg Account Stats</p>
-                                        <p className="text-5xl font-black">56,1<span className="text-lg text-gray-300 align-top">%</span></p>
+                                        <p className="text-[10px] text-gray-400 uppercase font-semibold tracking-widest mb-1">Avg Account Stats</p>
+                                        <p className="text-5xl font-semibold">56,1<span className="text-lg text-gray-300 align-top">%</span></p>
                                     </div>
                                     <div className="text-xs font-bold space-y-3 text-right">
                                         <p><span className="text-gray-400 font-medium">Manuals</span> 34% <span className="w-1.5 h-1.5 bg-[#DBF350] rounded-full inline-block ml-1" /></p>
@@ -1316,7 +1316,7 @@ const SyncdeskVariant = ({ activeSection }: { activeSection: string }) => {
                                         <div key={i} className={`flex-1 rounded-t-sm transition-all duration-300 hover:scale-y-110 origin-bottom ${i === 15 || i === 16 || i === 17 ? 'bg-[#DBF350] shadow-[0_0_10px_#DBF350]' : i === 28 ? 'bg-black' : 'bg-gray-100'}`} style={{ height: Math.max(10, Math.random() * 90) + '%' }} />
                                     ))}
                                 </div>
-                                <div className="flex justify-between text-[10px] text-gray-400 mt-2 uppercase font-black tracking-widest">
+                                <div className="flex justify-between text-[10px] text-gray-400 mt-2 uppercase font-semibold tracking-widest">
                                     <span>June 01</span><span>July 01</span>
                                 </div>
                             </div>
@@ -1339,8 +1339,8 @@ const SyncdeskVariant = ({ activeSection }: { activeSection: string }) => {
                                         <p>24% <span className="text-gray-400 font-medium">Active</span></p>
                                     </div>
                                     <div className="text-center absolute left-1/2 -translate-x-1/2">
-                                        <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Avg Account Stats</p>
-                                        <p className="text-5xl font-black">82,6<span className="text-lg text-gray-300 align-top">%</span></p>
+                                        <p className="text-[10px] text-gray-400 uppercase font-semibold tracking-widest mb-1">Avg Account Stats</p>
+                                        <p className="text-5xl font-semibold">82,6<span className="text-lg text-gray-300 align-top">%</span></p>
                                     </div>
                                     <div className="text-xs font-bold space-y-3 text-right">
                                         <p>84/0% <span className="text-gray-400 font-medium">OnTime</span></p>
@@ -1353,7 +1353,7 @@ const SyncdeskVariant = ({ activeSection }: { activeSection: string }) => {
                                         <div key={i} className={`flex-1 rounded-t-sm transition-all duration-300 ${i > 20 && i < 30 ? 'bg-black' : 'border border-gray-200 bg-transparent'}`} style={{ height: Math.max(15, Math.random() * 80) + '%' }} />
                                     ))}
                                 </div>
-                                <div className="flex justify-between text-[10px] text-gray-400 mt-2 uppercase font-black tracking-widest relative z-10">
+                                <div className="flex justify-between text-[10px] text-gray-400 mt-2 uppercase font-semibold tracking-widest relative z-10">
                                     <span>June 01</span><span>July 01</span>
                                 </div>
                             </div>
@@ -1381,7 +1381,7 @@ const SyncdeskVariant = ({ activeSection }: { activeSection: string }) => {
                     {/* Right Column (AI Assistant) */}
                     <div className="w-[380px] shrink-0 bg-white rounded-[40px] p-6 shadow-xl shadow-black/5 border border-gray-100 flex flex-col h-auto max-h-[900px]">
                         <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-100">
-                            <div className="flex items-center gap-2 font-black text-sm uppercase tracking-wide">
+                            <div className="flex items-center gap-2 font-semibold text-sm uppercase tracking-wide">
                                 <span className="w-2 h-2 rounded-full bg-[#DBF350] shadow-[0_0_10px_#DBF350]" /> AI Assistant
                             </div>
                             <div className="flex gap-2">
@@ -1418,7 +1418,7 @@ const SyncdeskVariant = ({ activeSection }: { activeSection: string }) => {
                                                 <div key={l} className="flex items-center gap-3 text-xs text-gray-600 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
                                                     <div className={`w-2 h-2 rounded-full ${idx === 1 ? 'bg-red-500' : 'bg-[#DBF350]'}`} />
                                                     <span className="font-medium">{l.split(' - ')[0]}</span>
-                                                    <span className="font-black ml-auto">{l.split(' - ')[1]}</span>
+                                                    <span className="font-semibold ml-auto">{l.split(' - ')[1]}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -1565,7 +1565,7 @@ const CallAIVariant = ({ activeSection }: { activeSection: string }) => {
                                          <p className="flex items-center gap-2 text-[10px] font-bold text-gray-400 mb-2">
                                              <span className={`w-2 h-2 rounded-full ${stat.g}`} /> {stat.c}
                                          </p>
-                                         <p className="text-4xl font-black tracking-tight text-gray-800">{stat.v}<span className="text-xl text-gray-400 ml-1">{stat.s}</span></p>
+                                         <p className="text-4xl font-semibold tracking-tight text-gray-800">{stat.v}<span className="text-xl text-gray-400 ml-1">{stat.s}</span></p>
                                      </div>
                                  </div>
                              ))}
@@ -1591,7 +1591,7 @@ const CallAIVariant = ({ activeSection }: { activeSection: string }) => {
                                         <span>Talk: +10%</span><span>Listen: -4%</span>
                                     </div>
                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 text-center">
-                                        <div className="text-4xl font-black text-gray-800">124</div>
+                                        <div className="text-4xl font-semibold text-gray-800">124</div>
                                         <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Calls</div>
                                     </div>
                                  </div>
@@ -1605,7 +1605,7 @@ const CallAIVariant = ({ activeSection }: { activeSection: string }) => {
                                  </div>
                                  <div className="mt-[-40px]">
                                      <p className="text-[10px] text-gray-400 font-bold mb-1">Duration: +12%</p>
-                                     <p className="text-3xl font-black text-gray-800">12:11</p>
+                                     <p className="text-3xl font-semibold text-gray-800">12:11</p>
                                  </div>
                              </div>
                         </div>
@@ -1621,13 +1621,13 @@ const CallAIVariant = ({ activeSection }: { activeSection: string }) => {
                                         {i === 4 && (
                                             <div className="relative -top-12 text-center w-full">
                                                 <div className="text-[10px] font-bold text-gray-400">Negative: 10%</div>
-                                                <div className="text-3xl font-black text-gray-800">{h}%</div>
+                                                <div className="text-3xl font-semibold text-gray-800">{h}%</div>
                                             </div>
                                         )}
                                         {i === 1 && (
                                             <div className="relative -top-12 text-center w-full">
                                                 <div className="text-[10px] font-bold text-gray-400 leading-tight">Positive</div>
-                                                <div className="text-xl font-black text-gray-800">20%</div>
+                                                <div className="text-xl font-semibold text-gray-800">20%</div>
                                             </div>
                                         )}
                                      </div>
@@ -1649,7 +1649,7 @@ const NodusVariant = ({ activeSection }: { activeSection: string }) => {
         <div className="w-full h-full font-sans bg-[#F9FAFB] text-[#111] flex flex-col overflow-hidden relative">
             {/* Header */}
             <div className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-10 shadow-sm shrink-0 z-20">
-                <div className="flex items-center gap-2 font-black text-xl tracking-tighter">
+                <div className="flex items-center gap-2 font-semibold text-xl tracking-tighter">
                     <div className="grid grid-cols-2 gap-0.5">
                         <div className="w-2 h-2 bg-black rounded-tl-sm"/>
                         <div className="w-2 h-2 bg-black/50 rounded-tr-sm"/>
@@ -1813,7 +1813,7 @@ const SantoriniVariant = ({ activeSection }: { activeSection: string }) => {
         <div className="w-full h-full font-sans bg-[#F4F4F5] p-6 overflow-hidden flex flex-col">
             {/* Nav */}
             <div className="flex items-center gap-6 mb-6 px-2">
-                <div className="w-10 h-10 bg-[#EAFF8C] rounded-full flex items-center justify-center font-black text-xl shadow-md">•</div>
+                <div className="w-10 h-10 bg-[#EAFF8C] rounded-full flex items-center justify-center font-semibold text-xl shadow-md">•</div>
                 <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm text-sm font-bold w-64">
                     Travel planning <X className="w-3 h-3 ml-auto text-gray-400 cursor-pointer hover:text-red-500" />
                 </div>
@@ -1901,7 +1901,7 @@ const SantoriniVariant = ({ activeSection }: { activeSection: string }) => {
                              <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-100 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity" />
                              <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white"><Sun className="w-4 h-4" /></div>
                              <div className="mt-4 text-center">
-                                 <span className="text-6xl font-black text-gray-800">28<span className="text-2xl align-top text-gray-400">°C</span></span>
+                                 <span className="text-6xl font-semibold text-gray-800">28<span className="text-2xl align-top text-gray-400">°C</span></span>
                                  <p className="text-sm font-bold text-gray-400 mt-2">For your dates</p>
                              </div>
                          </div>
@@ -1946,7 +1946,7 @@ const JobFlowVariant = ({ activeSection }: { activeSection: string }) => {
     return (
         <div className="w-full h-full font-sans bg-[#F8F9FE] p-8 flex flex-col relative overflow-hidden">
             {/* Soft 3D Blob Decoration */}
-            <div className="absolute top-20 right-20 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" />
+            <div className="absolute top-20 right-20 w-64 h-64 bg-lime-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" />
             <div className="absolute top-40 right-60 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20" />
 
             {/* Header / Timeline */}
@@ -1965,7 +1965,7 @@ const JobFlowVariant = ({ activeSection }: { activeSection: string }) => {
                              <span className="text-[9px] font-bold text-gray-400 hidden lg:inline">36 min</span>
                          </div>
                          <div className="absolute left-[40%] h-full w-px bg-black/5 border-l border-dashed border-gray-400" />
-                         <div className="absolute left-[40%] -top-3 bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded-b-md font-bold shadow-sm">09:15 AM</div>
+                         <div className="absolute left-[40%] -top-3 bg-lime-500 text-white text-[9px] px-2 py-0.5 rounded-b-md font-bold shadow-sm">09:15 AM</div>
                          
                          <div className="flex items-center gap-2 absolute right-4">
                              <span className="text-[9px] font-bold text-gray-400 hidden lg:inline">10:00 AM</span>
@@ -1997,7 +1997,7 @@ const JobFlowVariant = ({ activeSection }: { activeSection: string }) => {
                      
                      <div className="absolute bottom-4 -left-20 bg-white/80 backdrop-blur-md p-3 rounded-2xl shadow-lg border border-white flex items-center gap-3 w-64 z-20">
                          <div className="relative">
-                             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white"><Check className="w-5 h-5" /></div>
+                             <div className="w-10 h-10 bg-lime-500 rounded-lg flex items-center justify-center text-white"><Check className="w-5 h-5" /></div>
                              <div className="absolute -top-6 left-1/2 w-px h-6 bg-black border-l border-dashed border-gray-400" />
                              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[9px] px-1.5 py-0.5 rounded font-bold">25%</div>
                          </div>
@@ -2010,7 +2010,7 @@ const JobFlowVariant = ({ activeSection }: { activeSection: string }) => {
             </div>
 
             <div className="flex gap-4 mb-8 px-4">
-                <button className="px-6 py-2.5 bg-blue-600 text-white rounded-full text-sm font-bold shadow-lg shadow-blue-200 hover:shadow-xl hover:scale-105 transition-all">View today's tasks</button>
+                <button className="px-6 py-2.5 bg-lime-500 text-white rounded-full text-sm font-bold shadow-lg shadow-blue-200 hover:shadow-xl hover:scale-105 transition-all">View today's tasks</button>
                 <button className="px-6 py-2.5 bg-white text-gray-500 rounded-full text-sm font-bold shadow-sm hover:text-black hover:bg-gray-50 transition-colors">Schedule</button>
             </div>
 
@@ -2024,8 +2024,8 @@ const JobFlowVariant = ({ activeSection }: { activeSection: string }) => {
                     </div>
                     <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
                         {[
-                            {n: 'Ted Company', t: '09:00 AM', c: 'bg-blue-600'},
-                            {n: 'Modira Ink', t: '10:00 AM', c: 'bg-blue-600'},
+                            {n: 'Ted Company', t: '09:00 AM', c: 'bg-lime-500'},
+                            {n: 'Modira Ink', t: '10:00 AM', c: 'bg-lime-500'},
                             {n: 'Nike Company', t: '10:30 AM', c: 'bg-indigo-600'},
                             {n: 'Linear B', t: '11:30 AM', c: 'bg-purple-600'},
                         ].map((j, i) => (
@@ -2061,7 +2061,7 @@ const JobFlowVariant = ({ activeSection }: { activeSection: string }) => {
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Applications Sent</p>
                             </div>
                         </div>
-                        <div className="w-10 h-10 border border-gray-200 rounded-full flex items-center justify-center bg-white group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm"><ArrowUpRight className="w-4 h-4" /></div>
+                        <div className="w-10 h-10 border border-gray-200 rounded-full flex items-center justify-center bg-white group-hover:bg-lime-500 group-hover:text-white transition-all shadow-sm"><ArrowUpRight className="w-4 h-4" /></div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-4 text-center mb-8">
@@ -2330,7 +2330,7 @@ const EdTechVariant = ({ activeSection }: { activeSection: string }) => {
         <div className="w-full h-full font-sans bg-[#F5F5EF] p-10 overflow-hidden flex flex-col text-[#1A1A1A]">
             {/* Header */}
             <div className="flex items-center justify-between mb-16">
-                 <div className="font-black text-xl tracking-tight">EdTech</div>
+                 <div className="font-semibold text-xl tracking-tight">EdTech</div>
                  <div className="hidden md:flex gap-8 text-sm font-bold text-gray-400">
                      {['Dashboard', 'Activity', 'Teachers', 'Events', 'Payments', "Parent's Guide"].map((t,i) => (
                          <span key={t} className={`cursor-pointer transition-colors hover:text-black ${i===0 ? 'text-black' : ''}`}>{t}</span>
@@ -2563,7 +2563,7 @@ const ZarssVariant = ({ activeSection }: { activeSection: string }) => {
                                  <span className="bg-white/40 px-2 py-1 rounded-lg text-[10px] font-bold text-[#4A6347]">+ 17%</span>
                              </div>
                              <div className="relative z-10">
-                                 <span className="text-3xl font-black text-[#2A3F28] tracking-tight">$ 56,874</span>
+                                 <span className="text-3xl font-semibold text-[#2A3F28] tracking-tight">$ 56,874</span>
                              </div>
                              {/* Line Chart Sparkline */}
                              <svg className="absolute bottom-4 left-0 w-full h-16 pointer-events-none" preserveAspectRatio="none">
@@ -2578,7 +2578,7 @@ const ZarssVariant = ({ activeSection }: { activeSection: string }) => {
                                  <span className="bg-white/40 px-2 py-1 rounded-lg text-[10px] font-bold text-[#7A6935]">+ 23%</span>
                              </div>
                              <div className="relative z-10">
-                                 <span className="text-3xl font-black text-[#4F4118] tracking-tight">$ 24,575</span>
+                                 <span className="text-3xl font-semibold text-[#4F4118] tracking-tight">$ 24,575</span>
                              </div>
                              <svg className="absolute bottom-4 left-0 w-full h-16 pointer-events-none" preserveAspectRatio="none">
                                  <path d="M0,50 Q30,60 60,30 T120,40 T180,20 T240,40" fill="none" stroke="#A8944E" strokeWidth="2" opacity="0.6" />
@@ -2598,7 +2598,7 @@ const ZarssVariant = ({ activeSection }: { activeSection: string }) => {
                         <div className="flex justify-between items-start mb-8">
                             <div>
                                 <h3 className="font-bold text-base text-gray-800">User in The Last Week</h3>
-                                <p className="text-3xl font-black text-gray-900 mt-2">+ 3,2%</p>
+                                <p className="text-3xl font-semibold text-gray-900 mt-2">+ 3,2%</p>
                             </div>
                             <span className="text-xs font-bold text-gray-400 cursor-pointer hover:text-black mt-2">See statistics for all time</span>
                         </div>
@@ -2679,7 +2679,7 @@ const ZarssVariant = ({ activeSection }: { activeSection: string }) => {
                                  </svg>
                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                                      <span className="text-[9px] font-bold text-gray-400">Total</span>
-                                     <span className="text-xs font-black text-gray-800">$76,356</span>
+                                     <span className="text-xs font-semibold text-gray-800">$76,356</span>
                                  </div>
                              </div>
                              
@@ -2687,15 +2687,15 @@ const ZarssVariant = ({ activeSection }: { activeSection: string }) => {
                              <div className="flex flex-col justify-center gap-3">
                                  <div>
                                      <p className="text-[10px] font-bold text-gray-400">Giveaway</p>
-                                     <p className="text-sm font-black text-[#9BA7F9]">60%</p>
+                                     <p className="text-sm font-semibold text-[#9BA7F9]">60%</p>
                                  </div>
                                  <div>
                                      <p className="text-[10px] font-bold text-gray-400">Affiliate</p>
-                                     <p className="text-sm font-black text-[#D3E0D0]">24%</p>
+                                     <p className="text-sm font-semibold text-[#D3E0D0]">24%</p>
                                  </div>
                                   <div>
                                      <p className="text-[10px] font-bold text-gray-400">Offline Sales</p>
-                                     <p className="text-sm font-black text-[#FAE5A8]">16%</p>
+                                     <p className="text-sm font-semibold text-[#FAE5A8]">16%</p>
                                  </div>
                              </div>
                          </div>
@@ -2725,7 +2725,7 @@ const ZarssVariant = ({ activeSection }: { activeSection: string }) => {
                                              <p className="text-[10px] text-gray-400">{s.t}</p>
                                          </div>
                                      </div>
-                                     <div className={`font-black text-xs ${s.hl ? 'text-green-600 bg-green-50 px-2 py-1 rounded' : 'text-gray-800'}`}>{s.a}</div>
+                                     <div className={`font-semibold text-xs ${s.hl ? 'text-green-600 bg-green-50 px-2 py-1 rounded' : 'text-gray-800'}`}>{s.a}</div>
                                  </div>
                              ))}
                          </div>
@@ -2747,7 +2747,7 @@ const CheckBoxVariant = ({ activeSection }: { activeSection: string }) => {
             {/* Header */}
             <div className="flex items-center justify-between mb-8 px-2 shrink-0">
                 <div className="flex items-center gap-8">
-                     <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-black font-black text-xl">N</div>
+                     <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-black font-semibold text-xl">N</div>
                      <div className="flex gap-2">
                          {['Check Box', 'Monitoring', 'Support'].map((t, i) => (
                              <button key={t} className={`px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 border transition-all ${i===0 ? 'bg-white/10 border-white/20 text-white' : 'border-transparent text-gray-500 hover:text-white'}`}>
@@ -2787,7 +2787,7 @@ const CheckBoxVariant = ({ activeSection }: { activeSection: string }) => {
                 <div className="flex-1 flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar">
                     {/* Title + Filters Row */}
                     <div className="flex justify-between items-center">
-                        <h1 className="text-2xl font-black uppercase tracking-wider">Check Box</h1>
+                        <h1 className="text-2xl font-semibold uppercase tracking-wider">Check Box</h1>
                         <div className="flex gap-3">
                              {['Date: Now', 'Product: All', 'Profile: Bogdan'].map(f => (
                                  <button key={f} className="px-4 py-2 bg-[#121212] rounded-full text-[10px] font-bold border border-white/5 hover:border-white/20 transition-colors flex items-center gap-2">
@@ -2922,7 +2922,7 @@ const CheckBoxVariant = ({ activeSection }: { activeSection: string }) => {
                                      <div className="flex items-center">
                                          <span className="w-12 text-[10px] font-bold text-gray-500 shrink-0">30.09</span>
                                          <div className="ml-4 w-40 h-8 bg-[#bef264] rounded-full flex items-center px-2 justify-between cursor-pointer hover:scale-105 transition-transform text-black">
-                                             <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center"><Zap className="w-3 h-3 text-blue-500" /></div>
+                                             <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center"><Zap className="w-3 h-3 text-lime-600" /></div>
                                              <span className="text-[9px] font-bold mr-2">16</span>
                                          </div>
                                      </div>
@@ -3020,7 +3020,7 @@ export const DesignShowcase = ({ onClose, isDarkMode }: { onClose: () => void, i
                 {/* Master Toolbar */}
                 <div className="h-16 bg-[#111] border-b border-white/10 flex items-center justify-between px-8 shrink-0 relative z-50">
                     <div className="flex items-center gap-6 overflow-hidden">
-                        <div className="flex items-center gap-2 text-white font-black tracking-tight text-lg shrink-0">
+                        <div className="flex items-center gap-2 text-white font-semibold tracking-tight text-lg shrink-0">
                             <Sparkles className="w-5 h-5 text-purple-400 fill-current" />
                             DESIGN<span className="text-purple-400">LAB</span>
                         </div>

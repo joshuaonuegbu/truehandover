@@ -340,7 +340,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                 files: (project.files || []).map(f => ({ name: f.name, type: f.type, size: f.size, hash: f.metadata?.hash, locked: f.locked })),
                 timeline: [],
             });
-            downloadBlob(`Heartifact_Invoice_${project.name.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
+            downloadBlob(`Grinlight_Invoice_${project.name.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
         } catch { } finally { setDownloadingPdf(null); }
     };
 
@@ -363,7 +363,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                 status: project.status,
                 scope: (project.files || []).map(f => f.name),
             });
-            downloadBlob(`Heartifact_Receipt_${project.name.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
+            downloadBlob(`Grinlight_Receipt_${project.name.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
         } catch { } finally { setDownloadingPdf(null); }
     };
 

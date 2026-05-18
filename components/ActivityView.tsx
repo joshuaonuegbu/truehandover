@@ -367,7 +367,7 @@ const ActivityView = () => {
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder="Search transactions..."
-                                        className="w-full pl-9 pr-4 py-2 bg-white dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] rounded-lg text-xs font-bold text-zinc-700 dark:text-zinc-200 focus:outline-none focus:border-blue-500/50 transition-all placeholder:text-zinc-400 placeholder:font-medium"
+                                        className="w-full pl-9 pr-4 py-2 bg-white dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] rounded-lg text-xs font-bold text-zinc-700 dark:text-zinc-200 focus:outline-none focus:border-lime-400/50 transition-all placeholder:text-zinc-400 placeholder:font-medium"
                                     />
                                 </div>
 
@@ -405,7 +405,7 @@ const ActivityView = () => {
                                                     <div className="flex flex-col items-center mr-6 relative">
                                                         <div className={`
                                                             w-10 h-10 rounded-full flex items-center justify-center z-10 border-2 border-white dark:border-[#23232e] shadow-sm transition-colors
-                                                            ${event.type === 'financial' ? 'bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-blue-900/30 dark:text-blue-400' : 'bg-editorial text-zinc-500 dark:bg-white/5 dark:text-zinc-400'}
+                                                            ${event.type === 'financial' ? 'bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-blue-900/30 dark:text-lime-400' : 'bg-editorial text-zinc-500 dark:bg-white/5 dark:text-zinc-400'}
                                                         `}>
                                                             <event.icon className="w-4 h-4" />
                                                         </div>
@@ -420,7 +420,7 @@ const ActivityView = () => {
                                                             <div>
                                                                 <div className="flex items-center gap-2 mb-1">
                                                                     <h5 className="font-bold text-obsidian dark:text-white text-sm">{event.title}</h5>
-                                                                    {event.status === 'cleared' && <span className="text-[9px] font-bold uppercase bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-blue-500/12 dark:text-blue-300 px-1.5 py-0.5 rounded">Cleared</span>}
+                                                                    {event.status === 'cleared' && <span className="text-[9px] font-bold uppercase bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-lime-400/12 dark:text-blue-300 px-1.5 py-0.5 rounded">Cleared</span>}
                                                                     {event.status === 'pending' && <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Pending</span>}
                                                                 </div>
                                                                 <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">{event.desc || `${event.project} • ${event.client}`}</p>

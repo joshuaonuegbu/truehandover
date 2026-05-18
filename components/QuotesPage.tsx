@@ -116,7 +116,7 @@ export default function QuotesPage() {
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement('a');
         anchor.href = url;
-        anchor.download = `Heartifact_${quoteNumber}.txt`;
+        anchor.download = `Sendational_${quoteNumber}.txt`;
         anchor.click();
         URL.revokeObjectURL(url);
     };
@@ -142,7 +142,7 @@ export default function QuotesPage() {
             const url = URL.createObjectURL(blob);
             const anchor = document.createElement('a');
             anchor.href = url;
-            anchor.download = `Heartifact_${quoteNumber}.pdf`;
+            anchor.download = `Sendational_${quoteNumber}.pdf`;
             anchor.click();
             URL.revokeObjectURL(url);
             playSuccess();

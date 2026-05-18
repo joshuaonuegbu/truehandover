@@ -345,8 +345,8 @@ const ReportsView = () => {
                     projectName,
                     projectId,
                     evidenceId: (evidenceItem as any)?.evidenceId || (evidenceItem as any)?.hash || `EV-${projectId.slice(0, 8).toUpperCase()}`,
-                    creatorName: user?.name || 'Heartifact Demo Studio',
-                    creatorEmail: user?.email || 'studio@heartifact.demo',
+                    creatorName: user?.name || 'Sendational Demo Studio',
+                    creatorEmail: user?.email || 'studio@Sendational.demo',
                     clientName: project?.client?.name || evidenceItem?.client || 'Client',
                     clientEmail: project?.client?.email || '',
                     status: evidenceItem?.status || project?.status || 'Secured',
@@ -368,13 +368,13 @@ const ReportsView = () => {
                         ],
                     timeline,
                 });
-                downloadBlobFile(`Heartifact_AuditTrail_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
+                downloadBlobFile(`Sendational_AuditTrail_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
                 return;
             }
 
             const { blob, error } = await DB.downloadAuditTrail(projectId);
             if (error || !blob) { setReportError(`Could not generate PDF: ${error ?? 'Unknown error'}`); return; }
-            downloadBlobFile(`Heartifact_AuditTrail_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
+            downloadBlobFile(`Sendational_AuditTrail_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
         } finally { setDownloadingPdf(null); }
     };
 
@@ -404,8 +404,8 @@ const ReportsView = () => {
                     certificateId: `RT-${projectId.slice(0, 8).toUpperCase()}`,
                     projectName,
                     projectId,
-                    creatorName: user?.name || 'Heartifact Demo Studio',
-                    creatorEmail: user?.email || 'studio@heartifact.demo',
+                    creatorName: user?.name || 'Sendational Demo Studio',
+                    creatorEmail: user?.email || 'studio@Sendational.demo',
                     clientName: project?.client?.name || 'Client',
                     clientEmail: project?.client?.email || '',
                     amountUsd: project?.amount || 0,
@@ -415,16 +415,16 @@ const ReportsView = () => {
                     scope: [
                         'Final approved deliverables listed for this project',
                         'Commercial use rights as defined in the client agreement',
-                        'Operational record of payment-cleared release through Heartifact',
+                        'Operational record of payment-cleared release through Sendational',
                     ],
                 });
-                downloadBlobFile(`Heartifact_RightsTransfer_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
+                downloadBlobFile(`Sendational_RightsTransfer_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
                 return;
             }
 
             const { blob, error } = await DB.downloadRightsTransfer(projectId);
             if (error || !blob) { setReportError(`Could not generate rights certificate: ${error ?? 'Unknown error'}`); return; }
-            downloadBlobFile(`Heartifact_RightsTransfer_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
+            downloadBlobFile(`Sendational_RightsTransfer_${projectName.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
         } finally {
             setDownloadingRights(null);
         }
@@ -434,8 +434,8 @@ const ReportsView = () => {
         setReportError(null);
         const blob = await createPortfolioOverviewPdf({
             rangeLabel: timeRange === 'ALL' ? 'All Activity' : timeRange,
-            creatorName: user?.name || 'Heartifact Demo Studio',
-            creatorEmail: user?.email || 'studio@heartifact.demo',
+            creatorName: user?.name || 'Sendational Demo Studio',
+            creatorEmail: user?.email || 'studio@Sendational.demo',
             totalVolumeUsd: totalVolume,
             securedVolumeUsd: securedVolume,
             lockedVolumeUsd: lockedVolume,
@@ -459,7 +459,7 @@ const ReportsView = () => {
                     createdAt: project.createdAt,
                 }))).slice(0, 8),
         });
-        downloadBlobFile(`Heartifact_PortfolioOverview_${new Date().toISOString().slice(0, 10)}.pdf`, blob);
+        downloadBlobFile(`Sendational_PortfolioOverview_${new Date().toISOString().slice(0, 10)}.pdf`, blob);
     };
 
     const handleDownloadICS = () => {
@@ -471,16 +471,16 @@ const ReportsView = () => {
         const lines = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
-            'PRODID:-//Heartifact//Delivery Calendar//EN',
+            'PRODID:-//Sendational//Delivery Calendar//EN',
             'CALSCALE:GREGORIAN',
             'METHOD:PUBLISH',
-            'X-WR-CALNAME:Heartifact Projects',
-            'X-WR-CALDESC:Project due dates and payment deadlines from Heartifact',
+            'X-WR-CALNAME:Sendational Projects',
+            'X-WR-CALDESC:Project due dates and payment deadlines from Sendational',
         ];
 
         projects.forEach(p => {
             if (!p.dueDate) return;
-            const uid = `Heartifact-${p.id}@heartifact.com`;
+            const uid = `Sendational-${p.id}@Sendational.com`;
             const statusLabel = {
                 draft: 'Draft',
                 awaiting_signature: 'Awaiting Signature',
@@ -498,7 +498,7 @@ const ReportsView = () => {
                 `DTEND;VALUE=DATE:${new Date(p.dueDate).toISOString().slice(0, 10).replace(/-/g, '')}`,
                 `SUMMARY:${escIcs(`${p.name} — ${statusLabel}`)}`,
                 `DESCRIPTION:${escIcs(`Client: ${p.client.name}\nValue: $${p.amount.toLocaleString()}\nStatus: ${statusLabel}\nProject ID: ${p.id}`)}`,
-                `CATEGORIES:Heartifact`,
+                `CATEGORIES:Sendational`,
                 `STATUS:${['paid', 'completed'].includes(p.status) ? 'COMPLETED' : 'CONFIRMED'}`,
                 'END:VEVENT',
             );
@@ -511,7 +511,7 @@ const ReportsView = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Heartifact_Calendar_${new Date().toISOString().slice(0, 10)}.ics`;
+        a.download = `Sendational_Calendar_${new Date().toISOString().slice(0, 10)}.ics`;
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -531,7 +531,7 @@ const ReportsView = () => {
                 due_date: p.dueDate || '',
             }));
         const label = timeRange === 'ALL' ? 'ALL' : timeRange;
-        downloadTextFile(`Heartifact_Ledger_${label}_${new Date().toISOString().slice(0, 10)}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
+        downloadTextFile(`Sendational_Ledger_${label}_${new Date().toISOString().slice(0, 10)}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
     };
 
     const handleExportTaxLedgerCsv = () => {
@@ -552,18 +552,18 @@ const ReportsView = () => {
                 amount_usd: p.amount,
                 created_at: p.createdAt,
             }));
-        downloadTextFile(`Heartifact_TaxLedger_${year}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
+        downloadTextFile(`Sendational_TaxLedger_${year}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
     };
 
     const handleDownloadTaxLedgerPdf = async () => {
         const year = now.getFullYear();
         const blob = await createTaxLedgerPdf({
             statementLabel: String(year),
-            creatorName: user?.name || 'Heartifact Demo Studio',
-            creatorEmail: user?.email || 'studio@heartifact.demo',
+            creatorName: user?.name || 'Sendational Demo Studio',
+            creatorEmail: user?.email || 'studio@Sendational.demo',
             rows: getTaxLedgerRows(year),
         });
-        downloadBlobFile(`Heartifact_TaxLedger_${year}.pdf`, blob);
+        downloadBlobFile(`Sendational_TaxLedger_${year}.pdf`, blob);
     };
 
     const handleExportMonthlyStatementCsv = () => {
@@ -587,19 +587,19 @@ const ReportsView = () => {
                 due_date: p.dueDate || '',
             }));
         const safe = selected.replace(/[^a-z0-9]+/gi, '_');
-        downloadTextFile(`Heartifact_Statement_${safe}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
+        downloadTextFile(`Sendational_Statement_${safe}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
     };
 
     const handleDownloadMonthlyStatementPdf = async () => {
         const selected = statementMonth;
         const blob = await createMonthlyStatementPdf({
             statementLabel: selected,
-            creatorName: user?.name || 'Heartifact Demo Studio',
-            creatorEmail: user?.email || 'studio@heartifact.demo',
+            creatorName: user?.name || 'Sendational Demo Studio',
+            creatorEmail: user?.email || 'studio@Sendational.demo',
             rows: getStatementRows(selected),
         });
         const safe = selected.replace(/[^a-z0-9]+/gi, '_');
-        downloadBlobFile(`Heartifact_Statement_${safe}.pdf`, blob);
+        downloadBlobFile(`Sendational_Statement_${safe}.pdf`, blob);
     };
 
     // --- DATA PROCESSING ---
@@ -789,7 +789,7 @@ const ReportsView = () => {
 
                 <div className={`grid gap-10 xl:gap-24 relative z-10 ${summaryGridClassName}`}>
                     <div className="flex flex-col justify-end">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-3 block border-l-2 border-blue-500 dark:border-lime-400 pl-3">Net Revenue (Secured)</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-3 block border-l-2 border-lime-400 dark:border-lime-400 pl-3">Net Revenue (Secured)</span>
                         <div className="flex items-baseline gap-1 mt-2">
                             <span className="text-2xl lg:text-4xl font-sans tracking-tight text-zinc-400 dark:text-zinc-500 self-start mt-2">$</span>
                             <PrivacyBlur strength="strong" className="text-7xl lg:text-9xl font-sans tracking-tight font-medium text-obsidian dark:text-white tracking-tighter leading-[0.85]">
@@ -1087,7 +1087,7 @@ const ReportsView = () => {
                                                         title="Download Rights Transfer Certificate"
                                                         disabled={downloadingRights === item.id}
                                                         onClick={() => handleDownloadRightsTransfer(item.id, item.name)}
-                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm group/btn w-full justify-center disabled:opacity-50 disabled:cursor-wait bg-[#a3e635]/15 dark:bg-blue-900/20 border border-[#a3e635]/35 dark:border-blue-700/30 text-[#4d7c0f] dark:text-blue-400 hover:bg-[#a3e635]/25 dark:hover:bg-blue-900/40"
+                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm group/btn w-full justify-center disabled:opacity-50 disabled:cursor-wait bg-[#a3e635]/15 dark:bg-blue-900/20 border border-[#a3e635]/35 dark:border-blue-700/30 text-[#4d7c0f] dark:text-lime-400 hover:bg-[#a3e635]/25 dark:hover:bg-blue-900/40"
                                                     >
                                                         <FileCheck className="w-3.5 h-3.5" />
                                                         {downloadingRights === item.id ? 'Generating…' : 'Rights Certificate'}
@@ -1109,7 +1109,7 @@ const ReportsView = () => {
                         <h4 className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wide">Chain of Custody</h4>
                         <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed max-w-3xl">
                             Evidence Packs contain a tamper-evident summary of project events, timestamps, and any recorded file hashes.
-                            While Heartifact provides this data to support dispute resolution, we do not guarantee its admissibility in legal proceedings.
+                            While Sendational provides this data to support dispute resolution, we do not guarantee its admissibility in legal proceedings.
                             Consult with a legal professional regarding specific jurisdiction requirements.
                         </p>
                     </div>
@@ -1178,7 +1178,7 @@ const ReportsView = () => {
                             </p>
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                                    <span className="w-2 h-2 rounded-full bg-[#65a30d] dark:bg-blue-500" />
+                                    <span className="w-2 h-2 rounded-full bg-[#65a30d] dark:bg-lime-400" />
                                     {projects.filter(p => p.dueDate).length} events
                                 </div>
                             </div>
@@ -1199,11 +1199,11 @@ const ReportsView = () => {
             <div className="mt-24 pt-8 border-t border-zinc-200/50 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-zinc-400">
                 <div className="flex items-center gap-2 font-bold uppercase tracking-widest">
                     <ShieldCheck className="w-3 h-3" />
-                    Generated by Heartifact Financial Engine
+                    Generated by Sendational Financial Engine
                 </div>
                 <div className="max-w-md text-right opacity-60">
                     <p className="leading-tight">
-                        Heartifact Ltd. acts as a technical intermediary and does not provide legal, tax, or financial advice.
+                        Sendational Ltd. acts as a technical intermediary and does not provide legal, tax, or financial advice.
                         Users are responsible for their own tax compliance and contract enforcement.
                     </p>
                 </div>

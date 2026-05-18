@@ -4,7 +4,7 @@
  * A fully self-contained design playground. 5 premium layout variants, each
  * covering Dashboard / Projects / Activity / Reports / Settings.
  *
- * Uses Heartifact's own lime accent + dark-mode tokens — only layout, spacing
+ * Uses Sendational's own lime accent + dark-mode tokens — only layout, spacing
  * and UI chrome varies between variants.
  *
  * To remove: delete this file, remove the /design-showcase route from App.tsx
@@ -91,8 +91,8 @@ const MiniBarChart = ({ data, accent }: { data: number[]; accent: string }) => {
 const StatusBadge = ({ status }: { status: string }) => {
     const map: Record<string, string> = {
         pending: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
-        active: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400',
-        paid: 'bg-blue-100 text-lime-400 dark:bg-blue-500/15 dark:text-lime-400',
+        active: 'bg-blue-100 text-blue-700 dark:bg-lime-400/15 dark:text-lime-400',
+        paid: 'bg-blue-100 text-lime-400 dark:bg-lime-400/15 dark:text-lime-400',
         draft: 'bg-zinc-200 text-zinc-500 dark:bg-white/5 dark:text-zinc-400',
     };
     return (
@@ -212,7 +212,7 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
             </div>
             <div className="grid grid-cols-5 gap-3">
                 {MOCK_PROJECTS.map((p, i) => (
-                    <div key={i} className={`${cardBg} border rounded-2xl p-4 hover:border-blue-500/50 transition-all cursor-pointer group`}>
+                    <div key={i} className={`${cardBg} border rounded-2xl p-4 hover:border-lime-400/50 transition-all cursor-pointer group`}>
                         <div className={`w-10 h-10 rounded-xl mb-3 flex items-center justify-center ${isDark ? 'bg-lime-400/10' : 'bg-blue-50'} ${accentText}`}><FolderLock className="w-5 h-5" /></div>
                         <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-obsidian'} mb-0.5`}>{p.name}</p>
                         <p className={`text-[10px] ${subText}`}>{p.client}</p>
@@ -231,7 +231,7 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
             <h1 className={`font-sans tracking-tight text-2xl font-bold ${isDark ? 'text-white' : 'text-obsidian'}`}>Activity Log</h1>
             <div className={`${cardBg} border rounded-2xl divide-y ${isDark ? 'divide-white/5' : 'divide-zinc-100'}`}>
                 {MOCK_ACTIVITY.map((a, i) => {
-                    const dotColor = a.color === 'lime' ? 'bg-blue-500' : a.color === 'blue' ? 'bg-blue-500' : a.color === 'amber' ? 'bg-amber-500' : 'bg-zinc-400';
+                    const dotColor = a.color === 'lime' ? 'bg-lime-400' : a.color === 'blue' ? 'bg-lime-400' : a.color === 'amber' ? 'bg-amber-500' : 'bg-zinc-400';
                     return (
                         <div key={i} className={`flex items-center gap-4 px-5 py-3.5 ${isDark ? 'hover:bg-white/5' : 'hover:bg-editorial'} transition-colors`}>
                             <div className={`w-8 h-8 rounded-full ${isDark ? 'bg-white/5' : 'bg-zinc-200'} flex items-center justify-center`}><a.icon className={`w-4 h-4 ${subText}`} /></div>
@@ -308,7 +308,7 @@ const SidebarClassicLayout = ({ section, isDark }: { section: Section; isDark: b
             <div className={`w-52 shrink-0 ${sidebarBg} border-r flex flex-col py-6`}>
                 <div className="px-5 mb-8 flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-lime-400 dark:bg-lime-400 flex items-center justify-center"><Zap className="w-4 h-4 text-white dark:text-black" /></div>
-                    <span className={`font-sans tracking-tight font-bold text-base ${isDark ? 'text-white' : 'text-obsidian'}`}>Heartifact</span>
+                    <span className={`font-sans tracking-tight font-bold text-base ${isDark ? 'text-white' : 'text-obsidian'}`}>Sendational</span>
                 </div>
                 <nav className="flex-1 px-3 space-y-1">
                     {SECTIONS.map(s => (
@@ -320,7 +320,7 @@ const SidebarClassicLayout = ({ section, isDark }: { section: Section; isDark: b
                 <div className={`mx-3 mt-4 p-3 rounded-xl ${isDark ? 'bg-lime-400/10 border border-lime-400/20' : 'bg-blue-50 border border-blue-100'}`}>
                     <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-lime-400' : 'text-lime-400'}`}>Storage</p>
                     <div className={`w-full h-1.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-blue-100'} overflow-hidden`}>
-                        <div className="h-full w-[8%] rounded-full bg-blue-500" />
+                        <div className="h-full w-[8%] rounded-full bg-lime-400" />
                     </div>
                     <p className={`text-[9px] mt-1.5 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>2.4 GB of 30 GB used</p>
                 </div>
@@ -333,7 +333,7 @@ const SidebarClassicLayout = ({ section, isDark }: { section: Section; isDark: b
                     </div>
                     <div className="flex items-center gap-3">
                         <Bell className={`w-5 h-5 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`} />
-                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">J</div>
+                        <div className="w-8 h-8 rounded-full bg-lime-400 flex items-center justify-center text-white text-xs font-bold">J</div>
                     </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-6"><SidebarClassicContent section={section} isDark={isDark} /></div>
@@ -353,14 +353,14 @@ const BoldDarkContent = ({ section, isDark }: { section: Section; isDark: boolea
     if (section === 'dashboard') return (
         <div className="space-y-5">
             <div className="flex items-center justify-between">
-                <div><h1 className="text-4xl font-black text-white">Overview</h1><p className="text-zinc-400 text-sm mt-0.5">All projects · Feb 2026</p></div>
-                <button className="px-4 py-2 rounded-2xl text-xs font-black uppercase tracking-wider" style={{ background: acc, color: '#000' }}><Plus className="w-3.5 h-3.5 inline mr-1" />NEW PROJECT</button>
+                <div><h1 className="text-4xl font-semibold text-white">Overview</h1><p className="text-zinc-400 text-sm mt-0.5">All projects · Feb 2026</p></div>
+                <button className="px-4 py-2 rounded-2xl text-xs font-semibold uppercase tracking-wider" style={{ background: acc, color: '#000' }}><Plus className="w-3.5 h-3.5 inline mr-1" />NEW PROJECT</button>
             </div>
             <div className="grid grid-cols-3 gap-4">
                 {[{ l: 'Revenue', v: '$29,450', d: '+12.5%', g: [20, 35, 28, 44, 36, 55, 48, 68] }, { l: 'Projects', v: '8 Active', d: '+2 this week', g: [3, 5, 4, 7, 5, 8, 7, 8] }, { l: 'Pending', v: '$6,200', d: '2 invoices', g: [8, 12, 9, 14, 10, 16, 12, 18] }].map(k => (
                     <div key={k.l} className={`${card} border rounded-3xl p-5`}>
-                        <p className={`text-[10px] font-black uppercase tracking-widest ${sub} mb-3`}>{k.l}</p>
-                        <p className={`text-3xl font-black text-white mb-1`}>{k.v}</p>
+                        <p className={`text-[10px] font-semibold uppercase tracking-widest ${sub} mb-3`}>{k.l}</p>
+                        <p className={`text-3xl font-semibold text-white mb-1`}>{k.v}</p>
                         <p className="text-xs font-bold mb-4" style={{ color: acc }}>{k.d}</p>
                         <Sparkline data={k.g} color={acc} width={160} height={48} />
                     </div>
@@ -369,8 +369,8 @@ const BoldDarkContent = ({ section, isDark }: { section: Section; isDark: boolea
             <div className="grid grid-cols-5 gap-4">
                 <div className={`${card} border rounded-3xl p-5 col-span-3`}>
                     <div className="flex justify-between items-center mb-4">
-                        <p className="text-sm font-black text-white">Performance</p>
-                        <span className={`text-[10px] font-black uppercase ${sub}`}>Monthly</span>
+                        <p className="text-sm font-semibold text-white">Performance</p>
+                        <span className={`text-[10px] font-semibold uppercase ${sub}`}>Monthly</span>
                     </div>
                     <div className="flex items-end gap-1.5 h-28">
                         {MOCK_REVENUE.map((v, i) => (
@@ -383,16 +383,16 @@ const BoldDarkContent = ({ section, isDark }: { section: Section; isDark: boolea
                     </div>
                 </div>
                 <div className={`${card} border rounded-3xl p-5 col-span-2 flex flex-col`}>
-                    <p className="text-sm font-black text-white mb-4">Top Clients</p>
+                    <p className="text-sm font-semibold text-white mb-4">Top Clients</p>
                     <div className="space-y-3 flex-1">
                         {MOCK_PROJECTS.slice(0, 3).map((p, i) => (
                             <div key={i} className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-2xl flex items-center justify-center font-black text-sm" style={{ background: acc + '20', color: acc }}>{p.client[0]}</div>
+                                <div className="w-9 h-9 rounded-2xl flex items-center justify-center font-semibold text-sm" style={{ background: acc + '20', color: acc }}>{p.client[0]}</div>
                                 <div className="flex-1">
                                     <p className="text-sm font-bold text-white leading-tight">{p.client}</p>
                                     <p className={`text-[10px] ${sub}`}>{p.name}</p>
                                 </div>
-                                <span className="text-sm font-black" style={{ color: acc }}>${(p.amount / 1000).toFixed(1)}k</span>
+                                <span className="text-sm font-semibold" style={{ color: acc }}>${(p.amount / 1000).toFixed(1)}k</span>
                             </div>
                         ))}
                     </div>
@@ -403,16 +403,16 @@ const BoldDarkContent = ({ section, isDark }: { section: Section; isDark: boolea
 
     if (section === 'vault') return (
         <div className="space-y-5">
-            <h1 className="text-3xl font-black text-white">Projects</h1>
+            <h1 className="text-3xl font-semibold text-white">Projects</h1>
             <div className="grid grid-cols-5 gap-3">
                 {MOCK_PROJECTS.map((p, i) => (
                     <div key={i} className={`${card} border rounded-3xl p-4 cursor-pointer transition-all hover:border-lime-400/40`} style={{ borderColor: i === 0 ? acc + '40' : undefined }}>
-                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-3 text-black font-black text-sm" style={{ background: acc }}>{p.name[0]}</div>
-                        <p className="text-sm font-black text-white">{p.name}</p>
+                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-3 text-black font-semibold text-sm" style={{ background: acc }}>{p.name[0]}</div>
+                        <p className="text-sm font-semibold text-white">{p.name}</p>
                         <p className={`text-[10px] ${sub} mt-0.5`}>{p.client}</p>
                         <div className="mt-3 flex justify-between items-center">
                             <StatusBadge status={p.status} />
-                            <span className="text-xs font-black" style={{ color: acc }}>${p.amount.toLocaleString()}</span>
+                            <span className="text-xs font-semibold" style={{ color: acc }}>${p.amount.toLocaleString()}</span>
                         </div>
                     </div>
                 ))}
@@ -422,7 +422,7 @@ const BoldDarkContent = ({ section, isDark }: { section: Section; isDark: boolea
 
     if (section === 'activity') return (
         <div className="space-y-5">
-            <h1 className="text-3xl font-black text-white">Activity</h1>
+            <h1 className="text-3xl font-semibold text-white">Activity</h1>
             <div className={`${card} border rounded-3xl overflow-hidden`}>
                 {MOCK_ACTIVITY.map((a, i) => {
                     const c = a.color === 'lime' ? acc : a.color === 'blue' ? '#60a5fa' : a.color === 'amber' ? '#fbbf24' : '#64748b';
@@ -443,12 +443,12 @@ const BoldDarkContent = ({ section, isDark }: { section: Section; isDark: boolea
 
     if (section === 'reports') return (
         <div className="space-y-5">
-            <h1 className="text-3xl font-black text-white">Reports</h1>
+            <h1 className="text-3xl font-semibold text-white">Reports</h1>
             <div className="grid grid-cols-2 gap-4">
                 {[{ l: 'Total Revenue', v: '$48,200' }, { l: 'Total Disbursed', v: '$41,600' }].map(k => (
                     <div key={k.l} className={`${card} border rounded-3xl p-6`}>
-                        <p className={`text-[10px] font-black uppercase tracking-widest ${sub} mb-2`}>{k.l}</p>
-                        <p className="text-5xl font-black text-white">{k.v}</p>
+                        <p className={`text-[10px] font-semibold uppercase tracking-widest ${sub} mb-2`}>{k.l}</p>
+                        <p className="text-5xl font-semibold text-white">{k.v}</p>
                         <div className="mt-5"><MiniBarChart data={MOCK_REVENUE} accent={acc} /></div>
                     </div>
                 ))}
@@ -458,10 +458,10 @@ const BoldDarkContent = ({ section, isDark }: { section: Section; isDark: boolea
 
     return (
         <div className="space-y-5">
-            <h1 className="text-3xl font-black text-white">Settings</h1>
+            <h1 className="text-3xl font-semibold text-white">Settings</h1>
             {[{ l: 'Profile', icon: User }, { l: 'Billing', icon: CreditCard }, { l: 'Security', icon: ShieldCheck }].map(g => (
                 <div key={g.l} className={`${card} border rounded-3xl p-5`}>
-                    <div className="flex items-center gap-3 mb-4"><g.icon className="w-5 h-5" style={{ color: acc }} /><p className="text-base font-black text-white">{g.l}</p></div>
+                    <div className="flex items-center gap-3 mb-4"><g.icon className="w-5 h-5" style={{ color: acc }} /><p className="text-base font-semibold text-white">{g.l}</p></div>
                     <div className="space-y-2">
                         {['Primary setting', 'Secondary setting', 'Advanced options'].map((item, i) => (
                             <div key={i} className="flex items-center justify-between p-3 rounded-2xl hover:bg-white/5 cursor-pointer">
@@ -483,7 +483,7 @@ const BoldDarkLayout = ({ section, isDark }: { section: Section; isDark: boolean
             <div className="w-52 shrink-0 border-r border-white/5 flex flex-col py-6" style={{ background: '#111119' }}>
                 <div className="px-5 mb-8 flex items-center gap-2">
                     <div className="w-8 h-8 rounded-2xl flex items-center justify-center" style={{ background: acc }}><Zap className="w-4 h-4 text-black" /></div>
-                    <span className="font-black text-white text-base">Heartifact</span>
+                    <span className="font-semibold text-white text-base">Sendational</span>
                 </div>
                 <nav className="flex-1 px-3 space-y-1">
                     {SECTIONS.map(s => (
@@ -497,9 +497,9 @@ const BoldDarkLayout = ({ section, isDark }: { section: Section; isDark: boolean
                 {/* Upgrade card */}
                 <div className="mx-3 p-4 rounded-3xl" style={{ background: 'linear-gradient(135deg,#bef264 0%,#65a30d 100%)' }}>
                     <Crown className="w-5 h-5 text-black mb-2" />
-                    <p className="text-black font-black text-sm leading-snug">Upgrade to Pro</p>
+                    <p className="text-black font-semibold text-sm leading-snug">Upgrade to Pro</p>
                     <p className="text-black/70 text-[10px] mt-1 mb-3">Unlock unlimited projects</p>
-                    <div className="w-full py-1.5 rounded-xl bg-black text-white text-center text-[10px] font-black uppercase tracking-wider cursor-pointer">Upgrade Now</div>
+                    <div className="w-full py-1.5 rounded-xl bg-black text-white text-center text-[10px] font-semibold uppercase tracking-wider cursor-pointer">Upgrade Now</div>
                 </div>
             </div>
             {/* Main */}
@@ -510,7 +510,7 @@ const BoldDarkLayout = ({ section, isDark }: { section: Section; isDark: boolean
                     </div>
                     <div className="flex items-center gap-3">
                         <Bell className="w-5 h-5 text-zinc-400" />
-                        <div className="w-8 h-8 rounded-2xl flex items-center justify-center font-black text-black text-xs" style={{ background: acc }}>J</div>
+                        <div className="w-8 h-8 rounded-2xl flex items-center justify-center font-semibold text-black text-xs" style={{ background: acc }}>J</div>
                     </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-6"><BoldDarkContent section={section} isDark={true} /></div>
@@ -638,7 +638,7 @@ const FocusFlowLayout = ({ section, isDark }: { section: Section; isDark: boolea
                 <div className={`flex items-center gap-1 px-2 py-1.5 rounded-full border shadow-lg ${pillBg}`}>
                     <div className="flex items-center gap-2 px-3 py-1 mr-3">
                         <Zap className="w-4 h-4" style={{ color: acc }} />
-                        <span className="font-bold text-sm">Heartifact</span>
+                        <span className="font-bold text-sm">Sendational</span>
                     </div>
                     {SECTIONS.map(s => (
                         <button key={s.id} className="px-4 py-1.5 rounded-full text-xs font-bold transition-all"
@@ -774,7 +774,7 @@ const CommandCenterLayout = ({ section, isDark }: { section: Section; isDark: bo
             <div className={`w-44 shrink-0 ${sidebarBg} border-r flex flex-col py-5`}>
                 <div className="px-4 mb-6 flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg bg-lime-400 flex items-center justify-center"><Zap className="w-3 h-3 text-white" /></div>
-                    <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-white' : 'text-obsidian'}`}>Heartifact</span>
+                    <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-white' : 'text-obsidian'}`}>Sendational</span>
                 </div>
                 <nav className="flex-1 px-2 space-y-0.5">
                     {SECTIONS.map(s => (
@@ -946,7 +946,7 @@ const AnalyticsHubLayout = ({ section, isDark }: { section: Section; isDark: boo
             <div className={`${topbarBg} border-b px-6 flex items-center gap-6 h-14 shrink-0`}>
                 <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-lime-400 dark:bg-lime-400 flex items-center justify-center"><Zap className="w-3.5 h-3.5 text-white dark:text-black" /></div>
-                    <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-obsidian'}`}>Heartifact</span>
+                    <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-obsidian'}`}>Sendational</span>
                 </div>
                 <div className="flex gap-0.5 h-full ml-4">
                     {SECTIONS.map(s => (
@@ -987,7 +987,7 @@ export const DesignShowcase: React.FC<ShowcaseProps> = ({ isDarkMode, onClose })
             {/* Showcase chrome */}
             <div className={`shrink-0 flex items-center gap-3 px-4 py-2 border-b ${isDarkMode ? 'bg-[#0f0f18] border-white/10' : 'glass-panel'} shadow-sm`}>
                 {/* Brand badge */}
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ${isDarkMode ? 'bg-lime-400/10 border-lime-400/20 text-lime-400' : 'bg-blue-50 border-blue-200 text-lime-400'} text-[10px] font-black uppercase tracking-widest`}>
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ${isDarkMode ? 'bg-lime-400/10 border-lime-400/20 text-lime-400' : 'bg-blue-50 border-blue-200 text-lime-400'} text-[10px] font-semibold uppercase tracking-widest`}>
                     <Sparkles className="w-3 h-3" /> Design Lab
                 </div>
                 <div className={`hidden md:block h-5 w-px ${isDarkMode ? 'bg-white/10' : 'bg-zinc-200'}`} />
@@ -1002,7 +1002,7 @@ export const DesignShowcase: React.FC<ShowcaseProps> = ({ isDarkMode, onClose })
                                 : (isDarkMode ? 'bg-white/5 border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/10' : 'bg-editorial border-zinc-200/50 text-zinc-500 hover:text-zinc-700 hover:bg-white')
                             }`}
                         >
-                            <span className="text-[10px] font-black uppercase tracking-wider leading-none">{v.label}</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-wider leading-none">{v.label}</span>
                             <span className="text-[9px] font-medium opacity-60 mt-0.5 leading-none hidden lg:block">{v.ref}</span>
                         </button>
                     ))}

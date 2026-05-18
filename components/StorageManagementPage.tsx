@@ -67,7 +67,7 @@ const StorageManagementPage: React.FC<StorageManagementPageProps> = ({ user, onU
         ? [
             { type: 'Videos', bytes: 10 * 1024 ** 3, color: 'bg-indigo-500', files: 23 },
             { type: 'Images', bytes: 6 * 1024 ** 3, color: 'bg-sky-400', files: 142 },
-            { type: 'Documents', bytes: 4 * 1024 ** 3, color: 'bg-blue-400', files: 67 },
+            { type: 'Documents', bytes: 4 * 1024 ** 3, color: 'bg-lime-300', files: 67 },
         ]
         : (() => {
             const acc = projects.reduce<Record<string, { bytes: number; files: number }>>((map, p) => {
@@ -82,7 +82,7 @@ const StorageManagementPage: React.FC<StorageManagementPageProps> = ({ user, onU
             return [
                 { type: 'Videos', bytes: acc.Videos?.bytes || 0, color: 'bg-indigo-500', files: acc.Videos?.files || 0 },
                 { type: 'Images', bytes: acc.Images?.bytes || 0, color: 'bg-sky-400', files: acc.Images?.files || 0 },
-                { type: 'Documents', bytes: acc.Documents?.bytes || 0, color: 'bg-blue-400', files: acc.Documents?.files || 0 },
+                { type: 'Documents', bytes: acc.Documents?.bytes || 0, color: 'bg-lime-300', files: acc.Documents?.files || 0 },
             ].filter(item => item.bytes > 0 || item.files > 0);
         })();
 
@@ -199,7 +199,7 @@ const StorageManagementPage: React.FC<StorageManagementPageProps> = ({ user, onU
                                             activity.action === 'Upload' ? 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400' :
                                             activity.action === 'Delete' ? 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400' :
                                             activity.action === 'Archive' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400' :
-                                            'bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+                                            'bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-lime-400'
                                         }`}>
                                             <activity.icon className="w-4 h-4" />
                                         </div>
@@ -219,9 +219,9 @@ const StorageManagementPage: React.FC<StorageManagementPageProps> = ({ user, onU
                         <Card className="p-6">
                             <h3 className="text-sm text-zinc-900 dark:text-white mb-4">Quick Actions</h3>
                             <div className="space-y-3">
-                                <button className="w-full p-3 rounded-lg border border-zinc-200 dark:border-white/10 hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-all text-left group">
+                                <button className="w-full p-3 rounded-lg border border-zinc-200 dark:border-white/10 hover:border-lime-400/50 dark:hover:border-lime-400/50 transition-all text-left group">
                                     <div className="flex items-center gap-3">
-                                        <Archive className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                        <Archive className="w-4 h-4 text-blue-600 dark:text-lime-400" />
                                         <div>
                                             <div className="text-xs text-zinc-900 dark:text-white">Archive Old Files</div>
                                             <div className="text-[10px] text-zinc-500 dark:text-zinc-400">Free up 2.3 GB</div>
@@ -312,7 +312,7 @@ const StorageManagementPage: React.FC<StorageManagementPageProps> = ({ user, onU
                                     
                                     <div className="p-6 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02]">
                                         <div className="flex items-start gap-4">
-                                            <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-1" />
+                                            <Zap className="w-6 h-6 text-blue-600 dark:text-lime-400 mt-1" />
                                             <div>
                                                 <h4 className="text-sm text-slate-900 dark:text-white mb-2">High Performance</h4>
                                                 <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -326,9 +326,9 @@ const StorageManagementPage: React.FC<StorageManagementPageProps> = ({ user, onU
 
                             {storageSettings.mode === 'drive' && (
                                 <div className="space-y-6">
-                                    <div className="p-6 rounded-2xl border border-blue-200 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/5">
+                                    <div className="p-6 rounded-2xl border border-blue-200 dark:border-lime-400/20 bg-blue-50 dark:bg-lime-400/5">
                                         <div className="flex items-start gap-4">
-                                            <Cloud className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-1" />
+                                            <Cloud className="w-6 h-6 text-blue-600 dark:text-lime-400 mt-1" />
                                             <div>
                                                 <h4 className="text-sm text-slate-900 dark:text-white mb-2">Cloud Drive Integration</h4>
                                                 <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -340,10 +340,15 @@ const StorageManagementPage: React.FC<StorageManagementPageProps> = ({ user, onU
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-4">
-                                            <label className="block text-sm text-slate-700 dark:text-slate-300">Drive Provider</label>
+                                            <label className="block text-sm text-slate-700 dark:text-slate-300">Drive provider</label>
                                             <SelectField
-                                                value={storageSettings.driveProvider || 'google'}
-                                                onChange={(value) => setStorageSettings(prev => ({ ...prev, driveProvider: value }))}
+                                                value={storageSettings.byosDriveProvider || 'google'}
+                                                onChange={(value) =>
+                                                    setStorageSettings((prev) => ({
+                                                        ...prev,
+                                                        byosDriveProvider: value as NonNullable<StorageSettings['byosDriveProvider']>,
+                                                    }))
+                                                }
                                                 options={[
                                                     { value: 'google', label: 'Google Drive' },
                                                     { value: 'dropbox', label: 'Dropbox' },
@@ -351,51 +356,22 @@ const StorageManagementPage: React.FC<StorageManagementPageProps> = ({ user, onU
                                                 ]}
                                             />
                                         </div>
-                                        
+
                                         <div className="space-y-4">
-                                            <label className="block text-sm text-slate-700 dark:text-slate-300">Sync Frequency</label>
-                                            <SelectField
-                                                value={storageSettings.syncFrequency || 'realtime'}
-                                                onChange={(value) => setStorageSettings(prev => ({ ...prev, syncFrequency: value }))}
-                                                options={[
-                                                    { value: 'realtime', label: 'Real-time' },
-                                                    { value: 'hourly', label: 'Every hour' },
-                                                    { value: 'daily', label: 'Daily' },
-                                                    { value: 'manual', label: 'Manual only' },
-                                                ]}
+                                            <label className="block text-sm text-slate-700 dark:text-slate-300">Account label</label>
+                                            <input
+                                                type="text"
+                                                value={storageSettings.byosDriveAccountLabel || ''}
+                                                onChange={(e) =>
+                                                    setStorageSettings((prev) => ({ ...prev, byosDriveAccountLabel: e.target.value }))
+                                                }
+                                                placeholder="e.g. studio.drive@gmail.com"
+                                                className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-lime-400 dark:focus:border-lime-300 outline-none transition-colors"
                                             />
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                                Non-sensitive label only — OAuth tokens are not stored in the browser.
+                                            </p>
                                         </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <label className="block text-sm text-slate-700 dark:text-slate-300">Root Folder Path</label>
-                                        <input
-                                            type="text"
-                                            value={storageSettings.drivePath || '/Heartifact'}
-                                            onChange={(e) => setStorageSettings(prev => ({ ...prev, drivePath: e.target.value }))}
-                                            placeholder="/Heartifact"
-                                            className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-blue-500 dark:focus:border-blue-400 outline-none transition-colors"
-                                        />
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                                            Files will be organized under this folder in your cloud drive
-                                        </p>
-                                    </div>
-
-                                    <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5">
-                                        <div>
-                                            <div className="text-sm text-slate-900 dark:text-white">Auto-backup project files</div>
-                                            <div className="text-xs text-slate-500 dark:text-slate-400">Automatically backup all project files to cloud drive</div>
-                                        </div>
-                                        <button
-                                            onClick={() => setStorageSettings(prev => ({ ...prev, autoBackup: !prev.autoBackup }))}
-                                            className={`w-12 h-6 rounded-full transition-colors ${
-                                                storageSettings.autoBackup ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
-                                            }`}
-                                        >
-                                            <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
-                                                storageSettings.autoBackup ? 'translate-x-6' : 'translate-x-0.5'
-                                            }`} />
-                                        </button>
                                     </div>
                                 </div>
                             )}
@@ -419,12 +395,16 @@ const StorageManagementPage: React.FC<StorageManagementPageProps> = ({ user, onU
                                             <label className="block text-sm text-slate-700 dark:text-slate-300">Provider</label>
                                             <SelectField
                                                 value={storageSettings.s3Provider || 'aws'}
-                                                onChange={(value) => setStorageSettings(prev => ({ ...prev, s3Provider: value }))}
+                                                onChange={(value) =>
+                                                    setStorageSettings((prev) => ({
+                                                        ...prev,
+                                                        s3Provider: value as NonNullable<StorageSettings['s3Provider']>,
+                                                    }))
+                                                }
                                                 options={[
                                                     { value: 'aws', label: 'Amazon S3' },
                                                     { value: 'r2', label: 'Cloudflare R2' },
-                                                    { value: 'digitalocean', label: 'DigitalOcean Spaces' },
-                                                    { value: 'custom', label: 'Custom S3 Endpoint' },
+                                                    { value: 'custom', label: 'Custom S3 endpoint' },
                                                 ]}
                                             />
                                         </div>
@@ -436,7 +416,7 @@ const StorageManagementPage: React.FC<StorageManagementPageProps> = ({ user, onU
                                                 value={storageSettings.s3Region || 'us-east-1'}
                                                 onChange={(e) => setStorageSettings(prev => ({ ...prev, s3Region: e.target.value }))}
                                                 placeholder="us-east-1"
-                                                className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-blue-500 dark:focus:border-blue-400 outline-none transition-colors"
+                                                className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-lime-400 dark:focus:border-lime-300 outline-none transition-colors"
                                             />
                                         </div>
                                     </div>
@@ -447,8 +427,8 @@ const StorageManagementPage: React.FC<StorageManagementPageProps> = ({ user, onU
                                             type="text"
                                             value={storageSettings.s3Bucket || ''}
                                             onChange={(e) => setStorageSettings(prev => ({ ...prev, s3Bucket: e.target.value }))}
-                                            placeholder="my-heartifact-bucket"
-                                            className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-blue-500 dark:focus:border-blue-400 outline-none transition-colors"
+                                            placeholder="my-Sendational-bucket"
+                                            className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-lime-400 dark:focus:border-lime-300 outline-none transition-colors"
                                         />
                                     </div>
 
@@ -460,49 +440,14 @@ const StorageManagementPage: React.FC<StorageManagementPageProps> = ({ user, onU
                                                 value={storageSettings.s3Endpoint || ''}
                                                 onChange={(e) => setStorageSettings(prev => ({ ...prev, s3Endpoint: e.target.value }))}
                                                 placeholder="https://s3.example.com"
-                                                className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-blue-500 dark:focus:border-blue-400 outline-none transition-colors"
+                                                className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-lime-400 dark:focus:border-lime-300 outline-none transition-colors"
                                             />
                                         </div>
                                     )}
 
-                                    <div className="space-y-4">
-                                        <label className="block text-sm text-slate-700 dark:text-slate-300">Access Key ID</label>
-                                        <input
-                                            type="text"
-                                            value={storageSettings.s3AccessKey || ''}
-                                            onChange={(e) => setStorageSettings(prev => ({ ...prev, s3AccessKey: e.target.value }))}
-                                            placeholder="AKIAIOSFODNN7EXAMPLE"
-                                            className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-blue-500 dark:focus:border-blue-400 outline-none transition-colors"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <label className="block text-sm text-slate-700 dark:text-slate-300">Secret Access Key</label>
-                                        <input
-                                            type="password"
-                                            value={storageSettings.s3SecretKey || ''}
-                                            onChange={(e) => setStorageSettings(prev => ({ ...prev, s3SecretKey: e.target.value }))}
-                                            placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-                                            className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-blue-500 dark:focus:border-blue-400 outline-none transition-colors"
-                                        />
-                                    </div>
-
-                                    <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5">
-                                        <div>
-                                            <div className="text-sm text-slate-900 dark:text-white">Enable CDN acceleration</div>
-                                            <div className="text-xs text-slate-500 dark:text-slate-400">Use CloudFront or similar CDN for faster file delivery</div>
-                                        </div>
-                                        <button
-                                            onClick={() => setStorageSettings(prev => ({ ...prev, cdnEnabled: !prev.cdnEnabled }))}
-                                            className={`w-12 h-6 rounded-full transition-colors ${
-                                                storageSettings.cdnEnabled ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
-                                            }`}
-                                        >
-                                            <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
-                                                storageSettings.cdnEnabled ? 'translate-x-6' : 'translate-x-0.5'
-                                            }`} />
-                                        </button>
-                                    </div>
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] px-4 py-3">
+                                        Secret keys and OAuth tokens are not stored client-side. Sendational uses server-issued presigned URLs for BYOS; configure credentials in your deployment environment.
+                                    </p>
                                 </div>
                             )}
                         </div>
@@ -513,7 +458,7 @@ const StorageManagementPage: React.FC<StorageManagementPageProps> = ({ user, onU
                                 className={`h-12 px-8 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all ${
                                     isSaving
                                         ? 'bg-zinc-100 dark:bg-white/10 text-zinc-400 cursor-wait'
-                                        : 'bg-blue-500 text-zinc-950 hover:opacity-95 shadow-lg'
+                                        : 'bg-lime-400 text-zinc-950 hover:opacity-95 shadow-lg'
                                 }`}
                             >
                                 {isSaving ? 'Saving...' : 'Save Configuration'}
@@ -656,11 +601,11 @@ const StorageManagementPage: React.FC<StorageManagementPageProps> = ({ user, onU
                         <Card className="relative overflow-hidden p-6 border border-zinc-200/60 dark:border-white/[0.08] bg-white dark:bg-charcoal shadow-sm dark:shadow-md">
                             <div className="flex items-start justify-between mb-4">
                                 <div>
-                                    <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300 border border-blue-200/60 dark:border-blue-500/25">Lossless</div>
+                                    <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-lime-400/15 dark:text-blue-300 border border-blue-200/60 dark:border-lime-400/25">Lossless</div>
                                     <h4 className="text-base font-semibold text-zinc-900 dark:text-white mt-3">Compress Files</h4>
                                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Optimize oversized media and documents while preserving quality.</p>
                                 </div>
-                                <div className="h-10 w-10 rounded-xl border border-blue-200/60 dark:border-blue-500/25 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-300 flex items-center justify-center">
+                                <div className="h-10 w-10 rounded-xl border border-blue-200/60 dark:border-lime-400/25 bg-blue-50 dark:bg-lime-400/10 text-blue-600 dark:text-blue-300 flex items-center justify-center">
                                     <Zap className="w-5 h-5" />
                                 </div>
                             </div>

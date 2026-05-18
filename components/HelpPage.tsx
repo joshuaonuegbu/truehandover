@@ -18,7 +18,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
         {
             category: 'payments',
             q: "How do I get paid?",
-            a: "Heartifact integrates directly with Stripe Connect. When you link your bank account in Settings, client payments flow directly to you. We do not hold your funds in a wallet, ensuring faster payouts and reduced platform risk."
+            a: "Free users: Stripe card only (4.5% fee). Pro users have three payment rails: (1) Stripe Card (3.75%), (2) ACH Direct Debit (1.5%, settles in 2–5 business days), and (3) Manual Payments (0% — Zelle, Wire, Bank Transfer, PayPal, etc.). For card and ACH, files unlock automatically on settlement confirmation. For manual payments, your client marks paid and files remain locked until you confirm receipt in your bank. All payments generate full audit records and dispute evidence."
         },
         {
             category: 'client',
@@ -28,7 +28,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
         {
             category: 'payments',
             q: "Are there platform fees?",
-            a: "We charge a flat monthly subscription for the software. We do not take a percentage of your project revenue. Standard Stripe processing fees (approx. 2.9% + 30Â¢) still apply to transactions."
+            a: "Free Plan: 4.5% total. Pro Plan ($29/mo): Stripe Card = 3.75%. ACH Direct Debit = 1.5% total. Manual payments (Zelle/Wire/Bank Transfer/PayPal) = 0% fees and are included as a Pro payment option. We process all payments through our system for security, audit logs, and dispute evidence collection."
         },
         {
             category: 'delivery',
@@ -38,7 +38,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
         {
             category: 'delivery',
             q: "Can I use my own storage provider?",
-            a: "Yes. On the Agency plan, you can connect your own AWS S3 bucket or Google Drive. Heartifact acts as the gatekeeper, managing access permissions while the files reside on your own infrastructure."
+            a: "Absolutely! This is a core part of our strategy. On both Free and Pro Plans, you can use bring your own storage links (Google Drive, Dropbox, OneDrive, S3, etc.). We act as the access gateway while your files remain in your own storage. Free Plan also includes 5GB of native Sendational storage. Pro Plan includes 250GB of native storage plus unlimited BYOS storage links."
         },
         {
             category: 'payments',
@@ -99,7 +99,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
                         </p>
                     </div>
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#a3e635]/15 dark:bg-[#bef264]/12 text-[#4d7c0f] dark:text-[#bef264] border border-[#a3e635]/35 dark:border-[#bef264]/30 backdrop-blur-sm text-[10px] font-bold uppercase tracking-widest self-start xl:self-auto">
-                        <LifeBuoy className="w-3 h-3" /> Heartifact Support
+                        <LifeBuoy className="w-3 h-3" /> Sendational Support
                     </div>
                 </div>
 
@@ -110,7 +110,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
                     </div>
                     <input
                         type="text"
-                        className="block w-full pl-12 pr-4 py-4 bg-white dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] rounded-2xl leading-5 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-zinc-900 dark:text-white font-medium"
+                        className="block w-full pl-12 pr-4 py-4 bg-white dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] rounded-2xl leading-5 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-lime-400/20 focus:border-lime-400 transition-all shadow-sm text-zinc-900 dark:text-white font-medium"
                         placeholder="Search for answers..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}

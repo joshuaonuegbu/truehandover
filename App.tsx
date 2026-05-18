@@ -73,6 +73,7 @@ const routePreloadMap: Record<string, () => Promise<unknown>> = {
     activity: _importActivity,
     reports: _importReports,
     settings: _importSettings,
+    storage: _importStorageManagement,
     quotes: _importQuotes,
     help: _importHelp,
     trash: _importTrash,
@@ -103,9 +104,9 @@ const ToastContainer = ({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: nu
         warning: 'bg-white dark:bg-[#201f1e] border-amber-300 dark:border-amber-700/40 text-zinc-800 dark:text-white',
     };
     const iconStyles: Record<ToastKind, string> = {
-        success: 'text-blue-600 dark:text-blue-400',
+        success: 'text-[#65a30d] dark:text-lime-400',
         error:   'text-red-500',
-        info:    'text-blue-500',
+        info:    'text-lime-600',
         warning: 'text-amber-500',
     };
     const icons: Record<ToastKind, React.ElementType> = {
@@ -159,7 +160,7 @@ const QUICK_MESSAGE_PRESETS = [
     },
     {
         label: 'Warm',
-        text: "Hi {{name}}, everything is ready on Heartifact. Review the previews and unlock the final files whenever you're ready."
+        text: "Hi {{name}}, everything is ready on Sendational. Review the previews and unlock the final files whenever you're ready."
     },
     {
         label: 'Short',
@@ -668,14 +669,14 @@ const Timeline = ({ projects }: { projects: Project[] }) => {
             <div className="absolute left-[88px] top-4 bottom-4 w-px bg-zinc-200 dark:bg-white/10" />
             {briefingActivities.map((item, i) => {
                 const iconColor = {
-                    lime: 'text-blue-600 dark:text-blue-400',
+                    lime: 'text-[#65a30d] dark:text-lime-400',
                     white: 'text-zinc-500 dark:text-zinc-400'
                 }[item.color];
 
                 return (
                     <div key={i} className="flex items-center relative z-10 group pl-2">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 w-16 text-right font-mono mr-6">{item.date}</span>
-                        <div className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-blue-500 text-zinc-900 shadow-sm dark:bg-blue-500 animate-pulse' : 'bg-zinc-300 dark:bg-zinc-700'} ring-4 ring-white/50 dark:ring-black/20 relative z-20 mr-3`} />
+                        <div className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-lime-400 text-zinc-900 shadow-sm dark:bg-lime-400 animate-pulse' : 'bg-zinc-300 dark:bg-zinc-700'} ring-4 ring-white/50 dark:ring-black/20 relative z-20 mr-3`} />
                         <div className="flex-1 flex items-center justify-between gap-6 p-3 rounded-lg hover:bg-white hover:shadow-sm dark:hover:bg-white/5 transition-all cursor-pointer border border-transparent hover:border-zinc-100 dark:hover:border-white/5">
                             <div className="flex items-center gap-3">
                                 <item.icon className={`w-4 h-4 ${iconColor}`} />
@@ -753,7 +754,7 @@ const CyclingWidget = ({
         ? [
             { label: 'Video', bytes: 10 * 1024 * 1024 * 1024, color: 'bg-indigo-500' },
             { label: 'Images', bytes: 6 * 1024 * 1024 * 1024, color: 'bg-sky-400' },
-            { label: 'Docs', bytes: 4 * 1024 * 1024 * 1024, color: 'bg-blue-400' },
+            { label: 'Docs', bytes: 4 * 1024 * 1024 * 1024, color: 'bg-lime-300' },
         ]
         : (() => {
             const bytesByType = projects.reduce<Record<string, number>>((acc, project) => {
@@ -771,7 +772,7 @@ const CyclingWidget = ({
             return [
                 { label: 'Video', bytes: bytesByType.Video || 0, color: 'bg-indigo-500' },
                 { label: 'Images', bytes: bytesByType.Images || 0, color: 'bg-sky-400' },
-                { label: 'Docs', bytes: bytesByType.Docs || 0, color: 'bg-blue-400' },
+                { label: 'Docs', bytes: bytesByType.Docs || 0, color: 'bg-lime-300' },
             ].filter((item) => item.bytes > 0);
         })();
     const storageTotal = storageBreakdown.reduce((sum, item) => sum + item.bytes, 0);
@@ -820,7 +821,7 @@ const CyclingWidget = ({
                     <div className="min-h-0">
                         <div className="mb-3 flex items-start justify-between gap-2">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Net Revenue</span>
-                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-[#a3e635]/35 bg-[#a3e635]/15 px-2 py-1 text-[10px] font-bold text-[#4d7c0f] dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
+                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-[#a3e635]/35 bg-[#a3e635]/15 px-2 py-1 text-[10px] font-bold text-[#4d7c0f] dark:border-lime-400/20 dark:bg-lime-400/10 dark:text-lime-400">
                                 <ArrowUpRight className="h-3 w-3" /> {demoMode ? '12.5%' : 'Active'}
                             </div>
                         </div>
@@ -996,7 +997,7 @@ const CyclingWidget = ({
                             </button>
                         </div>
                         <textarea
-                            className="flex-1 w-full min-h-[80px] resize-none rounded-xl border border-zinc-200/50 bg-zinc-50 dark:bg-white/5 p-3 text-sm text-zinc-900 dark:text-white transition-colors focus:border-blue-500 focus:outline-none dark:border-white/10 dark:focus:border-blue-500"
+                            className="flex-1 w-full min-h-[80px] resize-none rounded-xl border border-zinc-200/50 bg-zinc-50 dark:bg-white/5 p-3 text-sm text-zinc-900 dark:text-white transition-colors focus:border-lime-400 focus:outline-none dark:border-white/10 dark:focus:border-lime-400"
                             placeholder="Type your reply..."
                             value={replyText}
                             onChange={(e) => setReplyText(e.target.value)}
@@ -1005,7 +1006,7 @@ const CyclingWidget = ({
                             <button
                                 type="button"
                                 onClick={() => { setIsReplying(false); setReplyText(''); playSuccess(); }}
-                                className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-950 shadow-sm transition-transform hover:scale-[1.02]"
+                                className="flex items-center gap-2 rounded-lg bg-lime-400 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-950 shadow-sm transition-transform hover:scale-[1.02]"
                             >
                                 Send <Send className="h-3 w-3" />
                             </button>
@@ -1023,7 +1024,7 @@ const CyclingWidget = ({
                     <div className="relative z-10 flex h-full min-h-0 flex-col justify-between">
                     <div>
                             <div className="mb-3 flex flex-wrap items-center gap-2">
-                                <span className="rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-blue-500 text-zinc-950 shadow-sm">Upgrade</span>
+                                <span className="rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-lime-400 text-zinc-950 shadow-sm">Upgrade</span>
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Business Tier</span>
                     </div>
                             <h3 className="mb-2 font-sans font-medium leading-tight tracking-tight text-[clamp(1.1rem,calc(0.85rem+1.8vw),1.85rem)] text-white sm:text-[clamp(1.2rem,calc(0.95rem+1.5vw),2.15rem)]">
@@ -1031,7 +1032,7 @@ const CyclingWidget = ({
                             </h3>
                             <p className="max-w-[95%] text-xs leading-relaxed text-zinc-300 opacity-90 sm:text-sm dark:text-zinc-400">Get advanced reporting and client portals.</p>
                         </div>
-                        <button type="button" className="mt-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-blue-400 transition-all hover:gap-3 dark:text-blue-400">
+                        <button type="button" className="mt-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-lime-400 transition-all hover:gap-3 dark:text-lime-400">
                             View Plans <ArrowRight className="h-4 w-4" />
                         </button>
                     </div>
@@ -1048,8 +1049,8 @@ const CyclingWidget = ({
                     <div className="relative z-10 flex justify-between items-start">
                         <div className="flex items-center gap-2 px-2 py-1 rounded bg-white/10 border border-white/10 backdrop-blur-md">
                             <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500 text-zinc-900 shadow-sm"></span>
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-300 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-lime-400 text-zinc-900 shadow-sm"></span>
                             </span>
                             <span className="text-[9px] font-bold uppercase tracking-widest text-white">Live Session</span>
                         </div>
@@ -1061,7 +1062,7 @@ const CyclingWidget = ({
                             <div className="relative">
                                 <img src="https://api.dicebear.com/9.x/shapes/svg?seed=MikeRoss" alt="Client" className="w-12 h-12 rounded-full border-2 border-zinc-800" />
                                 <div className="absolute -bottom-1 -right-1 bg-zinc-800 p-1 rounded-full border border-zinc-700">
-                                    <Monitor className="w-3 h-3 text-blue-400" />
+                                    <Monitor className="w-3 h-3 text-lime-400" />
                                 </div>
                             </div>
                             <div className="min-w-0">
@@ -1070,7 +1071,7 @@ const CyclingWidget = ({
                             </div>
                         </div>
                         <p className="font-sans text-[clamp(0.85rem,calc(0.72rem+0.9vw),1.05rem)] leading-snug tracking-tight text-white/90">
-                            Currently viewing <span className="font-medium text-blue-400">Q4_Financial_Report.pdf</span>
+                            Currently viewing <span className="font-medium text-lime-400">Q4_Financial_Report.pdf</span>
                         </p>
                     </div>
 
@@ -1092,7 +1093,7 @@ const CyclingWidget = ({
                     <div className="min-h-0">
                         <div className="mb-3 flex items-start justify-between gap-3">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Net Revenue</span>
-                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-[#a3e635]/35 bg-[#a3e635]/15 px-2 py-1 text-[10px] font-bold text-[#4d7c0f] dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
+                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-[#a3e635]/35 bg-[#a3e635]/15 px-2 py-1 text-[10px] font-bold text-[#4d7c0f] dark:border-lime-400/20 dark:bg-lime-400/10 dark:text-lime-400">
                                 <ArrowUpRight className="h-3 w-3" /> {paidProjects.length} closed
                                 </div>
                         </div>
@@ -1105,7 +1106,7 @@ const CyclingWidget = ({
                                 <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300"><PrivacyBlur>${pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</PrivacyBlur> Pending</span>
                             </div>
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5">
-                                <CheckCircle className="w-3 h-3 text-blue-500" />
+                                <CheckCircle className="w-3 h-3 text-lime-600" />
                                 <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300">{paidProjects.length} paid or completed</span>
                                     </div>
                                 </div>
@@ -1217,8 +1218,8 @@ const CyclingWidget = ({
                     <div className="relative z-10 flex items-start justify-between gap-3">
                         <div className="flex items-center gap-2 px-2 py-1 rounded bg-white/10 border border-white/10 backdrop-blur-md">
                             <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500 text-zinc-900 shadow-sm"></span>
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-300 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-lime-400 text-zinc-900 shadow-sm"></span>
                             </span>
                             <span className="text-[9px] font-bold uppercase tracking-widest text-white">Recent Activity</span>
                         </div>
@@ -1238,7 +1239,7 @@ const CyclingWidget = ({
                                             </div>
                                         )}
                                         <div className="absolute -bottom-1 -right-1 bg-zinc-800 p-1 rounded-full border border-zinc-700">
-                                            <Monitor className="w-3 h-3 text-blue-400" />
+                                            <Monitor className="w-3 h-3 text-lime-400" />
                                         </div>
                                     </div>
                                     <div className="min-w-0">
@@ -1248,7 +1249,7 @@ const CyclingWidget = ({
                                 </div>
                                 <p className="font-sans text-[clamp(0.85rem,calc(0.72rem+0.9vw),1.05rem)] leading-snug tracking-tight text-white/90">
                                     {recentProject.clientViewedAt ? 'Last viewed' : 'Most recent project'}{' '}
-                                    <span className="font-medium text-blue-400">{recentProject.name}</span>
+                                    <span className="font-medium text-lime-400">{recentProject.name}</span>
                                 </p>
                                 <p className="mt-2 text-[10px] uppercase tracking-widest text-white/50">
                                     {recentProject.status.replace(/_/g, ' ')} â€¢ ${recentProject.amount.toLocaleString()}
@@ -1338,7 +1339,7 @@ const CyclingWidget = ({
             {/* Progress Bar */}
             <div className="absolute top-0 left-4 right-4 h-0.5 bg-zinc-100 dark:bg-white/5 z-30 rounded-b-full overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                 <div 
-                    className="h-full bg-blue-500 text-zinc-900 shadow-sm dark:bg-blue-500 transition-all duration-100 ease-linear shadow-[0_0_8px_rgba(101,163,13,0.5)]"
+                    className="h-full bg-lime-400 text-zinc-900 shadow-sm dark:bg-lime-400 transition-all duration-100 ease-linear shadow-[0_0_8px_rgba(101,163,13,0.5)]"
                     style={{ width: `${progress}%`, opacity: isPaused ? 0.2 : 1 }}
                 />
             </div>
@@ -1472,9 +1473,9 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                             <span className="font-mono font-normal tracking-normal normal-case text-zinc-500 dark:text-zinc-400">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</span>
                         </div>
                         {shouldUseGreetingHeader ? (
-                            <h1 className="font-serif tracking-tight text-4xl sm:text-5xl md:text-6xl text-zinc-900 dark:text-white leading-[0.98] mb-2 whitespace-nowrap overflow-hidden text-ellipsis">
+                            <h1 className="font-serif tracking-tight text-4xl sm:text-5xl md:text-6xl text-zinc-900 dark:text-white leading-tight pb-2 mb-0 whitespace-nowrap overflow-hidden text-ellipsis">
                                 {greetingLine}{' '}
-                                <span className="italic text-lime-400 dark:text-blue-400">{greetingName}</span>.
+                                <span className="italic text-lime-400 dark:text-lime-400">{greetingName}</span>.
                             </h1>
                         ) : (
                             <h1 className="font-sans tracking-tight text-5xl md:text-6xl text-zinc-900 dark:text-white leading-[0.98] mb-2">
@@ -1513,14 +1514,14 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                             ].filter(Boolean) as { label: string; value: string | null; color: 'amber' | 'blue' | 'lime' | 'slate'; icon: React.ElementType; action: () => void }[];
                             if (chips.length === 0) return (
                                 <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
-                                    <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                                    <CheckCircle className="w-4 h-4 text-[#65a30d] dark:text-lime-400 shrink-0" />
                                     All caught up - nothing pending.
                                 </p>
                             );
                             const colorMap = {
                                 amber: 'text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-200',
                                 blue: 'text-zinc-900 dark:text-zinc-100 hover:text-zinc-950 dark:hover:text-white',
-                                lime: 'text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200',
+                                lime: 'text-blue-700 dark:text-lime-300 hover:text-blue-900 dark:hover:text-blue-200',
                                 slate: 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200',
                             };
                             return (
@@ -1536,7 +1537,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                         })()}
                     </div>
                     <div className="flex flex-col gap-4 shrink-0 lg:items-end">
-                        <button type="button" onClick={() => { playClick(); navigate('/create'); }} className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-blue-500 text-zinc-950 font-bold text-xs uppercase tracking-widest hover:opacity-95 transition-opacity shadow-sm w-full sm:w-auto">
+                        <button type="button" onClick={() => { playClick(); navigate('/create'); }} className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-lime-400 text-zinc-950 font-bold text-xs uppercase tracking-widest hover:opacity-95 transition-opacity shadow-sm w-full sm:w-auto">
                             <Plus className="w-4 h-4" /> New Project
                         </button>
                         <nav className="flex flex-wrap items-center gap-x-1 gap-y-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 lg:justify-end">
@@ -1577,14 +1578,14 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                 <button
                     type="button"
                     onClick={() => { playClick(); setDashboardView('projects'); }}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${dashView === 'projects' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-white dark:shadow-[0_0_0_1px_rgba(0,0,0,0.08)]' : 'text-zinc-500 hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-200'}`}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${dashView === 'projects' ? 'bg-white text-zinc-900 shadow-sm dark:bg-[#23232e] dark:text-white dark:shadow-[0_0_0_1px_rgba(0,0,0,0.08)]' : 'text-zinc-500 hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-200'}`}
                 >
                     <FolderLock className="w-3.5 h-3.5" /> Projects
                 </button>
                 <button
                     type="button"
                     onClick={() => { playClick(); setDashboardView('clients'); }}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${dashView === 'clients' ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-white dark:shadow-[0_0_0_1px_rgba(0,0,0,0.08)]' : 'text-zinc-500 hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-200'}`}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${dashView === 'clients' ? 'bg-white text-zinc-900 shadow-sm dark:bg-[#23232e] dark:text-white dark:shadow-[0_0_0_1px_rgba(0,0,0,0.08)]' : 'text-zinc-500 hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-200'}`}
                 >
                     <Users className="w-3.5 h-3.5" /> Clients
                 </button>
@@ -1621,13 +1622,13 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                 {alerts.length === 0 ? (
                                     <div className="bg-zinc-50 dark:bg-[#23232e]/45 border-2 border-dashed border-zinc-200/50 dark:border-white/10 p-6 rounded-[2rem] flex flex-col items-center justify-center text-center flex-1 min-h-[220px]">
                                         <div className="w-14 h-14 rounded-[1.25rem] bg-white dark:bg-white/5 flex items-center justify-center mb-4 shadow-sm border border-zinc-100 dark:border-white/10">
-                                            <CheckCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" strokeWidth={1.5} />
+                                            <CheckCircle className="w-6 h-6 text-[#65a30d] dark:text-lime-400" strokeWidth={1.5} />
                                         </div>
                                         <p className="font-sans tracking-tight text-xl text-zinc-900 dark:text-white mb-1">Clear Horizon</p>
                                         <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-[200px] mb-5">
                                             Everything is up to date. Ready for new incoming clients?
                                         </p>
-                                        <button onClick={() => { playClick(); navigate('/create'); }} className="px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-blue-500 text-white dark:text-white text-[11px] font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-2 group shadow-lg shadow-black/5">
+                                        <button onClick={() => { playClick(); navigate('/create'); }} className="px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-lime-400 text-white dark:text-zinc-950 text-[11px] font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-2 group shadow-lg shadow-black/5">
                                             <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform" /> Create Project
                                         </button>
                                     </div>
@@ -1639,59 +1640,54 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
                                         className="bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/5 p-4 rounded-[2rem] flex items-center gap-3 hover:border-zinc-200/50 dark:hover:border-white/20 transition-all cursor-pointer group shadow-sm"
                                     >
-                                        <div className={`p-2.5 rounded-xl shrink-0 ${alert.type === 'critical' ? 'bg-red-500/10 text-red-500' : alert.type === 'warning' ? 'bg-amber-500/10 text-amber-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                                        <div className={`p-2.5 rounded-xl shrink-0 ${alert.type === 'critical' ? 'bg-red-500/10 text-red-500' : alert.type === 'warning' ? 'bg-amber-500/10 text-amber-500' : 'bg-lime-400/10 text-lime-600'}`}>
                                             <alert.icon className="w-5 h-5" />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-0.5">{alert.type === 'critical' ? 'Urgent' : alert.type === 'warning' ? 'Warning' : 'Info'}</p>
                                             <p className="text-sm font-bold text-zinc-900 dark:text-white truncate leading-tight">{alert.message}</p>
                                             </div>
-                                        <ArrowRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+                                        <ArrowRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-[#65a30d] dark:group-hover:text-lime-400 group-hover:translate-x-1 transition-all" />
                                     </div>
                                 ))}
                             </div>
                         </Widget>
-
-                        {/* Live Client Radar — inline when replying, horizontal grid layout when Today's Priorities is NOT on same row */}
+                        {/* Live Client Radar — inside the grid ONLY when replying, fills the empty right column beside Today's Priorities */}
                         {isCyclingReplying && (
-                            <Widget title={"Live Client Radar"} titleIcon={ActivityIcon} surfaceless titleClassName="font-serif text-[0.975rem] md:text-[1.22rem] font-medium tracking-tight text-zinc-900 dark:text-white" headerClassName="px-4 pt-2 pb-2">
+                            <Widget title={"Live Client Radar"} titleIcon={ActivityIcon} surfaceless titleClassName="font-serif text-[0.975rem] md:text-[1.22rem] font-medium tracking-tight text-zinc-900 dark:text-white" headerClassName="px-4 pt-2 pb-2" className="h-[292px] md:h-[316px]">
                                 {liveClients.length === 0 ? (
-                                    <div className="rounded-[2rem] border border-dashed border-zinc-200/50 dark:border-white/15 p-6 text-center bg-white/70 dark:bg-white/[0.02]">
+                                    <div className="rounded-[2rem] border border-dashed border-zinc-200/50 dark:border-white/15 p-6 text-center bg-white/70 dark:bg-white/[0.02] flex-1 flex flex-col items-center justify-center">
                                         <Monitor className="w-5 h-5 text-zinc-400 mx-auto mb-2" />
-                                        <p className="text-sm font-bold text-zinc-700 dark:text-zinc-200">No active client sessions.</p>
-                                        <p className="text-xs text-zinc-400 mt-1">Recent client activity appears here once someone opens a project link.</p>
+                                        <p className="text-sm font-bold text-zinc-700 dark:text-zinc-200">No active sessions.</p>
+                                        <p className="text-xs text-zinc-400 mt-1 max-w-[180px]">Client activity appears here once someone opens a project link.</p>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                    <div className="flex-1 flex flex-col gap-3 overflow-y-auto min-h-0">
                                         {liveClients.map((client) => (
-                                            <Card key={client.id} className="p-4 flex items-center gap-4 hover:border-blue-500/50 dark:hover:border-blue-500/50 cursor-pointer group" noPadding>
-                                                <div className="relative">
+                                            <div key={client.id} className="bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/5 p-4 rounded-[2rem] flex items-center gap-3 hover:border-zinc-200/50 dark:hover:border-white/20 transition-all cursor-pointer group shadow-sm shrink-0">
+                                                <div className="relative shrink-0">
                                                     <img src={client.avatar} className="w-10 h-10 rounded-full object-cover" />
-                                                    {client.status === 'viewing' && (
-                                                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
-                                                        </span>
-                                                    )}
+                                                    {client.status === 'viewing' && (<span className="absolute -top-1 -right-1 flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-300 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-lime-400"></span></span>)}
                                                     {client.status === 'idle' && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white dark:border-[#23232e]" />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="flex justify-between items-center mb-0.5">
+                                                    <div className="flex items-center gap-2 mb-0.5">
                                                         <h4 className="text-sm font-bold text-zinc-900 dark:text-white truncate">{client.name}</h4>
-                                                        {client.status === 'viewing' && <span className="text-[9px] font-bold text-[#4d7c0f] dark:text-blue-400 uppercase tracking-wider animate-pulse">Live</span>}
+                                                        {client.status === 'viewing' && <span className="text-[9px] font-bold text-[#4d7c0f] dark:text-lime-400 uppercase tracking-wider animate-pulse shrink-0">Live</span>}
                                                     </div>
-                                                    <p className="text-xs text-zinc-500 truncate">{client.project}</p>
+                                                    <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{client.project}</p>
                                                 </div>
-                                                <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                                            </Card>
+                                                <ArrowRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-[#65a30d] dark:group-hover:text-lime-400 group-hover:translate-x-1 transition-all shrink-0" />
+                                            </div>
                                         ))}
                                     </div>
                                 )}
                             </Widget>
                         )}
+
                     </div>
 
-                    {/* Live Client Radar — always shown below inner grid when NOT replying */}
+                    {/* Live Client Radar — below the inner grid, horizontal. Hidden when replying (shown inside grid instead). */}
                     {!isCyclingReplying && (
                     <Widget title={"Live Client Radar"} titleIcon={ActivityIcon} surfaceless titleClassName="font-serif text-[0.975rem] md:text-[1.22rem] font-medium tracking-tight text-zinc-900 dark:text-white" headerClassName="px-4 pt-2 pb-2">
                         {liveClients.length === 0 ? (
@@ -1701,30 +1697,30 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                 <p className="text-xs text-zinc-400 mt-1">Recent client activity appears here once someone opens a project link.</p>
                             </div>
                         ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                            {liveClients.map((client) => (
-                                    <Card key={client.id} className="p-4 flex items-center gap-4 hover:border-blue-500/50 dark:hover:border-blue-500/50 cursor-pointer group" noPadding>
-                                    <div className="relative">
-                                        <img src={client.avatar} className="w-10 h-10 rounded-full object-cover" />
-                                        {client.status === 'viewing' && (
-                                            <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500 text-zinc-900 shadow-sm"></span>
-                                            </span>
-                                        )}
-                                        {client.status === 'idle' && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white dark:border-[#23232e]" />}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between items-center mb-0.5">
-                                                <h4 className="text-sm font-bold text-zinc-900 dark:text-white truncate">{client.name}</h4>
-                                                {client.status === 'viewing' && <span className="text-[9px] font-bold text-[#4d7c0f] dark:text-blue-400 uppercase tracking-wider animate-pulse">Live</span>}
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                {liveClients.map((client) => (
+                                    <Card key={client.id} className="p-4 flex items-center gap-4 hover:border-lime-400/50 dark:hover:border-lime-400/50 cursor-pointer group" noPadding>
+                                        <div className="relative shrink-0">
+                                            <img src={client.avatar} className="w-10 h-10 rounded-full object-cover" />
+                                            {client.status === 'viewing' && (
+                                                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-300 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-lime-400"></span>
+                                                </span>
+                                            )}
+                                            {client.status === 'idle' && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white dark:border-[#23232e]" />}
                                         </div>
-                                            <p className="text-xs text-zinc-500 truncate">{client.project}</p>
-                                    </div>
-                                        <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                                </Card>
-                            ))}
-                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-center mb-0.5">
+                                                <h4 className="text-sm font-bold text-zinc-900 dark:text-white truncate">{client.name}</h4>
+                                                {client.status === 'viewing' && <span className="text-[9px] font-bold text-[#4d7c0f] dark:text-lime-400 uppercase tracking-wider animate-pulse">Live</span>}
+                                            </div>
+                                            <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{client.project}</p>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-[#65a30d] dark:group-hover:text-lime-400 transition-colors" />
+                                    </Card>
+                                ))}
+                            </div>
                         )}
                     </Widget>
                     )}
@@ -1740,7 +1736,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                     <button
                                         key={tab}
                                         onClick={() => setProjectTab(tab as any)}
-                                        className={`pb-1 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${projectTab === tab ? 'border-blue-600 text-zinc-900 dark:text-white dark:border-blue-500' : 'border-transparent text-zinc-400 hover:text-zinc-600'}`}
+                                        className={`pb-1 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${projectTab === tab ? 'border-lime-600 text-zinc-900 dark:text-white dark:border-lime-400' : 'border-transparent text-zinc-400 hover:text-zinc-600'}`}
                                     >
                                         {tab}
                                     </button>
@@ -1754,8 +1750,8 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                 <div className="py-24 flex flex-col items-center justify-center opacity-80 border-2 border-dashed border-zinc-200/50 dark:border-white/10 rounded-3xl m-4 bg-transparent">
                                     <div className="w-20 h-20 rounded-[2rem] bg-white dark:bg-white/5 flex items-center justify-center mb-6 shadow-sm border border-zinc-100 dark:border-white/10 relative">
                                         <Briefcase className="w-10 h-10 stroke-[1.5] text-zinc-400" />
-                                        <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-100 dark:bg-blue-500/20 rounded-xl flex items-center justify-center border-2 border-white dark:border-[#23232e]">
-                                            <Plus className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                        <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-100 dark:bg-lime-400/20 rounded-xl flex items-center justify-center border-2 border-white dark:border-[#23232e]">
+                                            <Plus className="w-4 h-4 text-[#65a30d] dark:text-lime-400" />
                                         </div>
                                     </div>
                                     <h3 className="font-sans tracking-tight text-2xl text-zinc-900 dark:text-white mb-2">Start Your First Project</h3>
@@ -1781,13 +1777,13 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                         tabIndex={0}
                                         onClick={() => navigate(`/preview/${p.id}`, { state: { from: location.pathname } })}
                                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/preview/${p.id}`, { state: { from: location.pathname } }); }}
-                                        className="group flex flex-col md:flex-row md:items-center justify-between py-6 border-b border-transparent dark:border-transparent hover:border-zinc-100 dark:hover:border-white/5 hover:bg-zinc-50 dark:hover:bg-white/5 px-4 -mx-4 rounded-xl transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-blue-500/50"
+                                        className="group flex flex-col md:flex-row md:items-center justify-between py-6 border-b border-transparent dark:border-transparent hover:border-zinc-100 dark:hover:border-white/5 hover:bg-zinc-50 dark:hover:bg-white/5 px-4 -mx-4 rounded-xl transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-lime-400/50"
                                     >
                                         <div className="flex items-center gap-6">
                                             <span className="font-mono text-xs text-zinc-300 dark:text-zinc-600 w-8">{(i + 1).toString().padStart(2, '0')}</span>
                                             <div className="relative">
                                                 <img src={p.client.avatar} loading="lazy" className="w-12 h-12 rounded-lg object-cover grayscale group-hover:grayscale-0 transition-all" />
-                                                <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-[#23232e] ${p.status === 'paid' ? 'bg-blue-500 text-zinc-900 shadow-sm' : 'bg-amber-500'}`} />
+                                                <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-[#23232e] ${p.status === 'paid' ? 'bg-lime-400 text-zinc-900 shadow-sm' : 'bg-amber-500'}`} />
                                             </div>
                                             <div>
                                                 <h3 className="font-serif text-lg font-normal tracking-tight text-zinc-900 dark:text-zinc-100 transition-[font-weight] group-hover:font-semibold">{p.name}</h3>
@@ -1807,7 +1803,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                                     {new Date(p.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                                 </div>
                                             </div>
-                                            <div className="w-8 h-8 rounded-full border border-zinc-200/50 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-200 group-hover:bg-blue-500 group-hover:border-blue-600 group-hover:text-white dark:group-hover:bg-zinc-100 dark:group-hover:border-zinc-200 dark:group-hover:text-zinc-900 transition-all">
+                                            <div className="w-8 h-8 rounded-full border border-zinc-200/50 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-200 group-hover:bg-lime-400 group-hover:border-lime-600 group-hover:text-white dark:group-hover:bg-zinc-100 dark:group-hover:border-zinc-200 dark:group-hover:text-zinc-900 transition-all">
                                                 <ArrowUpRight className="w-4 h-4" />
                                             </div>
                                         </div>
@@ -1889,7 +1885,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                 files: (project.files || []).map(f => ({ name: f.name, type: f.type, size: f.size, hash: f.metadata?.hash, locked: f.locked })),
                 timeline: [],
             });
-            downloadBlob(`Heartifact_Invoice_${project.name.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
+            downloadBlob(`Sendational_Invoice_${project.name.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
         } catch { } finally { setDownloadingPdf(null); }
     };
 
@@ -1912,7 +1908,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                 status: project.status,
                 scope: (project.files || []).map(f => f.name),
             });
-            downloadBlob(`Heartifact_Receipt_${project.name.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
+            downloadBlob(`Sendational_Receipt_${project.name.replace(/[^a-z0-9]/gi, '_')}.pdf`, blob);
         } catch { } finally { setDownloadingPdf(null); }
     };
 
@@ -2014,15 +2010,15 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button onClick={() => navigate('/storage')} className="h-12 px-5 rounded-2xl border border-zinc-200/70 dark:border-white/10 bg-white dark:bg-charcoal text-zinc-600 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-300 hover:border-blue-200 dark:hover:border-blue-500/25 transition-all flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.12em] shadow-sm group">
-                        <HardDrive className="w-4 h-4 text-blue-400 dark:text-blue-400 group-hover:scale-110 transition-transform" />
+                    <button onClick={() => navigate('/storage')} className="h-12 px-5 rounded-2xl border border-zinc-200/70 dark:border-white/10 bg-white dark:bg-charcoal text-zinc-600 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-lime-400/10 hover:text-[#65a30d] dark:hover:text-blue-300 hover:border-blue-200 dark:hover:border-lime-400/25 transition-all flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.12em] shadow-sm group">
+                        <HardDrive className="w-4 h-4 text-lime-400 dark:text-lime-400 group-hover:scale-110 transition-transform" />
                         <span className="hidden sm:inline">Storage</span>
                     </button>
                     <button onClick={() => navigate('/trash')} className="h-12 px-5 rounded-2xl border border-zinc-200/70 dark:border-white/10 bg-white dark:bg-charcoal text-zinc-600 dark:text-zinc-300 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300 hover:border-red-200 dark:hover:border-red-500/25 transition-all flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.12em] shadow-sm group">
                         <Trash2 className="w-4 h-4 text-red-400 dark:text-red-400 group-hover:scale-110 transition-transform" />
                         <span className="hidden sm:inline">Trash</span>
                     </button>
-                    <button onClick={() => navigate('/create')} className="h-12 px-8 rounded-2xl bg-blue-500 text-zinc-950 font-bold text-sm uppercase tracking-widest flex items-center gap-2 transition-colors hover:opacity-95">
+                    <button onClick={() => navigate('/create')} className="h-12 px-8 rounded-2xl bg-lime-400 text-zinc-950 font-bold text-sm uppercase tracking-widest flex items-center gap-2 transition-colors hover:opacity-95">
                         <Plus className="w-4 h-4" />
                         New Project
                     </button>
@@ -2033,7 +2029,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
             <div className="hf-surface hf-no-glow flex flex-col gap-3 bg-white dark:bg-charcoal p-2 rounded-[2rem] overflow-visible border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md">
                 <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2">
                     <div className="relative w-full flex-1 group min-w-0">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-[#65a30d] dark:group-focus-within:text-lime-400 transition-colors" />
                         <input
                             type="text"
                             value={searchQuery}
@@ -2125,7 +2121,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                             <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center mb-8 max-w-[320px] leading-relaxed">
                                 Create your first project to organize deliverables, share files, and track payments in one place.
                             </p>
-                            <button onClick={() => { playClick(); navigate('/create'); }} className="px-8 py-4 rounded-2xl bg-zinc-900 dark:bg-blue-500 text-white dark:text-zinc-950 text-xs font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-3 shadow-xl shadow-zinc-900/10 dark:shadow-blue-500/10">
+                            <button onClick={() => { playClick(); navigate('/create'); }} className="px-8 py-4 rounded-2xl bg-zinc-900 dark:bg-lime-400 text-white dark:text-zinc-950 text-xs font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-3 shadow-xl shadow-zinc-900/10 dark:shadow-lime-400/10">
                                 <Plus className="w-5 h-5" /> Create First Project
                             </button>
                         </>
@@ -2153,9 +2149,9 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                     draft: 'text-zinc-500 bg-zinc-100 dark:bg-white/5',
                                     awaiting_signature: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:text-indigo-400',
                                     awaiting_payment: 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400',
-                                    payment_verification: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400',
-                                    paid: 'text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400',
-                                    completed: 'text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400',
+                                    payment_verification: 'text-[#65a30d] bg-blue-50 dark:bg-blue-900/20 dark:text-lime-400',
+                                    paid: 'text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-lime-400',
+                                    completed: 'text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-lime-400',
                                 };
                                 return (
                                     <tr
@@ -2167,7 +2163,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                             <div className="flex items-center gap-3">
                                                 <img src={project.client.avatar} className="w-8 h-8 rounded-lg object-cover grayscale group-hover:grayscale-0 transition-all shrink-0" />
                                             <div>
-                                                    <div className="font-bold text-zinc-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{project.name}</div>
+                                                    <div className="font-bold text-zinc-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-lime-400 transition-colors">{project.name}</div>
                                                     <div className="text-[10px] font-mono text-zinc-400">#{project.id.toUpperCase()}</div>
                                             </div>
                                         </div>
@@ -2181,7 +2177,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                         <td className="px-5 py-4 text-right font-sans tracking-tight text-zinc-900 dark:text-white">${project.amount.toLocaleString()}</td>
                                         <td className="px-5 py-4 text-right font-mono text-zinc-500 hidden lg:table-cell">{project.files.length}</td>
                                         <td className="px-3 py-4">
-                                            <ArrowUpRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                                            <ArrowUpRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-[#65a30d] dark:group-hover:text-lime-400 transition-colors" />
                                         </td>
                                     </tr>
                                 );
@@ -2216,8 +2212,8 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                 <div className="absolute inset-0 opacity-[0.12] dark:opacity-[0.05] pointer-events-none mix-blend-multiply dark:mix-blend-overlay z-0" style={{ backgroundImage: NOISE_SVG, backgroundSize: '360px 360px', filter: 'contrast(104%) brightness(102%)' }} />
                                 <div className="relative z-10">
                                     <div className="flex items-center gap-4 mb-8">
-                                        <div className={`px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 backdrop-blur-md ${project.status === 'paid' ? 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f] dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400' : 'bg-zinc-50/50 border-zinc-200 text-zinc-600 dark:bg-white/5 dark:border-white/10 dark:text-zinc-300'}`}>
-                                            <div className={`w-2 h-2 rounded-full ${project.status === 'paid' ? 'bg-[#4d7c0f] shadow-[0_0_8px_rgba(163,230,53,0.55)] dark:bg-blue-500 dark:shadow-[0_0_8px_rgba(59,130,246,0.6)]' : 'bg-zinc-400'} animate-pulse`} />
+                                        <div className={`px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 backdrop-blur-md ${project.status === 'paid' ? 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f] dark:bg-lime-400/10 dark:border-lime-400/20 dark:text-lime-400' : 'bg-zinc-50/50 border-zinc-200 text-zinc-600 dark:bg-white/5 dark:border-white/10 dark:text-zinc-300'}`}>
+                                            <div className={`w-2 h-2 rounded-full ${project.status === 'paid' ? 'bg-[#4d7c0f] shadow-[0_0_8px_rgba(163,230,53,0.55)] dark:bg-lime-400 dark:shadow-[0_0_8px_rgba(59,130,246,0.6)]' : 'bg-zinc-400'} animate-pulse`} />
                                             {project.status === 'paid' || project.status === 'completed'
                                                 ? 'Paid'
                                                 : project.status === 'draft'
@@ -2239,10 +2235,10 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                     </h3>
                                     
                                     <div className="flex items-center gap-4 group/client cursor-pointer w-fit">
-                                        <img src={project.client.avatar} className="w-10 h-10 rounded-full border-2 border-white dark:border-zinc-800 shadow-md transition-all duration-300 group-hover/client:ring-2 group-hover/client:ring-blue-500 group-hover/client:ring-offset-2 dark:group-hover/client:ring-offset-charcoal" />
+                                        <img src={project.client.avatar} className="w-10 h-10 rounded-full border-2 border-white dark:border-zinc-800 shadow-md transition-all duration-300 group-hover/client:ring-2 group-hover/client:ring-lime-400 group-hover/client:ring-offset-2 dark:group-hover/client:ring-offset-charcoal" />
                                         <div>
                                             <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Prepared For</div>
-                                            <div className="text-sm font-bold text-zinc-900 dark:text-white group-hover/client:text-blue-600 dark:transition-colors">{project.client.name}</div>
+                                            <div className="text-sm font-bold text-zinc-900 dark:text-white group-hover/client:text-[#65a30d] dark:transition-colors">{project.client.name}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -2253,7 +2249,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                             <div className="relative flex h-12 w-12 shrink-0 items-center justify-center">
                                                 <svg className="absolute inset-0 h-full w-full -rotate-90">
                                                     <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-zinc-100 dark:text-white/5" />
-                                                    <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" strokeDasharray="138" strokeDashoffset={138 - (138 * Math.min(project.amount / 10000, 1))} strokeLinecap="round" className="text-[#65a30d] dark:text-blue-500 transition-all duration-1000 ease-out" />
+                                                    <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" strokeDasharray="138" strokeDashoffset={138 - (138 * Math.min(project.amount / 10000, 1))} strokeLinecap="round" className="text-[#65a30d] dark:text-lime-400 transition-all duration-1000 ease-out" />
                                                 </svg>
                                                 <DollarSign className="relative h-4 w-4 text-zinc-400" />
                             </div>
@@ -2265,8 +2261,8 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                          <div className="flex min-w-0 items-center gap-4 border-t border-zinc-200/50 pt-4 min-[560px]:border-t-0 min-[560px]:border-l min-[560px]:border-zinc-200/50 min-[560px]:pt-0 min-[560px]:pl-6 dark:border-white/10">
                                             <div className="flex h-10 shrink-0 items-end gap-[3px] py-1.5">
                                                 {[40, 70, 100, 50, 80].map((h, idx) => (
-                                                    <div key={idx} className="relative w-1.5 overflow-hidden rounded-t-sm bg-[#a3e635]/20 dark:bg-blue-400/10" style={{ height: '100%' }}>
-                                                        <div className="absolute bottom-0 left-0 w-full bg-[#65a30d] dark:bg-blue-400" style={{ height: `${h}%`, animation: `pulse-height 2s infinite ease-in-out`, animationDelay: `${idx * 200}ms` }} />
+                                                    <div key={idx} className="relative w-1.5 overflow-hidden rounded-t-sm bg-[#a3e635]/20 dark:bg-lime-400/10" style={{ height: '100%' }}>
+                                                        <div className="absolute bottom-0 left-0 w-full bg-[#65a30d] dark:bg-lime-400" style={{ height: `${h}%`, animation: `pulse-height 2s infinite ease-in-out`, animationDelay: `${idx * 200}ms` }} />
                                                     </div>
                                                 ))}
                                             </div>
@@ -2277,7 +2273,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                         </div>
                                         <div className="flex min-w-0 items-center gap-4 border-t border-zinc-200/50 pt-4 min-[560px]:border-t-0 min-[560px]:border-l min-[560px]:border-zinc-200/50 min-[560px]:pt-0 min-[560px]:pl-6 dark:border-white/10">
                                             <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-zinc-200/70 bg-white/80 dark:border-white/10 dark:bg-white/5">
-                                                <Eye className="h-4 w-4 text-[#65a30d] dark:text-blue-500" />
+                                                <Eye className="h-4 w-4 text-[#65a30d] dark:text-lime-400" />
                                             </div>
                                              <div className="min-w-0">
                                                 <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Views</div>
@@ -2492,7 +2488,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                             </div>
                             <button
                                 onClick={() => navigate(`/preview/${qrProject.id}`)}
-                                className="w-full py-3 rounded-xl bg-zinc-900 dark:bg-blue-500 text-white dark:text-zinc-950 text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                                className="w-full py-3 rounded-xl bg-zinc-900 dark:bg-lime-400 text-white dark:text-zinc-950 text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                             >
                                 <Eye className="w-3.5 h-3.5" /> Open project
                             </button>
@@ -3546,7 +3542,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                         onClick={() => { playClick(); fileInputRef.current?.click(); }}
                         className={`rounded-2xl py-4 px-3 flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer ${panelSurfaceCls}`}
                     >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-blue-600 text-zinc-950'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-lime-500 text-zinc-950'}`}>
                             <Plus className="w-4 h-4" />
                         </div>
                         <span className="text-sm text-zinc-800 dark:text-zinc-100">Add files</span>
@@ -3555,7 +3551,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                         onClick={() => { playClick(); folderInputRef.current?.click(); }}
                         className={`rounded-2xl py-4 px-3 flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer ${panelSurfaceCls}`}
                     >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-blue-600 text-zinc-950'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-lime-500 text-zinc-950'}`}>
                             <Box className="w-4 h-4" />
                         </div>
                         <span className="text-sm text-zinc-800 dark:text-zinc-100">Add folders</span>
@@ -3566,20 +3562,20 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                     <label className="flex items-center gap-3 cursor-pointer">
                         <button
                             onClick={() => { playClick(); setSendMode('link'); }}
-                            className={`w-7 h-7 rounded-full border flex items-center justify-center transition-colors ${sendMode === 'link' ? 'border-blue-500' : 'border-zinc-300 dark:border-white/15'}`}
+                            className={`w-7 h-7 rounded-full border flex items-center justify-center transition-colors ${sendMode === 'link' ? 'border-lime-400' : 'border-zinc-300 dark:border-white/15'}`}
                             type="button"
                         >
-                            <span className={`w-3.5 h-3.5 rounded-full ${sendMode === 'link' ? 'bg-blue-500' : 'bg-transparent'}`} />
+                            <span className={`w-3.5 h-3.5 rounded-full ${sendMode === 'link' ? 'bg-lime-400' : 'bg-transparent'}`} />
                         </button>
                         <span className="text-sm text-zinc-900 dark:text-white">Create link</span>
                     </label>
                     <label className="flex items-center gap-3 cursor-pointer">
                         <button
                             onClick={() => { playClick(); setSendMode('email'); }}
-                            className={`w-7 h-7 rounded-full border flex items-center justify-center transition-colors ${sendMode === 'email' ? 'border-blue-500' : 'border-zinc-300 dark:border-white/15'}`}
+                            className={`w-7 h-7 rounded-full border flex items-center justify-center transition-colors ${sendMode === 'email' ? 'border-lime-400' : 'border-zinc-300 dark:border-white/15'}`}
                             type="button"
                         >
-                            <span className={`w-3.5 h-3.5 rounded-full ${sendMode === 'email' ? 'bg-blue-500' : 'bg-transparent'}`} />
+                            <span className={`w-3.5 h-3.5 rounded-full ${sendMode === 'email' ? 'bg-lime-400' : 'bg-transparent'}`} />
                         </button>
                         <span className="text-sm text-zinc-900 dark:text-white">Send email</span>
                     </label>
@@ -3711,7 +3707,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                         <div className="min-w-0 flex-1">
                             <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">Storage</p>
                             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
-                                {storageMode === 'platform' ? 'Native (Heartifact hosted)' : storageMode === 'drive' ? `External link Â· ${user?.storageSettings?.byosDriveAccountLabel || 'paste URL'}` : `S3 Â· ${user?.storageSettings?.s3Bucket || 'configure'}`}
+                                {storageMode === 'platform' ? 'Native (Sendational hosted)' : storageMode === 'drive' ? `External link Â· ${user?.storageSettings?.byosDriveAccountLabel || 'paste URL'}` : `S3 Â· ${user?.storageSettings?.s3Bucket || 'configure'}`}
                             </p>
                         </div>
                         <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${storageExpanded ? 'rotate-180' : ''}`} />
@@ -3834,7 +3830,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                 key={option.id}
                                 onClick={() => { playClick(); setRetention(option.id as typeof retention); }}
                                 className={`rounded-xl px-2 py-2 text-[11px] font-semibold border transition-colors cursor-pointer ${retention === option.id
-                                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-500/10 dark:text-blue-300'
+                                    ? 'border-lime-400 bg-blue-50 text-blue-700 dark:border-lime-400 dark:bg-lime-400/10 dark:text-lime-300'
                                     : `${panelSurfaceCls} ${isDarkMode ? 'border-white/10 text-zinc-300' : 'border-zinc-200 text-zinc-600'}`
                                 }`}
                             >
@@ -3866,7 +3862,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                     className={`w-full rounded-2xl px-3.5 py-2.5 border flex items-center justify-between text-left cursor-pointer ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}
                                 >
                                     <span className="text-sm text-zinc-800 dark:text-zinc-100">{option.label}</span>
-                                    <div className={`w-9 h-5 rounded-full flex items-center transition-colors ${option.checked ? 'bg-blue-500' : isDarkMode ? 'bg-white/10' : 'bg-zinc-200'}`}>
+                                    <div className={`w-9 h-5 rounded-full flex items-center transition-colors ${option.checked ? 'bg-lime-400' : isDarkMode ? 'bg-white/10' : 'bg-zinc-200'}`}>
                                         <div
                                             className={`w-4 h-4 rounded-full shadow-sm transition-transform mx-0.5 ${option.checked ? 'translate-x-4' : ''} ${
                                                 option.checked
@@ -3901,7 +3897,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                         <span className="text-sm font-medium flex-1 text-left">
                             {enablePayment ? 'Request payment' : 'No payment gate'}
                         </span>
-                        <div className={`w-8 h-4 rounded-full flex items-center transition-all ${enablePayment ? 'bg-blue-500' : (isDarkMode ? 'bg-white/10' : 'bg-zinc-200')}`}>
+                        <div className={`w-8 h-4 rounded-full flex items-center transition-all ${enablePayment ? 'bg-lime-400' : (isDarkMode ? 'bg-white/10' : 'bg-zinc-200')}`}>
                             <div
                                 className={`w-3 h-3 rounded-full shadow-sm transition-all mx-0.5 ${enablePayment ? 'translate-x-4' : 'translate-x-0'} ${
                                     enablePayment
@@ -3987,7 +3983,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                 setShowMoreMenu((open) => !open);
                                 setShowRetentionMenu(false);
                             }}
-                            className="w-12 h-12 rounded-2xl border border-blue-500 text-blue-500 flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors cursor-pointer"
+                            className="w-12 h-12 rounded-2xl border border-lime-400 text-lime-600 flex items-center justify-center hover:bg-blue-50 dark:hover:bg-lime-400/10 transition-colors cursor-pointer"
                         >
                             <MoreHorizontal className="w-4 h-4" />
                         </button>
@@ -4004,7 +4000,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                         className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm text-zinc-800 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
                                     >
                                         <span>{option.label}</span>
-                                        {retention === option.id && <Check className="w-4 h-4 text-blue-500" />}
+                                        {retention === option.id && <Check className="w-4 h-4 text-lime-600" />}
                                     </button>
                                 ))}
                             </div>
@@ -4025,7 +4021,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                     <button
                         onClick={handlePublish}
                         disabled={!canPublish || publishState === 'publishing'}
-                        className={`h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm ${!canPublish || publishState === 'publishing' ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-blue-600 hover:bg-blue-700 text-zinc-950'}`}
+                        className={`h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm ${!canPublish || publishState === 'publishing' ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-lime-500 hover:bg-blue-700 text-zinc-950'}`}
                     >
                         {publishState === 'publishing' ? 'Publishing...' : 'Publish'}
                     </button>
@@ -4060,7 +4056,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                             <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1 briefing-scroll">
                                 {briefingItems.map((item) => {
                                     const toneClass = item.tone === 'success'
-                                        ? 'text-blue-600 dark:text-blue-400'
+                                        ? 'text-[#65a30d] dark:text-lime-400'
                                         : item.tone === 'warning'
                                             ? 'text-amber-600 dark:text-amber-400'
                                             : 'text-zinc-500 dark:text-zinc-300';
@@ -4113,10 +4109,10 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                                 <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                                                     <span className="truncate">{project.name}</span>
                                                     {isLive && (
-                                                        <span className="inline-flex items-center gap-1 rounded-full border border-[#a3e635]/35 bg-[#a3e635]/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#4d7c0f] dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
+                                                        <span className="inline-flex items-center gap-1 rounded-full border border-[#a3e635]/35 bg-[#a3e635]/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#4d7c0f] dark:border-lime-400/30 dark:bg-lime-400/10 dark:text-lime-300">
                                                             <span className="relative flex h-2 w-2">
-                                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#65a30d] opacity-70 dark:bg-blue-400" />
-                                                                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#65a30d] dark:bg-blue-400" />
+                                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#65a30d] opacity-70 dark:bg-lime-400" />
+                                                                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#65a30d] dark:bg-lime-400" />
                                                             </span>
                                                             Live
                                                         </span>
@@ -4669,7 +4665,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             {getInitials(user?.name)}
                         </div>
                     )}
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 text-zinc-900 shadow-sm rounded-full border-2 border-white dark:border-[#1a1a23] flex items-center justify-center">
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-lime-400 text-zinc-900 shadow-sm rounded-full border-2 border-white dark:border-[#1a1a23] flex items-center justify-center">
                         <Check className="w-2 h-2 text-white" />
                     </div>
                 </div>
@@ -4687,7 +4683,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                     {notifications.some((n: any) => !n.read) && (
                         <button
                             onClick={() => notifications.filter((n: any) => !n.read).forEach((n: any) => markNotificationRead(n.id))}
-                            className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                            className="text-[10px] font-bold text-[#65a30d] dark:text-lime-400 hover:underline"
                         >
                             Mark all read
                         </button>
@@ -4703,7 +4699,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             <div key={n.id} className={`flex gap-3 p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors cursor-pointer group ${n.read ? 'opacity-70' : ''}`}>
                                 <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-zinc-300 dark:bg-zinc-600' : 'bg-red-500 animate-pulse'}`} />
                         <div>
-                                    <p className="text-xs font-bold text-zinc-900 dark:text-white leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{n.title}</p>
+                                    <p className="text-xs font-bold text-zinc-900 dark:text-white leading-tight group-hover:text-[#65a30d] dark:group-hover:text-lime-400 transition-colors">{n.title}</p>
                                     <p className="text-[10px] text-zinc-500 dark:text-zinc-400">{n.body}</p>
                         </div>
                     </div>
@@ -4744,7 +4740,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                         className="p-3 rounded-xl bg-white dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10 border border-zinc-200/80 dark:border-white/10 transition-all text-center group shadow-sm"
                         title={demoMode ? 'Switch to real backend data' : 'Switch to mock demo data'}
                     >
-                        <Database className={`w-5 h-5 mx-auto mb-1 transition-colors ${demoMode ? 'text-amber-600 dark:text-amber-300' : 'text-blue-600 dark:text-blue-300'}`} />
+                        <Database className={`w-5 h-5 mx-auto mb-1 transition-colors ${demoMode ? 'text-amber-600 dark:text-amber-300' : 'text-[#65a30d] dark:text-lime-300'}`} />
                         <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white">{demoMode ? 'Mock' : 'Real'}</span>
                     </button>
                 )}
@@ -4922,8 +4918,8 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             {/* Global drag-drop overlay */}
             {isDraggingGlobal && (
                 <div className="fixed inset-0 z-[999] bg-zinc-900/60 dark:bg-[#323242]/80 backdrop-blur-md flex items-center justify-center pointer-events-none animate-in fade-in duration-200">
-                    <div className="w-full max-w-lg mx-4 rounded-[2rem] border-2 border-dashed border-blue-500 bg-white/10 dark:bg-[#1a1a23]/50 flex flex-col items-center justify-center p-16 text-center shadow-2xl scale-105 animate-pulse">
-                        <div className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center mb-6 shadow-xl shadow-blue-900/20">
+                    <div className="w-full max-w-lg mx-4 rounded-[2rem] border-2 border-dashed border-lime-400 bg-white/10 dark:bg-[#1a1a23]/50 flex flex-col items-center justify-center p-16 text-center shadow-2xl scale-105 animate-pulse">
+                        <div className="w-20 h-20 rounded-full bg-lime-400 flex items-center justify-center mb-6 shadow-xl shadow-blue-900/20">
                             <Plus className="w-10 h-10 text-white" strokeWidth={3} />
                             </div>
                         <h2 className="text-2xl font-bold text-white mb-2">Drop to Create Project</h2>
@@ -4948,7 +4944,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                     title="Home"
                 >
                     <EditorialIcon className="w-5 h-5 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
-                    <span className="font-serif font-medium text-zinc-900 dark:text-white hidden sm:block">Heartifact</span>
+                    <span className="font-serif font-medium text-zinc-900 dark:text-white hidden sm:block">Sendational</span>
                 </button>
 
                 {/* Nav pill + controls cluster */}
@@ -5034,7 +5030,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                     {/* Privacy toggle */}
                             <button
                         onClick={togglePrivacyMode}
-                        className={`inline-flex p-2.5 rounded-xl transition-all cursor-pointer ${topbarGlassCls} ${privacyMode ? 'border-blue-700/30 dark:border-blue-400/30 text-blue-700 dark:text-blue-400' : `text-zinc-500 dark:text-zinc-300 ${topbarGlassHoverCls}`}`}
+                        className={`inline-flex p-2.5 rounded-xl transition-all cursor-pointer ${topbarGlassCls} ${privacyMode ? 'border-blue-700/30 dark:border-lime-400/30 text-blue-700 dark:text-lime-400' : `text-zinc-500 dark:text-zinc-300 ${topbarGlassHoverCls}`}`}
                         title="Privacy Mode"
                     >
                         {privacyMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -5185,15 +5181,15 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                                 {quickstartDraftFiles.map((name) => (
                                                     <div
                                                         key={name}
-                                                        className="rounded-xl border border-[#a3e635]/35 bg-[#a3e635]/15 dark:border-blue-500/20 dark:bg-blue-500/10 px-3 py-2.5 text-left"
+                                                        className="rounded-xl border border-[#a3e635]/35 bg-[#a3e635]/15 dark:border-lime-400/20 dark:bg-lime-400/10 px-3 py-2.5 text-left"
                                                     >
                                                         <div className="flex items-center justify-between gap-2">
-                                                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#4d7c0f] dark:text-blue-300">
+                                                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#4d7c0f] dark:text-lime-300">
                                                                 New asset
                                                             </span>
                                                             <span className="relative flex h-2 w-2 shrink-0">
-                                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#65a30d] opacity-70 dark:bg-blue-400" />
-                                                                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#65a30d] dark:bg-blue-400" />
+                                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#65a30d] opacity-70 dark:bg-lime-400" />
+                                                                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#65a30d] dark:bg-lime-400" />
                                                             </span>
                                                         </div>
                                                         <p className="mt-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-100 truncate">
@@ -5215,7 +5211,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             </div>
                         )}
                         <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-700 ${workspaceQuickstartActive || !showHeroGreeting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                            <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-[5.9rem] 2xl:text-[8.5rem] text-zinc-900 dark:text-white tracking-tight leading-[1.03] max-w-[11ch] px-1">
+                            <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-[5.9rem] 2xl:text-[8.5rem] text-zinc-900 dark:text-white tracking-tight leading-[1.03] max-w-full px-1 py-4">
                                 <span className="block animate-fade-in">
                                     {heroGreetingPrefix}
                                     <span className="italic text-lime-400 dark:text-[#bef264]">{greetingName}</span>
@@ -5248,8 +5244,8 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                         right: '24px',
                     }}
                 >
-                    <div className="relative w-full max-w-md">
-                        <h2 className={`max-w-[11ch] font-serif text-5xl md:text-6xl lg:text-[3.9rem] text-zinc-900 dark:text-white tracking-tight leading-[1.1] transition-opacity duration-500 ${showHeroGreeting ? 'opacity-100' : 'opacity-0 pointer-events-none absolute inset-0'}`}>
+                    <div className="relative w-full max-w-[min(100%,64rem)]">
+                        <h2 className={`max-w-full font-serif text-5xl md:text-6xl lg:text-[3.9rem] text-zinc-900 dark:text-white tracking-tight leading-[1.1] py-4 transition-opacity duration-500 ${showHeroGreeting ? 'opacity-100' : 'opacity-0 pointer-events-none absolute inset-0'}`}>
                             {heroGreetingPrefix}
                             <span className="italic text-lime-400 dark:text-[#bef264]">{greetingName}</span>
                             {heroGreetingSuffix}
@@ -5315,7 +5311,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                                 <img src={file.previewUrl} alt={file.name} className="w-full h-full object-cover" draggable={false} onDragStart={(e) => e.preventDefault()} />
                                             )
                                         ) : (
-                                            <div className="flex flex-col items-center gap-1 text-zinc-600 dark:text-blue-300">
+                                            <div className="flex flex-col items-center gap-1 text-zinc-600 dark:text-lime-300">
                                                 {file.type === 'image' ? <ImageIcon className="w-4 h-4" /> : file.type === 'video' ? <Film className="w-4 h-4" /> : file.type === 'pdf' ? <FileText className="w-4 h-4" /> : <File className="w-4 h-4" />}
                                                 <span className="text-[9px] font-bold uppercase">{file.type}</span>
                                             </div>
@@ -5490,7 +5486,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                         onClick={() => playSuccess()}
                         onMouseEnter={() => routePreloadMap.help?.()}
                         onTouchStart={() => routePreloadMap.help?.()}
-                        className="w-12 h-12 bg-blue-500 hover:bg-blue-600 text-zinc-950 rounded-2xl flex items-center justify-center shadow-lg transition-all hover:scale-110 hover:rotate-6 duration-300 cursor-pointer"
+                        className="w-12 h-12 bg-lime-400 hover:bg-lime-500 text-zinc-950 rounded-2xl flex items-center justify-center shadow-lg transition-all hover:scale-110 hover:rotate-6 duration-300 cursor-pointer"
                     >
                         <HelpCircle className="w-5 h-5" />
                 </Link>
@@ -5644,12 +5640,12 @@ const ClientLinkWrapper = ({ isDarkMode, themeMode, onToggleTheme, onSetThemeMod
             <div className={`min-h-screen w-full flex items-center justify-center ${isDarkMode ? 'bg-cosmic text-white' : 'bg-white text-zinc-900'}`}>
                 <div className="max-w-md w-full px-6">
                     <div className={`rounded-2xl border p-5 ${isDarkMode ? 'border-white/10 bg-white/5' : 'border-zinc-200/50 bg-zinc-50'}`}>
-                        <div className="font-black tracking-wide mb-2">Preview unavailable</div>
+                        <div className="font-semibold tracking-wide mb-2">Preview unavailable</div>
                         <div className="text-sm opacity-80">{error || 'This link may be invalid or expired.'}</div>
                         <button
                             type="button"
                             onClick={() => navigate('/')}
-                            className={`mt-4 w-full h-11 rounded-xl font-bold text-xs uppercase tracking-widest ${isDarkMode ? 'bg-blue-500 text-zinc-950 hover:bg-blue-600' : 'bg-blue-500 text-zinc-900 shadow-sm hover:bg-blue-700'}`}
+                            className={`mt-4 w-full h-11 rounded-xl font-bold text-xs uppercase tracking-widest ${isDarkMode ? 'bg-lime-400 text-zinc-950 hover:bg-lime-500' : 'bg-lime-400 text-zinc-900 shadow-sm hover:bg-blue-700'}`}
                         >
                             Back to home
                         </button>
@@ -6029,7 +6025,7 @@ const AppContent = () => {
                     </div>
                 )}
                 {showBackOnlineStrip && (
-                    <div className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 bg-blue-500 text-zinc-950 shadow-sm text-[11px] font-bold h-7 z-[200]">
+                    <div className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 bg-lime-400 text-zinc-950 shadow-sm text-[11px] font-bold h-7 z-[200]">
                         <div className="flex items-center gap-2">
                             <CheckCircle className="w-3 h-3 shrink-0" />
                             <span>Back online â€” connection restored.</span>
@@ -6039,7 +6035,7 @@ const AppContent = () => {
 
                 {/* Ã¢â€â‚¬Ã¢â€â‚¬ SW update available strip Ã¢â€â‚¬Ã¢â€â‚¬ */}
                 {showUpdateStrip && (
-                    <div className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 bg-blue-500 text-zinc-950 shadow-sm text-[11px] font-bold h-7 z-[200]">
+                    <div className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 bg-lime-400 text-zinc-950 shadow-sm text-[11px] font-bold h-7 z-[200]">
                         <div className="flex items-center gap-2 min-w-0">
                             <RefreshCw className="w-3 h-3 shrink-0" />
                             <span className="truncate">A new version is ready.</span>
@@ -6065,7 +6061,7 @@ const AppContent = () => {
                     {firstVisitThemeNotice && (
                             <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[120] px-4">
                             <div className="flex items-center gap-2 rounded-full border border-zinc-200/50 dark:border-white/10 bg-white/30 dark:bg-[#18181b]/90 backdrop-blur-md shadow-lg px-4 py-2 text-[11px] font-bold tracking-wide text-zinc-700 dark:text-zinc-200">
-                                <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                <CheckCircle className="w-4 h-4 text-[#65a30d] dark:text-lime-400" />
                                 <span>{firstVisitThemeNotice}</span>
                                 <button
                                     type="button"

@@ -1,0 +1,334 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    FLOATING WIDGET VISUAL MOCKUP
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  ◉ ◉ ◉                    🌟 Grinlight                    [☀️] [Sign In] [Start] │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────┐  ┌────────────────────────────────────────────────┐
+│                      │  │                                                │
+│  ╔════════════════╗  │  │                                                │
+│  ║ 📋 Try it now  ║  │  │         Deliver creative work                  │
+│  ║ Quick delivery ║  │  │         that makes clients smile               │
+│  ╚════════════════╝  │  │                                                │
+│                      │  │         ┌──────────────┐  ┌──────────────┐    │
+│  Build a delivery,   │  │         │ Start Free   │  │ Watch Video  │    │
+│  see how it works.   │  │         └──────────────┘  └──────────────┘    │
+│  Sign up to keep it. │  │                                                │
+│                      │  └────────────────────────────────────────────────┘
+│  ┌─────────────────┐ │
+│  │    STORAGE      │ │  ┌────────────────────────────────────────────────┐
+│  ├─────────────────┤ │  │                                                │
+│  │ [💾 Local]      │ │  │    ❌ Old Way          ✅ New Way              │
+│  │ [☁️ Cloud]      │ │  │                                                │
+│  └─────────────────┘ │  │    • Email chaos       • Organized portal      │
+│                      │  │    • Lost files        • Secure delivery       │
+│  ┌─────────────────┐ │  │    • No tracking       • Real-time updates    │
+│  │   📤 Upload     │ │  │                                                │
+│  │  Choose files   │ │  └────────────────────────────────────────────────┘
+│  │ From your device│ │
+│  └─────────────────┘ │  ┌────────────────────────────────────────────────┐
+│                      │  │                                                │
+│  ┌─────────────────┐ │  │         🎨 Features Grid                       │
+│  │ Project title   │ │  │                                                │
+│  └─────────────────┘ │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
+│  ┌─────────────────┐ │  │  │ Payments │  │ Branding │  │ Analytics│    │
+│  │ Client name     │ │  │  └──────────┘  └──────────┘  └──────────┘    │
+│  └─────────────────┘ │  │                                                │
+│  ┌─────────────────┐ │  └────────────────────────────────────────────────┘
+│  │ Client email    │ │
+│  └─────────────────┘ │  ┌────────────────────────────────────────────────┐
+│                      │  │                                                │
+│  ╔═══════════════╗   │  │         💰 Pricing                             │
+│  ║ QUOTE BUILDER ║   │  │                                                │
+│  ╚═══════════════╝   │  │  Free → $29/mo → $99/mo → Custom              │
+│                      │  │                                                │
+│  ┌─────────────────┐ │  └────────────────────────────────────────────────┘
+│  │ Description     │ │
+│  │ 1 | $500 | $500│ │  ┌────────────────────────────────────────────────┐
+│  └─────────────────┘ │  │                                                │
+│                      │  │         ❓ FAQ                                  │
+│  [+ Line] $500      │  │                                                │
+│                      │  │  • How does it work?                           │
+│  [Apply] [Copy]     │  │  • Is it secure?                               │
+│  [PDF] [Email]      │  │  • What about storage?                         │
+│                      │  │                                                │
+│  ┌─────────────────┐ │  └────────────────────────────────────────────────┘
+│  │ 💾 Sign up to   │ │
+│  │   keep it       │ │  ┌────────────────────────────────────────────────┐
+│  └─────────────────┘ │  │                                                │
+│  Free • No card     │  │         Footer                                 │
+│                      │  │         © 2026 Grinlight                       │
+└──────────────────────┘  └────────────────────────────────────────────────┘
+
+    ↑ FIXED POSITION        ↑ SCROLLABLE CONTENT WITH LEFT PADDING
+    (Scrolls with page)     (Main landing page sections)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                         MOBILE VIEW (< 1280px)
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────┐
+│  ☰  🌟 Grinlight          [Start]   │
+└─────────────────────────────────────┘
+
+┌─────────────────────────────────────┐
+│                                     │
+│     Deliver creative work           │
+│     that makes clients smile        │
+│                                     │
+│     ┌─────────────────────┐         │
+│     │   Start for Free    │         │
+│     └─────────────────────┘         │
+│     ┌─────────────────────┐         │
+│     │   Watch Video       │         │
+│     └─────────────────────┘         │
+│                                     │
+└─────────────────────────────────────┘
+
+┌─────────────────────────────────────┐
+│                                     │
+│   ❌ Old Way    ✅ New Way          │
+│                                     │
+│   • Email       • Portal            │
+│   • Lost        • Secure            │
+│   • No track    • Updates           │
+│                                     │
+└─────────────────────────────────────┘
+
+(Widget is HIDDEN on mobile)
+(Full-width content)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                    WIDGET INTERACTION STATES
+═══════════════════════════════════════════════════════════════════════════════
+
+STATE 1: INITIAL (Empty)
+┌──────────────────────┐
+│ 📋 Try it now        │
+│ Quick delivery       │
+├──────────────────────┤
+│ STORAGE              │
+│ [💾 Local] [☁️ Cloud]│
+├──────────────────────┤
+│ ┌──────────────────┐ │
+│ │  📤 Choose files │ │
+│ │  From your device│ │
+│ └──────────────────┘ │
+├──────────────────────┤
+│ [Project title    ]  │
+│ [Client name      ]  │
+│ [Client email     ]  │
+├──────────────────────┤
+│ Quote: $0            │
+│ [+ Line]             │
+├──────────────────────┤
+│ [💾 Sign up to keep] │
+│ Free • No card       │
+└──────────────────────┘
+
+
+STATE 2: FILES UPLOADED
+┌──────────────────────┐
+│ 📋 Try it now        │
+│ Quick delivery       │
+├──────────────────────┤
+│ STORAGE              │
+│ [💾 Local] [☁️ Cloud]│
+├──────────────────────┤
+│ ┌──────────────────┐ │
+│ │  ✅ 5 files      │ │  ← Changed!
+│ │  From your device│ │
+│ └──────────────────┘ │
+├──────────────────────┤
+│ [Project title    ]  │
+│ [Client name      ]  │
+│ [Client email     ]  │
+├──────────────────────┤
+│ Quote: $0            │
+│ [+ Line]             │
+├──────────────────────┤
+│ [💾 Sign up to keep] │
+│ Free • No card       │
+└──────────────────────┘
+
+
+STATE 3: FULLY FILLED
+┌──────────────────────┐
+│ 📋 Try it now        │
+│ Quick delivery       │
+├──────────────────────┤
+│ STORAGE              │
+│ [💾 Local] [☁️ Cloud]│
+├──────────────────────┤
+│ ┌──────────────────┐ │
+│ │  ✅ 5 files      │ │
+│ │  From your device│ │
+│ └──────────────────┘ │
+├──────────────────────┤
+│ [Brand Photoshoot ]  │  ← Filled!
+│ [Acme Corp        ]  │  ← Filled!
+│ [jane@acme.com    ]  │  ← Filled!
+├──────────────────────┤
+│ Photography | 1 | 500│  ← Added!
+│ Editing     | 1 | 200│  ← Added!
+│ Quote: $700          │  ← Updated!
+│ [+ Line]             │
+│ [Apply] [Copy]       │
+│ [PDF] [Email]        │
+├──────────────────────┤
+│ [💾 Sign up to keep] │  ← Glowing!
+│ Free • No card       │
+└──────────────────────┘
+
+
+STATE 4: HOVER ON SIGN UP
+┌──────────────────────┐
+│ 📋 Try it now        │
+│ Quick delivery       │
+├──────────────────────┤
+│ STORAGE              │
+│ [💾 Local] [☁️ Cloud]│
+├──────────────────────┤
+│ ┌──────────────────┐ │
+│ │  ✅ 5 files      │ │
+│ │  From your device│ │
+│ └──────────────────┘ │
+├──────────────────────┤
+│ [Brand Photoshoot ]  │
+│ [Acme Corp        ]  │
+│ [jane@acme.com    ]  │
+├──────────────────────┤
+│ Photography | 1 | 500│
+│ Editing     | 1 | 200│
+│ Quote: $700          │
+│ [+ Line]             │
+│ [Apply] [Copy]       │
+│ [PDF] [Email]        │
+├──────────────────────┤
+│ ╔══════════════════╗ │
+│ ║ 💾 Sign up to    ║ │  ← Scaled up!
+│ ║   keep it        ║ │  ← Brighter!
+│ ╚══════════════════╝ │  ← Shadow!
+│ Free • No card       │
+└──────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                    COLOR SCHEME REFERENCE
+═══════════════════════════════════════════════════════════════════════════════
+
+LIGHT MODE:
+┌──────────────────────┐
+│ ⬜ White background  │
+│ ⬛ Black text        │
+│ 🟩 Lime-400 accent   │
+│ ⬜ Zinc-200 borders  │
+└──────────────────────┘
+
+DARK MODE:
+┌──────────────────────┐
+│ ⬛ Charcoal bg       │
+│ ⬜ White text        │
+│ 🟩 Lime-400 accent   │
+│ ⬜ White/10 borders  │
+└──────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                    USER JOURNEY FLOW
+═══════════════════════════════════════════════════════════════════════════════
+
+1. LAND ON PAGE
+   ↓
+   User sees widget immediately
+   "Try it now" catches attention
+
+2. CHOOSE STORAGE
+   ↓
+   Click [Local] or [Cloud]
+   Visual feedback confirms selection
+
+3. UPLOAD FILES
+   ↓
+   Click upload area
+   File picker opens
+   "5 files selected" shows success
+
+4. FILL DETAILS
+   ↓
+   Type project title
+   Type client name
+   Type client email
+
+5. BUILD QUOTE
+   ↓
+   Add line items
+   See total update
+   Try Copy/PDF/Email
+
+6. REALIZE VALUE
+   ↓
+   "This is actually useful!"
+   "I want to keep this"
+
+7. SIGN UP
+   ↓
+   Click "Sign up to keep it"
+   Modal opens
+   Create account
+   Data persists
+
+8. BECOME USER
+   ↓
+   Full app access
+   Widget data imported
+   Smooth onboarding
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                    CONVERSION FUNNEL
+═══════════════════════════════════════════════════════════════════════════════
+
+100% → Land on page
+ 80% → Notice widget
+ 60% → Interact with widget
+ 40% → Upload files
+ 30% → Fill details
+ 20% → Build quote
+ 15% → Click sign up
+ 10% → Complete signup
+
+Expected conversion: 10-15% of visitors who interact with widget
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                    TECHNICAL SPECS
+═══════════════════════════════════════════════════════════════════════════════
+
+Position:     fixed
+Left:         1.5rem (24px)
+Top:          8rem (128px)
+Width:        20rem (320px)
+Max Height:   calc(100vh - 10rem)
+Z-Index:      40
+Display:      hidden xl:block
+Overflow:     auto (scrollable)
+
+Breakpoints:
+- Mobile:     < 768px   (hidden)
+- Tablet:     768-1279px (hidden)
+- Desktop:    ≥ 1280px  (visible)
+
+Main Content Padding:
+- Mobile:     0
+- Tablet:     0
+- Desktop:    0 0 0 22rem (352px)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                    END OF VISUAL MOCKUP
+═══════════════════════════════════════════════════════════════════════════════

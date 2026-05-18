@@ -7,14 +7,14 @@
 
 This document is retained as a reference for a future secure connector implementation.
 
-Historically, Heartifact supported "Bring Your Own Storage" (BYOS) via cloud-drive connections in:
+Historically, Sendational supported "Bring Your Own Storage" (BYOS) via cloud-drive connections in:
 
 `Settings -> Storage -> Cloud Drive`
 
 ## The Non-Negotiable Reality
 
-If you want Heartifact to show an OAuth consent screen like "Heartifact wants access to your Drive",
-you (Heartifact) must register an OAuth app with each provider at least once.
+If you want Sendational to show an OAuth consent screen like "Sendational wants access to your Drive",
+you (Sendational) must register an OAuth app with each provider at least once.
 
 Your customers do **not** create OAuth keys. They simply click **Connect** and grant permissions.
 

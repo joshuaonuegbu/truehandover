@@ -30,6 +30,10 @@ type DeliveryQuickQuoteProps = {
     className?: string;
     /** Renders below the primary actions (e.g. switch-to-project hint), fixed with the footer */
     footerExtra?: React.ReactNode;
+    /** Line items scroll; footer (subtotal + actions) stays pinned — use inside a flex column with constrained height */
+    splitScrollFooter?: boolean;
+    /** Inserted after quote actions inside the sticky footer (e.g. landing “sign up”) */
+    footerSlot?: React.ReactNode;
 };
 
 export default function DeliveryQuickQuote({
@@ -46,6 +50,8 @@ export default function DeliveryQuickQuote({
     freelancerEmail = '',
     className = '',
     footerExtra,
+    splitScrollFooter = false,
+    footerSlot,
 }: DeliveryQuickQuoteProps) {
     const subtotal = useMemo(() => calcQuoteSubtotal(lines), [lines]);
     const accentButton = accentButtonClass(isDarkMode);
@@ -127,7 +133,7 @@ export default function DeliveryQuickQuote({
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Heartifact_${quoteNumber}.pdf`;
+            a.download = `Sendational_${quoteNumber}.pdf`;
             a.click();
             URL.revokeObjectURL(url);
             playSuccess();
@@ -144,77 +150,78 @@ export default function DeliveryQuickQuote({
 
     const footerBorder = isDarkMode ? 'border-white/10' : 'border-zinc-200';
 
-    return (
-        <div className={`flex flex-col flex-1 min-h-0 ${className}`}>
-            <div className="flex items-center justify-between gap-2 mb-2 shrink-0">
-                <p className="text-[11px] leading-snug text-zinc-500 dark:text-zinc-400 flex-1">
-                    Line items add up to your total — apply to sync the payment amount when you switch to{' '}
-                    <span className="font-semibold text-zinc-600 dark:text-zinc-300">Create project</span>.
-                </p>
-                {subtotal > 0 && (
-                    <span className="text-xs font-bold tabular-nums text-zinc-900 dark:text-white shrink-0">
-                        {quoteCurrency.format(subtotal)}
-                    </span>
-                )}
-            </div>
+    const introRow = (
+        <div className="flex items-center justify-between gap-2 mb-2 shrink-0">
+            <p className="text-[11px] leading-snug text-zinc-500 dark:text-zinc-400 flex-1">
+                Line items add up to your total — apply to sync the payment amount when you switch to{' '}
+                <span className="font-semibold text-zinc-600 dark:text-zinc-300">Create project</span>.
+            </p>
+            {subtotal > 0 && (
+                <span className="text-xs font-bold tabular-nums text-zinc-900 dark:text-white shrink-0">
+                    {quoteCurrency.format(subtotal)}
+                </span>
+            )}
+        </div>
+    );
 
-            <div className="flex-1 min-h-0 overflow-y-auto pr-1 briefing-scroll">
-                <div className="space-y-2 pr-0.5">
-                {lines.map((line) => {
-                    const lineTotal = (Number(line.qty) || 0) * (Number(line.rate) || 0);
-                    return (
-                        <div
-                            key={line.id}
-                            className={`rounded-xl border p-2.5 space-y-2 ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}
-                        >
+    const linesBlock = (
+        <div className="space-y-2 pr-0.5">
+            {lines.map((line) => {
+                const lineTotal = (Number(line.qty) || 0) * (Number(line.rate) || 0);
+                return (
+                    <div
+                        key={line.id}
+                        className={`rounded-xl border p-2.5 space-y-2 ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}
+                    >
+                        <input
+                            value={line.description}
+                            onChange={(e) => updateLine(line.id, { description: e.target.value })}
+                            placeholder="Description"
+                            className={`w-full h-9 rounded-lg px-2.5 text-xs border outline-none transition-colors ${lineInputExtra}`}
+                        />
+                        <div className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto_auto] items-center gap-1.5">
                             <input
-                                value={line.description}
-                                onChange={(e) => updateLine(line.id, { description: e.target.value })}
-                                placeholder="Description"
-                                className={`w-full h-9 rounded-lg px-2.5 text-xs border outline-none transition-colors ${lineInputExtra}`}
+                                type="number"
+                                min={0}
+                                value={line.qty}
+                                onChange={(e) => updateLine(line.id, { qty: Math.max(0, Number(e.target.value) || 0) })}
+                                className={`w-14 h-9 rounded-lg px-1.5 text-xs border text-center ${lineInputExtra}`}
+                                title="Qty"
                             />
-                            <div className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto_auto] items-center gap-1.5">
-                                <input
-                                    type="number"
-                                    min={0}
-                                    value={line.qty}
-                                    onChange={(e) => updateLine(line.id, { qty: Math.max(0, Number(e.target.value) || 0) })}
-                                    className={`w-14 h-9 rounded-lg px-1.5 text-xs border text-center ${lineInputExtra}`}
-                                    title="Qty"
-                                />
-                                <input
-                                    type="number"
-                                    min={0}
-                                    step="0.01"
-                                    value={line.rate}
-                                    onChange={(e) => updateLine(line.id, { rate: Math.max(0, Number(e.target.value) || 0) })}
-                                    placeholder="0"
-                                    className={`flex-1 min-w-0 h-9 rounded-lg px-2 text-xs border ${lineInputExtra}`}
-                                    title="Rate"
-                                />
-                                <div
-                                    className={`shrink-0 h-9 px-2 rounded-lg text-[11px] font-semibold tabular-nums flex items-center ${
-                                        isDarkMode ? 'bg-white/10 text-white' : 'bg-zinc-900 text-white'
-                                    }`}
-                                >
-                                    {quoteCurrency.format(lineTotal)}
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => removeLine(line.id)}
-                                    className="shrink-0 p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
-                                    title="Remove line"
-                                >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                            <input
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                value={line.rate}
+                                onChange={(e) => updateLine(line.id, { rate: Math.max(0, Number(e.target.value) || 0) })}
+                                placeholder="0"
+                                className={`flex-1 min-w-0 h-9 rounded-lg px-2 text-xs border ${lineInputExtra}`}
+                                title="Rate"
+                            />
+                            <div
+                                className={`shrink-0 h-9 px-2 rounded-lg text-[11px] font-semibold tabular-nums flex items-center ${
+                                    isDarkMode ? 'bg-white/10 text-white' : 'bg-zinc-900 text-white'
+                                }`}
+                            >
+                                {quoteCurrency.format(lineTotal)}
                             </div>
+                            <button
+                                type="button"
+                                onClick={() => removeLine(line.id)}
+                                className="shrink-0 p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                                title="Remove line"
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                         </div>
-                    );
-                })}
-                </div>
-            </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
 
-            <div className={`shrink-0 pt-3 mt-1 space-y-2 border-t ${footerBorder}`}>
+    const footerBlock = (
+        <div className={`shrink-0 pt-3 mt-1 space-y-2 border-t ${footerBorder}`}>
             <div className="flex items-center justify-between gap-2">
                 <button
                     type="button"
@@ -292,7 +299,31 @@ export default function DeliveryQuickQuote({
                 Open full quote builder
             </button>
             {footerExtra}
+            {footerSlot}
+        </div>
+    );
+
+    if (splitScrollFooter) {
+        return (
+            <div className={`flex flex-col flex-1 min-h-0 ${className}`}>
+                {introRow}
+                <div className="flex-1 min-h-0 overflow-y-auto pr-1 briefing-scroll [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                    {linesBlock}
+                </div>
+                {footerBlock}
             </div>
+        );
+    }
+
+    return (
+        <div className={`flex flex-col flex-1 min-h-0 ${className}`}>
+            {introRow}
+
+            <div className="flex-1 min-h-0 overflow-y-auto pr-1 briefing-scroll">
+                {linesBlock}
+            </div>
+
+            {footerBlock}
         </div>
     );
 }

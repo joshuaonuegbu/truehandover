@@ -57,7 +57,7 @@ export function buildQuotePlainText(input: BuildQuotePlainTextInput): string {
         .join('\n');
 
     return [
-        `Heartifact Quote ${input.quoteNumber}`,
+        `Sendational Quote ${input.quoteNumber}`,
         `${input.quoteTitle}`,
         '',
         `From: ${input.freelancerName || 'Freelancer'}`,

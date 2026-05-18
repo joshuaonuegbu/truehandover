@@ -192,7 +192,7 @@ export const PortalStyleLightbox: React.FC<PortalStyleLightboxProps> = ({
                             <Info className="w-3.5 h-3.5 inline-block mr-1" /> Panel
                         </button>
                         {!isLocked && src && (
-                            <a href={src} target="_blank" rel="noreferrer" className="px-3 h-9 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-600 hover:bg-blue-500 flex items-center gap-1.5">
+                            <a href={src} target="_blank" rel="noreferrer" className="px-3 h-9 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-lime-500 hover:bg-lime-400 flex items-center gap-1.5">
                                 <Download className="w-3.5 h-3.5" /> Download
                             </a>
                         )}

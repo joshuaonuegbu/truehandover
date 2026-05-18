@@ -282,7 +282,7 @@ html.dark *::-moz-selection {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
-/* --- Heartifact widget surface overlays (match Reports "Net Revenue" panel) --- */
+/* --- Sendational widget surface overlays (match Reports "Net Revenue" panel) --- */
 :root {
   --hf-noise-svg: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
 }
@@ -333,3 +333,19 @@ html.dark *::-moz-selection {
 .hf-no-glow::after {
   content: none !important;
 }
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+.animate-marquee {
+  animation: marquee 25s linear infinite;
+}
+@keyframes marquee2 {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(0%); }
+}
+.animate-marquee2 {
+  animation: marquee2 25s linear infinite;
+}
+

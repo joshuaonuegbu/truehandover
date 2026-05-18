@@ -274,7 +274,7 @@ export const LayoutBillboard: React.FC<LayoutProps> = ({
 				<div className={`space-y-6 ${DEFAULT_WIDGET_STACK_GAP}`}>
 					<div className="flex items-center justify-between">
 						<h2 className={`font-bold text-sm uppercase tracking-widest ${isDarkMode ? 'text-zinc-300' : 'text-zinc-500'}`}>Assets ({files.length})</h2>
-						<span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${isLocked ? 'text-amber-500 border-amber-500/40 bg-amber-500/10' : 'text-blue-400 border-blue-400/30 bg-blue-500/10'}`}>
+						<span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${isLocked ? 'text-amber-500 border-amber-500/40 bg-amber-500/10' : 'text-lime-400 border-lime-300/30 bg-lime-400/10'}`}>
 							{isLocked ? 'Locked' : 'Unlocked'}
 						</span>
 					</div>
@@ -407,7 +407,7 @@ export const LayoutCinema: React.FC<LayoutProps> = ({
 							</div>
 						</div>
 
-						<h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-[0.9] mb-6 drop-shadow-2xl line-clamp-2">
+						<h1 className="text-4xl md:text-6xl font-semibold tracking-tighter leading-[0.9] mb-6 drop-shadow-2xl line-clamp-2">
 							{activeAsset.name}
 						</h1>
 
@@ -744,7 +744,7 @@ export const LayoutMasonry: React.FC<LayoutProps> = ({
 				<div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
 					<div>
 						<div className="flex items-center gap-3 mb-2">
-							<div className={`w-2 h-2 rounded-full ${isLocked ? 'bg-amber-500' : 'bg-blue-500'}`}></div>
+							<div className={`w-2 h-2 rounded-full ${isLocked ? 'bg-amber-500' : 'bg-lime-400'}`}></div>
 							<span className={`text-xs font-bold uppercase tracking-widest ${textMuted}`}>{isLocked ? 'Payment Pending' : 'Collection Unlocked'}</span>
 						</div>
 						<h1 className="text-3xl md:text-5xl font-serif font-medium tracking-tight drop-shadow-[0_8px_20px_rgba(0,0,0,0.24)]">{project.name}</h1>
@@ -967,7 +967,7 @@ export const LayoutSplit: React.FC<LayoutProps> = ({
 						<p className={`text-xs font-bold uppercase tracking-widest ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Client</p>
 						<p className="text-lg font-bold">{project.client.name}</p>
 					</div>
-					<span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${isLocked ? 'text-amber-500 border-amber-500/40 bg-amber-500/10' : 'text-blue-400 border-blue-400/30 bg-blue-500/10'}`}>
+					<span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${isLocked ? 'text-amber-500 border-amber-500/40 bg-amber-500/10' : 'text-lime-400 border-lime-300/30 bg-lime-400/10'}`}>
 						{isLocked ? 'Locked' : 'Unlocked'}
 					</span>
 				</div>
@@ -1326,7 +1326,7 @@ export const LayoutModeler: React.FC<LayoutProps> = ({
 		<div className={`relative w-full min-h-full overflow-hidden font-mono ${isDarkMode ? `${DARK_LAYOUT_ROOT_BG} text-zinc-200` : 'text-zinc-800'}`}>
 			<div className={`h-12 border-b px-4 flex items-center justify-between backdrop-blur-xl ${isDarkMode ? 'bg-[#0f1118]/80 border-white/10 shadow-[0_8px_18px_-10px_rgba(0,0,0,0.8)]' : 'bg-white/30 border-zinc-200/40 shadow-[0_8px_18px_-12px_rgba(0,0,0,0.24)]'}`}>
 				<div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
-					<Monitor className="w-4 h-4 text-blue-400" /> Modeler View
+					<Monitor className="w-4 h-4 text-lime-400" /> Modeler View
 				</div>
 				<div className="text-xs uppercase tracking-widest text-zinc-500">{project.name}</div>
 			</div>
@@ -1362,7 +1362,7 @@ export const LayoutModeler: React.FC<LayoutProps> = ({
 									<button
 										type="button"
 										onClick={() => { setActiveIndex(i); playClick(); }}
-										className={`w-full text-left px-2 py-1.5 rounded-md text-xs transition-colors ${i === activeIndex ? 'bg-blue-500/20 text-blue-300' : (isDarkMode ? 'text-zinc-300 hover:bg-white/5' : 'text-zinc-700 hover:bg-zinc-100')}`}
+										className={`w-full text-left px-2 py-1.5 rounded-md text-xs transition-colors ${i === activeIndex ? 'bg-lime-400/20 text-blue-300' : (isDarkMode ? 'text-zinc-300 hover:bg-white/5' : 'text-zinc-700 hover:bg-zinc-100')}`}
 									>
 										{asset.name}
 									</button>
@@ -1411,7 +1411,7 @@ export const LayoutStudio: React.FC<LayoutProps> = ({
 	const [isPlaying, setIsPlaying] = useState(false);
 	const tracks = files.slice(0, 5);
 	const trackColor = (_asset: FileAsset, i: number) => {
-		const palette = ['bg-blue-400', 'bg-orange-400', 'bg-violet-400', 'bg-cyan-400', 'bg-pink-400'];
+		const palette = ['bg-lime-300', 'bg-orange-400', 'bg-violet-400', 'bg-cyan-400', 'bg-pink-400'];
 		return palette[i % palette.length];
 	};
 
@@ -1422,7 +1422,7 @@ export const LayoutStudio: React.FC<LayoutProps> = ({
 					<p className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">Studio Console</p>
 					<h2 className="text-xl font-serif">{project.name}</h2>
 				</div>
-				<button type="button" onClick={() => setIsPlaying((p) => !p)} className="w-12 h-12 rounded-full bg-blue-500 text-white hover:bg-blue-400 flex items-center justify-center">
+				<button type="button" onClick={() => setIsPlaying((p) => !p)} className="w-12 h-12 rounded-full bg-lime-400 text-white hover:bg-lime-300 flex items-center justify-center">
 					{isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-current" />}
 				</button>
 			</div>

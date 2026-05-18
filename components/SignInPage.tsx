@@ -15,7 +15,7 @@ const EditorialIcon = ({ className }: { className?: string }) => (
     <BrandLogo className={className} />
 );
 
-// --- SECURE HANDOVER CARD (Heartifact Identity) ---
+// --- SECURE HANDOVER CARD (Sendational Identity) ---
 const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: string | null, email: string, password: string }) => {
     const totalInputLength = email.length + password.length;
     const energyLevel = Math.min(1, totalInputLength / 28);
@@ -35,8 +35,8 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
     return (
         <div className="relative w-full h-full flex items-center justify-center perspective-[2000px] overflow-visible">
             {/* Ambient Background Blobs */}
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/20 dark:bg-blue-500/10 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-400/10 dark:bg-blue-500/10 rounded-full blur-[120px] animate-pulse delay-700" />
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-lime-300/20 dark:bg-lime-400/10 rounded-full blur-[120px] animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-lime-300/10 dark:bg-lime-400/10 rounded-full blur-[120px] animate-pulse delay-700" />
 
             {/* FOCAL TEXTURE VIGNETTE - SUBTLE TECH GRID */}
             <div className="absolute inset-[-50%] pointer-events-none z-50 hidden dark:block"
@@ -71,15 +71,15 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
                 <div className={`absolute top-4 left-4 w-full h-full bg-white/20 dark:bg-[#232328]/40 backdrop-blur-xl rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] transform transition-all duration-1000 ease-out border-[0.5px] border-black/10 dark:border-white/10 flex flex-col justify-center overflow-hidden px-8 ${focusedField ? '-rotate-1 scale-[1.01]' : '-rotate-3 group-hover:-rotate-1'}`}>
                     {/* Mini auth field indicators */}
                     <div className="space-y-4 opacity-60">
-                        <div className={`h-8 rounded-lg border transition-all duration-500 flex items-center px-3 gap-2 ${focusedField === 'email' ? 'border-blue-500 dark:border-blue-500 bg-blue-50/50 dark:bg-blue-500/5 scale-[1.02]' : 'border-zinc-200/50 dark:border-white/10'}`}>
-                            <div className={`w-1 h-4 rounded-full transition-colors duration-300 ${focusedField === 'email' ? 'bg-blue-500 dark:bg-blue-500 animate-pulse' : 'bg-zinc-300 dark:bg-white/20'}`} />
-                            <span className={`text-[8px] font-mono tracking-wider truncate ${focusedField === 'email' ? 'text-blue-700 dark:text-blue-400' : 'text-zinc-400'}`}>
+                        <div className={`h-8 rounded-lg border transition-all duration-500 flex items-center px-3 gap-2 ${focusedField === 'email' ? 'border-lime-400 dark:border-lime-400 bg-blue-50/50 dark:bg-lime-400/5 scale-[1.02]' : 'border-zinc-200/50 dark:border-white/10'}`}>
+                            <div className={`w-1 h-4 rounded-full transition-colors duration-300 ${focusedField === 'email' ? 'bg-lime-400 dark:bg-lime-400 animate-pulse' : 'bg-zinc-300 dark:bg-white/20'}`} />
+                            <span className={`text-[8px] font-mono tracking-wider truncate ${focusedField === 'email' ? 'text-blue-700 dark:text-lime-400' : 'text-zinc-400'}`}>
                                 {email || 'email@example.com'}
                             </span>
                         </div>
-                        <div className={`h-8 rounded-lg border transition-all duration-500 flex items-center px-3 gap-2 ${focusedField === 'password' ? 'border-blue-500 dark:border-blue-500 bg-blue-50/50 dark:bg-blue-500/5 scale-[1.02]' : 'border-zinc-200/50 dark:border-white/10'}`}>
-                            <div className={`w-1 h-4 rounded-full transition-colors duration-300 ${focusedField === 'password' ? 'bg-blue-500 dark:bg-blue-500 animate-pulse' : 'bg-zinc-300 dark:bg-white/20'}`} />
-                            <span className={`text-[8px] font-mono tracking-wider ${focusedField === 'password' ? 'text-blue-700 dark:text-blue-400' : 'text-zinc-400'}`}>
+                        <div className={`h-8 rounded-lg border transition-all duration-500 flex items-center px-3 gap-2 ${focusedField === 'password' ? 'border-lime-400 dark:border-lime-400 bg-blue-50/50 dark:bg-lime-400/5 scale-[1.02]' : 'border-zinc-200/50 dark:border-white/10'}`}>
+                            <div className={`w-1 h-4 rounded-full transition-colors duration-300 ${focusedField === 'password' ? 'bg-lime-400 dark:bg-lime-400 animate-pulse' : 'bg-zinc-300 dark:bg-white/20'}`} />
+                            <span className={`text-[8px] font-mono tracking-wider ${focusedField === 'password' ? 'text-blue-700 dark:text-lime-400' : 'text-zinc-400'}`}>
                                 {password ? '•'.repeat(Math.min(password.length, 16)) : '••••••••'}
                             </span>
                         </div>
@@ -94,10 +94,10 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
 
                     <div className="flex-1 p-10 flex flex-col justify-between relative z-10">
                         <div className="flex justify-between items-start">
-                            <div className="w-14 h-14 rounded-2xl bg-blue-500 flex items-center justify-center shadow-[0_10px_30px_rgba(190, 242, 100,0.3)]">
+                            <div className="w-14 h-14 rounded-2xl bg-lime-400 flex items-center justify-center shadow-[0_10px_30px_rgba(190, 242, 100,0.3)]">
                                 <EditorialIcon className="w-7 h-7 text-black" />
                             </div>
-                            <div className="px-4 py-1.5 rounded-full bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/10 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-300">
+                            <div className="px-4 py-1.5 rounded-full bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/10 text-[9px] font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-300">
                                 Protected Access
                             </div>
                         </div>
@@ -105,7 +105,7 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
                         <div className="space-y-6">
                             {/* File count + encryption */}
                             <div>
-                                <div className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-2">Secure delivery</div>
+                                <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-zinc-400 mb-2">Secure delivery</div>
                                 <div className="text-3xl font-sans tracking-tight text-zinc-900 dark:text-white tracking-tight leading-none">8 Assets</div>
                                 <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 font-mono tracking-wider">AES-256 · End-to-End</div>
                             </div>
@@ -113,8 +113,8 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
                             {/* Milestone Progress */}
                             <div>
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400">Payment Progress</span>
-                                    <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400">2 of 3</span>
+                                    <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-zinc-400">Payment Progress</span>
+                                    <span className="text-[9px] font-bold text-blue-600 dark:text-lime-400">2 of 3</span>
                                 </div>
                                 <div className="h-1.5 w-full bg-zinc-200/50 dark:bg-white/10 rounded-full overflow-hidden">
                                     <div className="h-full bg-gradient-to-r from-blue-500 to-blue-500 rounded-full transition-all duration-700" style={{ width: `${progressWidth}%` }} />
@@ -123,7 +123,7 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
                                     {signalBars.map((height, idx) => (
                                         <div
                                             key={idx}
-                                            className={`w-2 rounded-full transition-all duration-500 ${focusedField ? 'bg-blue-500/80 dark:bg-blue-500/80' : 'bg-zinc-300 dark:bg-white/20'}`}
+                                            className={`w-2 rounded-full transition-all duration-500 ${focusedField ? 'bg-lime-400/80 dark:bg-lime-400/80' : 'bg-zinc-300 dark:bg-white/20'}`}
                                             style={{ height: `${height}%` }}
                                         />
                                     ))}
@@ -133,10 +133,10 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
                             <div className="h-[0.5px] w-full bg-zinc-200 dark:bg-white/10" />
                             <div className="flex justify-between items-end">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(190, 242, 100,0.5)] dark:shadow-[0_0_8px_rgba(190, 242, 100,0.4)]" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">{statusLabel}</span>
+                                    <div className="w-2 h-2 rounded-full bg-lime-500 dark:bg-lime-400 animate-pulse shadow-[0_0_8px_rgba(190, 242, 100,0.5)] dark:shadow-[0_0_8px_rgba(190, 242, 100,0.4)]" />
+                                    <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">{statusLabel}</span>
                                 </div>
-                                <Activity className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+                                <Activity className="w-7 h-7 text-blue-600 dark:text-lime-400" />
                             </div>
                         </div>
                     </div>
@@ -144,10 +144,10 @@ const EnhancedMonolith = ({ focusedField, email, password }: { focusedField: str
 
                 {/* Floating Badge: Payment Verified */}
                 <div className="absolute -right-10 top-1/4 px-4 py-3 bg-white dark:bg-[#2a2a2e] rounded-2xl shadow-2xl border-[0.5px] border-zinc-100 dark:border-white/5 animate-float-delayed z-20 flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-full bg-lime-400 flex items-center justify-center">
                         <ShieldCheck className="w-3 h-3 text-black" />
                     </div>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-300 whitespace-nowrap">Verified</span>
+                    <span className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600 dark:text-zinc-300 whitespace-nowrap">Verified</span>
                 </div>
             </div>
         </div>
@@ -274,7 +274,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                     className="absolute top-8 left-8 md:left-16 lg:left-20 cursor-pointer group flex items-center gap-3"
                 >
                     <EditorialIcon className="w-8 h-8 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
-                    <span className="font-sans tracking-tight font-bold text-xl tracking-tight hidden md:block text-black dark:text-white">Heartifact</span>
+                    <span className="font-sans tracking-tight font-bold text-xl tracking-tight hidden md:block text-black dark:text-white">Sendational</span>
                 </div>
 
                 {/* Theme Toggle */}
@@ -308,7 +308,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                         )}
                         <div className="space-y-8">
                             <div className="group relative">
-                                <label className={`absolute left-0 transition-all duration-300 pointer-events-none ${focusedField === 'email' || email ? '-top-6 text-[9px] font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400' : 'top-3 text-lg text-zinc-400 font-medium'}`}>
+                                <label className={`absolute left-0 transition-all duration-300 pointer-events-none ${focusedField === 'email' || email ? '-top-6 text-[9px] font-semibold uppercase tracking-[0.3em] text-blue-600 dark:text-lime-400' : 'top-3 text-lg text-zinc-400 font-medium'}`}>
                                     Email Address
                                 </label>
                                 <input
@@ -323,7 +323,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                             </div>
 
                             <div className="group relative">
-                                <label className={`absolute left-0 transition-all duration-300 pointer-events-none ${focusedField === 'password' || password ? '-top-6 text-[9px] font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400' : 'top-3 text-lg text-zinc-400 font-medium'}`}>
+                                <label className={`absolute left-0 transition-all duration-300 pointer-events-none ${focusedField === 'password' || password ? '-top-6 text-[9px] font-semibold uppercase tracking-[0.3em] text-blue-600 dark:text-lime-400' : 'top-3 text-lg text-zinc-400 font-medium'}`}>
                                     Password
                                 </label>
                                 <input
@@ -339,13 +339,13 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
                         </div>
 
                         <div className="flex items-center justify-between gap-8">
-                            <button type="button" className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black dark:hover:text-white transition-colors underline underline-offset-8 decoration-zinc-200 dark:decoration-white/10">
+                            <button type="button" className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 hover:text-black dark:hover:text-white transition-colors underline underline-offset-8 decoration-zinc-200 dark:decoration-white/10">
                                 Reset Password
                             </button>
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="group/btn h-14 px-10 bg-black dark:bg-blue-500 text-white dark:text-zinc-950 rounded-full font-black text-[10px] uppercase tracking-[0.3em] transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-2xl shadow-black/20 dark:shadow-blue-500/10"
+                                className="group/btn h-14 px-10 bg-black dark:bg-lime-400 text-white dark:text-zinc-950 rounded-full font-semibold text-[10px] uppercase tracking-[0.3em] transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-2xl shadow-black/20 dark:shadow-lime-400/10"
                             >
                                 {isLoading ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -361,7 +361,7 @@ export default function SignInPage({ themeMode = 'light', toggleTheme }: SignInP
 
                     <div className="mt-16 text-center pt-8 border-t border-zinc-50 dark:border-white/5">
                         <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">
-                            {isSignUp ? "Already have an account?" : "Don't have an account?"} <button type="button" onClick={() => { playClick(); setIsSignUp(!isSignUp); setFormError(null); }} className="font-bold text-black dark:text-white hover:underline decoration-blue-500 decoration-2 underline-offset-4 transition-all">{isSignUp ? "Sign In!" : "Create one!"}</button>
+                            {isSignUp ? "Already have an account?" : "Don't have an account?"} <button type="button" onClick={() => { playClick(); setIsSignUp(!isSignUp); setFormError(null); }} className="font-bold text-black dark:text-white hover:underline decoration-lime-400 decoration-2 underline-offset-4 transition-all">{isSignUp ? "Sign In!" : "Create one!"}</button>
                         </p>
                     </div>
                 </div>

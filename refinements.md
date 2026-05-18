@@ -1,5 +1,5 @@
 
-# 🛠️ Heartifact: Frontend Refinement & Patch Roadmap
+# 🛠️ Sendational: Frontend Refinement & Patch Roadmap
 
 > **Status:** Alpha / Prototype
 > **Priority:** Stabilization & Architecture before Feature Expansion.

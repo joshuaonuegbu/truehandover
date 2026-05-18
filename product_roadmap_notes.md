@@ -1,5 +1,5 @@
 
-# 🛡️ Heartifact Product Roadmap: "Sticky" Utility Features
+# 🛡️ Sendational Product Roadmap: "Sticky" Utility Features
 > **Philosophy:** High Retention ("Lock-In"), Zero AI, Zero Legal Liability.
 > **Goal:** Become the "Operating System" for the freelancer, not just a delivery tool.
 
@@ -35,7 +35,7 @@
 *Tools that manage the relationship, not just the file.*
 
 ### 6. The "Forever" Client Portal
-*   **Function:** A persistent URL (`portal.heartifact.com/client-name`) showing *all* past and present projects for that specific client.
+*   **Function:** A persistent URL (`portal.sendational.com/client-name`) showing *all* past and present projects for that specific client.
 *   **Lock-In:** The client gets habituated to this hub. Moving platforms disrupts the client.
 
 ### 7. Automated "Nudge" Sequences
@@ -86,8 +86,8 @@
 *Features that turn the user's work into marketing material.*
 
 ### 16. The "Living" Portfolio (High Lock-In)
-*   **Function:** A public profile (`heartifact.com/@username`). When a project is marked "Completed" & "Public", the thumbnail automatically appears on this grid.
-*   **Lock-In:** If they leave Heartifact, their professional website disappears.
+*   **Function:** A public profile (`sendational.com/@username`). When a project is marked "Completed" & "Public", the thumbnail automatically appears on this grid.
+*   **Lock-In:** If they leave Sendational, their professional website disappears.
 *   **Cost:** Minimal (hosting thumbnails).
 
 ### 17. Client "Happiness" Rating (Private)
@@ -95,7 +95,7 @@
 *   **Value:** Private feedback loop for the freelancer (unlike public Upwork reviews).
 
 ### 18. "Verified Freelancer" Badge
-*   **Function:** An embeddable HTML snippet for their *personal* website: "Payments Secured by Heartifact."
+*   **Function:** An embeddable HTML snippet for their *personal* website: "Payments Secured by Sendational."
 *   **Value:** Adds legitimacy to them; free marketing for you.
 
 ### 19. QR Code Generator
@@ -130,7 +130,7 @@
 
 ### 25. Collaborator "Observer" Seats
 *   **Concept:** Allow the Client to invite *their* boss/team to "View Only".
-*   **Value:** Spreads Heartifact usage to entire organizations (viral loop).
+*   **Value:** Spreads Sendational usage to entire organizations (viral loop).
 
 ### 26. "One-Click" Case Study Generator
 *   **Concept:** Takes the Project Name, Description, and Thumbnails -> Formats them into a clean HTML "Case Study" page.

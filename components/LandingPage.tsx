@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import {
     ArrowRight, Shield, Zap, Globe,
     Lock, Check, Eye, FileText, Smartphone,
@@ -25,20 +25,41 @@ import {
     Gem,
     Coins,
     Banknote,
+    BarChart3,
     Menu,
     LifeBuoy,
     Youtube,
-    LayoutGrid
+    LayoutGrid,
+    FolderOpen,
+    Save,
+    Calendar
 } from 'lucide-react';
-import { playClick } from '../utils/sound';
+import { playClick, playSuccess } from '../utils/sound';
 import ThemeModeDropdown from './ThemeModeDropdown';
 import BrandLogo from './BrandLogo';
+import DeliveryQuickQuote from './DeliveryQuickQuote';
+import { type QuoteLine, makeQuoteLine, calcQuoteSubtotal } from '../utils/quoteBuilderCore';
 
 // --- VISUAL PRIMITIVES ---
 
 // OPTIMIZED: Granular Film Grain SVG (Synced with App.tsx Vault Style)
 // baseFrequency=0.98 provides the "Ultra High Res" digital film look.
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.7' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
+
+function subscribeDocDarkClass(onStoreChange: () => void) {
+    if (typeof document === 'undefined') return () => {};
+    const mo = new MutationObserver(onStoreChange);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    mq.addEventListener('change', onStoreChange);
+    return () => {
+        mo.disconnect();
+        mq.removeEventListener('change', onStoreChange);
+    };
+}
+function getDocDarkClassSnapshot() {
+    return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+}
 const Logo = ({ className = "w-8 h-8" }) => (
     <BrandLogo className={className} />
 );
@@ -126,7 +147,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
                         width="100%"
                         height="100%"
                         src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=0&loop=1&playlist=${videoId}`}
-                        title="Heartifact Film"
+                        title="Sendational Film"
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
@@ -226,8 +247,8 @@ const GetStartedModal = ({
                         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-zinc-300/80 to-transparent dark:via-white/20" />
                         <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0 space-y-2 pr-2">
-                                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-400 dark:text-zinc-500">Heartifact</p>
-                                <h2 id="get-started-title" className="font-serif text-2xl leading-[1.15] tracking-tight text-zinc-950 dark:text-white sm:text-[1.65rem]">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-400 dark:text-zinc-500">Sendational</p>
+                                <h2 id="get-started-title" className="font-sans font-medium tracking-tight text-2xl leading-[1.15]  text-zinc-950 dark:text-white sm:text-[1.65rem]">
                                     How would you like to begin?
                                 </h2>
                                 <p className="max-w-md text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
@@ -337,7 +358,7 @@ const SectionHeading = ({ badge, title, subtitle, className = "" }: any) => (
                 {badge}
             </span>
         )}
-        <h2 className="font-serif text-4xl md:text-6xl mb-6 text-black dark:text-white transition-colors duration-500 leading-tight tracking-wide">
+        <h2 className="font-sans font-medium tracking-tight text-4xl md:text-6xl mb-6 text-black dark:text-white transition-colors duration-500 leading-tight ">
             {title}
         </h2>
         {subtitle && <p className="text-slate-600 dark:text-slate-200 text-lg max-w-xl transition-colors duration-500 leading-relaxed">
@@ -359,7 +380,7 @@ const BentoCard = ({ children, className = "", title, subtitle, icon: Icon }: { 
                         </div>
                     )}
                     <div>
-                        {title && <h3 className="font-serif text-xl text-black dark:text-white leading-none mb-1 tracking-wide">{title}</h3>}
+                        {title && <h3 className="font-sans font-medium tracking-tight text-xl text-black dark:text-white leading-none mb-1 ">{title}</h3>}
                         {subtitle && <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">{subtitle}</p>}
                     </div>
                 </div>
@@ -386,15 +407,18 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
             className={`fixed top-0 left-0 right-0 z-50 px-6 pb-6 transition-all duration-500 ${isHidden ? 'opacity-0 -translate-y-full pointer-events-none' : 'opacity-100 translate-y-0'}`}
             style={{ paddingTop: 'max(32px, calc(env(safe-area-inset-top, 0px) + 18px))' }}
         >
+            {/* On xl+ screens, offset the nav pill to the right of the floating widget (w-80 = 20rem + left-6 + gap ≈ 22rem) */}
+            <div>
             <div className="max-w-[760px] md:max-w-[900px] xl:max-w-[1080px] 2xl:max-w-[1200px] mx-auto bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full px-4 sm:px-5 lg:px-6 py-3 flex items-center justify-between shadow-2xl relative z-50">
                 <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                     <Logo className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
-                    <span className="font-serif text-lg sm:text-xl tracking-tight text-black dark:text-white">Heartifact</span>
+                    <span className="font-sans font-medium tracking-tight text-lg sm:text-xl  text-black dark:text-white">Sendational</span>
                 </div>
 
                 <div className="hidden md:flex items-center gap-4 lg:gap-6">
-                    <button onClick={() => scrollTo('comparison')} className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors">Why Us</button>
-                    <button onClick={() => scrollTo('how-it-works')} className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors">Process</button>
+                    <button onClick={() => scrollTo('proof')} className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors">Proof</button>
+                    <button onClick={() => scrollTo('flow')} className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors">Flow</button>
+                    <button onClick={() => scrollTo('control')} className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors">Control</button>
                     <button onClick={() => scrollTo('pricing')} className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors">Pricing</button>
                 </div>
 
@@ -415,7 +439,7 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
 
                     <button
                         onClick={onStart}
-                        className="px-6 py-2.5 bg-black dark:bg-lime-400 text-white dark:text-zinc-950 rounded-2xl font-bold text-xs uppercase tracking-[0.15em] hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_20px_rgba(190, 242, 100,0.5)] transition-all shadow-lg border border-transparent dark:border-lime-400"
+                        className="px-6 py-2.5 bg-black dark:bg-lime-400 text-white dark:text-zinc-950 rounded-full font-bold text-xs uppercase tracking-[0.15em] hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_20px_rgba(190, 242, 100,0.5)] transition-all shadow-lg border border-transparent dark:border-lime-400"
                     >
                         Start for Free
                     </button>
@@ -443,9 +467,10 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
             `}>
                 <div className="bg-white/95 dark:bg-[#2D2E45]/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-[2rem] p-6 shadow-2xl flex flex-col gap-6">
                     <div className="flex flex-col gap-4">
-                        <button onClick={() => scrollTo('comparison')} className="text-lg font-serif text-obsidian dark:text-white text-left px-2">Why Us</button>
-                        <button onClick={() => scrollTo('how-it-works')} className="text-lg font-serif text-obsidian dark:text-white text-left px-2">Process</button>
-                        <button onClick={() => scrollTo('pricing')} className="text-lg font-serif text-obsidian dark:text-white text-left px-2">Pricing</button>
+                        <button onClick={() => scrollTo('proof')} className="text-lg font-sans font-medium tracking-tight text-obsidian dark:text-white text-left px-2">Proof</button>
+                        <button onClick={() => scrollTo('flow')} className="text-lg font-sans font-medium tracking-tight text-obsidian dark:text-white text-left px-2">Flow</button>
+                        <button onClick={() => scrollTo('control')} className="text-lg font-sans font-medium tracking-tight text-obsidian dark:text-white text-left px-2">Control</button>
+                        <button onClick={() => scrollTo('pricing')} className="text-lg font-sans font-medium tracking-tight text-obsidian dark:text-white text-left px-2">Pricing</button>
                     </div>
                     <div className="h-px bg-slate-200 dark:bg-white/10 w-full" />
                     <div className="flex items-center justify-between px-2">
@@ -475,16 +500,16 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
                     </div>
                 </div>
             </div>
+            </div>{/* end xl:pl-[22rem] wrapper */}
         </nav>
     );
 };
 
-const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: () => void }) => {
-    // ... [Same implementation as before] ...
+const Hero = ({ onStart, onWatchVideo, viewMode, setViewMode }: { onStart: () => void, onWatchVideo: () => void, viewMode: 'creatives' | 'clients', setViewMode: (mode: 'creatives' | 'clients') => void }) => {
     const [isHoveringCTA, setIsHoveringCTA] = useState(false);
 
     return (
-        <section className="relative min-h-[100vh] flex flex-col items-center px-6 pt-32 pb-12 overflow-hidden bg-editorial dark:bg-cosmic text-black dark:text-white transition-colors duration-700">
+        <section id="landing-hero" className="relative flex flex-col items-center px-6 pt-32 pb-16 overflow-hidden bg-editorial dark:bg-cosmic text-black dark:text-white transition-colors duration-700">
             {/* Film grain — light mode: subtle, dark mode: prominent */}
             <div
                 className="absolute inset-0 opacity-[0.06] dark:opacity-0 mix-blend-multiply pointer-events-none z-0"
@@ -503,109 +528,613 @@ const Hero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: ()
                 }}
             ></div>
 
-            <div className="flex-1 w-full flex flex-col items-center justify-center relative z-10 w-full">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1200px] h-full pointer-events-none overflow-hidden z-0">
-                    <div className={`
-                    absolute top-[20%] right-[5%] md:right-[15%] w-48 h-64 bg-white dark:bg-[#2D2E45] rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl rotate-12 transition-all duration-700 ease-out overflow-hidden
-                    ${isHoveringCTA ? 'translate-y-[-20px] scale-110 shadow-[0_20px_50px_rgba(190, 242, 100,0.2)]' : 'translate-y-0 opacity-40'}
-                `}>
-                        <div
-                            className="absolute inset-0 opacity-0 dark:opacity-40 mix-blend-multiply dark:mix-blend-overlay pointer-events-none z-0"
-                            style={{
-                                backgroundImage: NOISE_SVG,
-                                backgroundSize: '150px 150px',
-                                filter: 'contrast(1500%) brightness(102%)'
-                            }}
-                        ></div>
+            <div className="flex-1 w-full flex flex-col items-center justify-center relative z-10 w-full mb-16">
+                
+                {/* The Split Toggle */}
+                <div className="mb-12 relative z-20 flex flex-col items-center animate-fade-in">
+                    <nav className="flex items-center bg-slate-100/80 dark:bg-black/20 p-1.5 rounded-full border border-slate-200 dark:border-white/10 backdrop-blur-xl shadow-inner" role="tablist">
+                        <button 
+                            onClick={() => setViewMode('creatives')}
+                            className={`px-8 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300 ${viewMode === 'creatives' ? 'bg-white dark:bg-[#323242] text-black dark:text-white shadow-[0_2px_8px_rgba(0,0,0,0.08)]' : 'text-slate-500 dark:text-slate-400 hover:text-black dark:hover:text-white'}`}
+                        >
+                            Creative
+                        </button>
 
-                        <div className="p-4 h-full flex flex-col items-center justify-center relative z-10">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-all duration-500 ${isHoveringCTA ? 'bg-lime-400 text-black' : 'bg-slate-200 dark:bg-white/10 text-slate-400'}`}>
-                                {isHoveringCTA ? <Unlock className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
+                        <button 
+                            onClick={() => setViewMode('clients')}
+                            className={`px-8 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300 ${viewMode === 'clients' ? 'bg-white dark:bg-[#323242] text-black dark:text-white shadow-[0_2px_8px_rgba(0,0,0,0.08)]' : 'text-slate-500 dark:text-slate-400 hover:text-black dark:hover:text-white'}`}
+                        >
+                            Client
+                        </button>
+                    </nav>
+                </div>
+
+                {viewMode === 'creatives' ? (
+                    <>
+                        {/* Creative Hero — Decorative background glow */}
+                        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-lime-400/8 rounded-full blur-[120px] pointer-events-none z-0" />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1200px] h-full pointer-events-none overflow-hidden z-0">
+                            <div className={`
+                            absolute top-[20%] right-[5%] md:right-[15%] w-48 h-64 bg-white dark:bg-[#2D2E45] rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl rotate-12 transition-all duration-700 ease-out overflow-hidden
+                            ${isHoveringCTA ? 'translate-y-[-20px] scale-110 shadow-[0_20px_50px_rgba(190, 242, 100,0.2)]' : 'translate-y-0 opacity-40'}
+                        `}>
+                                <div
+                                    className="absolute inset-0 opacity-0 dark:opacity-40 mix-blend-multiply dark:mix-blend-overlay pointer-events-none z-0"
+                                    style={{
+                                        backgroundImage: NOISE_SVG,
+                                        backgroundSize: '150px 150px',
+                                        filter: 'contrast(1500%) brightness(102%)'
+                                    }}
+                                ></div>
+
+                                <div className="p-4 h-full flex flex-col items-center justify-center relative z-10">
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-all duration-500 ${isHoveringCTA ? 'bg-lime-400 text-black' : 'bg-slate-200 dark:bg-white/10 text-slate-400'}`}>
+                                        {isHoveringCTA ? <Unlock className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
+                                    </div>
+                                    <div className="w-20 h-2 bg-slate-200 dark:bg-white/10 rounded-full mb-2" />
+                                    <div className="w-12 h-2 bg-slate-200 dark:bg-white/10 rounded-full" />
+                                </div>
                             </div>
-                            <div className="w-20 h-2 bg-slate-200 dark:bg-white/10 rounded-full mb-2" />
-                            <div className="w-12 h-2 bg-slate-200 dark:bg-white/10 rounded-full" />
+                        </div>
+
+                        <div className="relative z-10 max-w-5xl mx-auto text-center mb-12">
+                            <h1 className="font-sans font-medium tracking-tight text-5xl md:text-8xl lg:text-9xl font-medium  leading-[0.95] mb-10 animate-slide-up">
+                                <span className="text-black dark:text-white"><span className="line-through decoration-red-500 decoration-[6px] md:decoration-[8px]">Stop Chasing.</span></span> <br />
+                                <span className="text-black dark:text-white">Start <span className="italic text-lime-500 dark:text-lime-400">Delivering.</span></span>
+                            </h1>
+
+                            <div className="max-w-4xl mx-auto leading-relaxed mb-12 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                                <p className="font-sans font-medium tracking-tight italic text-xl md:text-3xl text-obsidian dark:text-white mb-6 ">
+                                    The end of the "You send first" standoff.
+                                </p>
+                                <p className="text-lg md:text-2xl text-slate-600 dark:text-slate-200 font-light leading-relaxed">
+                                    Sendational ensures your assets are <span className="border-b-2 border-lime-400 text-black dark:text-white font-medium">securely handed over</span> only when payment clears.
+                                    We generate watermarked previews automatically, so your client reviews the excellence while you retain the master files.
+                                </p>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                                <button
+                                    onClick={() => { onStart(); }}
+                                    onMouseEnter={() => setIsHoveringCTA(true)}
+                                    onMouseLeave={() => setIsHoveringCTA(false)}
+                                    className="group relative h-16 px-10 bg-lime-400 text-zinc-950 rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(190, 242, 100,0.6)] shadow-xl"
+                                >
+                                    <span className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-cta-sheen" />
+                                    </span>
+                                    <span className="relative z-10 flex items-center gap-3">
+                                        Start for Free <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className="relative z-10 max-w-5xl mx-auto text-center mb-12">
+                            {/* Client Hero — Decorative background glow */}
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-lime-400/8 rounded-full blur-[120px] pointer-events-none -z-10" />
+
+                            <h1 className="font-sans font-medium tracking-tight text-5xl md:text-8xl lg:text-9xl font-medium leading-[0.95] mb-10 animate-slide-up flex flex-col items-center">
+                                <span className="text-black dark:text-white block">The ultimate</span>
+                                <span className="text-lime-500 dark:text-lime-400 block italic">digital handshake.</span>
+                            </h1>
+
+                            <div className="max-w-4xl mx-auto leading-relaxed mb-12 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                                <p className="font-sans font-medium tracking-tight italic text-xl md:text-3xl text-obsidian dark:text-white mb-6 ">
+                                    One link. Preview, approve, pay, and download.
+                                </p>
+                                <p className="text-lg md:text-2xl text-slate-600 dark:text-slate-200 font-light leading-relaxed">
+                                    Your creative sends you a private portal—not a random ZIP link.
+                                    Browse <span className="border-b-2 border-lime-400 text-black dark:text-white font-medium">watermarked previews</span>, pay the final balance inline, and your full-resolution files unlock instantly.
+                                </p>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                                <button
+                                    onClick={onStart}
+                                    className="group relative h-16 px-10 bg-lime-400 text-zinc-950 rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(190,242,100,0.6)] shadow-xl"
+                                >
+                                    <span className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-cta-sheen" />
+                                    </span>
+                                    <span className="relative z-10 flex items-center gap-3">
+                                        Start for Free <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {/* Video Carousel — Positioned Higher in Hero */}
+                <div className="w-full max-w-[1066px] mx-auto px-4 relative z-20 animate-slide-up mb-12" style={{ animationDelay: '0.35s' }}>
+                    <div className="rounded-[2rem] border border-slate-200 dark:border-white/10 shadow-[0_24px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_24px_50px_rgba(0,0,0,0.6)] overflow-hidden bg-white dark:bg-[#323242]">
+                        <div className="flex h-10 w-full items-center gap-2 bg-slate-100 dark:bg-[#1C1C26] px-4 border-b border-slate-200 dark:border-white/10">
+                            <span className="h-3 w-3 rounded-full bg-red-400"></span>
+                            <span className="h-3 w-3 rounded-full bg-amber-400"></span>
+                            <span className="h-3 w-3 rounded-full bg-lime-400"></span>
+                        </div>
+                        <div className="relative aspect-video w-full bg-black flex items-center justify-center">
+                            <video 
+                                src="https://www.w3schools.com/html/mov_bbb.mp4" 
+                                autoPlay 
+                                loop 
+                                muted 
+                                playsInline 
+                                className="absolute inset-0 w-full h-full object-cover opacity-90 mix-blend-screen" 
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
                         </div>
                     </div>
                 </div>
 
-                <div className="mb-10 animate-fade-in relative z-10 flex flex-col md:flex-row items-center gap-4">
-                    <a
-                        href="https://www.producthunt.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-lg hover:scale-105 transition-all cursor-pointer group"
-                    >
-                        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[#FF6154] text-white">
-                            <span className="font-bold text-[10px] pb-0.5">P</span>
-                        </div>
-                        <span className="text-xs font-bold text-obsidian dark:text-white uppercase tracking-wider group-hover:text-[#FF6154] transition-colors">
-                            Featured on Product Hunt
-                        </span>
-                    </a>
-
-                    <div className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-sm shadow-sm transition-all hover:bg-white dark:hover:bg-white/10 cursor-default">
-                        <div className="w-2 h-2 bg-lime-400 rounded-full animate-pulse shadow-[0_0_8px_#bef264]"></div>
-                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-none uppercase tracking-wider">
-                            Now available in public beta
-                        </span>
+                <div className="w-full max-w-[1200px] border-t border-slate-200 dark:border-white/5 pt-8 animate-slide-up relative z-20" style={{ animationDelay: '0.4s' }}>
+                    <p className="text-center text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-400 mb-8">
+                        Built to integrate seamlessly with your stack
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
+                        <div className="flex items-center gap-2 text-xl font-sans font-medium tracking-tight text-slate-500 dark:text-slate-400"><Server className="w-5 h-5" /> AWS S3</div>
+                        <div className="flex items-center gap-2 text-xl font-sans font-medium tracking-tight text-slate-500 dark:text-slate-400"><DollarSign className="w-5 h-5" /> Stripe Connect</div>
+                        <div className="flex items-center gap-2 text-xl font-sans font-medium tracking-tight text-slate-500 dark:text-slate-400"><Globe className="w-5 h-5" /> Cloudflare R2</div>
+                        <div className="flex items-center gap-2 text-xl font-sans font-medium tracking-tight text-slate-500 dark:text-slate-400"><Disc className="w-5 h-5" /> Google Drive</div>
+                        <div className="flex items-center gap-2 text-xl font-sans font-medium tracking-tight text-slate-500 dark:text-slate-400"><Box className="w-5 h-5" /> Dropbox</div>
+                        <div className="flex items-center gap-2 text-xl font-sans font-medium tracking-tight text-slate-500 dark:text-slate-400"><Smartphone className="w-5 h-5" /> Zelle</div>
+                        <div className="flex items-center gap-2 text-xl font-sans font-medium tracking-tight text-slate-500 dark:text-slate-400"><Cloud className="w-5 h-5" /> OneDrive</div>
                     </div>
                 </div>
-
-                <div className="relative z-10 max-w-5xl mx-auto text-center mb-16">
-                    <h1 className="font-serif text-5xl md:text-8xl lg:text-9xl font-medium tracking-tight leading-[0.95] mb-10 animate-slide-up">
-                        <span className="text-red-600 dark:text-red-500 drop-shadow-sm">Stop Chasing.</span> <br />
-                        <span className="text-black dark:text-white">Start <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-[#bef264] to-[#bef264]">Delivering.</span></span>
-                    </h1>
-
-                    <div className="max-w-4xl mx-auto leading-relaxed mb-12 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                        <p className="font-serif italic text-xl md:text-3xl text-obsidian dark:text-white mb-6 tracking-wide">
-                            The end of the "You send first" standoff.
-                        </p>
-                        <p className="text-lg md:text-2xl text-slate-600 dark:text-slate-200 font-light leading-relaxed">
-                            Heartifact ensures your assets are <span className="border-b-2 border-lime-400 text-black dark:text-white font-medium">securely handed over</span> only when payment clears.
-                            We generate watermarked previews automatically, so your client reviews the excellence while you retain the master files.
-                        </p>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                        <button
-                            onClick={() => { onStart(); }}
-                            onMouseEnter={() => setIsHoveringCTA(true)}
-                            onMouseLeave={() => setIsHoveringCTA(false)}
-                            className="group relative h-16 px-10 bg-lime-400 text-zinc-950 rounded-2xl font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(190, 242, 100,0.6)] shadow-xl"
-                        >
-                            <span className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-cta-sheen" />
-                            </span>
-                            <span className="relative z-10 flex items-center gap-3">
-                                Start for Free <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                            </span>
-                        </button>
-
-                        <button
-                            onClick={() => { playClick(); onWatchVideo(); }}
-                            className="group h-16 px-10 rounded-2xl border border-slate-200 dark:border-white/20 text-black dark:text-white font-bold text-sm uppercase tracking-widest hover:bg-black/5 dark:hover:bg-white/5 transition-all backdrop-blur-sm flex items-center gap-3 hover:shadow-lg"
-                        >
-                            <PlayCircle className="w-4 h-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" /> Watch the Film
-                        </button>
-                    </div>
-
-                </div>
-
             </div>
 
-            <div className="w-full max-w-[1200px] border-t border-slate-200 dark:border-white/5 pt-8 mt-auto animate-slide-up relative z-20" style={{ animationDelay: '0.4s' }}>
-                <p className="text-center text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-400 mb-8">
-                    Built to integrate seamlessly with your stack
+
+
+        </section>
+    );
+};
+
+const SendationalArcStyles = () => (
+    <style>{`
+        @keyframes sendational-arc-drift {
+            0%, 100% { transform: translateY(0) rotate(var(--card-rotate)); }
+            50% { transform: translateY(-14px) rotate(calc(var(--card-rotate) + 1deg)); }
+        }
+        @keyframes sendational-track {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+        .sendational-arc-card {
+            --card-rotate: 0deg;
+            animation: sendational-arc-drift 7s ease-in-out infinite;
+            animation-delay: var(--card-delay, 0ms);
+        }
+        .sendational-trust-track {
+            animation: sendational-track 28s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .sendational-arc-card,
+            .sendational-trust-track {
+                animation: none;
+            }
+        }
+    `}</style>
+);
+
+const SendationalArcHero = ({ onStart, onWatchVideo }: { onStart: () => void, onWatchVideo: () => void }) => {
+    const arcCards = [
+        { icon: Eye, title: 'Watermark the gallery', text: 'Preview-ready files in seconds', rotate: '-15deg', y: '58px', delay: '0ms' },
+        { icon: Lock, title: 'Lock master files', text: 'Originals stay protected', rotate: '-8deg', y: '18px', delay: '160ms' },
+        { icon: CreditCard, title: 'Collect the balance', text: 'Stripe checkout in the portal', rotate: '0deg', y: '0px', delay: '320ms' },
+        { icon: Unlock, title: 'Unlock on payment', text: 'Client gets the final delivery', rotate: '8deg', y: '18px', delay: '480ms' },
+        { icon: FileCheck, title: 'Close the handoff', text: 'Receipt, audit trail, done', rotate: '15deg', y: '58px', delay: '640ms' },
+    ];
+
+    return (
+        <section id="landing-hero" className="relative overflow-hidden bg-[#e4edf1] text-zinc-950 transition-colors duration-700 dark:bg-[#171720] dark:text-white">
+            <SendationalArcStyles />
+            <div
+                className="absolute inset-0 pointer-events-none opacity-[0.05] mix-blend-multiply dark:opacity-[0.22] dark:mix-blend-overlay"
+                style={{ backgroundImage: NOISE_SVG, backgroundSize: '240px 240px' }}
+            />
+            <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-col px-6 pt-16 pb-24 sm:px-8 lg:px-10">
+                <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center text-center">
+                    <div className="mb-7 inline-flex items-center gap-3 rounded-full border border-zinc-900/10 bg-white/70 px-4 py-2 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06]">
+                        <img src="/icon-192.png" alt="" className="h-7 w-7 rounded-lg object-cover" />
+                        <span className="text-xs font-bold uppercase text-zinc-700 dark:text-zinc-200">Sendational theme system</span>
+                        <span className="hidden h-1.5 w-1.5 rounded-full bg-lime-400 sm:block" />
+                        <span className="hidden text-xs text-zinc-500 dark:text-zinc-400 sm:inline">Payment-gated delivery, rebuilt for attention</span>
+                    </div>
+
+                    <h1 className="max-w-6xl font-sans text-[clamp(3.5rem,10vw,8.8rem)] font-medium leading-[0.9] text-zinc-950 dark:text-white">
+                        Sendational delivery portals
+                    </h1>
+                    <p className="mt-8 max-w-3xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-200 sm:text-2xl">
+                        Turn every handoff into a branded, cinematic client moment: preview the work, approve the scope, pay the balance, then unlock the originals instantly.
+                    </p>
+
+                    <div className="mt-9 flex w-full max-w-3xl flex-col overflow-hidden rounded-lg border border-white/70 bg-white/[0.82] shadow-[0_24px_70px_rgba(23,23,32,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.07] dark:shadow-[0_24px_70px_rgba(0,0,0,0.45)]">
+                        <div className="flex items-center gap-3 border-b border-zinc-200/70 px-4 py-3 dark:border-white/10">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lime-400 text-black">
+                                <Zap className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0 flex-1 text-left">
+                                <p className="truncate text-sm font-semibold text-zinc-900 dark:text-white">Build a protected delivery for a brand campaign</p>
+                                <p className="text-xs text-zinc-500 dark:text-zinc-400">watermark previews, collect $4,800, unlock source files</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => { playClick(); onStart(); }}
+                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-950 text-white transition-transform hover:scale-105 dark:bg-lime-400 dark:text-black"
+                                aria-label="Start delivery"
+                            >
+                                <ArrowRight className="h-4 w-4" />
+                            </button>
+                        </div>
+                        <div className="grid gap-px bg-zinc-200/70 text-left dark:bg-white/10 sm:grid-cols-3">
+                            {['Preview gallery', 'Payment gate', 'Instant unlock'].map((label, i) => (
+                                <div key={label} className="bg-white/[0.88] px-4 py-3 dark:bg-[#20202c]/[0.92]">
+                                    <p className="text-[10px] font-bold uppercase text-zinc-400">0{i + 1}</p>
+                                    <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-white">{label}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                        <button
+                            onClick={() => { playClick(); onStart(); }}
+                            className="group flex h-14 items-center gap-3 rounded-full bg-lime-400 px-8 text-sm font-bold uppercase text-zinc-950 shadow-xl shadow-lime-400/20 transition-all hover:scale-105 hover:bg-lime-300"
+                        >
+                            Start a delivery <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </button>
+                        <button
+                            onClick={() => { playClick(); onWatchVideo(); }}
+                            className="flex h-14 items-center gap-3 rounded-full border border-zinc-900/10 bg-white/60 px-7 text-sm font-bold uppercase text-zinc-900 backdrop-blur-xl transition-all hover:bg-white dark:border-white/10 dark:bg-white/[0.06] dark:text-white dark:hover:bg-white/[0.10]"
+                        >
+                            <PlayCircle className="h-4 w-4" /> Watch the handoff
+                        </button>
+                    </div>
+                </div>
+
+                <div className="relative mt-10 hidden h-[245px] w-full lg:block" aria-hidden="true">
+                    <div className="absolute left-1/2 top-8 h-[520px] w-[1320px] -translate-x-1/2 rounded-[50%] border border-zinc-950/10 dark:border-white/10" />
+                    <div className="absolute left-1/2 top-0 flex w-[1180px] -translate-x-1/2 justify-between">
+                        {arcCards.map((card) => (
+                            <div
+                                key={card.title}
+                                className="sendational-arc-card w-[214px] rounded-lg border border-white/70 bg-white/[0.84] p-4 text-left shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-[#252535]/[0.88]"
+                                style={{ '--card-rotate': card.rotate, '--card-delay': card.delay, marginTop: card.y } as React.CSSProperties}
+                            >
+                                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-950 text-lime-300 dark:bg-lime-400 dark:text-black">
+                                    <card.icon className="h-5 w-5" />
+                                </div>
+                                <p className="text-base font-semibold text-zinc-950 dark:text-white">{card.title}</p>
+                                <p className="mt-1 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{card.text}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="pb-6 text-center text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+                    Preview the proof below
+                </div>
+            </div>
+        </section>
+    );
+};
+
+const SendationalProofBand = () => {
+    const proof = [
+        { icon: ShieldCheck, title: 'Trust shows up first', text: 'A branded portal says this handoff is official before a client clicks a file.' },
+        { icon: CreditCard, title: 'Payment is part of the flow', text: 'No awkward reminder chain. The balance gate sits exactly where the final files are.' },
+        { icon: FileCheck, title: 'Delivery feels finished', text: 'Previews, approvals, receipts, and unlocks live in one polished client path.' },
+    ];
+    const trust = ['Watermarked previews', 'Stripe checkout', 'BYO storage', 'Custom portals', 'Audit timeline', 'Instant unlock', 'Client approvals', 'Secure downloads'];
+    const track = [...trust, ...trust];
+
+    return (
+        <section id="proof" className="overflow-hidden bg-white py-16 text-zinc-950 dark:bg-[#20202c] dark:text-white">
+            <div className="mx-auto grid max-w-6xl gap-4 px-6 md:grid-cols-3">
+                {proof.map((item) => (
+                    <article key={item.title} className="rounded-lg border border-zinc-200 bg-[#f8f4f1] p-6 dark:border-white/10 dark:bg-white/[0.04]">
+                        <item.icon className="h-7 w-7 text-lime-500 dark:text-lime-300" />
+                        <h2 className="mt-5 text-2xl font-medium">{item.title}</h2>
+                        <p className="mt-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">{item.text}</p>
+                    </article>
+                ))}
+            </div>
+            <div className="mt-14 flex overflow-hidden border-y border-zinc-200 bg-[#e4edf1]/70 py-5 dark:border-white/10 dark:bg-black/20">
+                <div className="sendational-trust-track flex min-w-max items-center gap-10 px-5">
+                    {track.map((label, index) => (
+                        <div key={`${label}-${index}`} className="flex items-center gap-3 text-lg font-semibold text-zinc-500 dark:text-zinc-400">
+                            <CheckCircle className="h-5 w-5 text-lime-500 dark:text-lime-300" />
+                            {label}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+const SendationalWorkflowTheater = () => {
+    const scenes = [
+        {
+            label: 'Launch the portal',
+            title: 'One place to preview, approve, pay, and unlock',
+            text: 'Build the delivery from files, a quote, and a client email. Sendational turns it into a focused portal that feels more like a product launch than a shared folder.',
+            metric: '4 steps',
+            items: ['Upload or connect storage', 'Generate watermarked previews', 'Add quote and client details', 'Publish a secure link'],
+        },
+        {
+            label: 'Gate the originals',
+            title: 'Let clients inspect the work while the master files stay safe',
+            text: 'Clients can scan proofs, confirm scope, and pay from the same surface. Originals stay locked until the gate conditions are met.',
+            metric: '0 leaks',
+            items: ['Preview only', 'Payment required', 'Terms accepted', 'Unlock logged'],
+        },
+        {
+            label: 'Finish cleanly',
+            title: 'The moment payment clears, the handoff completes itself',
+            text: 'Receipts, download access, and timeline events land automatically so the project closes without another follow-up email.',
+            metric: 'instant',
+            items: ['Payment received', 'Files unlocked', 'Client notified', 'Audit trail saved'],
+        },
+    ];
+    const [active, setActive] = useState(0);
+
+    useEffect(() => {
+        const id = window.setInterval(() => setActive((value) => (value + 1) % scenes.length), 4200);
+        return () => window.clearInterval(id);
+    }, [scenes.length]);
+
+    const scene = scenes[active];
+
+    return (
+        <section id="flow" className="bg-[#e4edf1] py-24 text-zinc-950 dark:bg-charcoal dark:text-white transition-colors duration-700">
+            <div className="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+                <div>
+                    <p className="text-sm font-bold uppercase text-lime-700 dark:text-lime-300">The Sendational flow</p>
+                    <h2 className="mt-4 max-w-xl text-5xl font-medium leading-[0.98] sm:text-6xl">A landing-page moment inside your delivery.</h2>
+                    <p className="mt-6 max-w-lg text-lg leading-relaxed text-zinc-600 dark:text-zinc-300">
+                        Move from intent to execution in one sweep: assemble the delivery, let the client review the work, collect the balance, and release the originals.
+                    </p>
+                    <div className="mt-8 flex flex-col gap-3">
+                        {scenes.map((item, index) => (
+                            <button
+                                key={item.label}
+                                type="button"
+                                onClick={() => { playClick(); setActive(index); }}
+                                className={`flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-all ${
+                                    active === index
+                                        ? 'border-zinc-950 bg-white shadow-lg dark:border-lime-300 dark:bg-white/[0.09]'
+                                        : 'border-zinc-200 bg-white/50 hover:bg-white dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]'
+                                }`}
+                            >
+                                <span className="text-sm font-semibold">{item.label}</span>
+                                <span className="text-xs text-zinc-500 dark:text-zinc-400">{item.metric}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="relative">
+                    <div className="rounded-lg border border-white/70 bg-white/[0.78] p-3 shadow-[0_28px_80px_rgba(23,23,32,0.18)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06]">
+                        <div className="rounded-lg border border-zinc-200 bg-[#f8f4f1] dark:border-white/10 dark:bg-[#222231]">
+                            <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3 dark:border-white/10">
+                                <div className="flex items-center gap-2">
+                                    <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+                                    <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+                                    <span className="h-2.5 w-2.5 rounded-full bg-lime-400" />
+                                </div>
+                                <div className="flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-zinc-500 dark:bg-white/[0.06] dark:text-zinc-300">
+                                    <Lock className="h-3 w-3" /> sendational.link/project
+                                </div>
+                            </div>
+                            <div className="grid gap-px bg-zinc-200 dark:bg-white/10 md:grid-cols-[1fr_0.8fr]">
+                                <div className="min-h-[430px] bg-white p-5 dark:bg-[#1c1c26]">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-xs font-bold uppercase text-zinc-400">{scene.label}</p>
+                                            <h3 className="mt-2 max-w-xl text-3xl font-medium leading-tight">{scene.title}</h3>
+                                        </div>
+                                        <BrandLogo className="h-11 w-11" accentColor="var(--color-brand)" />
+                                    </div>
+                                    <p className="mt-5 max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">{scene.text}</p>
+                                    <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                                        {scene.items.map((item, index) => (
+                                            <div key={item} className="rounded-lg border border-zinc-200 bg-[#e4edf1]/70 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                                                <p className="text-[10px] font-bold uppercase text-zinc-400">Step {index + 1}</p>
+                                                <p className="mt-2 text-sm font-semibold">{item}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <aside className="bg-[#f8f4f1] p-5 dark:bg-[#252535]">
+                                    <div className="rounded-lg bg-zinc-950 p-5 text-white dark:bg-lime-400 dark:text-black">
+                                        <p className="text-xs font-bold uppercase opacity-70">Balance due</p>
+                                        <p className="mt-2 text-4xl font-medium">$4,800</p>
+                                        <div className="mt-5 h-2 rounded-full bg-white/20">
+                                            <div className="h-full w-[72%] rounded-full bg-lime-400 dark:bg-black" />
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 space-y-3">
+                                        {['Preview gallery viewed', 'Terms accepted', 'Payment pending'].map((item, index) => (
+                                            <div key={item} className="flex items-center justify-between rounded-lg bg-white px-4 py-3 text-sm dark:bg-white/[0.06]">
+                                                <span>{item}</span>
+                                                {index < 2 ? <Check className="h-4 w-4 text-lime-500" /> : <Clock className="h-4 w-4 text-zinc-400" />}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </aside>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+const SendationalPromptBuilder = ({ onStart }: { onStart: () => void }) => {
+    const categories = [
+        { name: 'Popular', prompts: ['Send a photo gallery', 'Deliver source files', 'Collect final balance'] },
+        { name: 'Creative', prompts: ['Launch a brand kit', 'Hand off video exports', 'Package design assets'] },
+        { name: 'Agency', prompts: ['Approve campaign files', 'Ship a client portal', 'Close a retainer milestone'] },
+        { name: 'Secure', prompts: ['Use BYO storage', 'Protect originals', 'Log the unlock trail'] },
+    ];
+    const [active, setActive] = useState(0);
+    const [prompt, setPrompt] = useState('Build a protected delivery for a brand campaign with $4,800 due before unlock.');
+
+    return (
+        <section id="builder" className="bg-gradient-to-b from-[#f8f4f1] via-white to-[#e4edf1] py-24 text-zinc-950 dark:from-[#20202c] dark:via-[#171720] dark:to-[#20202c] dark:text-white">
+            <div className="mx-auto max-w-5xl px-6 text-center">
+                <p className="text-sm font-bold uppercase text-lime-700 dark:text-lime-300">Prompt-to-portal energy</p>
+                <h2 className="mt-4 text-5xl font-medium leading-none sm:text-6xl">Ask Sendational to shape the handoff.</h2>
+                <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-300">
+                    Start with the outcome you want, then turn it into a polished delivery with previews, payment, and unlock terms already in motion.
                 </p>
-                <div className="flex flex-wrap justify-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
-                    <div className="flex items-center gap-2 text-xl font-bold font-serif text-slate-500 dark:text-slate-400"><Server className="w-5 h-5" /> AWS S3</div>
-                    <div className="flex items-center gap-2 text-xl font-bold font-serif text-slate-500 dark:text-slate-400"><DollarSign className="w-5 h-5" /> Stripe Connect</div>
-                    <div className="flex items-center gap-2 text-xl font-bold font-serif text-slate-500 dark:text-slate-400"><Globe className="w-5 h-5" /> Cloudflare R2</div>
-                    <div className="flex items-center gap-2 text-xl font-bold font-serif text-slate-500 dark:text-slate-400"><Disc className="w-5 h-5" /> Google Drive</div>
-                    <div className="flex items-center gap-2 text-xl font-bold font-serif text-slate-500 dark:text-slate-400"><Box className="w-5 h-5" /> Dropbox</div>
-                    <div className="flex items-center gap-2 text-xl font-bold font-serif text-slate-500 dark:text-slate-400"><Smartphone className="w-5 h-5" /> Zelle</div>
-                    <div className="flex items-center gap-2 text-xl font-bold font-serif text-slate-500 dark:text-slate-400"><Cloud className="w-5 h-5" /> OneDrive</div>
+
+                <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-lg border border-zinc-200 bg-white text-left shadow-2xl dark:border-white/10 dark:bg-white/[0.06]">
+                    <textarea
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        className="min-h-[128px] w-full resize-none bg-transparent p-5 text-lg outline-none placeholder:text-zinc-400 dark:text-white"
+                        placeholder="Describe what you want to deliver..."
+                    />
+                    <div className="flex flex-col gap-4 border-t border-zinc-200 p-4 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-wrap gap-2">
+                            {categories.map((category, index) => (
+                                <button
+                                    key={category.name}
+                                    type="button"
+                                    onClick={() => { playClick(); setActive(index); setPrompt(category.prompts[0]); }}
+                                    className={`rounded-full px-4 py-2 text-xs font-bold uppercase transition-all ${
+                                        active === index
+                                            ? 'bg-zinc-950 text-white dark:bg-lime-400 dark:text-black'
+                                            : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-white/[0.08] dark:text-zinc-300'
+                                    }`}
+                                >
+                                    {category.name}
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => { playSuccess(); onStart(); }}
+                            className="flex h-11 items-center justify-center gap-2 rounded-full bg-lime-400 px-5 text-sm font-bold uppercase text-black transition-all hover:scale-105 hover:bg-lime-300"
+                        >
+                            Generate portal <ArrowRight className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="mt-7 flex flex-wrap justify-center gap-3">
+                    {categories[active].prompts.map((item) => (
+                        <button
+                            key={item}
+                            type="button"
+                            onClick={() => { playClick(); setPrompt(item); }}
+                            className="rounded-full border border-zinc-200 bg-white/70 px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-lime-400 dark:border-white/10 dark:bg-white/[0.05] dark:text-zinc-200"
+                        >
+                            {item}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+const SendationalControlBand = () => {
+    const controls = [
+        { icon: HardDrive, title: 'Bring your own storage links', text: 'Keep originals in the stack you already trust, then let Sendational coordinate access.' },
+        { icon: Shield, title: 'Set the unlock terms', text: 'Payment, approval, and terms can all become gates before the final files open.' },
+        { icon: BarChart3, title: 'Read the delivery room', text: 'See views, approvals, payments, and download activity in a timeline your team can trust.' },
+    ];
+
+    return (
+        <section id="control" className="bg-[#f8f4f1] py-24 text-zinc-950 dark:bg-[#20202c] dark:text-white">
+            <div className="mx-auto max-w-6xl px-6">
+                <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+                    <div>
+                        <p className="text-sm font-bold uppercase text-lime-700 dark:text-lime-300">Your web, your control</p>
+                        <h2 className="mt-4 text-5xl font-medium leading-none sm:text-6xl">Make the delivery dramatic without making it risky.</h2>
+                    </div>
+                    <p className="text-lg leading-relaxed text-zinc-600 dark:text-zinc-300">
+                        Give clients a high-trust path while you keep control of storage, payment rules, access, and every event in the handoff timeline.
+                    </p>
+                </div>
+
+                <div className="mt-10 grid gap-4 md:grid-cols-3">
+                    {controls.map((item) => (
+                        <article key={item.title} className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.05]">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-zinc-950 text-lime-300 dark:bg-lime-400 dark:text-black">
+                                <item.icon className="h-5 w-5" />
+                            </div>
+                            <h3 className="mt-5 text-2xl font-medium">{item.title}</h3>
+                            <p className="mt-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">{item.text}</p>
+                        </article>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+
+
+const SendationalReviews = () => {
+    const reviews = [
+        {
+            quote: "I need clients to see the work, approve it, and pay the balance without me sounding like a collections department.",
+            author: "Commercial photographers",
+            title: "Large files, final balances, tight timelines"
+        },
+        {
+            quote: "A Dropbox link gets the job done. A branded portal makes the handoff feel like the final chapter of a premium project.",
+            author: "Design studios",
+            title: "Brand systems, decks, source files"
+        },
+        {
+            quote: "The client should be able to review previews on mobile, pay on the spot, and get the originals instantly.",
+            author: "Video teams",
+            title: "Exports, selects, revisions, approvals"
+        },
+        {
+            quote: "When the delivery is clean, the project feels more expensive. That matters when referrals are built on the last impression.",
+            author: "Agencies and consultants",
+            title: "Reports, strategy assets, recurring clients"
+        }
+    ];
+
+    return (
+        <section className="overflow-hidden py-20 sm:py-32 bg-editorial dark:bg-cosmic transition-colors duration-700 relative">
+            <div className="max-w-[1200px] mx-auto px-6 mb-16">
+                <h2 className="font-sans font-medium tracking-tight text-4xl md:text-5xl lg:text-[64px] lg:leading-[72px] text-center md:text-left text-black dark:text-white">
+                    The final handoff is where <br className="hidden md:block" /> your brand either lands or leaks.
+                </h2>
+                <p className="mt-5 max-w-2xl text-center text-lg leading-relaxed text-slate-600 dark:text-slate-300 md:text-left">
+                    Sendational turns that moment into a controlled, polished exchange: preview first, payment next, originals released on cue.
+                </p>
+            </div>
+            
+            <div className="relative flex overflow-x-hidden group pb-8">
+                <div className="animate-marquee whitespace-nowrap flex gap-6 px-6 items-stretch">
+                    {[...reviews, ...reviews, ...reviews].map((rev, i) => (
+                        <div key={i} className="relative h-[440px] w-[300px] sm:w-[340px] shrink-0 rounded-2xl p-8 overflow-hidden bg-white dark:bg-[#323242] border border-slate-200 dark:border-white/10 shadow-xl flex flex-col justify-end whitespace-normal transition-transform duration-500 hover:-translate-y-2 hover:shadow-[0_24px_45px_-20px_rgba(15,23,42,0.4)] dark:hover:shadow-[0_24px_45px_-20px_rgba(0,0,0,0.7)]">
+                            <div className="absolute inset-0 bg-gradient-to-b from-black/5 to-black/80 dark:from-black/20 dark:to-black/90 z-0" />
+                            <div className="absolute inset-0 bg-slate-800 -z-10" />
+                            
+                            <div className="relative z-10 text-white">
+                                <svg fill="none" height="24" viewBox="0 0 26 20" width="24" className="mb-6 opacity-80 text-lime-400">
+                                    <path d="M5.876 19.072C7.668 19.072 8.97467 18.736 9.796 18.064C10.6173 17.3546 11.028 16.1413 11.028 14.424C11.028 12.632 10.6733 11.456 9.964 10.896C9.292 10.336 8.116 10.056 6.436 10.056C6.13733 10.056 5.85733 10.0746 5.596 10.112C5.33467 10.1493 5.092 10.2053 4.868 10.28C5.05467 8.63732 5.57733 7.40531 6.436 6.58398C7.332 5.72531 8.65733 5.05331 10.412 4.56798L9.404 0.927979C6.45467 1.52531 4.23333 2.81332 2.74 4.79198C1.24667 6.77065 0.5 9.34665 0.5 12.52C0.5 14.9466 0.910667 16.6453 1.732 17.616C2.55333 18.5866 3.93467 19.072 5.876 19.072ZM20.388 19.072C22.18 19.072 23.4867 18.736 24.308 18.064C25.1293 17.3546 25.54 16.1413 25.54 14.424C25.54 12.632 25.1853 11.456 24.476 10.896C23.804 10.336 22.628 10.056 20.948 10.056C20.6493 10.056 20.3693 10.0746 20.108 10.112C19.8467 10.1493 19.604 10.2053 19.38 10.28C19.5667 8.63732 20.0893 7.40531 20.948 6.58398C21.844 5.72531 23.1693 5.05331 24.924 4.56798L23.916 0.927979C20.9667 1.52531 18.7453 2.81332 17.252 4.79198C15.7587 6.77065 15.012 9.34665 15.012 12.52C15.012 14.9466 15.4227 16.6453 16.244 17.616C17.0653 18.5866 18.4467 19.072 20.388 19.072Z" fill="currentColor"></path>
+                                </svg>
+                                <p className="font-sans text-lg md:text-xl leading-snug mb-8">&ldquo;{rev.quote}&rdquo;</p>
+                                <h4 className="text-lime-400 font-bold text-sm tracking-wider uppercase">{rev.author}</h4>
+                                <h5 className="font-sans italic text-sm text-white/60 mt-1">{rev.title}</h5>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </section>
@@ -630,7 +1159,7 @@ const ComparisonSection = () => {
         { icon: Eye, title: "Smart Previews", desc: "We watermark and compress automatically. They look, but can't touch." },
         { icon: Lock, title: "Pay to Unlock", desc: "Payment clears, files unlock. Instant, automated, secure." },
         { icon: ShieldCheck, title: "Zero-Risk Leverage", desc: "Atomic transactions. Money in, files out. No awkward follow-ups." },
-        { icon: Banknote, title: "Keep 100% of Revenue*", desc: "Zero transaction fees on paid plans. Just a flat monthly subscription." }
+        { icon: Banknote, title: "Margin-Focused Pricing", desc: "3.75% Stripe card fees on Pro. Manual is a 0% Pro payment option. No marketplace tax." }
     ];
 
     useEffect(() => {
@@ -658,7 +1187,7 @@ const ComparisonSection = () => {
                             Stop the <span className="line-through decoration-red-500 decoration-4 text-slate-400 dark:text-slate-500">"Send-then-Chase"</span> cycle.
                         </span>
                     }
-                    subtitle="Built for professionals who value their time, talent, and creative leverage."
+                    subtitle="The Sendational way: preview first, payment next, originals released on cue."
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-stretch">
@@ -676,7 +1205,7 @@ const ComparisonSection = () => {
                             <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-900/20 flex items-center justify-center text-red-500 font-bold shadow-sm">
                                 <X className="w-6 h-6" />
                             </div>
-                            <h3 className="text-2xl font-serif text-slate-500 dark:text-slate-300 tracking-wide">The Old Way</h3>
+                            <h3 className="text-2xl font-sans font-medium tracking-tight text-slate-500 dark:text-slate-300 ">The Old Way</h3>
                         </div>
 
                         <div className="space-y-8 relative z-10">
@@ -686,7 +1215,7 @@ const ComparisonSection = () => {
                                     <div key={i} className={`flex gap-5 transition-all duration-500 ${isHighlighted ? 'opacity-100 translate-x-1' : 'opacity-60 translate-x-0'}`}>
                                         <item.icon className={`w-6 h-6 shrink-0 mt-1 transition-all duration-500 ${isHighlighted ? 'text-slate-600 dark:text-slate-100 scale-110' : 'text-slate-400 dark:text-slate-400 scale-100'}`} />
                                         <div>
-                                            <h4 className="font-bold text-slate-700 dark:text-slate-200 text-lg">{item.title}</h4>
+                                            <h4 className="font-sans font-medium text-slate-700 dark:text-slate-200 text-lg">{item.title}</h4>
                                             <p className="text-sm text-slate-500 dark:text-slate-300 mt-1 leading-relaxed">{item.desc}</p>
                                         </div>
                                     </div>
@@ -700,7 +1229,7 @@ const ComparisonSection = () => {
                         </div>
                     </div>
 
-                    {/* The Heartifact Way */}
+                    {/* The Sendational Way */}
                     <div
                         onMouseEnter={() => setHoveredCard('new')}
                         onMouseLeave={() => setHoveredCard(null)}
@@ -714,7 +1243,7 @@ const ComparisonSection = () => {
                             <div className="w-12 h-12 rounded-2xl bg-black text-lime-400 flex items-center justify-center font-bold shadow-xl">
                                 <Check className="w-6 h-6" />
                             </div>
-                            <h3 className="text-2xl font-serif font-medium text-black tracking-wide">The New Standard</h3>
+                            <h3 className="text-2xl font-sans font-medium tracking-tight font-medium text-black ">The New Standard</h3>
                         </div>
 
                         <div className="space-y-8 relative z-10">
@@ -724,7 +1253,7 @@ const ComparisonSection = () => {
                                         <item.icon className={`w-5 h-5 text-black shrink-0 transition-transform duration-500 ${hoveredCard === 'new' ? 'scale-110' : 'scale-100'}`} />
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-black text-lg">{item.title}</h4>
+                                        <h4 className="font-sans font-medium text-black text-lg">{item.title}</h4>
                                         <p className="text-sm text-black/70 mt-1 font-medium leading-relaxed">{item.desc}</p>
                                     </div>
                                 </div>
@@ -743,13 +1272,92 @@ const ComparisonSection = () => {
     );
 };
 
+const SendationalFeatureGrid = () => (
+    <section className="relative overflow-hidden py-28 px-6 bg-zinc-50/90 dark:bg-white/[0.03] text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
+        <div className="pointer-events-none absolute inset-0">
+            <div className="absolute -top-24 left-[6%] h-56 w-56 rounded-full bg-lime-400/12 blur-[110px]" />
+            <div className="absolute bottom-[-25%] right-[8%] h-72 w-72 rounded-full bg-lime-400/12 blur-[140px]" />
+        </div>
+        <div className="max-w-[1200px] mx-auto relative z-10">
+            <SectionHeading
+                badge="Sendational Suite"
+                title={<span>Payments, branding, and signals in one clean send.</span>}
+                subtitle="Everything the client touches is connected to the moment you get paid."
+                className="motion-safe:animate-fade-in"
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="rounded-2xl border border-slate-200 bg-white/80 dark:bg-[#323242]/60 dark:border-white/10 backdrop-blur-xl p-6 transition-transform hover:-translate-y-1 hover:shadow-[0_20px_45px_-25px_rgba(15,23,42,0.35)] dark:hover:shadow-[0_20px_45px_-25px_rgba(0,0,0,0.6)]">
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-lime-400/15 text-lime-600 dark:text-lime-400">
+                            <CreditCard className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Payments</p>
+                            <h3 className="font-sans font-medium tracking-tight text-xl text-zinc-900 dark:text-white">Unlock on payment</h3>
+                        </div>
+                    </div>
+                    <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">
+                        Charge by card or verify manual transfers, then release final files instantly.
+                    </p>
+                    <ul className="mt-4 space-y-2 text-xs text-zinc-500 dark:text-zinc-400">
+                        <li className="flex items-center gap-2"><Check className="h-3 w-3 text-lime-400" /> Pay-to-unlock checkout</li>
+                        <li className="flex items-center gap-2"><Check className="h-3 w-3 text-lime-400" /> Manual payment verification</li>
+                        <li className="flex items-center gap-2"><Check className="h-3 w-3 text-lime-400" /> Instant delivery release</li>
+                    </ul>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white/80 dark:bg-[#323242]/60 dark:border-white/10 backdrop-blur-xl p-6 transition-transform hover:-translate-y-1 hover:shadow-[0_20px_45px_-25px_rgba(15,23,42,0.35)] dark:hover:shadow-[0_20px_45px_-25px_rgba(0,0,0,0.6)]">
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-lime-400/15 text-lime-600 dark:text-lime-400">
+                            <Palette className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Branding</p>
+                            <h3 className="font-sans font-medium tracking-tight text-xl text-zinc-900 dark:text-white">Your studio, everywhere</h3>
+                        </div>
+                    </div>
+                    <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">
+                        Deliver under your domain with custom colors, logos, and client-ready portals.
+                    </p>
+                    <ul className="mt-4 space-y-2 text-xs text-zinc-500 dark:text-zinc-400">
+                        <li className="flex items-center gap-2"><Check className="h-3 w-3 text-lime-600" /> Custom domains + emails</li>
+                        <li className="flex items-center gap-2"><Check className="h-3 w-3 text-lime-600" /> Branded client portals</li>
+                        <li className="flex items-center gap-2"><Check className="h-3 w-3 text-lime-600" /> Portfolio-safe previews</li>
+                    </ul>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white/80 dark:bg-[#323242]/60 dark:border-white/10 backdrop-blur-xl p-6 transition-transform hover:-translate-y-1 hover:shadow-[0_20px_45px_-25px_rgba(15,23,42,0.35)] dark:hover:shadow-[0_20px_45px_-25px_rgba(0,0,0,0.6)]">
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/20 text-amber-500 dark:text-amber-400">
+                            <BarChart3 className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Analytics</p>
+                            <h3 className="font-sans font-medium tracking-tight text-xl text-zinc-900 dark:text-white">Signals, not guesses</h3>
+                        </div>
+                    </div>
+                    <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">
+                        Track views, approvals, and payout milestones to move at the right moment.
+                    </p>
+                    <ul className="mt-4 space-y-2 text-xs text-zinc-500 dark:text-zinc-400">
+                        <li className="flex items-center gap-2"><Check className="h-3 w-3 text-amber-500" /> View + approval timeline</li>
+                        <li className="flex items-center gap-2"><Check className="h-3 w-3 text-amber-500" /> Audit-ready activity logs</li>
+                        <li className="flex items-center gap-2"><Check className="h-3 w-3 text-amber-500" /> Client portal insights</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+);
+
 const BentoGrid = () => {
     // ... [Same implementation as before] ...
     const [isCustom, setIsCustom] = useState(false);
     const [accentColor, setAccentColor] = useState('#bef264');
 
     const brandConfigs = [
-        { name: 'Default', color: '#bef264', domain: 'portal.heartifact.com' },
+        { name: 'Default', color: '#bef264', domain: 'portal.Sendational.com' },
         { name: 'Onyx', color: '#334155', domain: 'delivery.agency.com' },
         { name: 'Cobalt', color: '#3b82f6', domain: 'files.studio.io' }
     ];
@@ -762,7 +1370,7 @@ const BentoGrid = () => {
                 <SectionHeading
                     badge="The Mechanism"
                     title={<span>A structured workflow <br /><span className="italic text-slate-400 dark:text-slate-500">for peace of mind.</span></span>}
-                    subtitle="Replace scattered tools with a single, professional delivery pipeline."
+                    subtitle="Replace scattered tools with a delivery pipeline that keeps control intact."
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6">
@@ -777,7 +1385,7 @@ const BentoGrid = () => {
                                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600607686527-6fb886090705?w=500&q=50')] bg-cover bg-center opacity-40 blur-[2px]" />
                                 <div className="absolute inset-0 bg-black/10 dark:bg-[#323242]/40" />
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="text-5xl font-black text-black/35 dark:text-white/30 -rotate-12 select-none pointer-events-none tracking-widest">PREVIEW</div>
+                                    <div className="text-5xl font-semibold text-black/35 dark:text-white/30 -rotate-12 select-none pointer-events-none tracking-widest">PREVIEW</div>
                                 </div>
                                 <div className="absolute bottom-4 left-4 right-4 bg-white/95 dark:bg-[#2D2E45]/85 backdrop-blur-md p-3 rounded-lg border border-slate-200/80 dark:border-white/20 shadow-lg">
                                     <div className="flex items-center gap-2 text-xs font-mono text-slate-700 dark:text-slate-100">
@@ -864,7 +1472,7 @@ const BentoGrid = () => {
                                     <div className="mb-8">
                                         <div className="flex items-start justify-between mb-4">
                                             <div>
-                                                <h3 className="font-serif text-2xl text-black dark:text-white tracking-wide">Your Brand</h3>
+                                                <h3 className="font-sans font-medium tracking-tight text-2xl text-black dark:text-white ">Your Brand</h3>
                                                 <p className="text-sm text-zinc-500 dark:text-zinc-400">Custom Portal</p>
                                             </div>
                                             <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200/50 dark:border-white/[0.06] flex items-center justify-center text-black dark:text-lime-400">
@@ -991,10 +1599,10 @@ const BentoGrid = () => {
                     <div className="md:col-span-6 lg:col-span-4 flex flex-col gap-6 min-h-[540px]">
 
                         {/* 5. STORAGE FREEDOM (Compressed) */}
-                        <BentoCard className="min-h-[258px] shadow-sm dark:shadow-md" title="Storage Freedom" subtitle="BYOS (Bring Your Own Storage)" icon={HardDrive}>
+                        <BentoCard className="min-h-[258px] shadow-sm dark:shadow-md" title="Storage Freedom" subtitle="Bring Your Own Storage Links" icon={HardDrive}>
                             <div className="p-6 pt-0 flex flex-col justify-between gap-4">
                                 <p className="text-zinc-600 dark:text-zinc-300 text-xs leading-relaxed mb-4">
-                                    All paid plans support BYOS links (Bring Your Own Storage). Paste your own S3/Drive/Dropbox share links so you keep full custody of the originals. (Connectors coming soon.)
+                                    All plans support bring your own storage links. Paste your own S3/Drive/Dropbox share links so you keep full custody of the originals. (Connectors coming soon.)
                                 </p>
                                 <div className="space-y-4">
                                     {/* Progress Bar */}
@@ -1036,7 +1644,7 @@ const BentoGrid = () => {
                                         <div className="h-1 w-full bg-slate-200 dark:bg-white/10 rounded-full" />
                                         <div className="h-1 w-2/3 bg-slate-200 dark:bg-white/10 rounded-full" />
                                         <div className="h-8 border-b border-slate-200 dark:border-white/20 mt-2 flex items-end">
-                                            <span className="font-serif italic text-lg text-black dark:text-white opacity-80">Alex Smith</span>
+                                            <span className="font-sans font-medium tracking-tight italic text-lg text-black dark:text-white opacity-80">Alex Smith</span>
                                         </div>
                                         <div className="flex justify-between items-center mt-1">
                                             <span className="text-[8px] text-slate-400 uppercase">Signed</span>
@@ -1155,11 +1763,11 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                     <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-lime-400 uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
                         Plans
                     </span>
-                    <h2 className="font-serif text-5xl md:text-6xl mb-6">
-                        Start free. <span className="italic text-lime-400 dark:text-lime-400">Scale as you succeed.</span>
+                    <h2 className="font-sans font-medium tracking-tight text-5xl md:text-6xl mb-6">
+                        Start free. <span className="italic text-lime-500 dark:text-lime-400">Scale as you succeed.</span>
                     </h2>
                     <p className="text-slate-500 dark:text-slate-300 text-lg max-w-2xl mx-auto">
-                        Simple pricing. Professional features.
+                        Premium delivery workflows. Margin-focused infrastructure.
                     </p>
 
                     {/* Toggle */}
@@ -1171,172 +1779,137 @@ const Pricing = ({ onStart }: { onStart: () => void }) => {
                         >
                             <div className={`w-6 h-6 rounded-full shadow-md transition-transform duration-300 bg-white dark:bg-zinc-950 ${billingCycle === 'yearly' ? 'translate-x-6' : ''}`} />
                         </button>
-                        <span className={`text-sm font-bold ${billingCycle === 'yearly' ? 'text-black dark:text-white' : 'text-slate-500'}`}>Yearly <span className="text-lime-400 text-[10px] ml-1 uppercase tracking-wider">Save 18%</span></span>
+                        <span className={`text-sm font-bold ${billingCycle === 'yearly' ? 'text-black dark:text-white' : 'text-slate-500'}`}>Yearly <span className="text-lime-400 text-[10px] ml-1 uppercase tracking-wider">Save 20%</span></span>
                     </div>
                 </div>
 
-                {/* RESPONSIVE GRID FIX: Using lg:grid-cols-3 instead of md:grid-cols-3 to prevent squishing on tablets */}
-                <div className={`grid grid-cols-1 ${billingCycle === 'yearly' ? 'lg:grid-cols-2 max-w-4xl mx-auto' : 'lg:grid-cols-3'} gap-8 items-start`}>
+                <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 items-start max-w-5xl mx-auto`}>
 
-                    {/* Starter - Only visible in Monthly - ENHANCED BORDER */}
-                    {billingCycle === 'monthly' && (
-                        <div className="relative overflow-hidden rounded-[2rem] bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:border-zinc-300/80 dark:hover:border-white/15 flex flex-col h-full animate-fade-in transition-all duration-300 shadow-sm dark:shadow-md">
-                            <div className="p-8 flex flex-col flex-1 min-h-0">
-                            <div className="font-mono text-xs uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-6">Starter</div>
-                            <div className="flex items-baseline gap-1 mb-2">
-                                <span className="text-4xl font-serif font-bold">$0</span>
-                                <span className="text-sm text-slate-500">/mo</span>
-                            </div>
-                            <div className="text-sm text-slate-500 dark:text-slate-300 mb-8 min-h-[40px]">Perfect for your first secure handover.</div>
-
-                            <button onClick={onStart} className="w-full py-4 rounded-2xl border border-slate-200 dark:border-white/20 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-zinc-950 font-bold text-xs uppercase tracking-widest transition-all mb-8">
-                                Start Free
-                            </button>
-
-                            <div className="space-y-4">
-                                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-200 dark:border-white/5 pb-2">Includes</p>
-                                <ul className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
-                                    <li className="flex gap-3 items-center font-bold text-black dark:text-white"><Check className="w-4 h-4 text-lime-400 shrink-0" /> 2.5% Platform Fee + Processing*</li>
-                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> 5 Active Projects</li>
-                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> 10GB Total Native Storage</li>
-                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Standard Watermarking</li>
-                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Stripe Payments Only</li>
-                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Basic Audit Logs</li>
-                                </ul>
-                                <p className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 border-b border-zinc-200/50 dark:border-white/[0.06] pb-2 pt-4">Limits</p>
-                                <ul className="space-y-4 text-sm text-zinc-500 dark:text-zinc-400">
-                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-zinc-300 dark:text-zinc-600 shrink-0" /> No BYOS Storage Links</li>
-                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-zinc-300 dark:text-zinc-600 shrink-0" /> 7-Day Link Expiry</li>
-                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-zinc-300 dark:text-zinc-600 shrink-0" /> "Powered by" Branding</li>
-                                    <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-zinc-300 dark:text-zinc-600 shrink-0" /> No Manual Payments</li>
-                                </ul>
-                            </div>
-                            </div>
+                    {/* Free - Bring Your Own Storage */}
+                    <div className="relative overflow-hidden rounded-[2rem] bg-white/80 dark:bg-[#323242]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 hover:border-zinc-300/80 dark:hover:border-white/15 flex flex-col h-full animate-fade-in transition-all duration-300 shadow-sm dark:shadow-md">
+                        <div className="p-8 flex flex-col flex-1 min-h-0">
+                        <div className="font-mono text-xs uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-6">Free Forever</div>
+                        <div className="flex items-baseline gap-1 mb-2">
+                            <span className="text-4xl font-sans font-medium tracking-tight font-bold">$0</span>
+                            <span className="text-sm text-slate-500">/mo</span>
                         </div>
-                    )}
+                        <div className="text-sm text-slate-500 dark:text-slate-300 mb-8 min-h-[40px]">Perfect for freelancers starting out. Bring your own storage or use native storage.</div>
 
-                    {/* Studio - SOLID DEFAULT BORDER + HOVER ANIMATION & SHIFT */}
-                    <div className="relative group z-10 h-full">
-                        {/* The Card Container - Handling the solid border and positioning */}
-                        <div className="
-                        relative h-full rounded-[2rem] p-[2px]
-                        bg-lime-400 /* Default Solid Border */
-                        transform transition-all duration-300 ease-out
-                        lg:-translate-y-4 /* Default 'Sweet Spot' Lift only on desktop */
-                        group-hover:-translate-y-2 lg:group-hover:-translate-y-6 group-hover:shadow-[0_20px_40px_-10px_rgba(190, 242, 100,0.4)] /* Hover Lift + Glow */
-                    ">
-                            {/* The Animated Gradient Border Layer - Only visible on hover */}
-                            <div className="
-                            absolute inset-0 rounded-[2rem]
-                            bg-gradient-to-r from-[#bef264] via-emerald-400 to-[#bef264]
-                            bg-[length:200%_auto]
-                            opacity-0 group-hover:opacity-100
-                            group-hover:animate-border-flow
-                            transition-opacity duration-300
-                        " />
+                        <button onClick={onStart} className="w-full py-4 rounded-2xl border border-slate-200 dark:border-white/20 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-zinc-950 font-bold text-xs uppercase tracking-widest transition-all mb-8">
+                            Start Free
+                        </button>
 
-                            {/* The Inner Content — clean panel inside brand ring; no grain or gradient wash */}
-                            <div className="relative h-full rounded-[1.9rem] overflow-hidden flex flex-col bg-white dark:bg-charcoal">
-                                <div className="relative z-10 p-8 flex flex-col flex-1 min-h-0">
-                                <div className="absolute top-0 right-0 p-6">
-                                    <div className="px-3 py-1 bg-lime-400 text-black text-[10px] font-bold uppercase tracking-widest rounded-full">Sweet Spot</div>
-                                </div>
-
-                                <div className="mb-6">
-                                    <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-lime-400 uppercase tracking-widest border border-black/10 dark:border-white/10 shadow-lg">
-                                        Studio
-                                    </span>
-                                </div>
-
-                                <div className="flex items-baseline gap-1 mb-2">
-                                    <span className="text-5xl font-serif font-bold text-black dark:text-white">
-                                        {billingCycle === 'monthly' ? '$11.99' : '$119'}
-                                    </span>
-                                    <span className="text-sm text-zinc-500 dark:text-zinc-400">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
-                                </div>
-                                <div className="text-sm text-zinc-500 dark:text-zinc-400 mb-8 min-h-[40px]">For consistent delivery & branding.</div>
-
-                                <button onClick={onStart} className="w-full py-4 rounded-2xl bg-lime-400 text-zinc-950 hover:bg-black hover:text-lime-400 dark:hover:bg-white dark:hover:text-zinc-950 font-bold text-xs uppercase tracking-widest transition-all shadow-lg mb-8">
-                                    Get Studio
-                                </button>
-
-                                <div className="space-y-4">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 border-b border-zinc-200/50 dark:border-white/[0.06] pb-2">Everything in Starter, plus</p>
-                                    <ul className="space-y-4 text-sm font-medium text-black dark:text-white">
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> <span className="font-bold">0% Platform Fees (Standard Processing Only*)</span></li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> <span className="font-bold">Unlimited</span> Projects</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> 150GB Total Native Storage</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> <span className="font-bold">10 Active BYOS Storage Links (S3/Drive)</span></li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Custom Branding (Logo/Colors)</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Client Library (Recurring Clients)</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Remove "Powered By" Badge</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Manual Payments (Zelle/Wire)</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Contract Signatures</li>
-                                        <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Permanent Links (No Expiry)</li>
-                                    </ul>
-                                </div>
-                                </div>
-                            </div>
+                        <div className="space-y-4">
+                            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-200 dark:border-white/5 pb-2">Includes</p>
+                            <ul className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
+                                <li className="flex gap-3 items-center font-bold text-black dark:text-white"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Bring Your Own Storage Links (BYOS)</li>
+                                <li className="flex gap-3 items-center font-bold text-black dark:text-white"><Check className="w-4 h-4 text-lime-400 shrink-0" /> 5GB Native Storage Included</li>
+                                <li className="flex gap-3 items-center font-bold text-black dark:text-white"><Check className="w-4 h-4 text-lime-400 shrink-0" /> 4.5% Transaction Fee Total*</li>
+                                <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Unlimited Projects</li>
+                                <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Watermarked Previews</li>
+                                <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Stripe Payments</li>
+                                <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Audit Logs</li>
+                                <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-black dark:text-white shrink-0" /> Email Notifications</li>
+                            </ul>
+                            <p className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 border-b border-zinc-200/50 dark:border-white/[0.06] pb-2 pt-4">Limits</p>
+                            <ul className="space-y-4 text-sm text-zinc-500 dark:text-zinc-400">
+                                <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-zinc-300 dark:text-zinc-600 shrink-0" /> "Powered by Sendational" Branding</li>
+                                <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-zinc-300 dark:text-zinc-600 shrink-0" /> No Manual Payments (Stripe only)</li>
+                                <li className="flex gap-3 items-center"><Minus className="w-4 h-4 text-zinc-300 dark:text-zinc-600 shrink-0" /> No Custom Domain</li>
+                            </ul>
+                        </div>
                         </div>
                     </div>
 
-                    {/* Business - Premium Dark Card - UPDATED COLOR (Lighter Slate Indigo) */}
+                    {/* Pro - Professional Tier */}
                     <div className="relative p-1 rounded-[2rem] bg-[#45455e] border border-[#565675] shadow-2xl h-full animate-fade-in group overflow-hidden transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]">
-                        {/* Background Color - Layer 0 */}
                         <div className="absolute inset-0 bg-[#45455e] rounded-[1.9rem]"></div>
-
                         <div className="relative z-10 p-8 h-full flex flex-col text-white rounded-[1.9rem]">
-
                             <div className="absolute top-0 right-0 p-6">
-                                <div className="px-3 py-1 bg-white/10 border border-white/20 text-white text-[10px] font-bold uppercase tracking-widest rounded-full flex items-center gap-2 shadow-sm backdrop-blur-md">
-                                    <Gem className="w-3 h-3" /> Power User
+                                <div className="px-3 py-1 bg-lime-400 border border-lime-400 text-black text-[10px] font-bold uppercase tracking-widest rounded-full flex items-center gap-2 shadow-sm backdrop-blur-md">
+                                    <Gem className="w-3 h-3" /> Most Popular
                                 </div>
                             </div>
-
                             <div className="mb-6">
                                 <span className="inline-block py-1.5 px-4 rounded-full bg-white/10 border border-white/20 font-mono text-xs text-white uppercase tracking-widest shadow-lg backdrop-blur-md">
-                                    Business
+                                    Pro
                                 </span>
                             </div>
-
-                            {/* UNIFIED GLASS TEXT: Bold price + suffix in one gradient block */}
-                            <div className="font-serif font-bold text-white filter drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] mb-2">
+                            <div className="font-sans font-medium tracking-tight font-bold text-white filter drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] mb-2 flex items-baseline">
                                 <span className="text-5xl">
-                                    {billingCycle === 'monthly' ? '$39.99' : '$390'}
+                                    {billingCycle === 'monthly' ? '$29' : '$290'}
                                 </span>
                                 <span className="text-2xl ml-1 font-normal text-indigo-200/80">
                                     /{billingCycle === 'monthly' ? 'mo' : 'yr'}
                                 </span>
                             </div>
-
-                            <div className="text-sm text-indigo-200/80 mb-8 min-h-[40px]">High volume infrastructure for elites.</div>
-
-                            {/* Glassmorphism Button */}
-                            <button onClick={onStart} className="w-full py-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/20 text-white hover:bg-white/15 hover:border-white/30 font-bold text-xs uppercase tracking-widest transition-all mb-8 shadow-lg group relative overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                                Go Business
+                            <div className="text-sm text-indigo-200/80 mb-8 min-h-[40px]">For creators and agencies scaling high-ticket deliveries. Includes ACH Direct Debit at 1.5%.</div>
+                            <button onClick={onStart} className="w-full py-4 rounded-2xl bg-lime-400 text-zinc-950 hover:bg-white hover:text-black font-bold text-xs uppercase tracking-widest transition-all mb-8 shadow-lg group relative overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                                Go Pro
                             </button>
-
                             <div className="space-y-4">
-                                <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 border-b border-white/10 pb-2">Everything in Studio, plus</p>
+                                <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 border-b border-white/10 pb-2">Everything in Free, plus</p>
                                 <ul className="space-y-4 text-sm text-indigo-50">
-                                    <li className="flex gap-3 items-center font-bold"><Check className="w-4 h-4 text-white shrink-0" /> 0% Platform Fees (Standard Processing Only*)</li>
-                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> 1TB Total Native Storage</li>
-                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Unlimited BYOS Storage Links</li>
-                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Custom Domain (CNAME)</li>
-                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Whitelabel Emails (SMTP)</li>
-                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Dispute Evidence Packs</li>
-                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Priority Support</li>
-                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Advanced Client Library Controls</li>
-                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-white shrink-0" /> Client Portal Analytics</li>
+                                    <li className="flex gap-3 items-center font-bold"><Check className="w-4 h-4 text-lime-400 shrink-0" /> 250GB Native Storage Included</li>
+                                    <li className="flex gap-3 items-center font-bold"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Stripe Card: 3.75% | ACH: 1.5%*</li>
+                                    <li className="flex gap-3 items-center font-bold"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Manual Payments: 0%</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> White-Label / Custom Domain</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Remove "Powered By" Badge</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Custom Branding (Logo/Colors)</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Analytics & Reporting</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Unlimited Bring Your Own Storage Links</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Client Portal Analytics</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Approval Workflows</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Dispute Evidence Packs & Risk Monitoring</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> ACH Settlement Protection</li>
+                                    <li className="flex gap-3 items-center"><Check className="w-4 h-4 text-lime-400 shrink-0" /> Priority Support</li>
                                 </ul>
                             </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                {/* Storage Expansion Add-ons */}
+                <div className="mt-16 pt-16 border-t border-slate-200 dark:border-white/10">
+                    <h3 className="text-center text-2xl font-sans font-medium tracking-tight text-black dark:text-white mb-12">Storage Expansion Add-ons</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+                        {/* +100GB */}
+                        <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-6 bg-white/40 dark:bg-white/5 backdrop-blur-sm hover:border-zinc-300/80 dark:hover:border-white/20 transition-all">
+                            <div className="text-xl font-sans font-bold text-black dark:text-white mb-2">+100GB</div>
+                            <div className="text-2xl font-sans font-medium text-black dark:text-white mb-4">
+                                {billingCycle === 'monthly' ? '$2.99' : '$29'}
+                                <span className="text-sm font-normal text-slate-500 dark:text-slate-400 ml-1">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                            </div>
+                            <p className="text-xs text-slate-600 dark:text-slate-300">One-time add-on or recurring</p>
+                        </div>
+
+                        {/* +500GB */}
+                        <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-6 bg-white/40 dark:bg-white/5 backdrop-blur-sm hover:border-zinc-300/80 dark:hover:border-white/20 transition-all ring-2 ring-lime-400">
+                            <div className="inline-block mb-3 px-2 py-1 rounded bg-lime-400 text-black text-[10px] font-bold uppercase">Best Value</div>
+                            <div className="text-xl font-sans font-bold text-black dark:text-white mb-2">+500GB</div>
+                            <div className="text-2xl font-sans font-medium text-black dark:text-white mb-4">
+                                {billingCycle === 'monthly' ? '$9.99' : '$100'}
+                                <span className="text-sm font-normal text-slate-500 dark:text-slate-400 ml-1">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                            </div>
+                            <p className="text-xs text-slate-600 dark:text-slate-300">For video creators & agencies</p>
+                        </div>
+
+                        {/* +1TB */}
+                        <div className="rounded-2xl border border-slate-200 dark:border-white/10 p-6 bg-white/40 dark:bg-white/5 backdrop-blur-sm hover:border-zinc-300/80 dark:hover:border-white/20 transition-all">
+                            <div className="text-xl font-sans font-bold text-black dark:text-white mb-2">+1TB</div>
+                            <div className="text-2xl font-sans font-medium text-black dark:text-white mb-4">
+                                {billingCycle === 'monthly' ? '$17.99' : '$180'}
+                                <span className="text-sm font-normal text-slate-500 dark:text-slate-400 ml-1">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                            </div>
+                            <p className="text-xs text-slate-600 dark:text-slate-300">Enterprise-scale storage</p>
                         </div>
                     </div>
                 </div>
 
                 <p className="text-[10px] font-bold uppercase tracking-wider text-black/60 dark:text-white/40 mt-12 text-center max-w-2xl mx-auto">
-                    * Processing fees refer to standard Stripe credit card processing charges (typically 2.9% + 30¢), which are deducted automatically by the payment processor.
+                    * Stripe Card (Pro): 3.75% total. ACH Direct Debit: 1.5% total. ACH settles in 2–5 business days. Manual payments (0%) include Zelle, Wire, Bank Transfer, PayPal. All payments processed through Sendational for security, audit, and dispute protection.
                 </p>
             </div>
         </section>
@@ -1352,7 +1925,7 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full py-6 flex items-center justify-between text-left group"
             >
-                <span className="text-lg font-serif text-zinc-900 dark:text-white group-hover:font-bold transition-all pr-8 tracking-wide">
+                <span className="text-lg font-sans font-medium tracking-tight text-zinc-900 dark:text-white group-hover:font-bold transition-all pr-8 ">
                     {question}
                 </span>
                 <div className={`shrink-0 w-8 h-8 rounded-full border border-zinc-200/50 dark:border-white/[0.06] flex items-center justify-center transition-all ${isOpen ? 'bg-obsidian text-white dark:bg-white dark:text-black rotate-45' : 'bg-transparent text-zinc-400'}`}>
@@ -1371,28 +1944,28 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
 };
 
 const FAQSection = () => (
-    <section className="py-32 px-6 bg-zinc-50/90 dark:bg-white/[0.03] transition-colors duration-700">
+    <section id="faq" className="py-32 px-6 bg-zinc-50/90 dark:bg-white/[0.03] transition-colors duration-700">
         <div className="max-w-[800px] mx-auto">
             <div className="text-center mb-16">
                 <span className="inline-block py-1.5 px-4 rounded-full bg-black dark:bg-white/10 font-mono text-xs text-lime-400 uppercase tracking-widest mb-6 border border-white/10 shadow-lg">
                     Support
                 </span>
-                <h2 className="font-serif text-4xl md:text-5xl text-obsidian dark:text-white mb-6 tracking-wide">Common Questions</h2>
+                <h2 className="font-sans font-medium tracking-tight text-4xl md:text-5xl text-obsidian dark:text-white mb-6 ">Common questions</h2>
             </div>
 
             <NetRevenueStylePanel roundedClass="rounded-[2rem]">
                 <div className="p-8 md:p-12">
                 <FAQItem
-                    question="What is Heartifact?"
-                    answer="Heartifact is a secure asset gateway designed for the creative economy. Think of it as a 'vending machine' for your business. It automates the final exchange of work for payment. You upload deliverables to a protected portal where clients can review watermarked previews. The high-resolution files are secured and instantly released only after payment is verified."
+                    question="What is Sendational?"
+                    answer="Sendational is a secure asset gateway designed for the creative economy. Think of it as a 'vending machine' for your business. It automates the final exchange of work for payment. You upload deliverables to a protected portal where clients can review watermarked previews. The high-resolution files are secured and instantly released only after payment is verified."
                 />
                 <FAQItem
-                    question="Is Heartifact an escrow platform?"
-                    answer="No. Heartifact is a technical delivery protocol, not a financial escrow service. We facilitate payments using Stripe Connect. We do not take custody of your funds. The payment is processed by Stripe and routed to your connected account immediately. This reduces liability and keeps you in control."
+                    question="Is Sendational an escrow platform?"
+                    answer="No. Sendational is a technical delivery protocol, not a financial escrow service. We facilitate payments using Stripe Connect. We do not take custody of your funds. The payment is processed by Stripe and routed to your connected account immediately. This reduces liability and keeps you in control."
                 />
                 <FAQItem
                     question="How do I get paid?"
-                    answer="We integrate with Stripe Connect to handle payouts instantly. We also support a 'Digital Handshake' for manual payments. If a client prefers Zelle, Venmo, or Wire Transfer, they can mark the invoice as 'Paid' manually. The files remain locked in a 'Verification Pending' state until you, the creator, confirm receipt of funds in your banking app. Once confirmed, the delivery unlocks automatically."
+                    answer="We integrate with Stripe Connect to handle payouts instantly. Pro users also support a 'Digital Handshake' for manual payments (Zelle, Wire, Bank Transfer, PayPal). Your client can mark the invoice as 'Paid' and the files remain locked in 'Verification Pending' until you confirm receipt of funds in your banking app. Once confirmed, the delivery unlocks automatically. Manual payments are 0% and part of Pro payment options."
                 />
                 <FAQItem
                     question="Can I accept Zelle or Venmo?"
@@ -1412,7 +1985,7 @@ const FAQSection = () => (
                 />
                 <FAQItem
                     question="Is this a replacement for Dropbox/Drive?"
-                    answer="It can be! We offer secure native storage where we hold the files for you. However, for Agency plans, we also offer 'BYOS' (Bring Your Own Storage). In BYOS mode, files remain in your own S3 bucket or Drive account—we simply gate access to the download links, meaning we never take custody of your actual files."
+                    answer="It can be. We offer secure native storage where we hold the files for you. On paid plans, BYOS (Bring Your Own Storage) lets files remain in your own S3 bucket or Drive account. We gate access to the download links, so you keep custody of your actual files."
                 />
                 <FAQItem
                     question="How do you handle disputes?"
@@ -1433,7 +2006,7 @@ const CookieConsentBanner = ({ onChoose }: { onChoose: (choice: Exclude<CookieCo
                 <div className="pr-2">
                     <p className="text-sm font-bold text-obsidian dark:text-white">Cookie settings</p>
                     <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        We use essential cookies to keep Heartifact secure and working. Optional cookies help us improve performance and product analytics.
+                        We use essential cookies to keep Sendational secure and working. Optional cookies help us improve performance and product analytics.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1461,18 +2034,18 @@ const Footer = () => (
             <div className="flex flex-col items-start gap-4">
                 <div className="flex items-center gap-3 group cursor-pointer">
                     <Logo className="w-6 h-6 text-black dark:text-white group-hover:rotate-12 transition-transform duration-500" />
-                    <span className="font-serif text-xl tracking-tight">Heartifact</span>
+                    <span className="font-sans font-medium tracking-tight text-xl ">Sendational</span>
                 </div>
-                <p className="text-slate-500 dark:text-slate-400 font-serif italic text-lg tracking-wide">Creative delivery, finally done right.</p>
+                <p className="text-slate-500 dark:text-slate-400 font-sans font-medium tracking-tight italic text-lg ">Turn every delivery into an experience.</p>
 
                 <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
-                    <a href="https://youtube.com/@heartifact" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="YouTube">
+                    <a href="https://youtube.com/@Sendational" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="YouTube">
                         <Youtube className="w-4 h-4" />
                     </a>
-                    <a href="https://x.com/Heartifact" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="X (Twitter)">
+                    <a href="https://x.com/Sendational" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="X (Twitter)">
                         <BrandXIcon className="w-4 h-4" />
                     </a>
-                    <a href="https://discord.gg/Heartifact" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="Discord">
+                    <a href="https://discord.gg/Sendational" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-8 h-8 rounded-full hover:text-black dark:hover:text-white transition-colors" aria-label="Discord">
                         <BrandDiscordIcon className="w-4 h-4" />
                     </a>
                 </div>
@@ -1485,18 +2058,464 @@ const Footer = () => (
             </div>
 
             <div className="text-[10px] text-slate-500 font-mono">
-                © 2026 Heartifact Ltd.
+                © 2026 Sendational Ltd.
             </div>
         </div>
     </footer>
 );
 
+const SendationalFeaturesShowcase = () => (
+    <section className="py-32 px-6 bg-white dark:bg-charcoal transition-colors duration-700 overflow-hidden border-t border-slate-200 dark:border-white/10">
+        <div className="max-w-[1200px] mx-auto space-y-32">
+            
+            {/* Feature 1 */}
+            <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+                <div className="w-full lg:w-1/2 order-2 lg:order-1 relative group">
+                    {/* Mockup Container */}
+                    <div className="relative aspect-[4/3] rounded-[2rem] bg-slate-100 dark:bg-[#2D2E45] border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden p-8 flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-700">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-lime-400/20 to-transparent blur-[80px]" />
+                        
+                        <div className="relative z-10 w-full max-w-sm bg-white dark:bg-[#1A1A24] rounded-2xl shadow-xl border border-slate-200 dark:border-white/10 overflow-hidden">
+                            <div className="h-12 border-b border-slate-100 dark:border-white/10 flex items-center px-4 bg-slate-50 dark:bg-white/5">
+                                <span className="text-xs font-bold uppercase text-slate-400">client_preview_v2.jpg</span>
+                            </div>
+                            <div className="p-8 flex items-center justify-center relative">
+                                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800')] bg-cover bg-center opacity-50 blur-[2px] grayscale" />
+                                <div className="relative z-10 px-6 py-3 bg-white/20 backdrop-blur-md border border-white/40 rounded-full text-black font-bold uppercase tracking-widest shadow-2xl flex items-center gap-2">
+                                    <Lock className="w-4 h-4" /> Watermarked
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="w-full lg:w-1/2 order-1 lg:order-2">
+                    <span className="inline-block py-1 px-3 rounded-full bg-lime-400/10 text-lime-600 dark:text-lime-400 font-bold text-[10px] uppercase tracking-widest mb-6">Smart Previews</span>
+                    <h2 className="font-sans font-medium tracking-tight text-4xl md:text-5xl lg:text-6xl text-black dark:text-white leading-[1.1] mb-6">
+                        Look, but don't touch.
+                    </h2>
+                    <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed mb-8">
+                        Upload your pristine high-resolution files. We instantly generate beautiful, lower-res watermarked previews for your client to review. They see the quality without getting the source.
+                    </p>
+                    <ul className="space-y-4">
+                        <li className="flex items-center gap-3 text-black dark:text-white font-medium"><CheckCircle className="w-5 h-5 text-lime-400" /> Auto-compression & Watermarking</li>
+                        <li className="flex items-center gap-3 text-black dark:text-white font-medium"><CheckCircle className="w-5 h-5 text-lime-400" /> Prevent unauthorized downloads</li>
+                        <li className="flex items-center gap-3 text-black dark:text-white font-medium"><CheckCircle className="w-5 h-5 text-lime-400" /> Beautiful client gallery UI</li>
+                    </ul>
+                </div>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+                <div className="w-full lg:w-1/2">
+                    <span className="inline-block py-1 px-3 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 font-bold text-[10px] uppercase tracking-widest mb-6">Atomic Escrow</span>
+                    <h2 className="font-sans font-medium tracking-tight text-4xl md:text-5xl lg:text-6xl text-black dark:text-white leading-[1.1] mb-6">
+                        No pay? <br />No files.
+                    </h2>
+                    <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed mb-8">
+                        Connect your Stripe or bank details. When the client is happy with the previews, they pay the outstanding balance directly on the delivery page. The high-res files unlock instantly upon payment success.
+                    </p>
+                    <ul className="space-y-4">
+                        <li className="flex items-center gap-3 text-black dark:text-white font-medium"><CheckCircle className="w-5 h-5 text-red-500" /> Secure payment gateways</li>
+                        <li className="flex items-center gap-3 text-black dark:text-white font-medium"><CheckCircle className="w-5 h-5 text-red-500" /> Instant automated asset release</li>
+                        <li className="flex items-center gap-3 text-black dark:text-white font-medium"><CheckCircle className="w-5 h-5 text-red-500" /> Eliminates invoice chasing</li>
+                    </ul>
+                </div>
+                <div className="w-full lg:w-1/2 relative group">
+                    <div className="relative aspect-[4/3] rounded-[2rem] bg-slate-100 dark:bg-[#2D2E45] border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden p-8 flex items-center justify-center group-hover:-translate-y-2 transition-transform duration-700">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-red-500/20 to-transparent blur-[80px]" />
+                        
+                        <div className="relative z-10 w-full max-w-sm bg-white dark:bg-[#1A1A24] rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden flex flex-col">
+                            <div className="p-6 text-center border-b border-slate-100 dark:border-white/10">
+                                <p className="text-sm font-bold uppercase text-slate-400 mb-1">Final Invoice</p>
+                                <p className="text-4xl font-sans tracking-tighter text-black dark:text-white">$2,500.00</p>
+                            </div>
+                            <div className="p-6 bg-slate-50 dark:bg-white/5 flex flex-col gap-3">
+                                <button className="w-full py-4 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold uppercase tracking-widest text-sm flex justify-center items-center gap-2">
+                                    <CreditCard className="w-5 h-5" /> Pay to Unlock
+                                </button>
+                                <button className="w-full py-4 rounded-xl border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-widest text-sm flex justify-center items-center gap-2">
+                                    <Globe className="w-5 h-5" /> Bank Transfer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+                <div className="w-full lg:w-1/2 order-2 lg:order-1 relative group">
+                    <div className="relative aspect-[4/3] rounded-[2rem] bg-slate-100 dark:bg-[#2D2E45] border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden p-8 flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-700">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-blue-500/20 to-transparent blur-[80px]" />
+                        
+                        <div className="relative z-10 w-full max-w-sm bg-white dark:bg-[#1A1A24] rounded-2xl shadow-xl border border-slate-200 dark:border-white/10 overflow-hidden p-8 flex flex-col gap-6">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-black dark:bg-white rounded-full flex items-center justify-center text-white dark:text-black font-bold text-xl">S</div>
+                                <div>
+                                    <p className="font-sans font-medium text-lg text-black dark:text-white leading-tight">Studio Branding</p>
+                                    <p className="text-sm text-slate-500">delivery.yourdomain.com</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <div className="w-8 h-8 rounded-full bg-lime-400 shadow-sm border border-black/10" />
+                                <div className="w-8 h-8 rounded-full bg-slate-900 shadow-sm border border-black/10" />
+                                <div className="w-8 h-8 rounded-full bg-lime-400 shadow-sm border border-black/10" />
+                            </div>
+                            <div className="h-px w-full bg-slate-100 dark:bg-white/10" />
+                            <div className="w-full h-8 bg-slate-100 dark:bg-white/5 rounded-md" />
+                            <div className="w-2/3 h-8 bg-slate-100 dark:bg-white/5 rounded-md" />
+                        </div>
+                    </div>
+                </div>
+                <div className="w-full lg:w-1/2 order-1 lg:order-2">
+                    <span className="inline-block py-1 px-3 rounded-full bg-lime-400/10 text-[#65a30d] dark:text-lime-400 font-bold text-[10px] uppercase tracking-widest mb-6">White Label</span>
+                    <h2 className="font-sans font-medium tracking-tight text-4xl md:text-5xl lg:text-6xl text-black dark:text-white leading-[1.1] mb-6">
+                        Your brand.<br />Front and center.
+                    </h2>
+                    <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 leading-relaxed mb-8">
+                        Sendational operates in the background. Your clients see your logo, your colors, and your custom domain. It's an enterprise-grade experience that commands premium pricing.
+                    </p>
+                    <ul className="space-y-4">
+                        <li className="flex items-center gap-3 text-black dark:text-white font-medium"><CheckCircle className="w-5 h-5 text-lime-600" /> Custom subdomains</li>
+                        <li className="flex items-center gap-3 text-black dark:text-white font-medium"><CheckCircle className="w-5 h-5 text-lime-600" /> Branded email notifications</li>
+                        <li className="flex items-center gap-3 text-black dark:text-white font-medium"><CheckCircle className="w-5 h-5 text-lime-600" /> Custom color palettes</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </section>
+);
+
+const SendationalToolkit = () => (
+    <section className="relative overflow-hidden py-32 px-6 bg-editorial dark:bg-cosmic text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
+        <div className="pointer-events-none absolute inset-0">
+            <div className="absolute -top-20 -left-24 h-64 w-64 rounded-full bg-lime-400/15 blur-[110px] motion-safe:animate-float" />
+            <div className="absolute -bottom-24 right-[-10%] h-72 w-72 rounded-full bg-lime-400/10 blur-[140px] motion-safe:animate-float-delayed" />
+            <div className="absolute top-10 right-[35%] h-24 w-24 rounded-full border border-lime-400/30 opacity-60 motion-safe:animate-spin" style={{ animationDuration: '18s' }} />
+        </div>
+        <div className="max-w-[1200px] mx-auto relative z-10">
+            <SectionHeading
+                badge="Sendational Stack"
+                title={<span>Everything to send with confidence.</span>}
+                subtitle="From preview security to payment release, every step is designed to feel effortless."
+                className="motion-safe:animate-fade-in"
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <BentoCard className="min-h-[260px] transition-transform hover:-translate-y-2 hover:shadow-[0_24px_50px_-28px_rgba(15,23,42,0.45)] dark:hover:shadow-[0_24px_50px_-28px_rgba(0,0,0,0.7)]" title="Preview Control" subtitle="Watermarked by default" icon={Eye}>
+                    <div className="p-8 pt-0">
+                        <div className="h-[2px] w-12 bg-gradient-to-r from-lime-400/90 to-transparent mb-5" />
+                        <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                            Auto-generate previews so clients can review the work without grabbing the master files.
+                        </p>
+                        <div className="mt-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                            <Check className="w-3 h-3 text-lime-400" /> Auto watermarking
+                        </div>
+                    </div>
+                </BentoCard>
+
+                <BentoCard className="min-h-[260px] transition-transform hover:-translate-y-2 hover:shadow-[0_24px_50px_-28px_rgba(15,23,42,0.45)] dark:hover:shadow-[0_24px_50px_-28px_rgba(0,0,0,0.7)]" title="Instant Unlock" subtitle="Payment gated" icon={Zap}>
+                    <div className="p-8 pt-0">
+                        <div className="h-[2px] w-12 bg-gradient-to-r from-lime-400/90 to-transparent mb-5" />
+                        <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                            Clients pay on the delivery page and the originals unlock immediately, no follow-ups.
+                        </p>
+                        <div className="mt-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                            <Lock className="w-3 h-3 text-lime-400" /> Money in, files out
+                        </div>
+                    </div>
+                </BentoCard>
+
+                <BentoCard className="min-h-[260px] transition-transform hover:-translate-y-2 hover:shadow-[0_24px_50px_-28px_rgba(15,23,42,0.45)] dark:hover:shadow-[0_24px_50px_-28px_rgba(0,0,0,0.7)]" title="Branded Portals" subtitle="Your look" icon={Globe}>
+                    <div className="p-8 pt-0">
+                        <div className="h-[2px] w-12 bg-gradient-to-r from-lime-400/90 to-transparent mb-5" />
+                        <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                            Deliver under your logo, colors, and domain for a polished client experience.
+                        </p>
+                        <div className="mt-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                            <Palette className="w-3 h-3 text-lime-400" /> Custom identity
+                        </div>
+                    </div>
+                </BentoCard>
+
+                <BentoCard className="min-h-[260px] transition-transform hover:-translate-y-2 hover:shadow-[0_24px_50px_-28px_rgba(15,23,42,0.45)] dark:hover:shadow-[0_24px_50px_-28px_rgba(0,0,0,0.7)]" title="Client Signals" subtitle="Know the moment" icon={Mail}>
+                    <div className="p-8 pt-0">
+                        <div className="h-[2px] w-12 bg-gradient-to-r from-lime-400/90 to-transparent mb-5" />
+                        <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                            See when clients review, approve, or pay so you can move at the right moment.
+                        </p>
+                        <div className="mt-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                            <Clock className="w-3 h-3 text-lime-400" /> Review timeline
+                        </div>
+                    </div>
+                </BentoCard>
+
+                <BentoCard className="min-h-[260px] transition-transform hover:-translate-y-2 hover:shadow-[0_24px_50px_-28px_rgba(15,23,42,0.45)] dark:hover:shadow-[0_24px_50px_-28px_rgba(0,0,0,0.7)]" title="Audit Trail" subtitle="Dispute ready" icon={ShieldCheck}>
+                    <div className="p-8 pt-0">
+                        <div className="h-[2px] w-12 bg-gradient-to-r from-lime-400/90 to-transparent mb-5" />
+                        <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                            Every view, approval, and unlock is tracked in a clean log you can export anytime.
+                        </p>
+                        <div className="mt-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                            <FileCheck className="w-3 h-3 text-lime-400" /> Evidence packs
+                        </div>
+                    </div>
+                </BentoCard>
+
+                <BentoCard className="min-h-[260px] transition-transform hover:-translate-y-2 hover:shadow-[0_24px_50px_-28px_rgba(15,23,42,0.45)] dark:hover:shadow-[0_24px_50px_-28px_rgba(0,0,0,0.7)]" title="Storage Freedom" subtitle="BYOS ready" icon={HardDrive}>
+                    <div className="p-8 pt-0">
+                        <div className="h-[2px] w-12 bg-gradient-to-r from-lime-400/90 to-transparent mb-5" />
+                        <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                            Keep files in your own cloud and let Sendational gate the delivery link.
+                        </p>
+                        <div className="mt-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                            <Cloud className="w-3 h-3 text-lime-400" /> S3, Drive, Dropbox
+                        </div>
+                    </div>
+                </BentoCard>
+            </div>
+        </div>
+    </section>
+);
+
+const SendationalUseCases = () => {
+    const lanes = [
+        [
+            { label: 'Wedding photography', icon: ImageIcon },
+            { label: 'Brand identity', icon: Palette },
+            { label: 'Video production', icon: PlayCircle },
+            { label: 'Web design', icon: LayoutGrid },
+            { label: 'Consulting reports', icon: FileText },
+        ],
+        [
+            { label: 'Course assets', icon: Crown },
+            { label: 'Music masters', icon: Disc },
+            { label: 'Event media', icon: Calendar },
+            { label: 'Creative retainers', icon: Clock },
+            { label: 'Agency handoffs', icon: FolderOpen },
+        ],
+    ];
+
+    return (
+        <section className="overflow-hidden border-t border-slate-200 bg-editorial py-24 text-center text-black transition-colors duration-700 dark:border-white/10 dark:bg-cosmic dark:text-white">
+            <div className="mx-auto mb-12 max-w-[900px] px-6">
+                <span className="inline-block rounded-full border border-slate-200 bg-white px-4 py-1.5 font-mono text-xs font-bold uppercase tracking-widest text-lime-600 shadow-sm dark:border-white/10 dark:bg-white/[0.06] dark:text-lime-400">
+                    Built For The Send
+                </span>
+                <h2 className="mt-6 font-sans text-4xl font-medium tracking-tight md:text-6xl">
+                    Any work that should be previewed before it is released.
+                </h2>
+                <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-slate-300">
+                    If the final files matter, the final moment matters. Sendational gives that moment a branded portal, a clear balance, and a clean unlock.
+                </p>
+            </div>
+
+            <div className="space-y-4">
+                {lanes.map((lane, laneIndex) => (
+                    <div key={laneIndex} className="relative flex overflow-hidden">
+                        <div className={`flex min-w-max gap-4 px-4 ${laneIndex === 0 ? 'animate-marquee' : 'animate-marquee2'}`}>
+                            {[...lane, ...lane, ...lane].map((item, index) => (
+                                <div
+                                    key={`${item.label}-${laneIndex}-${index}`}
+                                    className="flex h-16 items-center gap-4 rounded-full border border-slate-200 bg-white px-6 text-lg font-semibold shadow-sm transition-transform hover:-translate-y-1 dark:border-white/10 dark:bg-white/[0.06]"
+                                >
+                                    <item.icon className="h-5 w-5 text-lime-500 dark:text-lime-400" />
+                                    <span className="whitespace-nowrap">{item.label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+};
+
+const CompetitiveMatrix = () => {
+    type CellValue = 'yes' | 'partial' | 'no';
+    const columns = [
+        { label: 'Sendational', highlight: true, note: 'Built for delivery' },
+        { label: 'Marketplaces', highlight: false, note: 'Fees + rules' },
+        { label: 'Generic Links', highlight: false, note: 'No payment gate' },
+        { label: 'Legacy CRMs', highlight: false, note: 'Sales first' }
+    ];
+    const rows: { label: string; desc: string; values: CellValue[] }[] = [
+        { label: 'Payment gating', desc: 'Files unlock only after payment clears.', values: ['yes', 'partial', 'no', 'partial'] },
+        { label: 'Preview security', desc: 'Automatic watermarking and compression.', values: ['yes', 'no', 'partial', 'no'] },
+        { label: 'Client portal', desc: 'Branded delivery space for every project.', values: ['yes', 'partial', 'no', 'partial'] },
+        { label: 'Audit trail', desc: 'Proof of views, approvals, and releases.', values: ['yes', 'no', 'no', 'partial'] },
+        { label: 'BYOS storage', desc: 'Keep files in your own cloud.', values: ['yes', 'no', 'partial', 'no'] },
+        { label: 'Zero awkward chase', desc: 'No "send then chase" follow-ups.', values: ['yes', 'no', 'no', 'partial'] }
+    ];
+
+    const renderCell = (value: CellValue) => {
+        if (value === 'yes') return <Check className="w-4 h-4 text-lime-400" />;
+        if (value === 'partial') return <Minus className="w-4 h-4 text-amber-500" />;
+        return <X className="w-4 h-4 text-red-500" />;
+    };
+
+    return (
+        <section id="comparison-table" className="relative overflow-hidden py-32 px-6 bg-zinc-50/90 dark:bg-white/[0.03] text-black dark:text-white border-t border-slate-200 dark:border-white/10 transition-colors duration-700">
+            <div className="pointer-events-none absolute inset-0">
+                <div className="absolute -top-24 left-[8%] h-64 w-64 rounded-full bg-lime-400/12 blur-[130px] motion-safe:animate-float" />
+                <div className="absolute bottom-[-25%] right-[6%] h-72 w-72 rounded-full bg-sky-400/12 blur-[140px] motion-safe:animate-float-delayed" />
+            </div>
+            <div className="max-w-[1200px] mx-auto relative z-10">
+                <SectionHeading
+                    badge="Matrix"
+                    title={<span>Ahead of the usual options.</span>}
+                    subtitle="A plain-language look at what you actually get when it is time to deliver."
+                    className="motion-safe:animate-fade-in"
+                />
+
+                <div className="mt-12 overflow-x-auto motion-safe:animate-fade-in" style={{ animationDelay: '0.05s' }}>
+                    <div className="relative min-w-[900px] rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#323242]/50 backdrop-blur-xl overflow-hidden">
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-lime-400/10 via-transparent to-blue-500/10 opacity-60" />
+                        <div className="grid grid-cols-[240px_repeat(4,minmax(150px,1fr))] gap-4 px-6 py-4 border-b border-slate-200 dark:border-white/10 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                            <div>Capability</div>
+                            {columns.map((col) => (
+                                <div
+                                    key={col.label}
+                                    className={`rounded-xl px-3 py-2 text-center transition-shadow ${col.highlight ? 'bg-lime-400/20 text-black dark:text-white ring-1 ring-lime-400/30 shadow-[0_0_22px_rgba(190,242,100,0.2)]' : 'bg-slate-50 dark:bg-white/[0.03]'}`}
+                                >
+                                    <div className="text-[11px] font-bold text-black dark:text-white">{col.label}</div>
+                                    <div className="text-[9px] font-mono text-slate-400 dark:text-slate-500">{col.note}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="divide-y divide-slate-200 dark:divide-white/10">
+                            {rows.map((row) => (
+                                <div key={row.label} className="grid grid-cols-[240px_repeat(4,minmax(150px,1fr))] gap-4 px-6 py-4 items-center rounded-xl transition-colors duration-300 hover:bg-lime-400/10 dark:hover:bg-white/[0.04]">
+                                    <div>
+                                        <p className="text-sm font-semibold text-black dark:text-white">{row.label}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">{row.desc}</p>
+                                    </div>
+                                    {row.values.map((value, index) => (
+                                        <div
+                                            key={`${row.label}-${index}`}
+                                            className={`flex items-center justify-center rounded-xl py-3 transition-transform duration-300 ${columns[index].highlight ? 'bg-lime-400/15' : 'bg-slate-50 dark:bg-white/[0.03]'} hover:-translate-y-0.5`}
+                                            aria-label={`${columns[index].label} ${row.label} ${value}`}
+                                        >
+                                            {renderCell(value)}
+                                        </div>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <p className="mt-6 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                    Partial means available with manual steps or limited control.
+                </p>
+            </div>
+        </section>
+    );
+};
+
+const SendationalFinalCTA = ({ onStart, viewMode }: { onStart: () => void, viewMode: 'creatives' | 'clients' }) => (
+    <section className="py-32 px-6 bg-lime-400 text-black relative overflow-hidden">
+        <div className="absolute -top-[50%] -right-[10%] w-[60%] h-[150%] bg-white/20 rounded-full blur-[120px] pointer-events-none" />
+        
+        <div className="max-w-[1000px] mx-auto relative z-10 text-center">
+            <h2 className="font-sans font-medium tracking-tight text-5xl md:text-7xl lg:text-8xl leading-[0.9] mb-8">
+                {viewMode === 'creatives' ? (
+                    <>
+                        Deliver your work, <br />
+                        <span className="italic font-light">Send-sationally.</span>
+                    </>
+                ) : (
+                    <>
+                        A delivery experience that feels <br />
+                        <span className="italic font-light">Send-sational.</span>
+                    </>
+                )}
+            </h2>
+            <p className="text-xl md:text-2xl text-black/70 mb-12 max-w-3xl mx-auto font-medium">
+                {viewMode === 'creatives' ? 
+                    "Delivering to clients shouldn't feel like a risky chore. Stop chasing payments and start looking like the professional you are. Make every send sensational." :
+                    "Review files, approve the scope, and unlock the final deliverables instantly. No more messy ZIP files or payment delays."
+                }
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                <button
+                    onClick={onStart}
+                    className="group h-16 px-12 bg-black text-white rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 shadow-2xl flex items-center gap-3"
+                >
+                    Start for Free <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+                <p className="text-sm font-bold uppercase tracking-widest text-black/50">
+                    No credit card required
+                </p>
+            </div>
+        </div>
+    </section>
+);
+
+const SendationalWorkflow = () => (
+    <section className="py-32 px-6 bg-editorial dark:bg-cosmic transition-colors duration-700 relative overflow-hidden">
+        <div className="max-w-[1200px] mx-auto relative z-10">
+            <div className="text-center mb-24">
+                <span className="inline-block py-1 px-3 rounded-full bg-lime-400/10 text-lime-600 dark:text-lime-400 font-bold text-[10px] uppercase tracking-widest mb-6">Workflow Simplified</span>
+                <h2 className="font-sans font-medium tracking-tight text-5xl md:text-7xl text-black dark:text-white mb-6">
+                    Handover in <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-lime-400">3 simple steps.</span>
+                </h2>
+                <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+                    We've distilled the entire delivery process down to a few clicks. You focus on the creative work; we handle the business end.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+                {/* Connecting Line */}
+                <div className="hidden md:block absolute top-[48px] left-[15%] w-[70%] h-0.5 bg-gradient-to-r from-lime-400 via-blue-500 to-red-500 opacity-20" />
+                
+                {/* Step 1 */}
+                <div className="relative z-10 flex flex-col items-center text-center group">
+                    <div className="w-24 h-24 rounded-full bg-white dark:bg-[#2D2E45] border-2 border-lime-400 flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(190,242,100,0.2)] group-hover:scale-110 transition-transform">
+                        <span className="text-4xl font-bold font-sans text-lime-400">1</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-black dark:text-white mb-4">Upload Master Files</h3>
+                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed max-w-xs mx-auto">
+                        Drag and drop your high-resolution assets into Sendational. We automatically generate compressed, watermarked previews in seconds.
+                    </p>
+                </div>
+
+                {/* Step 2 */}
+                <div className="relative z-10 flex flex-col items-center text-center group">
+                    <div className="w-24 h-24 rounded-full bg-white dark:bg-[#2D2E45] border-2 border-lime-400 flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(59,130,246,0.2)] group-hover:scale-110 transition-transform">
+                        <span className="text-4xl font-bold font-sans text-lime-600">2</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-black dark:text-white mb-4">Client Reviews</h3>
+                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed max-w-xs mx-auto">
+                        Share a beautiful, branded link. The client previews the work exactly as intended, but cannot download the source files.
+                    </p>
+                </div>
+
+                {/* Step 3 */}
+                <div className="relative z-10 flex flex-col items-center text-center group">
+                    <div className="w-24 h-24 rounded-full bg-white dark:bg-[#2D2E45] border-2 border-red-500 flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(239,68,68,0.2)] group-hover:scale-110 transition-transform">
+                        <span className="text-4xl font-bold font-sans text-red-500">3</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-black dark:text-white mb-4">Get Paid & Release</h3>
+                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed max-w-xs mx-auto">
+                        The client hits "Pay Now". The funds hit your account instantly, and Sendational automatically releases the high-res files.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+);
+
 export default function LandingPage({ onGetStarted, onQuickStartWithFiles, currentTheme, onSetThemeMode, toggleTheme }: { onGetStarted: () => void, onQuickStartWithFiles?: (files: File[]) => void, currentTheme: 'light' | 'dark' | 'system', onSetThemeMode: (mode: 'light' | 'dark' | 'system') => void, toggleTheme?: () => void }) {
 
     // Removed internal state management for theme to rely on parent App state
+    const [viewMode, setViewMode] = useState<'creatives' | 'clients'>('creatives');
     const [isVideoOpen, setIsVideoOpen] = useState(false);
     const [isGetStartedOpen, setIsGetStartedOpen] = useState(false);
     const [isDropActive, setIsDropActive] = useState(false);
+    const [isWidgetOpen, setIsWidgetOpen] = useState(false);
     const quickUploadInputRef = useRef<HTMLInputElement | null>(null);
     const dragCounterRef = useRef(0);
     const [cookieConsent, setCookieConsent] = useState<CookieConsentChoice>(() => {
@@ -1505,6 +2524,27 @@ export default function LandingPage({ onGetStarted, onQuickStartWithFiles, curre
         if (saved === 'essential' || saved === 'all') return saved;
         return 'unknown';
     });
+
+    // Floating widget state
+    const [widgetLines, setWidgetLines] = useState<QuoteLine[]>([makeQuoteLine()]);
+    const [widgetProjectTitle, setWidgetProjectTitle] = useState('');
+    const [widgetClientName, setWidgetClientName] = useState('');
+    const [widgetClientEmail, setWidgetClientEmail] = useState('');
+    const [widgetStorageType, setWidgetStorageType] = useState<'cloud' | 'local'>('local');
+    const [widgetFiles, setWidgetFiles] = useState<File[]>([]);
+    const [widgetCloudProvider, setWidgetCloudProvider] = useState<'gdrive' | 'dropbox' | null>(null);
+    const widgetFileInputRef = useRef<HTMLInputElement | null>(null);
+    const widgetSubtotal = calcQuoteSubtotal(widgetLines);
+    const widgetHasFiles = widgetStorageType === 'local' ? widgetFiles.length > 0 : Boolean(widgetCloudProvider);
+    const widgetHasDetails = Boolean(widgetProjectTitle.trim()) || Boolean(widgetClientName.trim()) || Boolean(widgetClientEmail.trim());
+    const widgetSteps = [
+        { id: 'files', label: 'Files', complete: widgetHasFiles },
+        { id: 'details', label: 'Client', complete: widgetHasDetails },
+        { id: 'quote', label: 'Quote', complete: widgetSubtotal > 0 },
+    ];
+    const widgetCompletedCount = widgetSteps.filter((step) => step.complete).length;
+    const widgetProgressPercent = Math.round((widgetCompletedCount / widgetSteps.length) * 100);
+    const widgetNextStep = widgetSteps.find((step) => !step.complete)?.label;
 
     const handleCookieChoice = (choice: Exclude<CookieConsentChoice, 'unknown'>) => {
         setCookieConsent(choice);
@@ -1558,6 +2598,22 @@ export default function LandingPage({ onGetStarted, onQuickStartWithFiles, curre
         handleQuickStartFiles(e.dataTransfer.files);
     };
 
+    const handleWidgetFilesChange = (files: FileList | null) => {
+        if (!files || files.length === 0) return;
+        setWidgetFiles(Array.from(files));
+        playSuccess();
+    };
+
+    const handleWidgetSignUp = () => {
+        playSuccess();
+        // Show the get started modal with the widget data pre-filled
+        setIsGetStartedOpen(true);
+    };
+
+    const isDarkEffective = useSyncExternalStore(subscribeDocDarkClass, getDocDarkClassSnapshot, () => false);
+
+    const widgetNestedSurface = isDarkEffective ? 'bg-white/[0.06]' : 'bg-white';
+
     return (
         <div
             className="min-h-screen bg-editorial dark:bg-cosmic text-black dark:text-white font-sans selection:bg-lime-400 selection:text-black transition-colors duration-700"
@@ -1577,12 +2633,285 @@ export default function LandingPage({ onGetStarted, onQuickStartWithFiles, curre
                 }}
             />
 
+            <input
+                ref={widgetFileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                    handleWidgetFilesChange(e.target.files);
+                    e.currentTarget.value = '';
+                }}
+            />
+
+            {/* Floating Delivery Widget — Bottom-left pop-up (xl+ only) */}
+            <div className="fixed bottom-6 left-6 z-40 hidden xl:block">
+                {/* Expanded panel */}
+                {isWidgetOpen && (
+                    <div
+                        className="mb-3 flex flex-col overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white/[0.78] dark:border-white/[0.09] dark:bg-[#323242]/80 shadow-2xl backdrop-blur-xl"
+                        style={{ width: '20rem', maxHeight: 'calc(100vh - 8rem)' }}
+                    >
+                        <div
+                            className="pointer-events-none absolute inset-0 z-0 rounded-[2rem] opacity-[0.03] mix-blend-multiply dark:opacity-[0.10] dark:mix-blend-overlay"
+                            style={{ backgroundImage: NOISE_SVG, backgroundSize: '220px 220px' }}
+                        />
+                        {/* Panel header */}
+                        <div className="relative z-20 flex shrink-0 items-center justify-between border-b border-zinc-200/60 px-5 py-3.5 dark:border-white/10">
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-lime-400/15 dark:bg-lime-400/20">
+                                    <FileCheck className="h-3.5 w-3.5 text-lime-600 dark:text-lime-400" />
+                                </div>
+                                <div>
+                                    <h3 className="font-sans font-medium tracking-tight text-sm leading-none text-black dark:text-white">Try it now</h3>
+                                    <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-300">Quick delivery · free</p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => { playClick(); setIsWidgetOpen(false); }}
+                                className="relative z-30 flex h-7 w-7 items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-200 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-white/20 dark:hover:text-white"
+                                aria-label="Close widget"
+                            >
+                                <X className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                        {/* Scrollable body */}
+                        <div
+                            className="relative z-10 flex-1 overflow-y-auto p-5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                            style={{ minHeight: 0 }}
+                        >
+                        <div className="flex flex-col gap-3.5">
+                            <p className="text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-200">
+                                Build a real delivery. Sign up to keep it.
+                            </p>
+                            <div className="rounded-xl border border-zinc-200/60 bg-white/80 p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+                                <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                                    <span>Delivery progress</span>
+                                    <span>{widgetProgressPercent}%</span>
+                                </div>
+                                <div className="mt-2 h-1.5 w-full rounded-full bg-zinc-200/70 dark:bg-white/10 overflow-hidden">
+                                    <div
+                                        className="h-full bg-lime-400 transition-all"
+                                        style={{ width: `${widgetProgressPercent}%` }}
+                                    />
+                                </div>
+                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                    {widgetSteps.map((step) => (
+                                        <span
+                                            key={step.id}
+                                            className={`rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-wider ${
+                                                step.complete
+                                                    ? 'bg-lime-400/20 text-zinc-900 dark:text-lime-200'
+                                                    : 'bg-zinc-100 text-zinc-500 dark:bg-white/[0.06] dark:text-zinc-400'
+                                            }`}
+                                        >
+                                            {step.label}
+                                        </span>
+                                    ))}
+                                </div>
+                                <p className="mt-2 text-[10px] text-zinc-500 dark:text-zinc-400">
+                                    {widgetNextStep ? `Next up: ${widgetNextStep}.` : 'All set. Open the full builder to publish.'}
+                                </p>
+                            </div>
+                            {/* Storage Type Selector */}
+                            <div className="shrink-0">
+                                <label className="mb-1.5 block text-[9px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-300">
+                                    File source
+                                </label>
+                                <div className="grid grid-cols-2 gap-1.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => { playClick(); setWidgetStorageType('local'); }}
+                                        className={`flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-[11px] font-semibold transition-all ${
+                                            widgetStorageType === 'local'
+                                                ? 'border-zinc-950 bg-zinc-950 text-white dark:border-lime-400 dark:bg-lime-400 dark:text-black'
+                                                : 'border-zinc-200 bg-white/90 text-zinc-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-zinc-400 dark:hover:border-white/20'
+                                        }`}
+                                    >
+                                        <HardDrive className="h-3 w-3 shrink-0" />
+                                        Local
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { playClick(); setWidgetStorageType('cloud'); }}
+                                        className={`flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-[11px] font-semibold transition-all ${
+                                            widgetStorageType === 'cloud'
+                                                ? 'border-zinc-950 bg-zinc-950 text-white dark:border-lime-400 dark:bg-lime-400 dark:text-black'
+                                                : 'border-zinc-200 bg-white/90 text-zinc-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-zinc-400 dark:hover:border-white/20'
+                                        }`}
+                                    >
+                                        <Cloud className="h-3 w-3 shrink-0" />
+                                        Cloud
+                                    </button>
+                                </div>
+                            </div>
+
+                            {widgetStorageType === 'local' ? (
+                                <div className="shrink-0" style={{ minHeight: '7.5rem' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => widgetFileInputRef.current?.click()}
+                                        className="group w-full h-full rounded-xl border-2 border-dashed border-zinc-300 bg-zinc-50/60 px-3 py-3 transition-all hover:border-lime-400 hover:bg-lime-50 dark:border-white/15 dark:bg-white/[0.04] dark:hover:border-lime-400 dark:hover:bg-lime-400/10"
+                                    >
+                                        <Upload className="mx-auto mb-1 h-4 w-4 text-zinc-400 transition-colors group-hover:text-lime-600 dark:text-zinc-400 dark:group-hover:text-lime-400" />
+                                        <p className="text-[11px] font-medium text-zinc-600 transition-colors group-hover:text-lime-700 dark:text-zinc-100 dark:group-hover:text-lime-400">
+                                            {widgetFiles.length > 0
+                                                ? `${widgetFiles.length} file${widgetFiles.length > 1 ? 's' : ''} ready`
+                                                : 'Choose from device'}
+                                        </p>
+                                        {widgetFiles.length > 0 && (
+                                            <p className="mt-0.5 truncate px-2 text-[9px] text-zinc-400 dark:text-zinc-300">
+                                                {widgetFiles.map((f) => f.name).join(', ')}
+                                            </p>
+                                        )}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="shrink-0 space-y-1.5" style={{ minHeight: '7.5rem' }}>
+                                    <p className="mb-1 text-[9px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-300">Connect cloud drive</p>
+                                    <button
+                                        type="button"
+                                        onClick={() => { playClick(); setWidgetCloudProvider('gdrive'); }}
+                                        className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 transition-all ${
+                                            widgetCloudProvider === 'gdrive'
+                                                ? 'border-lime-300/60 bg-blue-50 dark:bg-lime-400/10'
+                                                : 'border-zinc-200 bg-white/90 dark:border-white/10 dark:bg-white/[0.05] dark:hover:border-white/20'
+                                        }`}
+                                    >
+                                        <svg className="h-4 w-4 shrink-0" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                            <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
+                                            <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/>
+                                            <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/>
+                                            <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/>
+                                            <path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/>
+                                            <path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/>
+                                        </svg>
+                                        <div className="flex-1 text-left">
+                                            <p className="text-[11px] font-semibold text-zinc-800 dark:text-zinc-200">Google Drive</p>
+                                            <p className="text-[9px] text-zinc-400 dark:text-zinc-500">Docs, Sheets, any file</p>
+                                        </div>
+                                        {widgetCloudProvider === 'gdrive' && <Check className="h-3.5 w-3.5 shrink-0 text-lime-600" />}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { playClick(); setWidgetCloudProvider('dropbox'); }}
+                                        className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 transition-all ${
+                                            widgetCloudProvider === 'dropbox'
+                                                ? 'border-[#0061FF]/50 bg-blue-50 dark:bg-[#0061FF]/10'
+                                                : 'border-zinc-200 bg-white/90 dark:border-white/10 dark:bg-white/[0.05] dark:hover:border-white/20'
+                                        }`}
+                                    >
+                                        <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="#0061FF" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                            <path d="M6 2L0 6l6 4-6 4 6 4 6-4-6-4 6-4L6 2zm12 0l-6 4 6 4-6 4 6 4 6-4-6-4 6-4-6-4zM6 18.5L12 22l6-3.5-6-4-6 4z"/>
+                                        </svg>
+                                        <div className="flex-1 text-left">
+                                            <p className="text-[11px] font-semibold text-zinc-800 dark:text-zinc-200">Dropbox</p>
+                                            <p className="text-[9px] text-zinc-400 dark:text-zinc-500">Photos, videos, folders</p>
+                                        </div>
+                                        {widgetCloudProvider === 'dropbox' && <Check className="h-3.5 w-3.5 shrink-0 text-[#0061FF]" />}
+                                    </button>
+                                    {widgetCloudProvider && (
+                                        <button
+                                            type="button"
+                                            onClick={() => { playClick(); }}
+                                            className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg bg-zinc-950 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-white transition-all hover:opacity-90 dark:bg-lime-400 dark:text-black"
+                                        >
+                                            <FolderOpen className="h-3.5 w-3.5" />
+                                            Browse {widgetCloudProvider === 'gdrive' ? 'Drive' : 'Dropbox'}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="shrink-0 space-y-1.5">
+                                <input
+                                    type="text"
+                                    placeholder="Project title"
+                                    value={widgetProjectTitle}
+                                    onChange={(e) => setWidgetProjectTitle(e.target.value)}
+                                    className={`h-8 w-full rounded-lg border px-3 text-xs outline-none transition-colors ${
+                                        isDarkEffective
+                                            ? 'border-white/10 bg-white/[0.07] text-zinc-100 placeholder:text-zinc-500'
+                                            : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400'
+                                    }`}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Client name"
+                                    value={widgetClientName}
+                                    onChange={(e) => setWidgetClientName(e.target.value)}
+                                    className={`h-8 w-full rounded-lg border px-3 text-xs outline-none transition-colors ${
+                                        isDarkEffective
+                                            ? 'border-white/10 bg-white/[0.07] text-zinc-100 placeholder:text-zinc-500'
+                                            : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400'
+                                    }`}
+                                />
+                                <input
+                                    type="email"
+                                    placeholder="Client email"
+                                    value={widgetClientEmail}
+                                    onChange={(e) => setWidgetClientEmail(e.target.value)}
+                                    className={`h-8 w-full rounded-lg border px-3 text-xs outline-none transition-colors ${
+                                        isDarkEffective
+                                            ? 'border-white/10 bg-white/[0.07] text-zinc-100 placeholder:text-zinc-500'
+                                            : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400'
+                                    }`}
+                                />
+                            </div>
+
+                            <DeliveryQuickQuote
+                                className="shrink-0"
+                                isDarkMode={isDarkEffective}
+                                projectTitle={widgetProjectTitle}
+                                clientName={widgetClientName}
+                                clientEmail={widgetClientEmail}
+                                lines={widgetLines}
+                                onLinesChange={setWidgetLines}
+                                onApplyToPayment={() => {}}
+                                onOpenFullBuilder={handleWidgetSignUp}
+                                panelSurfaceCls={widgetNestedSurface}
+                                footerSlot={(
+                                    <div className="mt-2 pt-2 border-t border-zinc-200/50 dark:border-white/10">
+                                        <button
+                                            type="button"
+                                            onClick={handleWidgetSignUp}
+                                            className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-lime-400 text-[11px] font-bold uppercase tracking-wider text-black shadow-md transition-all hover:scale-[1.02] hover:bg-lime-300 hover:shadow-lg"
+                                        >
+                                            <Save className="h-3.5 w-3.5" />
+                                            Sign up to keep it
+                                        </button>
+                                        <p className="mt-2 text-center text-[9px] text-zinc-400 dark:text-zinc-500">
+                                            Free to start · No card required
+                                        </p>
+                                    </div>
+                                )}
+                            />
+                        </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Floating trigger pill */}
+                <button
+                    type="button"
+                    onClick={() => { playClick(); setIsWidgetOpen(prev => !prev); }}
+                    className="flex items-center gap-2.5 rounded-2xl bg-lime-400 px-5 py-3.5 text-black shadow-2xl shadow-lime-400/25 transition-all hover:scale-105 hover:bg-lime-300 hover:shadow-lime-400/40 active:scale-95"
+                    aria-label={isWidgetOpen ? 'Close quick delivery' : 'Open quick delivery'}
+                >
+                    <FileCheck className="h-4 w-4 shrink-0" />
+                    <span className="text-[12px] font-bold uppercase tracking-widest">
+                        {isWidgetOpen ? 'Close' : 'Try a delivery'}
+                    </span>
+                </button>
+            </div>
+
             {isDropActive && (
                 <div className="fixed inset-0 z-[1200] pointer-events-none bg-black/40 dark:bg-[#323242]/60 backdrop-blur-[2px]">
                     <div className="absolute inset-0 flex items-center justify-center px-6">
                         <div className="rounded-3xl border border-white/20 bg-white/90 dark:bg-[#2D2E45]/90 shadow-2xl px-8 py-10 text-left max-w-lg w-full">
                             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3">Quick start</p>
-                            <h3 className="font-serif text-3xl sm:text-4xl text-zinc-900 dark:text-white mb-4">Drop to deliver</h3>
+                            <h3 className="font-sans font-medium tracking-tight text-3xl sm:text-4xl text-zinc-900 dark:text-white mb-4">Drop to deliver</h3>
                             <p className="text-sm text-zinc-600 dark:text-zinc-300 mb-5 leading-relaxed">
                                 We&apos;ll load your files into <strong className="text-zinc-800 dark:text-white">Quick delivery</strong>. Next you&apos;ll add client details, choose a link or email, publish, then share the project.
                             </p>
@@ -1600,11 +2929,14 @@ export default function LandingPage({ onGetStarted, onQuickStartWithFiles, curre
             {/* Nav receives isHidden prop to create cinema mode */}
             <Nav onStart={openGetStartedModal} currentTheme={currentTheme} onSetThemeMode={onSetThemeMode || (() => toggleTheme?.())} isHidden={isVideoOpen} />
             <main>
-                <Hero onStart={openGetStartedModal} onWatchVideo={() => setIsVideoOpen(true)} />
+                <Hero onStart={openGetStartedModal} onWatchVideo={() => setIsVideoOpen(true)} viewMode={viewMode} setViewMode={setViewMode} />
+                <SendationalWorkflowTheater />
                 <ComparisonSection />
-                <BentoGrid />
+                <SendationalFeaturesShowcase />
+                <CompetitiveMatrix />
                 <Pricing onStart={openGetStartedModal} />
                 <FAQSection />
+                <SendationalFinalCTA onStart={openGetStartedModal} viewMode={viewMode} />
             </main>
             <VideoModal isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} onStart={openGetStartedModal} />
             <GetStartedModal

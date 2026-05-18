@@ -198,7 +198,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
             onClick={() => { playClick(); onChange(!checked); }}
             className={`flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-charcoal ${
                 variant === 'blue'
-                    ? `${checked ? 'bg-blue-500' : 'bg-slate-200 dark:bg-white/10'} focus:ring-blue-500/40`
+                    ? `${checked ? 'bg-lime-400' : 'bg-slate-200 dark:bg-white/10'} focus:ring-lime-400/40`
                     : `${checked ? 'bg-lime-400 dark:bg-[#bef264]' : 'bg-slate-200 dark:bg-white/10'} focus:ring-lime-400`
             }`}
         >
@@ -514,7 +514,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                             placeholder="brand"
                                                         />
                                                         <div className="ml-2 shrink-0 border-l border-zinc-200 py-1 pl-3 font-mono text-xs text-zinc-500 dark:border-white/10 dark:text-zinc-400">
-                                                            .heartifact.com
+                                                            .Sendational.com
                                                         </div>
                                                     </div>
                                                     <p className="pl-0.5 text-[10px] text-zinc-500 dark:text-zinc-500">Hostname for deliverables</p>
@@ -544,7 +544,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                 <React.Fragment key={label}>
                                                     {i > 0 && <ChevronRight className="hidden h-3.5 w-3.5 text-zinc-400 sm:block dark:text-zinc-600" />}
                                                     <span className="inline-flex items-center gap-2 rounded-full border border-zinc-200/60 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-600 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-zinc-300 dark:shadow-none">
-                                                        <Icon className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                                        <Icon className="h-3.5 w-3.5 text-blue-600 dark:text-lime-400" />
                                                         {label}
                                                     </span>
                                                 </React.Fragment>
@@ -733,7 +733,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <Card>
                                         <div className="flex items-center gap-3 mb-6">
-                                            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500"><Wallet className="w-5 h-5" /></div>
+                                            <div className="p-2 rounded-lg bg-lime-400/10 text-lime-600"><Wallet className="w-5 h-5" /></div>
                                             <h3 className="font-bold text-slate-900 dark:text-white">P2P Apps</h3>
                                         </div>
                                         <div className="space-y-4">
@@ -756,7 +756,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
 
                                     <Card>
                                         <div className="flex items-center gap-3 mb-6">
-                                            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400"><Banknote className="w-5 h-5" /></div>
+                                            <div className="p-2 rounded-lg bg-lime-400/10 text-blue-600 dark:text-lime-400"><Banknote className="w-5 h-5" /></div>
                                             <h3 className="font-bold text-slate-900 dark:text-white">Bank Wire</h3>
                                         </div>
                                         <div className="space-y-2">
@@ -786,7 +786,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                     <h3 className="font-sans tracking-tight text-lg text-slate-900 dark:text-white">Whitelabel Domain</h3>
                                                 </div>
                                                 <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-1 pl-[34px]">
-                                                    Replace the default Heartifact URL with your own custom domain. Clients will see your brand only.
+                                                    Replace the default Sendational URL with your own custom domain. Clients will see your brand only.
                                                 </p>
                                             </div>
                                             <Badge color="lime">Agency</Badge>
@@ -822,7 +822,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Host</span>
                                                     <span className="text-slate-900 dark:text-white font-bold">portal</span>
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Value</span>
-                                                    <span className="text-[#4d7c0f] dark:text-[#bef264]">cname.heartifact.com</span>
+                                                    <span className="text-[#4d7c0f] dark:text-[#bef264]">cname.Sendational.com</span>
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Type</span>
                                                     <span>CNAME</span>
                                                 </div>
@@ -832,7 +832,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         {/* What this does — visual hint */}
                                         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5 flex items-center gap-3 text-[10px] text-slate-400 dark:text-slate-500">
                                             <Shield className="w-4 h-4 shrink-0" />
-                                            <span className="leading-relaxed">Instead of <span className="font-mono text-slate-500 dark:text-slate-400">brand.heartifact.com</span>, your clients see <span className="font-mono font-bold text-slate-700 dark:text-white">{agencySettings.cname || 'portal.youragency.com'}</span></span>
+                                            <span className="leading-relaxed">Instead of <span className="font-mono text-slate-500 dark:text-slate-400">brand.Sendational.com</span>, your clients see <span className="font-mono font-bold text-slate-700 dark:text-white">{agencySettings.cname || 'portal.youragency.com'}</span></span>
                                         </div>
                                     </div>
                                 </Card>
@@ -982,7 +982,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                             <div>
                                                                 <p className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">Platform storage</p>
                                                                 <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
-                                                                    Heartifact uses server-issued presigned URLs for uploads and downloads. No S3/R2 secret keys or cloud OAuth tokens are stored in the browser or in your profile.
+                                                                    Sendational uses server-issued presigned URLs for uploads and downloads. No S3/R2 secret keys or cloud OAuth tokens are stored in the browser or in your profile.
                                                                 </p>
                                                                 <div className="mt-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                                                     <span className="px-2 py-1 rounded bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10">Mode</span>
@@ -1155,7 +1155,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                             label="Bucket name"
                                                             value={storageSettings.s3Bucket || ''}
                                                             onChange={(e: any) => setStorageSettings(prev => ({ ...prev, s3Bucket: e.target.value }))}
-                                                            placeholder="e.g. heartifact-projects"
+                                                            placeholder="e.g. Sendational-projects"
                                                             icon={Database}
                                                         />
                                                         <InputField

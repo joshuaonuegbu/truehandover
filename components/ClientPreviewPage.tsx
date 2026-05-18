@@ -187,7 +187,7 @@ const ClientLibraryView: React.FC<ClientLibraryViewProps> = ({ projects, isDarkM
                                     Delivered {new Date(libraryProject.createdAt).toLocaleDateString()} - {unlockedFiles.length} assets
                                 </p>
                             </div>
-                            <div className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f]'}`}>
+                            <div className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-lime-400/10 border-lime-400/20 text-[#bef264]' : 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f]'}`}>
                                 Library
                             </div>
                         </div>
@@ -211,7 +211,7 @@ const ClientLibraryView: React.FC<ClientLibraryViewProps> = ({ projects, isDarkM
                                         <p className={`text-sm font-bold truncate ${textPrimary}`}>{file.name}</p>
                                         <p className={`text-[10px] uppercase tracking-widest ${textMuted} mt-1`}>{file.type} - {file.size}</p>
                                         {recentViewedAt && (
-                                            <p className={`text-[10px] mt-1 font-bold uppercase tracking-widest ${isDarkMode ? 'text-blue-400' : 'text-[#4d7c0f]'}`}>
+                                            <p className={`text-[10px] mt-1 font-bold uppercase tracking-widest ${isDarkMode ? 'text-[#bef264]' : 'text-[#4d7c0f]'}`}>
                                                 Viewed {new Date(recentViewedAt).toLocaleDateString()}
                                             </p>
                                         )}
@@ -354,7 +354,7 @@ const CredentialVaultWidget = ({ credentials, isLocked, isDarkMode }: any) => {
                                         className={`w-7 h-7 flex items-center justify-center rounded border ${isDarkMode ? 'bg-white/5 border-white/5 hover:bg-white/10' : 'bg-white/90 border-zinc-200 text-zinc-600 hover:bg-zinc-50 shadow-sm'} transition-colors`}
                                         title="Copy Username"
                                     >
-                                        {copiedId === cred.id + '_u' ? <Check className="w-3 h-3 text-blue-500" /> : <Copy className="w-3 h-3 text-zinc-400" />}
+                                        {copiedId === cred.id + '_u' ? <Check className="w-3 h-3 text-lime-600" /> : <Copy className="w-3 h-3 text-zinc-400" />}
                                     </button>
                                 </div>
                                 <div className="flex gap-2">
@@ -366,7 +366,7 @@ const CredentialVaultWidget = ({ credentials, isLocked, isDarkMode }: any) => {
                                         className={`w-7 h-7 flex items-center justify-center rounded border ${isDarkMode ? 'bg-white/5 border-white/5 hover:bg-white/10' : 'bg-white/90 border-zinc-200 text-zinc-600 hover:bg-zinc-50 shadow-sm'} transition-colors`}
                                         title="Copy Password"
                                     >
-                                        {copiedId === cred.id + '_p' ? <Check className="w-3 h-3 text-blue-500" /> : <Copy className="w-3 h-3 text-zinc-400" />}
+                                        {copiedId === cred.id + '_p' ? <Check className="w-3 h-3 text-lime-600" /> : <Copy className="w-3 h-3 text-zinc-400" />}
                                     </button>
                                 </div>
                                 {cred.notes && (
@@ -437,20 +437,24 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
     }, []);
 
     return (
-        <div ref={gridRef} className="w-full">
-            <div className="grid gap-3 sm:gap-4 lg:gap-6 pb-24" style={{ gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))` }}>
+        <div ref={gridRef} className="w-full" style={{ overflow: 'visible' }}>
+            <div className="grid gap-3 sm:gap-4 lg:gap-6 pb-24 pt-2 px-2 -mx-2 -mt-2" style={{ gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))` }}>
             {files.map((file: FileAsset, index: number) => {
                 const isRevisionSent = !!(revisions[file.id]?.length);
                 return (
                     <div
                         key={file.id}
-                        className={`group relative rounded-[2rem] border overflow-hidden transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-[1.01] ${isDarkMode
-                            ? 'bg-charcoal border-white/[0.08] shadow-[0_20px_44px_-12px_rgba(0,0,0,0.55)] hover:shadow-[0_30px_65px_-18px_rgba(0,0,0,0.62),0_0_44px_-12px_rgba(190,242,100,0.18)]'
-                            : 'bg-white border-zinc-200/70 shadow-[0_20px_52px_-14px_rgba(15,23,42,0.2)] hover:shadow-[0_28px_62px_-18px_rgba(15,23,42,0.26),0_0_38px_-14px_rgba(132,204,22,0.22)]'
+                        className={`group relative rounded-[2rem] border transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 hover:scale-[1.01] ${isDarkMode
+                            ? 'bg-charcoal border-white/[0.08] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] hover:border-white/20 hover:shadow-[0_0_60px_0_rgba(255,255,255,0.05)]'
+                            : 'bg-white border-zinc-200/70 shadow-[0_26px_60px_-16px_rgba(15,23,42,0.34)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]'
                             }`}
                         style={{ animationDelay: `${index * 100}ms` }}
                     >
-                        <div className={`absolute inset-0 pointer-events-none rounded-[2rem] ${isDarkMode ? 'opacity-[0.045]' : 'opacity-[0.03]'}`} style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                        {/* Noise + top accent line */}
+                        <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none">
+                            <div className={`absolute inset-0 ${isDarkMode ? 'opacity-[0.045]' : 'opacity-[0.03]'}`} style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
+                            <div className={`absolute top-0 left-8 right-8 h-px ${isDarkMode ? 'bg-gradient-to-r from-transparent via-white/20 to-transparent' : 'bg-gradient-to-r from-transparent via-zinc-900/10 to-transparent'}`} />
+                        </div>
                         <div className="relative z-10">
                         {/* Inline remove button (editor desktop preview only) */}
                         {onRemove && (
@@ -490,10 +494,10 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                     </div>
                                 </div>
                             )}
-                            <div className="absolute top-4 left-4 z-30">
-                                <div className={`px-3 py-1.5 rounded-lg ${isDarkMode ? 'bg-black/80 border-white/10 text-zinc-300' : 'bg-white/90 border-zinc-200/50 text-zinc-700'} backdrop-blur-md border shadow-sm flex items-center gap-2`}>
-                                    {(file.type === 'image' || file.type === 'design') ? <ImageIcon className="w-3 h-3 text-zinc-500" /> : <FileText className="w-3 h-3 text-zinc-500" />}
-                                    <span className="text-[10px] font-bold uppercase tracking-wider">{file.type}</span>
+                            <div className="absolute top-3 left-3 z-30">
+                                <div className={`px-2.5 py-1 rounded-full ${isDarkMode ? 'bg-black/70 border-white/[0.12] text-zinc-200' : 'bg-white/95 border-zinc-200/70 text-zinc-600'} backdrop-blur-xl border shadow-md flex items-center gap-1.5`}>
+                                    {(file.type === 'image' || file.type === 'design') ? <ImageIcon className="w-2.5 h-2.5 opacity-60" /> : <FileText className="w-2.5 h-2.5 opacity-60" />}
+                                    <span className="text-[9px] font-bold uppercase tracking-widest">{file.type}</span>
                                 </div>
                             </div>
                             <div className="absolute inset-0 z-20 rounded-t-[2rem] bg-transparent group-hover:bg-transparent transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 duration-300">
@@ -501,9 +505,10 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                 <div className={`w-12 h-12 backdrop-blur-md rounded-full border flex items-center justify-center text-white scale-75 group-hover:scale-100 transition-transform ${isDarkMode ? 'bg-black/35 border-white/25' : 'bg-white/55 border-white/70 text-zinc-900'}`}><Maximize2 className="w-5 h-5" /></div>
                             </div>
                         </button>
-                        <div className="p-4 md:p-6">
-                            <div className="flex justify-between items-start mb-6">
-                                <div className="flex-1 min-w-0 pr-4">
+                        <div className="px-4 md:px-5 pt-4 md:pt-5 pb-4 md:pb-5">
+                            {/* Name + status row */}
+                            <div className="flex items-start justify-between gap-3 mb-3">
+                                <div className="flex-1 min-w-0">
                                     {onRename && editingNameId === file.id ? (
                                         <input
                                             autoFocus
@@ -512,49 +517,36 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                             onBlur={() => { if (editingNameVal.trim()) onRename(file.id, editingNameVal.trim()); setEditingNameId(null); }}
                                             onKeyDown={(e) => { if (e.key === 'Enter') { if (editingNameVal.trim()) onRename(file.id, editingNameVal.trim()); setEditingNameId(null); } if (e.key === 'Escape') setEditingNameId(null); }}
                                             onClick={(e) => e.stopPropagation()}
-                                            className={`w-full font-bold ${titleClass} mb-1 bg-transparent border-b-2 outline-none truncate ${isDarkMode ? 'text-white border-blue-500' : 'text-zinc-900 border-blue-500'}`}
+                                            className={`w-full font-semibold ${titleClass} bg-transparent border-b-2 outline-none truncate ${isDarkMode ? 'text-white border-[#bef264]' : 'text-zinc-900 border-lime-400'}`}
                                         />
                                     ) : (
                                         <h3
-                                            className={`font-bold ${titleClass} ${textPrimary} mb-1 transition-colors truncate ${onRename ? 'cursor-text hover:opacity-70' : ''}`}
+                                            className={`font-semibold ${titleClass} ${textPrimary} truncate leading-snug ${onRename ? 'cursor-text hover:opacity-70' : ''}`}
                                             onClick={onRename ? (e) => { e.stopPropagation(); setEditingNameId(file.id); setEditingNameVal(file.name); } : undefined}
-                                            title={onRename ? 'Click to rename' : undefined}
+                                            title={file.name}
                                         >{file.name}</h3>
                                     )}
-                                    <div className={`flex items-center gap-2 ${metaTextClass} font-medium text-zinc-400`}>
+                                    <div className={`flex items-center gap-1.5 mt-1 ${metaTextClass} font-mono ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
                                         {onResize && editingSizeId === file.id ? (
-                                            <input
-                                                autoFocus
-                                                value={editingSizeVal}
-                                                onChange={(e) => setEditingSizeVal(e.target.value)}
-                                                onBlur={() => { if (editingSizeVal.trim()) onResize(file.id, editingSizeVal.trim()); setEditingSizeId(null); }}
-                                                onKeyDown={(e) => { if (e.key === 'Enter') { if (editingSizeVal.trim()) onResize(file.id, editingSizeVal.trim()); setEditingSizeId(null); } if (e.key === 'Escape') setEditingSizeId(null); }}
-                                                onClick={(e) => e.stopPropagation()}
-                                                className={`w-20 font-mono bg-transparent border-b outline-none ${metaTextClass} ${isDarkMode ? 'text-zinc-300 border-blue-500/50' : 'text-zinc-600 border-blue-400'}`}
-                                            />
+                                            <input autoFocus value={editingSizeVal} onChange={(e) => setEditingSizeVal(e.target.value)} onBlur={() => { if (editingSizeVal.trim()) onResize(file.id, editingSizeVal.trim()); setEditingSizeId(null); }} onKeyDown={(e) => { if (e.key === 'Enter') { if (editingSizeVal.trim()) onResize(file.id, editingSizeVal.trim()); setEditingSizeId(null); } if (e.key === 'Escape') setEditingSizeId(null); }} onClick={(e) => e.stopPropagation()} className={`w-20 font-mono bg-transparent border-b outline-none ${metaTextClass} ${isDarkMode ? 'text-zinc-300 border-lime-400/50' : 'text-zinc-600 border-lime-300'}`} />
                                         ) : (
-                                            <span
-                                                className={onResize ? 'cursor-text hover:opacity-70' : ''}
-                                                onClick={onResize ? (e) => { e.stopPropagation(); setEditingSizeId(file.id); setEditingSizeVal(file.size); } : undefined}
-                                                title={onResize ? 'Click to edit size' : undefined}
-                                            >{file.size}</span>
+                                            <span className={onResize ? 'cursor-text hover:opacity-70' : ''} onClick={onResize ? (e) => { e.stopPropagation(); setEditingSizeId(file.id); setEditingSizeVal(file.size); } : undefined}>{file.size}</span>
                                         )}
-                                        <span className={`w-1 h-1 rounded-full ${isDarkMode ? 'bg-zinc-700' : 'bg-zinc-300'}`} /><span className="uppercase tracking-wider">Version {file.version}.0</span>
+                                        <span className={`w-px h-3 ${isDarkMode ? 'bg-white/10' : 'bg-zinc-200'}`} />
+                                        <span className="uppercase tracking-wider">v{file.version}.0</span>
                                     </div>
                                 </div>
-                                <div
-                                    className={`shrink-0 mt-0.5 inline-flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
-                                        file.locked && isLocked
-                                            ? 'bg-amber-500/10 border-amber-500/25 text-amber-600'
-                                            : isDarkMode
-                                                ? 'bg-[#bef264]/15 border-[#bef264]/40 text-[#bef264]'
-                                                : 'bg-[#a3e635]/20 border-[#84cc16]/40 text-[#3f6212]'
-                                    }`}
-                                    title={file.locked && isLocked ? 'Asset is locked until payment is completed' : 'Asset is ready to download'}
-                                >
-                                    {file.locked && isLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                                    <span>{file.locked && isLocked ? 'Locked' : 'Ready'}</span>
-                            </div>
+                                {/* Status badge */}
+                                <div className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-widest border ${
+                                    file.locked && isLocked
+                                        ? 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+                                        : isDarkMode
+                                            ? 'bg-[#bef264]/10 border-[#bef264]/20 text-[#bef264]'
+                                            : 'bg-[#a3e635]/15 border-[#84cc16]/30 text-[#3f6212]'
+                                }`} title={file.locked && isLocked ? 'Locked until payment' : 'Ready to download'}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${ file.locked && isLocked ? 'bg-amber-400' : 'bg-[#bef264]' } ${!(file.locked && isLocked) ? 'shadow-[0_0_6px_rgba(190,242,100,0.7)]' : ''}`} />
+                                    {file.locked && isLocked ? 'Locked' : 'Ready'}
+                                </div>
                             </div>
                             <div className={`${expandedSpecs.has(file.id) ? 'block' : (isPhoneLike ? 'hidden' : 'hidden md:block')} mb-4 md:mb-6 p-3 rounded-xl border transition-all ${isDarkMode ? 'bg-black/25 border-white/10 shadow-inner shadow-black/20' : 'bg-zinc-50/90 border-zinc-200/70 shadow-inner shadow-zinc-200/50'}`}>
                                 <div className="flex justify-between items-center mb-2"><span className="text-[10px] font-bold uppercase text-zinc-500">Technical Specs</span><ShieldCheck className="w-3 h-3 text-zinc-400" /></div>
@@ -578,7 +570,7 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                                 title="Copy SHA-256 hash"
                                                 className={`shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border transition-all ${
                                                     copiedHashId === file.id
-                                                        ? (isDarkMode ? 'bg-blue-900/30 border-blue-700 text-blue-400' : 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f]')
+                                                        ? (isDarkMode ? 'bg-blue-900/30 border-blue-700 text-[#bef264]' : 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f]')
                                                         : (isDarkMode ? 'border-white/10 text-zinc-400 hover:text-white hover:bg-white/10' : 'border-zinc-200/50 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100')
                                                 }`}
                                             >
@@ -589,7 +581,7 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                     )}
                                 </div>
                             </div>
-                            <div className={`pt-4 md:pt-6 border-t ${borderColor} flex flex-col sm:flex-row gap-3`}>
+                            <div className={`pt-3 mt-3 border-t ${borderColor} flex flex-col sm:flex-row gap-2`}>
                                 {file.locked && isLocked ? (
                                     <>
                                         <button onClick={() => onRequestCorrection(index)} className={`flex-1 h-12 sm:h-11 flex items-center justify-center gap-2 rounded-lg border ${actionTextClass} font-bold uppercase tracking-wider transition-colors ${isRevisionSent ? (isDarkMode ? 'bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20' : 'bg-amber-100 text-amber-600 hover:bg-amber-200') : (isDarkMode ? 'bg-white/5 border-white/5 hover:bg-white/10 text-zinc-400 hover:text-white' : 'bg-zinc-50 border-zinc-100 hover:bg-zinc-100 text-zinc-500')}`}>
@@ -631,7 +623,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
     const [editingSizeVal, setEditingSizeVal] = useState('');
 
     return (
-        <div className="flex flex-col gap-4 pb-20">
+        <div className="flex flex-col gap-4 pb-24 pt-2 px-2 -mx-2 -mt-2">
             {files.map((file: FileAsset, index: number) => {
                 const isRevisionSent = revisions?.[file.id]?.length > 0;
                 const isFileLocked = file.locked && isLocked;
@@ -641,14 +633,15 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                         key={file.id}
                         onClick={() => onAssetClick(index)}
                         className={`
-                            group relative overflow-hidden rounded-3xl border transition-all duration-300 cursor-pointer backdrop-blur-md
+                            group relative rounded-[2rem] border transition-all duration-500 cursor-pointer
                             ${isDarkMode
-                                ? 'bg-[#14141b]/70 border-white/10 shadow-[0_10px_35px_-14px_rgba(0,0,0,0.55)]'
-                                : 'bg-white/70 border-zinc-200/50 shadow-[0_16px_40px_-18px_rgba(0,0,0,0.18)]'
+                                ? 'bg-[#181922]/80 border-white/[0.08] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.6)] hover:bg-[#1f202e]/90 hover:border-white/20 hover:shadow-[0_0_60px_0_rgba(255,255,255,0.05)]'
+                                : 'bg-white/80 border-zinc-200/60 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.2)] hover:bg-white hover:border-zinc-300 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]'
                             }
-                            hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-28px_rgba(0,0,0,0.35)]
+                            hover:-translate-y-1
                         `}
                     >
+                        <div className="absolute inset-0 rounded-[inherit] overflow-hidden pointer-events-none"><div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-gradient-to-r ${isDarkMode ? 'from-transparent via-white/[0.03] to-transparent' : 'from-transparent via-zinc-900/[0.02] to-transparent'} -translate-x-full group-hover:animate-cta-sheen`} /></div>
                         {/* Inline remove button (editor desktop preview only) */}
                         {onRemove && (
                             <button
@@ -666,7 +659,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                         <button
                             type="button"
                             onClick={() => onAssetClick(index)}
-                                className={`relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 overflow-hidden rounded-2xl ring-1 transition-all border-none p-0 ${isDarkMode ? 'bg-black ring-white/10' : 'bg-zinc-50 ring-zinc-200/80'} group-hover:ring-white/20`}
+                            className={`relative w-20 h-20 sm:w-28 sm:h-28 shrink-0 overflow-hidden rounded-[1.25rem] ring-1 transition-all duration-500 p-0 ${isDarkMode ? 'bg-[#0f0f15] ring-white/10 group-hover:ring-[#bef264]/40 group-hover:shadow-[0_0_20px_rgba(190,242,100,0.15)]' : 'bg-zinc-50 ring-zinc-200/80 group-hover:ring-[#bef264]/50 group-hover:shadow-[0_0_20px_rgba(190,242,100,0.25)]'}`}
                             aria-label={`View ${file.name}`}
                         >
                             {file.previewUrl ? (
@@ -705,7 +698,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                                     onBlur={() => { if (editingNameVal.trim()) onRename(file.id, editingNameVal.trim()); setEditingNameId(null); }}
                                                     onKeyDown={(e) => { if (e.key === 'Enter') { if (editingNameVal.trim()) onRename(file.id, editingNameVal.trim()); setEditingNameId(null); } if (e.key === 'Escape') setEditingNameId(null); }}
                                                     onClick={(e) => e.stopPropagation()}
-                                                    className={`min-w-0 font-bold ${titleClass} bg-transparent border-b-2 outline-none ${isDarkMode ? 'text-white border-blue-500' : 'text-zinc-900 border-blue-500'}`}
+                                                    className={`min-w-0 font-bold ${titleClass} bg-transparent border-b-2 outline-none ${isDarkMode ? 'text-white border-lime-400' : 'text-zinc-900 border-lime-400'}`}
                                                 />
                                             ) : (
                                                 <h3
@@ -717,7 +710,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                             {isFileLocked ? (
                                         <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Locked</span>
                                             ) : (
-                                                <span className={`shrink-0 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${isDarkMode ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' : 'text-[#4d7c0f] bg-blue-50 border-blue-200'}`}>Open</span>
+                                                <span className={`shrink-0 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${isDarkMode ? 'text-[#bef264] bg-lime-400/10 border-lime-400/20' : 'text-[#4d7c0f] bg-blue-50 border-blue-200'}`}>Open</span>
                                     )}
                                 </div>
 
@@ -732,7 +725,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                                     onBlur={() => { if (editingSizeVal.trim()) onResize(file.id, editingSizeVal.trim()); setEditingSizeId(null); }}
                                                     onKeyDown={(e) => { if (e.key === 'Enter') { if (editingSizeVal.trim()) onResize(file.id, editingSizeVal.trim()); setEditingSizeId(null); } if (e.key === 'Escape') setEditingSizeId(null); }}
                                                     onClick={(e) => e.stopPropagation()}
-                                                    className={`w-20 font-mono bg-transparent border-b outline-none ${metaClass} ${isDarkMode ? 'text-zinc-300 border-blue-500/50' : 'text-zinc-600 border-blue-400'}`}
+                                                    className={`w-20 font-mono bg-transparent border-b outline-none ${metaClass} ${isDarkMode ? 'text-zinc-300 border-lime-400/50' : 'text-zinc-600 border-lime-300'}`}
                                                 />
                                             ) : (
                                                 <span
@@ -773,7 +766,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                         target="_blank"
                                         rel="noopener noreferrer"
                                                 className={`flex items-center gap-2 px-3 py-2 rounded-full border transition-all text-[10px] font-bold uppercase tracking-widest ${isDarkMode
-                                                    ? 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20'
+                                                    ? 'bg-lime-400/10 border-lime-400/20 text-[#bef264] hover:bg-lime-400/20'
                                                     : 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f] hover:bg-blue-100'}`}
                                         title="Download"
                                     >
@@ -1233,7 +1226,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                                 }}>
                                                     {localShowWatermark && (
                                                         <div className="absolute inset-0" style={{
-                                                            backgroundImage: `url("data:image/svg+xml,%3Csvg width='300' height='300' viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-weight='900' font-size='24' fill='${isDarkMode ? 'white' : 'black'}' fill-opacity='0.07' transform='rotate(-45 150 150)' text-anchor='middle' dominant-baseline='middle' letter-spacing='4'%3EHeartifact PREVIEW%3C/text%3E%3C/svg%3E")`,
+                                                            backgroundImage: `url("data:image/svg+xml,%3Csvg width='300' height='300' viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-weight='900' font-size='24' fill='${isDarkMode ? 'white' : 'black'}' fill-opacity='0.07' transform='rotate(-45 150 150)' text-anchor='middle' dominant-baseline='middle' letter-spacing='4'%3ESendational PREVIEW%3C/text%3E%3C/svg%3E")`,
                                                             backgroundRepeat: 'repeat',
                                                             backgroundSize: `${Math.round(300 / zoomLevel)}px ${Math.round(300 / zoomLevel)}px`
                                                         }} />
@@ -1560,7 +1553,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                             : 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200/50 text-zinc-700'
                                             }`}
                                     />
-                                    {file.locked && isLocked ? <Lock className="w-4 h-4 text-amber-500" /> : <Unlock className={`w-4 h-4 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />}
+                                    {file.locked && isLocked ? <Lock className="w-4 h-4 text-amber-500" /> : <Unlock className={`w-4 h-4 ${isDarkMode ? 'text-[#bef264]' : 'text-blue-600'}`} />}
                                 </div>
                             </div>
                             <h3 className={`font-bold text-lg leading-tight ${textPrimary} truncate`}>{file.name}</h3>
@@ -1691,7 +1684,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
         } catch {
             return;
         }
-        window.parent.postMessage({ type: 'Heartifact_PREVIEW_THEME', isDarkMode }, window.location.origin);
+        window.parent.postMessage({ type: 'Sendational_PREVIEW_THEME', isDarkMode }, window.location.origin);
     }, [isDarkMode]);
 
     const lightboxOpen = lightboxIndex !== null;
@@ -1702,7 +1695,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
         } catch {
             return;
         }
-        window.parent.postMessage({ type: 'Heartifact_PREVIEW_LIGHTBOX', open: lightboxOpen }, window.location.origin);
+        window.parent.postMessage({ type: 'Sendational_PREVIEW_LIGHTBOX', open: lightboxOpen }, window.location.origin);
     }, [lightboxOpen, onLightboxOpenChange]);
 
     const isBelowLg = viewport.width < 1024;
@@ -1755,7 +1748,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
         }
         if (!inIframe) return;
         window.parent.postMessage({
-            type: 'Heartifact_PREVIEW_SIDEBAR_STATE',
+            type: 'Sendational_PREVIEW_SIDEBAR_STATE',
             collapsed: isDockedSidebarCollapsed,
         }, window.location.origin);
     }, [isDockedSidebarCollapsed]);
@@ -1779,7 +1772,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
             isLandscapeSplit;
 
         window.parent.postMessage({
-            type: 'Heartifact_PREVIEW_STATUSBAR',
+            type: 'Sendational_PREVIEW_STATUSBAR',
             mode: wantsTransparentLightStatusBar ? 'transparent' : 'solid',
         }, window.location.origin);
     }, [isDarkMode, deviceType, isLandscapeSplit]);
@@ -2119,7 +2112,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                     </button>
                                     <div className={`transition-all duration-300 ease-in-out overflow-hidden ${expandedSections.has('message') ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'}`}>
                                         <div className="px-4 pb-4">
-                                        <div className={`pl-4 border-l-2 ${isDarkMode ? 'border-blue-500/40' : 'border-blue-500/40'}`}>
+                                        <div className={`pl-4 border-l-2 ${isDarkMode ? 'border-lime-400/40' : 'border-lime-400/40'}`}>
                                             <p className={`text-sm ${textSecondary} font-medium leading-relaxed italic`}>"{project.message || `Hi ${project.client.name.split(' ')[0]}, please review the watermarked previews.`}"</p>
                                             <div className="mt-4 flex items-center gap-2">
                                                 <span className={`text-[10px] font-bold ${textSecondary} uppercase tracking-widest`}>Creator Signature</span>
@@ -2533,7 +2526,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                     else navigate('/');
                                 }}
                             >
-                                <div className={`flex items-center gap-5 px-6 py-3 rounded-[2rem] transition-all duration-300 border shadow-sm dark:shadow-md ${isDarkMode ? 'bg-charcoal border-white/[0.06] hover:border-white/10' : 'bg-white border-zinc-200/50 hover:border-zinc-300/80'} hover:scale-[1.02] hover:-translate-y-0.5`}>
+                                <div className={`flex items-center gap-5 px-6 py-3 rounded-full transition-all duration-300 backdrop-blur-md border hover:scale-[1.02] hover:-translate-y-1 ${isDarkMode ? 'bg-[#2a2a35] border-white/10 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] hover:shadow-white/5' : 'bg-slate-50 border-slate-200 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]'}`}>
                                     <EditorialIcon className={`w-8 h-8 ${isDarkMode ? 'text-white' : 'text-zinc-900'} group-hover:rotate-12 transition-transform duration-500`} /><div className={`h-8 w-px ${isDarkMode ? 'bg-white/10' : 'bg-zinc-900/10'}`} />
                                     <div className="flex flex-col items-start text-left">
                                         <span className={`text-[10px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'} mb-0.5`}>
@@ -2541,9 +2534,9 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                         </span>
                                         <div className="flex items-center gap-1.5 group-hover:gap-2 transition-all">
                                             <span className={`font-serif font-bold text-base ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-                                                {isCanvasSim ? 'About Heartifact' : 'Try Heartifact'}
+                                                {isCanvasSim ? 'About Sendational' : 'Try Sendational'}
                                             </span>
-                                            <ArrowRight className={`w-4 h-4 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                                            <ArrowRight className={`w-4 h-4 ${isDarkMode ? 'text-[#bef264]' : 'text-blue-600'}`} />
                                         </div>
                                     </div>
                                 </div>
@@ -2666,13 +2659,13 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                     </div>
                 )}
 
-                {/* Split Header (Landscape) — docked sidebar with collapse control (flush to sidebar wallpaper) */}
+                {/* Split Header (Landscape) — docked sidebar with collapse control */}
                 {!isEmbedded && isLandscapeSplit && (
                     <div
-                        className={`lg:hidden relative shrink-0 z-50`}
+                        className="lg:hidden relative shrink-0 z-50 bg-transparent"
                         style={{ paddingTop: headerChromePadTop }}
                     >
-                            <div className={`flex items-center gap-3 pb-2 ${isCanvasSim ? 'px-2 sm:px-3' : 'px-4'}`}>
+                        <div className={`flex items-center gap-3 pb-2 ${isCanvasSim ? 'px-2 sm:px-3' : 'px-4'}`}>
                             <button
                                 onClick={() => { playClick(); onBack(); }}
                                 className={`shrink-0 p-2 -ml-2 rounded-full hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors`}
@@ -2926,17 +2919,17 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             <div className="flex items-center justify-between gap-4">
                                 <div className="min-w-0">
                                     <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Preview Mode</p>
-                                    <h3 className="font-serif text-xl font-bold truncate">About Heartifact</h3>
+                                    <h3 className="font-serif text-xl font-bold truncate">About Sendational</h3>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
                                     <a
-                                        href="https://heartifact.com"
+                                        href="https://Sendational.com"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className={`hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-white/10 border-white/10 text-white hover:bg-white/15' : 'bg-zinc-50 border-zinc-200/50 text-zinc-700 hover:bg-zinc-100'}`}
                                         title="Opens in a new tab (exits simulation)"
                                     >
-                                        <span>heartifact.com</span>
+                                        <span>Sendational.com</span>
                                         <ExternalLink className="w-3.5 h-3.5" />
                                     </a>
                                     <button
@@ -2957,16 +2950,16 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             </p>
                             <div className={`rounded-2xl px-4 py-3 border ${isDarkMode ? 'bg-white/5 border-white/10 text-zinc-300' : 'bg-zinc-50 border-zinc-200/50 text-zinc-600'}`}>
                                 <p className="text-[11px] leading-relaxed">
-                                    Visiting <span className={`${isDarkMode ? 'text-white' : 'text-zinc-900'} font-bold`}>heartifact.com</span> opens the product website in a new tab.
+                                    Visiting <span className={`${isDarkMode ? 'text-white' : 'text-zinc-900'} font-bold`}>Sendational.com</span> opens the product website in a new tab.
                                     It is not your client portal domain (whitelabel/custom domains are separate).
                                 </p>
                                 <a
-                                    href="https://heartifact.com"
+                                    href="https://Sendational.com"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className={`mt-3 inline-flex sm:hidden items-center gap-2 px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${isDarkMode ? 'bg-white/10 border-white/10 text-white hover:bg-white/15' : 'bg-white/90 border-zinc-200 text-zinc-700 hover:bg-zinc-50 shadow-sm'}`}
                                 >
-                                    <span>heartifact.com</span>
+                                    <span>Sendational.com</span>
                                     <ExternalLink className="w-3.5 h-3.5" />
                                 </a>
                                 <p className={`mt-2 text-[9px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>

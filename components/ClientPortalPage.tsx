@@ -8,7 +8,7 @@ const fmtDate = (iso?: string | null) =>
     iso ? new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
 const statusBadge = (status: string) => {
-    if (status === 'paid' || status === 'completed') return 'bg-blue-100 text-blue-700 border-blue-200';
+    if (status === 'paid' || status === 'completed') return 'bg-emerald-100 text-emerald-700 border-emerald-200';
     if (status === 'awaiting_payment') return 'bg-amber-100 text-amber-700 border-amber-200';
     return 'bg-zinc-100 text-zinc-600 border-zinc-200';
 };
@@ -18,7 +18,7 @@ const statusLabel = (status: string) => ({
     awaiting_signature: 'Awaiting Signature',
     awaiting_payment: 'Awaiting Payment',
     payment_verification: 'Payment Verification',
-    paid: 'Paid',
+    paid: 'Grinlit',
     completed: 'Completed',
 }[status] || status);
 
@@ -58,7 +58,7 @@ const ClientPortalPage = ({
                 <div className="rounded-2xl border border-zinc-200/50 bg-white p-6 md:p-8 mb-6">
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-2">Heartifact Client Portal</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-2">Sendational Client Portal</p>
                             <h1 className="font-sans tracking-tight text-4xl leading-tight">{portal.client?.name || 'Client'}</h1>
                             <p className="text-sm text-zinc-500 mt-2">All projects and delivery status in one place.</p>
                         </div>
@@ -76,7 +76,7 @@ const ClientPortalPage = ({
                             <p className="font-sans tracking-tight text-2xl">{fmtCurrency(portal.totalValue || 0)}</p>
                         </div>
                         <div className="rounded-xl border border-zinc-200/50 p-3 bg-zinc-50">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Paid</p>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Grinlit</p>
                             <p className="font-sans tracking-tight text-2xl">{totalPaid}</p>
                         </div>
                         <div className="rounded-xl border border-zinc-200/50 p-3 bg-zinc-50">

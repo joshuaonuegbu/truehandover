@@ -130,7 +130,7 @@ export default function TrashPage({ onBack }: { onBack?: () => void }) {
                 <div className="relative z-10 flex flex-1 flex-col p-6 lg:p-7">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
-                            <span className="mb-2 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-lime-400 dark:text-zinc-400">
+                            <span className="mb-2 block border-l-2 border-lime-400 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-lime-400 dark:text-zinc-400">
                                 {typeLabel}
                             </span>
                             <h3 className="line-clamp-2 font-sans text-lg font-semibold leading-snug tracking-tight text-obsidian dark:text-white" title={item.name}>
@@ -186,7 +186,7 @@ export default function TrashPage({ onBack }: { onBack?: () => void }) {
                     <button
                         type="button"
                         onClick={() => handleRestore(item.id)}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200/60 bg-white py-2.5 text-[10px] font-bold uppercase tracking-widest text-zinc-700 transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:border-blue-500/30 dark:hover:bg-blue-500/10 dark:hover:text-blue-300"
+                        className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200/60 bg-white py-2.5 text-[10px] font-bold uppercase tracking-widest text-zinc-700 transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:border-lime-400/30 dark:hover:bg-lime-400/10 dark:hover:text-blue-300"
                     >
                         <RotateCcw className="h-3.5 w-3.5" /> Restore
                     </button>
@@ -222,7 +222,7 @@ export default function TrashPage({ onBack }: { onBack?: () => void }) {
                     </p>
                 </div>
                 <div className="hidden w-28 shrink-0 flex-col items-end gap-1 sm:flex">
-                    <span className={`text-[9px] font-black uppercase tracking-widest ${u.label}`}>{item.daysLeft} days</span>
+                    <span className={`text-[9px] font-semibold uppercase tracking-widest ${u.label}`}>{item.daysLeft} days</span>
                     <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-white/10">
                         <div className={`h-full rounded-full ${u.bar}`} style={{ width: `${(item.daysLeft / 30) * 100}%` }} />
                     </div>
@@ -234,7 +234,7 @@ export default function TrashPage({ onBack }: { onBack?: () => void }) {
                     <button
                         type="button"
                         onClick={() => handleRestore(item.id)}
-                        className="flex h-8 items-center gap-1.5 rounded-lg border border-transparent px-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 transition-all hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 dark:text-zinc-400 dark:hover:border-blue-500/20 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
+                        className="flex h-8 items-center gap-1.5 rounded-lg border border-transparent px-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 transition-all hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 dark:text-zinc-400 dark:hover:border-lime-400/20 dark:hover:bg-lime-400/10 dark:hover:text-lime-400"
                     >
                         <RotateCcw className="h-3 w-3" /> Restore
                     </button>
@@ -381,9 +381,9 @@ export default function TrashPage({ onBack }: { onBack?: () => void }) {
                         <div className="pointer-events-none absolute inset-0 opacity-[0.02] dark:opacity-[0.04]" style={{ backgroundImage: NOISE_SVG, backgroundRepeat: 'repeat' }} />
                         <div className="relative z-10 flex items-center gap-4 border-b border-zinc-100 bg-zinc-50/90 px-5 py-3 dark:border-white/[0.06] dark:bg-white/[0.03]">
                             <div className="w-9" />
-                            <span className="flex-1 text-[9px] font-black uppercase tracking-widest text-zinc-400">Asset</span>
-                            <span className="hidden w-28 text-right text-[9px] font-black uppercase tracking-widest text-zinc-400 sm:block">Timer</span>
-                            <span className="hidden w-20 text-[9px] font-black uppercase tracking-widest text-zinc-400 md:block">Deleted</span>
+                            <span className="flex-1 text-[9px] font-semibold uppercase tracking-widest text-zinc-400">Asset</span>
+                            <span className="hidden w-28 text-right text-[9px] font-semibold uppercase tracking-widest text-zinc-400 sm:block">Timer</span>
+                            <span className="hidden w-20 text-[9px] font-semibold uppercase tracking-widest text-zinc-400 md:block">Deleted</span>
                             <div className="w-24" />
                         </div>
                         {filtered.map((item, i) => (

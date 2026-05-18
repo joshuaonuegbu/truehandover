@@ -263,7 +263,7 @@ const createCtx = async (title: string, subtitle: string): Promise<PdfCtx> => {
   });
 
   // Brand name � serif bold, matches UI font-serif header
-  page.drawText('Heartifact', { x: MARGIN + 28, y: PAGE_H - 30, size: 16, font: serifBold, color: C.white });
+  page.drawText('Sendational', { x: MARGIN + 28, y: PAGE_H - 30, size: 16, font: serifBold, color: C.white });
 
   // "OFFICIAL DOCUMENT" badge � top-right
   const badgeText = 'OPERATIONAL RECORD';
@@ -502,7 +502,7 @@ const stampFooters = (ctx: PdfCtx, docLabel: string) => {
   ctx.pages.forEach((page, i) => {
     page.drawLine({ start: { x: MARGIN, y: 40 }, end: { x: PAGE_W - MARGIN, y: 40 }, thickness: 0.75, color: C.line });
     page.drawText(docLabel, { x: MARGIN, y: 24, size: 6.5, font: ctx.fonts.mono, color: C.slate });
-    const brand = 'Heartifact';
+    const brand = 'Sendational';
     page.drawText(brand, {
       x: PAGE_W / 2 - ctx.fonts.serifBold.widthOfTextAtSize(brand, 7) / 2,
       y: 24, size: 7, font: ctx.fonts.serifBold, color: C.slateMid,
@@ -594,7 +594,7 @@ export const createRightsCertificatePdf = async (input: RightsCertificatePdfInpu
   ctx.y -= 10;
   drawSection(ctx, 'Declaration');
   const decl = wrap(
-    'This certificate records that consideration for the above work has been satisfied through the Heartifact workflow and that the accompanying rights transfer has been acknowledged for operational record-keeping purposes.',
+    'This certificate records that consideration for the above work has been satisfied through the Sendational workflow and that the accompanying rights transfer has been acknowledged for operational record-keeping purposes.',
     CONTENT, ctx.fonts.reg, 9,
   );
   decl.forEach((line) => drawText(ctx, line, { size: 9 }));
@@ -761,5 +761,5 @@ export const createQuotePdf = async (input: QuotePdfInput) => {
   }
 
   const safeId = input.quoteNumber.replace(/[^\w.-]+/g, '_');
-  return toBlob(ctx, `Heartifact_${safeId}`);
+  return toBlob(ctx, `Sendational_${safeId}`);
 };

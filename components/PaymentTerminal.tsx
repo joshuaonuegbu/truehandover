@@ -285,7 +285,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                             <div className={`text-sm ${textSecondary} mb-8 space-y-3 w-full`}>
                                 <p className="mb-4">Send <strong className={`${textPrimary} font-mono text-xl`}>${totalDue.toLocaleString()}</strong> via:</p>
                                 
-                                {pm.venmo && <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-mono text-xs font-bold w-full border border-blue-100 dark:border-blue-500/20">
+                                {pm.venmo && <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-lime-400 font-mono text-xs font-bold w-full border border-blue-100 dark:border-lime-400/20">
                                     <div className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> Venmo</div>
                                     <span>{pm.venmo}</span>
                                 </div>}
@@ -375,7 +375,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                                     <span className={`text-[10px] font-bold uppercase tracking-widest ${textSecondary}`}>Total Due</span>
                                     <div className={`text-3xl font-sans tracking-tight font-bold ${textPrimary} leading-none mt-1`}>${totalDue.toLocaleString()}</div>
                                 </div>
-                                {tipAmount > 0 && <span className={`text-xs font-bold ${isDarkMode ? 'text-lime-400' : 'text-lime-400'} uppercase bg-blue-500/10 px-2 py-1 rounded`}>+${tipAmount.toLocaleString()} Tip</span>}
+                                {tipAmount > 0 && <span className={`text-xs font-bold ${isDarkMode ? 'text-lime-400' : 'text-lime-400'} uppercase bg-lime-400/10 px-2 py-1 rounded`}>+${tipAmount.toLocaleString()} Tip</span>}
                             </div>
 
                             {project.enableTips && (
@@ -436,7 +436,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
                                         <span className={`text-[10px] font-bold uppercase tracking-widest ${textSecondary}`}>Manual Transfer</span>
                                     </div>
                                     <div className="space-y-2">
-                                        {pm.venmo && <div className="flex items-center justify-between p-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-mono text-xs font-bold border border-blue-100 dark:border-blue-500/20"><div className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> Venmo</div><span>{pm.venmo}</span></div>}
+                                        {pm.venmo && <div className="flex items-center justify-between p-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-lime-400 font-mono text-xs font-bold border border-blue-100 dark:border-lime-400/20"><div className="flex items-center gap-2"><Smartphone className="w-3.5 h-3.5" /> Venmo</div><span>{pm.venmo}</span></div>}
                                         {pm.cashapp && <div className="flex items-center justify-between p-2.5 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-mono text-xs font-bold border border-green-100 dark:border-green-500/20"><div className="flex items-center gap-2"><DollarSign className="w-3.5 h-3.5" /> CashApp</div><span>{pm.cashapp}</span></div>}
                                         {pm.paypal && <div className="flex items-center justify-between p-2.5 rounded-lg bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 font-mono text-xs font-bold border border-sky-100 dark:border-sky-500/20"><div className="flex items-center gap-2"><Wallet className="w-3.5 h-3.5" /> PayPal</div><span>{pm.paypal}</span></div>}
                                         {pm.zelle && <div className="flex items-center justify-between p-2.5 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 font-mono text-xs font-bold border border-purple-100 dark:border-purple-500/20"><div className="flex items-center gap-2"><Send className="w-3.5 h-3.5" /> Zelle</div><span>{pm.zelle}</span></div>}

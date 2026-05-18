@@ -16,7 +16,7 @@ import { playClick } from '../utils/sound';
 // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CLIENT_NOISE = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`;
 
-const INSIGHT_LABEL = 'mb-1 block border-l-2 border-blue-500 pl-3 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500 dark:border-lime-400 dark:text-zinc-400';
+const INSIGHT_LABEL = 'mb-1 block border-l-2 border-lime-400 pl-3 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500 dark:border-lime-400 dark:text-zinc-400';
 
 /** Trash GridCard-style surface: editorial bg, noise, soft indigo corner glow */
 function ClientsInsightCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -107,7 +107,7 @@ function ClientTier({ ltv }: { ltv: number }) {
         </span>
     );
     if (ltv >= 1000) return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-blue-900/30 dark:text-blue-400 border border-[#a3e635]/35 dark:border-blue-700/30">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-blue-900/30 dark:text-lime-400 border border-[#a3e635]/35 dark:border-blue-700/30">
             <Star className="w-2.5 h-2.5" /> Silver
         </span>
     );
@@ -129,9 +129,9 @@ function ProjectRow({ project, onNavigate, onNudge, isNudging }: {
         draft: { label: 'Draft', className: 'text-zinc-500 bg-zinc-100 dark:bg-white/5 dark:text-zinc-400' },
         awaiting_signature: { label: 'Awaiting Sig.', className: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:text-indigo-400' },
         awaiting_payment: { label: 'Awaiting Payment', className: 'text-sky-800 bg-sky-50 dark:bg-sky-500/12 dark:text-sky-300' },
-        payment_verification: { label: 'Verifying', className: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400' },
-        paid: { label: 'Paid', className: 'text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400' },
-        completed: { label: 'Completed', className: 'text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400' },
+        payment_verification: { label: 'Verifying', className: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-lime-400' },
+        paid: { label: 'Paid', className: 'text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-lime-400' },
+        completed: { label: 'Completed', className: 'text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-lime-400' },
     };
     const cfg = statusConfig[project.status] || statusConfig.draft;
 
@@ -141,7 +141,7 @@ function ProjectRow({ project, onNavigate, onNudge, isNudging }: {
                 <div className="flex flex-col min-w-0">
                     <button
                         onClick={() => onNavigate(project.id)}
-                        className="text-sm font-bold text-zinc-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 text-left truncate transition-colors"
+                        className="text-sm font-bold text-zinc-900 dark:text-white hover:text-blue-600 dark:hover:text-lime-400 text-left truncate transition-colors"
                     >
                         {project.name}
                     </button>
@@ -336,7 +336,7 @@ function ClientCard({
                             {client.email && (
                                 <span className="flex items-center gap-1.5">
                                     <Mail className="w-3 h-3" />
-                                    <a href={`mailto:${client.email}`} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onClick={e => e.stopPropagation()}>
+                                    <a href={`mailto:${client.email}`} className="hover:text-blue-600 dark:hover:text-lime-400 transition-colors" onClick={e => e.stopPropagation()}>
                                         {client.email}
                                     </a>
                                 </span>
@@ -369,7 +369,7 @@ function ClientCard({
                     </div>
                     <div className="rounded-xl border border-zinc-200/60 p-3 dark:border-white/[0.06]">
                         <div className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Paid</div>
-                        <div className="text-xl font-sans tracking-tight font-medium text-blue-600 dark:text-blue-400">{client.paidProjects}</div>
+                        <div className="text-xl font-sans tracking-tight font-medium text-blue-600 dark:text-lime-400">{client.paidProjects}</div>
                     </div>
                     <div className="rounded-xl border border-zinc-200/60 p-3 dark:border-white/[0.06]">
                         <div className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Avg. Deal</div>
@@ -413,7 +413,7 @@ function ClientCard({
                     <button
                         onClick={handleCreateRetainer}
                         disabled={retainerBusy || !client.email}
-                        className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-[#a3e635]/35 dark:border-blue-600/40 text-[#4d7c0f] dark:text-blue-400 hover:bg-[#a3e635]/15 dark:hover:bg-blue-900/20 disabled:opacity-50"
+                        className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-[#a3e635]/35 dark:border-blue-600/40 text-[#4d7c0f] dark:text-lime-400 hover:bg-[#a3e635]/15 dark:hover:bg-blue-900/20 disabled:opacity-50"
                         title="Generate recurring Stripe retainer link"
                     >
                         {retainerBusy ? 'Generating…' : 'Retainer Link'}
@@ -473,7 +473,7 @@ function ClientCard({
                             <button
                                 onClick={() => onSaveBrandKit(client.email, kitDraft)}
                                 disabled={!client.email}
-                                className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-600 text-zinc-950 dark:bg-blue-500 dark:text-zinc-950 border border-blue-600"
+                                className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-lime-500 text-zinc-950 dark:bg-lime-400 dark:text-zinc-950 border border-blue-600"
                             >
                                 Save Kit
                             </button>
@@ -485,7 +485,7 @@ function ClientCard({
             {expanded && (
                 <div className="relative z-10 border-t border-zinc-100 dark:border-white/5 px-5 sm:px-6 pb-4 pt-3 bg-zinc-50/65 dark:bg-white/[0.03]">
                     {nudgeResult && (
-                        <div className={`mb-3 px-3 py-2 rounded-lg text-xs font-bold ${nudgeResult.ok ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
+                        <div className={`mb-3 px-3 py-2 rounded-lg text-xs font-bold ${nudgeResult.ok ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-lime-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
                             {nudgeResult.ok ? '✓ Reminder sent successfully.' : '✗ Could not send reminder — check Resend API key.'}
                         </div>
                     )}
@@ -592,7 +592,7 @@ export const ClientRolodexContent: React.FC = () => {
         <div className="space-y-6 animate-fade-in pb-16">
             <div className="hf-surface hf-no-glow flex flex-col sm:flex-row gap-3 items-center justify-between bg-white dark:bg-charcoal p-2 rounded-[2rem] overflow-visible border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md">
                 <div className="relative w-full min-w-0 sm:flex-1 group">
-                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 transition-colors group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400" />
+                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 transition-colors group-focus-within:text-blue-600 dark:group-focus-within:text-lime-400" />
                     <input
                         type="text"
                         value={search}
@@ -607,7 +607,7 @@ export const ClientRolodexContent: React.FC = () => {
                             key={key}
                             type="button"
                             onClick={() => { playClick(); setSortBy(key); }}
-                            className={`whitespace-nowrap rounded-[1rem] px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors ${sortBy === key ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-blue-500/25 dark:bg-white/10 dark:text-white dark:ring-blue-400/35' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-white/5 dark:hover:text-white'}`}
+                            className={`whitespace-nowrap rounded-[1rem] px-3.5 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors ${sortBy === key ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-lime-400/25 dark:bg-white/10 dark:text-white dark:ring-lime-400/35' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-white/5 dark:hover:text-white'}`}
                         >
                             {key === 'ltv' ? 'LTV' : key === 'recent' ? 'Recent' : key === 'projects' ? 'Projects' : 'Name'}
                         </button>
@@ -662,7 +662,7 @@ export const ClientRolodexContent: React.FC = () => {
                             {[
                                 { label: 'Platinum', count: platinumCount, cls: 'bg-violet-500' },
                                 { label: 'Gold', count: goldCount, cls: 'bg-zinc-400' },
-                                { label: 'Silver', count: silverCount, cls: 'bg-blue-500' },
+                                { label: 'Silver', count: silverCount, cls: 'bg-lime-400' },
                                 { label: 'New', count: newCount, cls: 'bg-zinc-300 dark:bg-zinc-600' },
                             ].map((tier) => {
                                 const pct = clients.length ? Math.round((tier.count / clients.length) * 100) : 0;
@@ -697,7 +697,7 @@ export const ClientRolodexContent: React.FC = () => {
                             </div>
                             <div className="rounded-xl border border-zinc-200/50 bg-white/60 p-3 dark:border-white/[0.06] dark:bg-black/20">
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Paid rate</p>
-                                <p className="mt-1 font-sans text-2xl font-medium tracking-tight text-blue-600 dark:text-blue-400">{paidRate}%</p>
+                                <p className="mt-1 font-sans text-2xl font-medium tracking-tight text-blue-600 dark:text-lime-400">{paidRate}%</p>
                             </div>
                             <div className="rounded-xl border border-zinc-200/50 bg-white/60 p-3 dark:border-white/[0.06] dark:bg-black/20">
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Active projects</p>
@@ -726,7 +726,7 @@ export const ClientRolodexContent: React.FC = () => {
                                         key={client.email || client.name}
                                         type="button"
                                         onClick={() => { playClick(); setSearch(client.name); }}
-                                        className="group w-full rounded-xl border border-transparent bg-transparent px-3 py-3 text-left outline-none transition-colors hover:border-zinc-100 hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-blue-500/50 dark:hover:border-white/5 dark:hover:bg-white/5"
+                                        className="group w-full rounded-xl border border-transparent bg-transparent px-3 py-3 text-left outline-none transition-colors hover:border-zinc-100 hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-lime-400/50 dark:hover:border-white/5 dark:hover:bg-white/5"
                                     >
                                         <div className="flex items-center justify-between gap-2">
                                             <span className="truncate text-sm font-semibold text-zinc-900 dark:text-white">{client.name}</span>
@@ -779,7 +779,7 @@ export const ClientRolodexContent: React.FC = () => {
                             <Search className="w-10 h-10 mx-auto mb-4 text-zinc-300 dark:text-zinc-600" />
                             <p className="font-sans tracking-tight text-lg text-zinc-900 dark:text-white">No matches for &ldquo;{search}&rdquo;</p>
                             <p className="text-sm text-zinc-500 mt-2">Try a shorter query or clear filters.</p>
-                            <button type="button" onClick={() => { playClick(); setSearch(''); }} className="mt-6 text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 hover:underline">
+                            <button type="button" onClick={() => { playClick(); setSearch(''); }} className="mt-6 text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-lime-400 hover:underline">
                                 Clear search
                             </button>
                         </>
@@ -788,7 +788,7 @@ export const ClientRolodexContent: React.FC = () => {
                             <Users className="w-12 h-12 mx-auto mb-4 text-zinc-300 dark:text-zinc-600" />
                             <p className="font-sans tracking-tight text-lg text-zinc-900 dark:text-white">No clients yet</p>
                             <p className="text-sm text-zinc-500 mt-2 max-w-sm mx-auto">When you create projects with client details, they consolidate here automatically.</p>
-                            <button type="button" onClick={() => { playClick(); navigate('/create'); }} className="mt-8 px-6 py-3 rounded-xl bg-zinc-900 dark:bg-blue-500 text-white dark:text-zinc-950 text-xs font-bold uppercase tracking-wider">
+                            <button type="button" onClick={() => { playClick(); navigate('/create'); }} className="mt-8 px-6 py-3 rounded-xl bg-zinc-900 dark:bg-lime-400 text-white dark:text-zinc-950 text-xs font-bold uppercase tracking-wider">
                                 Create project
                             </button>
                         </>

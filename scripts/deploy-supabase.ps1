@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "Heartifact: Supabase deploy (Edge Functions + Secrets)" -ForegroundColor Cyan
+Write-Host "Grinlight: Supabase deploy (Edge Functions + Secrets)" -ForegroundColor Cyan
 Write-Host ""
 
 $repoRoot = Split-Path -Parent $PSScriptRoot

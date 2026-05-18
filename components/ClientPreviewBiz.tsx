@@ -207,21 +207,21 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
             if (!data || typeof data.type !== 'string') return;
 
             // Child (iframe) -> parent: keep mock status bar in sync with the preview theme.
-            if (data.type === 'Heartifact_PREVIEW_THEME') {
+            if (data.type === 'Sendational_PREVIEW_THEME') {
                 if (typeof data.isDarkMode !== 'boolean') return;
                 setIframeThemeIsDark(data.isDarkMode);
                 return;
             }
 
             // Child (iframe) -> parent: tweak mock status bar background based on preview layout state.
-            if (data.type === 'Heartifact_PREVIEW_STATUSBAR') {
+            if (data.type === 'Sendational_PREVIEW_STATUSBAR') {
                 if (data.mode !== 'solid' && data.mode !== 'transparent') return;
                 setIframeStatusBarLightModeStyle(data.mode);
                 return;
             }
 
             // Child (iframe) -> parent: keep track of docked sidebar collapse state so overlays can avoid collisions.
-            if (data.type === 'Heartifact_PREVIEW_SIDEBAR_STATE') {
+            if (data.type === 'Sendational_PREVIEW_SIDEBAR_STATE') {
                 if (typeof data.collapsed !== 'boolean') return;
                 setIframeDockedSidebarCollapsed(data.collapsed);
                 onDockedSidebarCollapseChange?.(data.collapsed);
@@ -229,14 +229,14 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
             }
 
             // Parent (creator/editor) -> child: push live project edits into the canvas iframe so it stays in sync.
-            if (data.type === 'Heartifact_PREVIEW_SET_PROJECT') {
+            if (data.type === 'Sendational_PREVIEW_SET_PROJECT') {
                 if (!data.project) return;
                 setProject(data.project as Project);
                 return;
             }
 
             // Child iframe -> parent: vault lightbox covers the simulator; hide device toolbar / pills.
-            if (data.type === 'Heartifact_PREVIEW_LIGHTBOX') {
+            if (data.type === 'Sendational_PREVIEW_LIGHTBOX') {
                 if (typeof data.open !== 'boolean') return;
                 setPreviewChromeSuppressed(data.open);
                 return;
@@ -412,7 +412,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         const onMessage = (event: MessageEvent) => {
             if (event.origin !== window.location.origin) return;
             const data = event.data as any;
-            if (!data || data.type !== 'Heartifact_SIM_EXIT') return;
+            if (!data || data.type !== 'Sendational_SIM_EXIT') return;
             if (deviceMode !== 'desktop') switchDevice('desktop');
         };
         window.addEventListener('message', onMessage);
@@ -459,7 +459,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         if (deviceMode === 'desktop' || isRawMode || viewportClass === 'mobile') return;
         const target = iframeRef.current?.contentWindow;
         if (!target) return;
-        target.postMessage({ type: 'Heartifact_PREVIEW_SET_PROJECT', project }, window.location.origin);
+        target.postMessage({ type: 'Sendational_PREVIEW_SET_PROJECT', project }, window.location.origin);
     }, [deviceMode, orientation, iframeRefreshKey, iframeLoadedTick, project, isRawMode, viewportClass]);
 
     // --- RENDER: ClientPreviewPage (props bundle) ---
@@ -468,7 +468,7 @@ const ClientPreviewBiz: React.FC<ClientPreviewBizProps> = ({
         // This prevents creators from accidentally landing in /vault or other admin routes in the iframe.
         if (isRawMode) {
             try {
-                window.parent.postMessage({ type: 'Heartifact_SIM_EXIT' }, window.location.origin);
+                window.parent.postMessage({ type: 'Sendational_SIM_EXIT' }, window.location.origin);
             } catch { }
             return;
         }
