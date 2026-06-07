@@ -164,7 +164,7 @@ const VideoModal = ({ isOpen, onClose, onStart }: { isOpen: boolean; onClose: ()
                 >
                     <button
                         onClick={() => { handleClose(); setTimeout(onStart, 300); }}
-                        className="px-8 py-4 bg-lime-400 text-black rounded-full font-bold text-sm uppercase tracking-widest hover:scale-105 hover:shadow-[0_0_30px_rgba(190, 242, 100,0.4)] transition-all shadow-lg flex items-center gap-3"
+                        className="px-8 py-4 bg-lime-400 text-black rounded-full font-bold text-sm uppercase tracking-widest hover:scale-105 hover:shadow-[0_0_30px_rgba(163, 230, 53,0.4)] transition-all shadow-lg flex items-center gap-3"
                     >
                         Start for Free <ArrowRight className="w-4 h-4" />
                     </button>
@@ -439,7 +439,7 @@ const Nav = ({ onStart, currentTheme, onSetThemeMode, isHidden }: { onStart: () 
 
                     <button
                         onClick={onStart}
-                        className="px-6 py-2.5 bg-black dark:bg-lime-400 text-white dark:text-zinc-950 rounded-full font-bold text-xs uppercase tracking-[0.15em] hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_20px_rgba(190, 242, 100,0.5)] transition-all shadow-lg border border-transparent dark:border-lime-400"
+                        className="px-6 py-2.5 bg-black dark:bg-lime-400 text-white dark:text-zinc-950 rounded-full font-bold text-xs uppercase tracking-[0.15em] hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_20px_rgba(163, 230, 53,0.5)] transition-all shadow-lg border border-transparent dark:border-lime-400"
                     >
                         Start for Free
                     </button>
@@ -556,7 +556,7 @@ const Hero = ({ onStart, onWatchVideo, viewMode, setViewMode }: { onStart: () =>
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1200px] h-full pointer-events-none overflow-hidden z-0">
                             <div className={`
                             absolute top-[20%] right-[5%] md:right-[15%] w-48 h-64 bg-white dark:bg-[#2D2E45] rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl rotate-12 transition-all duration-700 ease-out overflow-hidden
-                            ${isHoveringCTA ? 'translate-y-[-20px] scale-110 shadow-[0_20px_50px_rgba(190, 242, 100,0.2)]' : 'translate-y-0 opacity-40'}
+                            ${isHoveringCTA ? 'translate-y-[-20px] scale-110 shadow-[0_20px_50px_rgba(163, 230, 53,0.2)]' : 'translate-y-0 opacity-40'}
                         `}>
                                 <div
                                     className="absolute inset-0 opacity-0 dark:opacity-40 mix-blend-multiply dark:mix-blend-overlay pointer-events-none z-0"
@@ -598,7 +598,7 @@ const Hero = ({ onStart, onWatchVideo, viewMode, setViewMode }: { onStart: () =>
                                     onClick={() => { onStart(); }}
                                     onMouseEnter={() => setIsHoveringCTA(true)}
                                     onMouseLeave={() => setIsHoveringCTA(false)}
-                                    className="group relative h-16 px-10 bg-lime-400 text-zinc-950 rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(190, 242, 100,0.6)] shadow-xl"
+                                    className="group relative h-16 px-10 bg-lime-400 text-zinc-950 rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(163, 230, 53,0.6)] shadow-xl"
                                 >
                                     <span className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                                         <span className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-cta-sheen" />
@@ -634,7 +634,7 @@ const Hero = ({ onStart, onWatchVideo, viewMode, setViewMode }: { onStart: () =>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                                 <button
                                     onClick={onStart}
-                                    className="group relative h-16 px-10 bg-lime-400 text-zinc-950 rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(190,242,100,0.6)] shadow-xl"
+                                    className="group relative h-16 px-10 bg-lime-400 text-zinc-950 rounded-full font-bold text-sm uppercase tracking-widest overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(163, 230, 53,0.6)] shadow-xl"
                                 >
                                     <span className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                                         <span className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-cta-sheen" />
@@ -1354,10 +1354,10 @@ const SendationalFeatureGrid = () => (
 const BentoGrid = () => {
     // ... [Same implementation as before] ...
     const [isCustom, setIsCustom] = useState(false);
-    const [accentColor, setAccentColor] = useState('#bef264');
+    const [accentColor, setAccentColor] = useState('#a3e635');
 
     const brandConfigs = [
-        { name: 'Default', color: '#bef264', domain: 'portal.Sendational.com' },
+        { name: 'Default', color: '#a3e635', domain: 'portal.Sendational.com' },
         { name: 'Onyx', color: '#334155', domain: 'delivery.agency.com' },
         { name: 'Cobalt', color: '#3b82f6', domain: 'files.studio.io' }
     ];
@@ -1407,23 +1407,23 @@ const BentoGrid = () => {
                             <div className="flex-1 bg-white dark:bg-charcoal rounded-xl border border-zinc-200/50 dark:border-white/[0.06] p-4 font-mono text-[10px] text-zinc-500 dark:text-zinc-300 overflow-hidden relative shadow-sm">
                                 <div className="space-y-3 opacity-80">
                                     <div className="flex gap-2">
-                                        <span className="text-[#4d7c0f] dark:text-lime-400">GET</span>
+                                        <span className="text-[#a3e635] dark:text-lime-400">GET</span>
                                         <span className="text-slate-500 dark:text-slate-600">/v/preview</span>
                                         <span className="ml-auto text-slate-500 dark:text-slate-700">200 OK</span>
                                     </div>
                                     <div className="flex gap-2">
-                                        <span className="text-[#4d7c0f] dark:text-lime-400">LOG</span>
+                                        <span className="text-[#a3e635] dark:text-lime-400">LOG</span>
                                         <span className="text-slate-400 dark:text-slate-300">Client Viewing</span>
                                         <span className="ml-auto text-slate-600 dark:text-slate-200">Active</span>
                                     </div>
                                     <div className="flex gap-2">
-                                        <span className="text-[#4d7c0f] dark:text-lime-400">LCK</span>
+                                        <span className="text-[#a3e635] dark:text-lime-400">LCK</span>
                                         <span className="text-slate-400 dark:text-slate-300">Asset Download</span>
                                         <span className="ml-auto text-slate-600 dark:text-slate-200">Blocked</span>
                                     </div>
                                 </div>
                                 <div className="absolute bottom-4 right-4">
-                                    <div className="px-3 py-1 bg-[#a3e635]/15 border border-[#a3e635]/35 rounded text-[#4d7c0f] dark:text-lime-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                    <div className="px-3 py-1 bg-lime-400/15 border border-lime-400/35 rounded text-[#a3e635] dark:text-lime-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
                                         <FileCheck className="w-3 h-3" /> Tracking Active
                                     </div>
                                 </div>
@@ -1458,7 +1458,7 @@ const BentoGrid = () => {
                                         <div className="text-black font-bold text-lg">$2,450.00</div>
                                     </div>
                                 </div>
-                                <div className="px-2 py-1 bg-[#a3e635]/15 text-[#4d7c0f] text-[9px] font-bold uppercase rounded">Paid</div>
+                                <div className="px-2 py-1 bg-lime-400/15 text-[#a3e635] text-[9px] font-bold uppercase rounded">Paid</div>
                             </div>
                         </div>
                     </BentoCard>
@@ -1583,7 +1583,7 @@ const BentoGrid = () => {
                                                 className="w-full py-3 rounded-lg font-bold text-xs uppercase tracking-wider text-center transition-all duration-700 shadow-lg"
                                                 style={{
                                                     backgroundColor: accentColor,
-                                                    color: accentColor === '#bef264' ? '#000' : '#fff' // Black text for lime (light mode), white for others
+                                                    color: accentColor === '#a3e635' ? '#000' : '#fff' // Black text for lime (light mode), white for others
                                                 }}
                                             >
                                                 Unlock Files
@@ -1613,7 +1613,7 @@ const BentoGrid = () => {
                                         </div>
                                         <div className="w-full bg-slate-200 dark:bg-white/5 rounded-full h-1.5 overflow-hidden">
                                             <div
-                                                className="bg-lime-400 h-full shadow-[0_0_10px_#bef264]"
+                                                className="bg-lime-400 h-full shadow-[0_0_10px_#a3e635]"
                                                 style={{ width: '34%' }}
                                             />
                                         </div>
@@ -2168,7 +2168,7 @@ const SendationalFeaturesShowcase = () => (
                     </div>
                 </div>
                 <div className="w-full lg:w-1/2 order-1 lg:order-2">
-                    <span className="inline-block py-1 px-3 rounded-full bg-lime-400/10 text-[#65a30d] dark:text-lime-400 font-bold text-[10px] uppercase tracking-widest mb-6">White Label</span>
+                    <span className="inline-block py-1 px-3 rounded-full bg-lime-400/10 text-[#a3e635] dark:text-lime-400 font-bold text-[10px] uppercase tracking-widest mb-6">White Label</span>
                     <h2 className="font-sans font-medium tracking-tight text-4xl md:text-5xl lg:text-6xl text-black dark:text-white leading-[1.1] mb-6">
                         Your brand.<br />Front and center.
                     </h2>
@@ -2377,7 +2377,7 @@ const CompetitiveMatrix = () => {
                             {columns.map((col) => (
                                 <div
                                     key={col.label}
-                                    className={`rounded-xl px-3 py-2 text-center transition-shadow ${col.highlight ? 'bg-lime-400/20 text-black dark:text-white ring-1 ring-lime-400/30 shadow-[0_0_22px_rgba(190,242,100,0.2)]' : 'bg-slate-50 dark:bg-white/[0.03]'}`}
+                                    className={`rounded-xl px-3 py-2 text-center transition-shadow ${col.highlight ? 'bg-lime-400/20 text-black dark:text-white ring-1 ring-lime-400/30 shadow-[0_0_22px_rgba(163, 230, 53,0.2)]' : 'bg-slate-50 dark:bg-white/[0.03]'}`}
                                 >
                                     <div className="text-[11px] font-bold text-black dark:text-white">{col.label}</div>
                                     <div className="text-[9px] font-mono text-slate-400 dark:text-slate-500">{col.note}</div>
@@ -2473,7 +2473,7 @@ const SendationalWorkflow = () => (
                 
                 {/* Step 1 */}
                 <div className="relative z-10 flex flex-col items-center text-center group">
-                    <div className="w-24 h-24 rounded-full bg-white dark:bg-[#2D2E45] border-2 border-lime-400 flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(190,242,100,0.2)] group-hover:scale-110 transition-transform">
+                    <div className="w-24 h-24 rounded-full bg-white dark:bg-[#2D2E45] border-2 border-lime-400 flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(163, 230, 53,0.2)] group-hover:scale-110 transition-transform">
                         <span className="text-4xl font-bold font-sans text-lime-400">1</span>
                     </div>
                     <h3 className="text-2xl font-bold text-black dark:text-white mb-4">Upload Master Files</h3>

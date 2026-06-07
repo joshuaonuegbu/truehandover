@@ -43,7 +43,7 @@ const PreviewModeShellTexture = ({ isDarkMode }: { isDarkMode: boolean }) => (
             }}
         />
         <div
-            className={`absolute inset-0 pointer-events-none ${isDarkMode ? 'bg-[radial-gradient(ellipse_50%_40%_at_50%_45%,_rgba(190, 242, 100,0.04)_0%,_transparent_70%)]' : 'bg-[radial-gradient(ellipse_55%_45%_at_50%_42%,_rgba(59,130,246,0.08)_0%,_transparent_72%)]'}`}
+            className={`absolute inset-0 pointer-events-none ${isDarkMode ? 'bg-[radial-gradient(ellipse_50%_40%_at_50%_45%,_rgba(163, 230, 53,0.04)_0%,_transparent_70%)]' : 'bg-[radial-gradient(ellipse_55%_45%_at_50%_42%,_rgba(59,130,246,0.08)_0%,_transparent_72%)]'}`}
         />
         <div
             className={`absolute inset-0 pointer-events-none ${isDarkMode ? 'bg-[radial-gradient(ellipse_at_center,_transparent_40%,_rgba(0,0,0,0.5)_100%)]' : 'bg-[radial-gradient(ellipse_at_center,_transparent_42%,_rgba(148,163,184,0.16)_100%)]'}`}

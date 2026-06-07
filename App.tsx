@@ -25,7 +25,7 @@ import {
     BarChart3, FileDigit, Landmark, Printer, PieChart, Users,
     QrCode, ZoomIn, ZoomOut, Play, Pause, RotateCcw, Maximize2, Minimize2
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, BarChart, Bar, Cell, Legend, ReferenceLine, YAxis, Pie, PieChart as RePieChart } from 'recharts';
+import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid, BarChart, Bar, Cell, Legend, ReferenceLine, YAxis, Pie, PieChart as RePieChart } from 'recharts';
 import { QRCodeSVG } from 'qrcode.react';
 import { playClick, playSuccess } from './utils/sound';
 import { useUiAccentHex } from './utils/useUiAccentHex';
@@ -54,6 +54,7 @@ const _importStorageManagement = () => import('./components/StorageManagementPag
 const _importReports = () => import('./components/ReportsView');
 const _importActivity = () => import('./components/ActivityView');
 const _importQuotes = () => import('./components/QuotesPage');
+const _importTestLab = () => import('./components/TestLabPage');
 
 const CreatorPage = lazy(_importCreator);
 const ClientPreviewBiz = lazy(_importPreviewBiz);
@@ -65,6 +66,7 @@ const StorageManagementPage = lazy(_importStorageManagement);
 const ReportsView = lazy(_importReports);
 const ActivityView = lazy(_importActivity);
 const QuotesPage = lazy(_importQuotes);
+const TestLabPage = lazy(_importTestLab);
 
 // Hover-prefetch map â€” call the matching _import* fn on nav item hover so the
 // chunk is in the module cache before the user even clicks the link.
@@ -77,6 +79,7 @@ const routePreloadMap: Record<string, () => Promise<unknown>> = {
     quotes: _importQuotes,
     help: _importHelp,
     trash: _importTrash,
+    'test-lab': _importTestLab,
 };
 import { DB, supabase } from './services/supabaseClient';
 import { Project, UserProfile, ViewState, FileAsset } from './types';
@@ -104,7 +107,7 @@ const ToastContainer = ({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: nu
         warning: 'bg-white dark:bg-[#201f1e] border-amber-300 dark:border-amber-700/40 text-zinc-800 dark:text-white',
     };
     const iconStyles: Record<ToastKind, string> = {
-        success: 'text-[#65a30d] dark:text-lime-400',
+        success: 'text-[#a3e635] dark:text-lime-400',
         error:   'text-red-500',
         info:    'text-lime-600',
         warning: 'text-amber-500',
@@ -166,6 +169,58 @@ const QUICK_MESSAGE_PRESETS = [
         label: 'Short',
         text: "Final assets are ready. Review the previews and unlock the full files after payment."
     }
+];
+const STUDIO_PREVIEW_ASSETS: FileAsset[] = [
+    {
+        id: 'studio-brand-guide',
+        name: 'brand_guide.pdf',
+        size: '4.2 MB',
+        type: 'pdf',
+        locked: true,
+        version: 1,
+        uploadDate: '2026-05-24',
+        previewUrl: 'https://images.unsplash.com/photo-1769501210990-a56025a9385a?auto=format&fit=crop&w=900&q=80',
+    },
+    {
+        id: 'studio-logo',
+        name: 'logo_final.png',
+        size: '2.1 MB',
+        type: 'image',
+        locked: true,
+        version: 1,
+        uploadDate: '2026-05-24',
+        previewUrl: 'https://images.unsplash.com/photo-1761577680549-21a6bc9d42f6?auto=format&fit=crop&w=900&q=80',
+    },
+    {
+        id: 'studio-social',
+        name: 'social_media.zip',
+        size: '12 MB',
+        type: 'archive',
+        locked: true,
+        version: 1,
+        uploadDate: '2026-05-24',
+        previewUrl: 'https://images.unsplash.com/photo-1768853972795-2739a9685567?auto=format&fit=crop&w=900&q=80',
+    },
+    {
+        id: 'studio-video',
+        name: 'video_preview.mp4',
+        size: '32 MB',
+        type: 'video',
+        locked: true,
+        version: 1,
+        uploadDate: '2026-05-24',
+        previewUrl: 'https://images.unsplash.com/photo-1536514498073-50e69d39c6cf?auto=format&fit=crop&w=900&q=80',
+    },
+    {
+        id: 'studio-campaign',
+        name: 'campaign_assets.ai',
+        size: '19.8 MB',
+        type: 'design',
+        locked: true,
+        version: 1,
+        uploadDate: '2026-05-24',
+        previewUrl: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=900&q=80',
+    },
 ];
 const QUICK_RETENTION_OPTIONS = [
     { id: 'forever', label: 'Keep forever' },
@@ -669,7 +724,7 @@ const Timeline = ({ projects }: { projects: Project[] }) => {
             <div className="absolute left-[88px] top-4 bottom-4 w-px bg-zinc-200 dark:bg-white/10" />
             {briefingActivities.map((item, i) => {
                 const iconColor = {
-                    lime: 'text-[#65a30d] dark:text-lime-400',
+                    lime: 'text-[#a3e635] dark:text-lime-400',
                     white: 'text-zinc-500 dark:text-zinc-400'
                 }[item.color];
 
@@ -709,7 +764,11 @@ const CyclingWidget = ({
     const [isPaused, setIsPaused] = useState(false);
     const [progress, setProgress] = useState(0);
     const [isReplying, setIsReplying] = useState(false);
+    const [isReplyComposerVisible, setIsReplyComposerVisible] = useState(false);
+    const [isReplyComposerClosing, setIsReplyComposerClosing] = useState(false);
     const [replyText, setReplyText] = useState('');
+    const replyOpenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const replyCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const demoMode = isMockMode();
     const duration = 10000; // 10 seconds per slide
     const interval = 50; // Update frequency
@@ -821,7 +880,7 @@ const CyclingWidget = ({
                     <div className="min-h-0">
                         <div className="mb-3 flex items-start justify-between gap-2">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Net Revenue</span>
-                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-[#a3e635]/35 bg-[#a3e635]/15 px-2 py-1 text-[10px] font-bold text-[#4d7c0f] dark:border-lime-400/20 dark:bg-lime-400/10 dark:text-lime-400">
+                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-lime-400/35 bg-lime-400/15 px-2 py-1 text-[10px] font-bold text-[#a3e635] dark:border-lime-400/20 dark:bg-lime-400/10 dark:text-lime-400">
                                 <ArrowUpRight className="h-3 w-3" /> {demoMode ? '12.5%' : 'Active'}
                             </div>
                         </div>
@@ -862,7 +921,7 @@ const CyclingWidget = ({
                     <div className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full bg-indigo-400/20 blur-3xl dark:bg-sky-500/10" />
                     <div className={`relative z-10 flex h-full min-h-0 flex-col justify-between ${slidePad}`}>
                         <div>
-                            <span className="mb-3 block border-l-2 border-[#65a30d] pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-lime-400 dark:text-zinc-400">
+                            <span className="mb-3 block border-l-2 border-lime-400 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-lime-400 dark:text-zinc-400">
                                 Project storage
                             </span>
                             <div className="flex items-start justify-between gap-3">
@@ -924,13 +983,16 @@ const CyclingWidget = ({
             id: 'reviews',
             render: () => {
                 const rev = latestRevision;
+                const replyComposerClipPath = isReplyComposerVisible || isReplyComposerClosing
+                    ? 'inset(0 0 0 0)'
+                    : 'inset(0 100% 0 0)';
                 const fmtTime = (iso: string) => {
                     const d = new Date(iso);
                     return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
                 };
     return (
                 <div className="absolute inset-0 flex h-full min-h-0 overflow-hidden bg-zinc-50 transition-all duration-700 ease-in-out dark:bg-charcoal">
-                    <div className={`flex min-h-0 flex-col transition-all duration-500 ${isReplying ? 'w-1/2 border-r border-zinc-200/50 dark:border-white/5' : 'w-full'}`}>
+                    <div className={`flex min-h-0 flex-col transition-all ${isReplying ? 'w-1/2 border-r border-zinc-200/50 duration-500 dark:border-white/5' : 'w-full duration-300'}`}>
                         <div className={`flex min-h-0 flex-1 flex-col p-4 pb-10 sm:p-5 md:p-6 lg:p-8`}>
                             <div className="flex shrink-0 items-start justify-between gap-2">
                                 <div className="flex min-w-0 items-center gap-2">
@@ -974,7 +1036,7 @@ const CyclingWidget = ({
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => setIsReplying(true)}
+                                            onClick={openReplyComposer}
                                             className="flex items-center gap-2 rounded-lg bg-zinc-900 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white transition-transform hover:scale-[1.02] dark:bg-white dark:text-zinc-950"
                                         >
                                             Reply <ArrowRight className="h-3 w-3" />
@@ -986,13 +1048,18 @@ const CyclingWidget = ({
                     </div>
 
                     <div
-                        className={`flex min-h-0 flex-col bg-white dark:bg-[#1c1c24] border-l border-zinc-200/60 dark:border-white/[0.06] transition-all duration-500 ${
-                            isReplying ? `h-full w-1/2 min-w-0 translate-x-0 opacity-100 p-4 sm:p-5 md:p-6 lg:p-8` : 'w-0 translate-x-full overflow-hidden p-0 opacity-0'
+                        className={`absolute inset-y-0 right-0 flex w-1/2 min-w-0 origin-center flex-col overflow-hidden border-l border-zinc-200/60 bg-white p-4 shadow-[-18px_0_36px_-28px_rgba(15,23,42,0.45)] transition-[clip-path,opacity,transform] ${isReplyComposerClosing ? 'duration-150 ease-out' : isReplyComposerVisible ? 'duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]' : 'duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'} will-change-[clip-path,opacity,transform] dark:border-white/[0.06] dark:bg-[#1c1c24] sm:p-5 md:p-6 lg:p-8 ${
+                            isReplyComposerVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
+                        } ${
+                            isReplyComposerClosing ? 'translate-y-1 scale-[0.985]' : 'translate-y-0 scale-100'
                         }`}
+                        style={{
+                            clipPath: replyComposerClipPath,
+                        }}
                     >
                         <div className="mb-3 flex items-center justify-between gap-2">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Reply to {rev?.clientName ?? 'Client'}</span>
-                            <button type="button" onClick={() => setIsReplying(false)} className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white">
+                            <button type="button" onClick={() => closeReplyComposer()} className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white">
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
@@ -1005,7 +1072,7 @@ const CyclingWidget = ({
                         <div className="mt-3 flex justify-start">
                             <button
                                 type="button"
-                                onClick={() => { setIsReplying(false); setReplyText(''); playSuccess(); }}
+                                onClick={() => { closeReplyComposer(true); playSuccess(); }}
                                 className="flex items-center gap-2 rounded-lg bg-lime-400 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-950 shadow-sm transition-transform hover:scale-[1.02]"
                             >
                                 Send <Send className="h-3 w-3" />
@@ -1093,7 +1160,7 @@ const CyclingWidget = ({
                     <div className="min-h-0">
                         <div className="mb-3 flex items-start justify-between gap-3">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Net Revenue</span>
-                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-[#a3e635]/35 bg-[#a3e635]/15 px-2 py-1 text-[10px] font-bold text-[#4d7c0f] dark:border-lime-400/20 dark:bg-lime-400/10 dark:text-lime-400">
+                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-lime-400/35 bg-lime-400/15 px-2 py-1 text-[10px] font-bold text-[#a3e635] dark:border-lime-400/20 dark:bg-lime-400/10 dark:text-lime-400">
                                 <ArrowUpRight className="h-3 w-3" /> {paidProjects.length} closed
                                 </div>
                         </div>
@@ -1147,7 +1214,7 @@ const CyclingWidget = ({
                     <div className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full bg-indigo-400/20 blur-3xl dark:bg-sky-500/10" />
                     <div className={`relative z-10 flex h-full min-h-0 flex-col justify-between ${slidePad}`}>
                         <div>
-                            <span className="mb-3 block border-l-2 border-[#65a30d] pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-lime-400 dark:text-zinc-400">
+                            <span className="mb-3 block border-l-2 border-lime-400 pl-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-lime-400 dark:text-zinc-400">
                                 Project storage
                             </span>
                             <div className="flex items-start justify-between gap-3">
@@ -1304,9 +1371,42 @@ const CyclingWidget = ({
         onReplyingChange?.(isReplying);
     }, [isReplying, onReplyingChange]);
 
+    useEffect(() => {
+        return () => {
+            if (replyOpenTimerRef.current) clearTimeout(replyOpenTimerRef.current);
+            if (replyCloseTimerRef.current) clearTimeout(replyCloseTimerRef.current);
+        };
+    }, []);
+
+    const openReplyComposer = () => {
+        if (replyCloseTimerRef.current) clearTimeout(replyCloseTimerRef.current);
+        if (replyOpenTimerRef.current) clearTimeout(replyOpenTimerRef.current);
+        setIsReplyComposerClosing(false);
+        setIsReplying(true);
+        replyOpenTimerRef.current = setTimeout(() => {
+            setIsReplyComposerVisible(true);
+        }, 30);
+    };
+
+    const closeReplyComposer = (clearText = false) => {
+        if (replyOpenTimerRef.current) clearTimeout(replyOpenTimerRef.current);
+        if (replyCloseTimerRef.current) clearTimeout(replyCloseTimerRef.current);
+        setIsReplyComposerClosing(true);
+        setIsReplyComposerVisible(false);
+        replyCloseTimerRef.current = setTimeout(() => {
+            setIsReplying(false);
+            setIsReplyComposerClosing(false);
+            if (clearText) setReplyText('');
+        }, 150);
+    };
+
     const manualChange = (index: number) => {
+        if (replyOpenTimerRef.current) clearTimeout(replyOpenTimerRef.current);
+        if (replyCloseTimerRef.current) clearTimeout(replyCloseTimerRef.current);
         setCycleIndex(index);
         setProgress(0);
+        setIsReplyComposerClosing(false);
+        setIsReplyComposerVisible(false);
         setIsReplying(false);
     };
 
@@ -1339,7 +1439,7 @@ const CyclingWidget = ({
             {/* Progress Bar */}
             <div className="absolute top-0 left-4 right-4 h-0.5 bg-zinc-100 dark:bg-white/5 z-30 rounded-b-full overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                 <div 
-                    className="h-full bg-lime-400 text-zinc-900 shadow-sm dark:bg-lime-400 transition-all duration-100 ease-linear shadow-[0_0_8px_rgba(101,163,13,0.5)]"
+                    className="h-full bg-lime-400 text-zinc-900 shadow-sm dark:bg-lime-400 transition-all duration-100 ease-linear shadow-[0_0_8px_rgba(163, 230, 53,0.5)]"
                     style={{ width: `${progress}%`, opacity: isPaused ? 0.2 : 1 }}
                 />
             </div>
@@ -1375,7 +1475,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
     // ... same as before
     const navigate = useNavigate();
     const location = useLocation();
-    const { openSearch, isCompactContent = false } = useOutletContext<{ privacyMode: boolean; openSearch?: () => void; isCompactContent?: boolean }>();
+    const { openSearch, openQuickDelivery, isCompactContent = false } = useOutletContext<{ privacyMode: boolean; openSearch?: () => void; openQuickDelivery?: () => void; isCompactContent?: boolean }>();
     const greetingName = useMemo(() => {
         const fullName = (user?.name || '').trim();
         return fullName ? fullName.split(/\s+/)[0] : 'there';
@@ -1514,7 +1614,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                             ].filter(Boolean) as { label: string; value: string | null; color: 'amber' | 'blue' | 'lime' | 'slate'; icon: React.ElementType; action: () => void }[];
                             if (chips.length === 0) return (
                                 <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
-                                    <CheckCircle className="w-4 h-4 text-[#65a30d] dark:text-lime-400 shrink-0" />
+                                    <CheckCircle className="w-4 h-4 text-[#a3e635] dark:text-lime-400 shrink-0" />
                                     All caught up - nothing pending.
                                 </p>
                             );
@@ -1537,7 +1637,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                         })()}
                     </div>
                     <div className="flex flex-col gap-4 shrink-0 lg:items-end">
-                        <button type="button" onClick={() => { playClick(); navigate('/create'); }} className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-lime-400 text-zinc-950 font-bold text-xs uppercase tracking-widest hover:opacity-95 transition-opacity shadow-sm w-full sm:w-auto">
+                        <button type="button" onClick={() => { playClick(); if (openQuickDelivery) { openQuickDelivery(); } else { navigate('/create'); } }} className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-lime-400 text-zinc-950 font-bold text-xs uppercase tracking-widest hover:opacity-95 transition-opacity shadow-sm w-full sm:w-auto">
                             <Plus className="w-4 h-4" /> New Project
                         </button>
                         <nav className="flex flex-wrap items-center gap-x-1 gap-y-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 lg:justify-end">
@@ -1604,7 +1704,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                     <div className={`grid grid-cols-1 items-start gap-4 md:gap-5 ${isCompactContent ? 'min-[700px]:grid-cols-[repeat(auto-fit,minmax(18rem,1fr))]' : 'md:grid-cols-2'}`}>
                         
                         {/* CYCLING WIDGET: col-span-2 when replying for expansion */}
-                        <Card noPadding className={`relative h-fit w-full min-w-0 overflow-hidden !rounded-[2rem] shadow-sm transition-all duration-500 ${isCyclingReplying ? 'col-span-2' : ''}`}>
+                        <Card noPadding className={`relative h-fit w-full min-w-0 overflow-hidden !rounded-[2rem] shadow-sm transition-all ${isCyclingReplying ? 'col-span-2 duration-500' : 'duration-300'}`}>
                             <CyclingWidget projects={projects} compact={isCompactContent} onReplyingChange={setIsCyclingReplying} />
                         </Card>
 
@@ -1622,13 +1722,13 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                 {alerts.length === 0 ? (
                                     <div className="bg-zinc-50 dark:bg-[#23232e]/45 border-2 border-dashed border-zinc-200/50 dark:border-white/10 p-6 rounded-[2rem] flex flex-col items-center justify-center text-center flex-1 min-h-[220px]">
                                         <div className="w-14 h-14 rounded-[1.25rem] bg-white dark:bg-white/5 flex items-center justify-center mb-4 shadow-sm border border-zinc-100 dark:border-white/10">
-                                            <CheckCircle className="w-6 h-6 text-[#65a30d] dark:text-lime-400" strokeWidth={1.5} />
+                                            <CheckCircle className="w-6 h-6 text-[#a3e635] dark:text-lime-400" strokeWidth={1.5} />
                                         </div>
                                         <p className="font-sans tracking-tight text-xl text-zinc-900 dark:text-white mb-1">Clear Horizon</p>
                                         <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-[200px] mb-5">
                                             Everything is up to date. Ready for new incoming clients?
                                         </p>
-                                        <button onClick={() => { playClick(); navigate('/create'); }} className="px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-lime-400 text-white dark:text-zinc-950 text-[11px] font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-2 group shadow-lg shadow-black/5">
+                                        <button onClick={() => { playClick(); if (openQuickDelivery) { openQuickDelivery(); } else { navigate('/create'); } }} className="px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-lime-400 text-white dark:text-zinc-950 text-[11px] font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-2 group shadow-lg shadow-black/5">
                                             <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform" /> Create Project
                                         </button>
                                     </div>
@@ -1647,7 +1747,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                             <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-0.5">{alert.type === 'critical' ? 'Urgent' : alert.type === 'warning' ? 'Warning' : 'Info'}</p>
                                             <p className="text-sm font-bold text-zinc-900 dark:text-white truncate leading-tight">{alert.message}</p>
                                             </div>
-                                        <ArrowRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-[#65a30d] dark:group-hover:text-lime-400 group-hover:translate-x-1 transition-all" />
+                                        <ArrowRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-lime-600 dark:group-hover:text-lime-400 dark:group-hover:text-lime-400 group-hover:translate-x-1 transition-all" />
                                     </div>
                                 ))}
                             </div>
@@ -1673,11 +1773,11 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 mb-0.5">
                                                         <h4 className="text-sm font-bold text-zinc-900 dark:text-white truncate">{client.name}</h4>
-                                                        {client.status === 'viewing' && <span className="text-[9px] font-bold text-[#4d7c0f] dark:text-lime-400 uppercase tracking-wider animate-pulse shrink-0">Live</span>}
+                                                        {client.status === 'viewing' && <span className="text-[9px] font-bold text-[#a3e635] dark:text-lime-400 uppercase tracking-wider animate-pulse shrink-0">Live</span>}
                                                     </div>
                                                     <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{client.project}</p>
                                                 </div>
-                                                <ArrowRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-[#65a30d] dark:group-hover:text-lime-400 group-hover:translate-x-1 transition-all shrink-0" />
+                                                <ArrowRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-lime-600 dark:group-hover:text-lime-400 dark:group-hover:text-lime-400 group-hover:translate-x-1 transition-all shrink-0" />
                                             </div>
                                         ))}
                                     </div>
@@ -1713,11 +1813,11 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-center mb-0.5">
                                                 <h4 className="text-sm font-bold text-zinc-900 dark:text-white truncate">{client.name}</h4>
-                                                {client.status === 'viewing' && <span className="text-[9px] font-bold text-[#4d7c0f] dark:text-lime-400 uppercase tracking-wider animate-pulse">Live</span>}
+                                                {client.status === 'viewing' && <span className="text-[9px] font-bold text-[#a3e635] dark:text-lime-400 uppercase tracking-wider animate-pulse">Live</span>}
                                             </div>
                                             <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{client.project}</p>
                                         </div>
-                                        <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-[#65a30d] dark:group-hover:text-lime-400 transition-colors" />
+                                        <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-lime-600 dark:group-hover:text-lime-400 dark:group-hover:text-lime-400 transition-colors" />
                                     </Card>
                                 ))}
                             </div>
@@ -1751,7 +1851,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                     <div className="w-20 h-20 rounded-[2rem] bg-white dark:bg-white/5 flex items-center justify-center mb-6 shadow-sm border border-zinc-100 dark:border-white/10 relative">
                                         <Briefcase className="w-10 h-10 stroke-[1.5] text-zinc-400" />
                                         <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-100 dark:bg-lime-400/20 rounded-xl flex items-center justify-center border-2 border-white dark:border-[#23232e]">
-                                            <Plus className="w-4 h-4 text-[#65a30d] dark:text-lime-400" />
+                                            <Plus className="w-4 h-4 text-[#a3e635] dark:text-lime-400" />
                                         </div>
                                     </div>
                                     <h3 className="font-sans tracking-tight text-2xl text-zinc-900 dark:text-white mb-2">Start Your First Project</h3>
@@ -1760,7 +1860,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
                                     </p>
                                     
                                     <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                                        <button onClick={() => { playClick(); navigate('/create'); }} className="px-6 py-3.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-black/5">
+                                        <button onClick={() => { playClick(); if (openQuickDelivery) { openQuickDelivery(); } else { navigate('/create'); } }} className="px-6 py-3.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-black/5">
                                             <Plus className="w-4 h-4" /> Create Project
                                         </button>
                                         <button onClick={() => { playClick(); document.getElementById('vault-tab-draft')?.click(); }} className="px-6 py-3.5 rounded-xl bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 text-zinc-600 dark:text-zinc-300 text-xs font-bold uppercase tracking-wider hover:bg-zinc-50 dark:hover:bg-white/10 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
@@ -2010,7 +2110,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button onClick={() => navigate('/storage')} className="h-12 px-5 rounded-2xl border border-zinc-200/70 dark:border-white/10 bg-white dark:bg-charcoal text-zinc-600 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-lime-400/10 hover:text-[#65a30d] dark:hover:text-blue-300 hover:border-blue-200 dark:hover:border-lime-400/25 transition-all flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.12em] shadow-sm group">
+                    <button onClick={() => navigate('/storage')} className="h-12 px-5 rounded-2xl border border-zinc-200/70 dark:border-white/10 bg-white dark:bg-charcoal text-zinc-600 dark:text-zinc-300 hover:bg-blue-50 dark:hover:bg-lime-400/10 hover:text-[#a3e635] dark:hover:text-blue-300 hover:border-blue-200 dark:hover:border-lime-400/25 transition-all flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.12em] shadow-sm group">
                         <HardDrive className="w-4 h-4 text-lime-400 dark:text-lime-400 group-hover:scale-110 transition-transform" />
                         <span className="hidden sm:inline">Storage</span>
                     </button>
@@ -2029,7 +2129,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
             <div className="hf-surface hf-no-glow flex flex-col gap-3 bg-white dark:bg-charcoal p-2 rounded-[2rem] overflow-visible border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md">
                 <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2">
                     <div className="relative w-full flex-1 group min-w-0">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-[#65a30d] dark:group-focus-within:text-lime-400 transition-colors" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-[#a3e635] dark:group-focus-within:text-lime-400 transition-colors" />
                         <input
                             type="text"
                             value={searchQuery}
@@ -2149,7 +2249,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                     draft: 'text-zinc-500 bg-zinc-100 dark:bg-white/5',
                                     awaiting_signature: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:text-indigo-400',
                                     awaiting_payment: 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400',
-                                    payment_verification: 'text-[#65a30d] bg-blue-50 dark:bg-blue-900/20 dark:text-lime-400',
+                                    payment_verification: 'text-[#a3e635] bg-blue-50 dark:bg-blue-900/20 dark:text-lime-400',
                                     paid: 'text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-lime-400',
                                     completed: 'text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-lime-400',
                                 };
@@ -2177,7 +2277,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                         <td className="px-5 py-4 text-right font-sans tracking-tight text-zinc-900 dark:text-white">${project.amount.toLocaleString()}</td>
                                         <td className="px-5 py-4 text-right font-mono text-zinc-500 hidden lg:table-cell">{project.files.length}</td>
                                         <td className="px-3 py-4">
-                                            <ArrowUpRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-[#65a30d] dark:group-hover:text-lime-400 transition-colors" />
+                                            <ArrowUpRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-lime-600 dark:group-hover:text-lime-400 dark:group-hover:text-lime-400 transition-colors" />
                                         </td>
                                     </tr>
                                 );
@@ -2212,8 +2312,8 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                 <div className="absolute inset-0 opacity-[0.12] dark:opacity-[0.05] pointer-events-none mix-blend-multiply dark:mix-blend-overlay z-0" style={{ backgroundImage: NOISE_SVG, backgroundSize: '360px 360px', filter: 'contrast(104%) brightness(102%)' }} />
                                 <div className="relative z-10">
                                     <div className="flex items-center gap-4 mb-8">
-                                        <div className={`px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 backdrop-blur-md ${project.status === 'paid' ? 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f] dark:bg-lime-400/10 dark:border-lime-400/20 dark:text-lime-400' : 'bg-zinc-50/50 border-zinc-200 text-zinc-600 dark:bg-white/5 dark:border-white/10 dark:text-zinc-300'}`}>
-                                            <div className={`w-2 h-2 rounded-full ${project.status === 'paid' ? 'bg-[#4d7c0f] shadow-[0_0_8px_rgba(163,230,53,0.55)] dark:bg-lime-400 dark:shadow-[0_0_8px_rgba(59,130,246,0.6)]' : 'bg-zinc-400'} animate-pulse`} />
+                                        <div className={`px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 backdrop-blur-md ${project.status === 'paid' ? 'bg-lime-400/15 border-lime-400/35 text-[#a3e635] dark:bg-lime-400/10 dark:border-lime-400/20 dark:text-lime-400' : 'bg-zinc-50/50 border-zinc-200 text-zinc-600 dark:bg-white/5 dark:border-white/10 dark:text-zinc-300'}`}>
+                                            <div className={`w-2 h-2 rounded-full ${project.status === 'paid' ? 'bg-lime-400 shadow-[0_0_8px_rgba(163, 230, 53,0.55)] dark:bg-lime-400 dark:shadow-[0_0_8px_rgba(59,130,246,0.6)]' : 'bg-zinc-400'} animate-pulse`} />
                                             {project.status === 'paid' || project.status === 'completed'
                                                 ? 'Paid'
                                                 : project.status === 'draft'
@@ -2238,7 +2338,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                         <img src={project.client.avatar} className="w-10 h-10 rounded-full border-2 border-white dark:border-zinc-800 shadow-md transition-all duration-300 group-hover/client:ring-2 group-hover/client:ring-lime-400 group-hover/client:ring-offset-2 dark:group-hover/client:ring-offset-charcoal" />
                                         <div>
                                             <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Prepared For</div>
-                                            <div className="text-sm font-bold text-zinc-900 dark:text-white group-hover/client:text-[#65a30d] dark:transition-colors">{project.client.name}</div>
+                                            <div className="text-sm font-bold text-zinc-900 dark:text-white group-hover/client:text-[#a3e635] dark:transition-colors">{project.client.name}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -2249,7 +2349,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                             <div className="relative flex h-12 w-12 shrink-0 items-center justify-center">
                                                 <svg className="absolute inset-0 h-full w-full -rotate-90">
                                                     <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-zinc-100 dark:text-white/5" />
-                                                    <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" strokeDasharray="138" strokeDashoffset={138 - (138 * Math.min(project.amount / 10000, 1))} strokeLinecap="round" className="text-[#65a30d] dark:text-lime-400 transition-all duration-1000 ease-out" />
+                                                    <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" fill="transparent" strokeDasharray="138" strokeDashoffset={138 - (138 * Math.min(project.amount / 10000, 1))} strokeLinecap="round" className="text-[#a3e635] dark:text-lime-400 transition-all duration-1000 ease-out" />
                                                 </svg>
                                                 <DollarSign className="relative h-4 w-4 text-zinc-400" />
                             </div>
@@ -2261,8 +2361,8 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                          <div className="flex min-w-0 items-center gap-4 border-t border-zinc-200/50 pt-4 min-[560px]:border-t-0 min-[560px]:border-l min-[560px]:border-zinc-200/50 min-[560px]:pt-0 min-[560px]:pl-6 dark:border-white/10">
                                             <div className="flex h-10 shrink-0 items-end gap-[3px] py-1.5">
                                                 {[40, 70, 100, 50, 80].map((h, idx) => (
-                                                    <div key={idx} className="relative w-1.5 overflow-hidden rounded-t-sm bg-[#a3e635]/20 dark:bg-lime-400/10" style={{ height: '100%' }}>
-                                                        <div className="absolute bottom-0 left-0 w-full bg-[#65a30d] dark:bg-lime-400" style={{ height: `${h}%`, animation: `pulse-height 2s infinite ease-in-out`, animationDelay: `${idx * 200}ms` }} />
+                                                    <div key={idx} className="relative w-1.5 overflow-hidden rounded-t-sm bg-lime-400/20 dark:bg-lime-400/10" style={{ height: '100%' }}>
+                                                        <div className="absolute bottom-0 left-0 w-full bg-lime-400 dark:bg-lime-400" style={{ height: `${h}%`, animation: `pulse-height 2s infinite ease-in-out`, animationDelay: `${idx * 200}ms` }} />
                                                     </div>
                                                 ))}
                                             </div>
@@ -2273,7 +2373,7 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                         </div>
                                         <div className="flex min-w-0 items-center gap-4 border-t border-zinc-200/50 pt-4 min-[560px]:border-t-0 min-[560px]:border-l min-[560px]:border-zinc-200/50 min-[560px]:pt-0 min-[560px]:pl-6 dark:border-white/10">
                                             <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-zinc-200/70 bg-white/80 dark:border-white/10 dark:bg-white/5">
-                                                <Eye className="h-4 w-4 text-[#65a30d] dark:text-lime-400" />
+                                                <Eye className="h-4 w-4 text-[#a3e635] dark:text-lime-400" />
                                             </div>
                                              <div className="min-w-0">
                                                 <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Views</div>
@@ -2335,11 +2435,11 @@ const VaultView = ({ projects }: { projects: Project[] }) => {
                                             </div>
                                         )}
                                         {project.files.length === 0 && (
-                                            <div className={`w-full max-w-[26rem] min-w-[11rem] ${isCompactContent ? 'h-36' : 'h-44 lg:h-56'} rounded-2xl border-2 border-dashed border-zinc-200 dark:border-white/10 flex flex-col items-center justify-center gap-3 hover:border-[#65a30d] hover:bg-[#eef3df] dark:hover:border-[#bef264]/45 dark:hover:bg-[#bef264]/10 transition-colors cursor-pointer group/add animate-slide-up`} style={{ animationDelay: `${projectIndex * 100 + 200}ms`, animationFillMode: 'both' }}>
-                                                <div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-white/5 flex items-center justify-center text-zinc-400 group-hover/add:bg-[#65a30d] group-hover/add:text-white dark:group-hover/add:bg-[#bef264] dark:group-hover/add:text-zinc-950 transition-colors">
+                                            <div className={`w-full max-w-[26rem] min-w-[11rem] ${isCompactContent ? 'h-36' : 'h-44 lg:h-56'} rounded-2xl border-2 border-dashed border-zinc-200 dark:border-white/10 flex flex-col items-center justify-center gap-3 hover:border-lime-400 hover:bg-lime-400 dark:hover:border-lime-400/45 dark:hover:bg-[#d9f99d]/10 transition-colors cursor-pointer group/add animate-slide-up`} style={{ animationDelay: `${projectIndex * 100 + 200}ms`, animationFillMode: 'both' }}>
+                                                <div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-white/5 flex items-center justify-center text-zinc-400 group-hover/add:bg-lime-400 group-hover/add:text-white dark:group-hover/add:bg-lime-400 dark:group-hover/add:text-zinc-950 transition-colors">
                                                     <Plus className="w-6 h-6" />
                                                 </div>
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 group-hover/add:text-[#4d7c0f] dark:group-hover/add:text-[#bef264] transition-colors">Add First Asset</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 group-hover/add:text-[#a3e635] dark:group-hover/add:text-[#a3e635] transition-colors">Add First Asset</span>
                                             </div>
                                         )}
                                     </div>
@@ -2518,7 +2618,7 @@ const MobileNavBar = ({ navItems, currentPath, onNavigate }: { navItems: any[], 
                             aria-current={isActive ? 'page' : undefined}
                             className={`relative flex items-center justify-center w-12 h-11 rounded-[1.375rem] transition-all duration-200 active:scale-90 ${
                                 isActive
-                                    ? 'bg-[#ecfccb] dark:bg-[#bef264]/10 text-[#3f6212] dark:text-[#bef264]'
+                                    ? 'bg-lime-400 dark:bg-[#bef264]/10 text-[#a3e635] dark:text-lime-400'
                                     : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
                             }`}
                         >
@@ -2527,7 +2627,7 @@ const MobileNavBar = ({ navItems, currentPath, onNavigate }: { navItems: any[], 
                                 strokeWidth={isActive ? 2.5 : 1.75}
                             />
                             {isActive && (
-                                <span className="absolute bottom-[5px] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#84cc16] dark:bg-[#bef264]" />
+                                <span className="absolute bottom-[5px] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-lime-400 dark:bg-[#bef264]" />
                             )}
                         </button>
                     );
@@ -2575,7 +2675,7 @@ const StageBackground = ({ isDarkMode }: { isDarkMode: boolean }) => (
 );
 
 /** Self-contained delivery widget â€” the "star" of the main surface */
-const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPublish: (project: Project) => Promise<void> | void }) => {
+const DeliveryWidget = ({ isDarkMode, previewMode, onOpenStudio, onDraftChange, onPublish, onClose }: { isDarkMode: boolean; previewMode?: boolean; onOpenStudio?: () => void; onDraftChange?: (p: Project) => void; onPublish: (project: Project) => Promise<void> | void; onClose?: () => void }) => {
     const navigate = useNavigate();
     const toast = useToast();
     const { projects, user, updateUser } = useStore();
@@ -2594,6 +2694,29 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
     const [clientEmail, setClientEmail] = useState(initialDraft?.formData?.client?.email || '');
     const [enablePayment, setEnablePayment] = useState((initialDraft?.formData?.amount || 0) > 0);
     const [amount, setAmount] = useState(initialDraft?.formData?.amount ? String(initialDraft.formData.amount) : '');
+    useEffect(() => {
+        if (!onDraftChange) return;
+        onDraftChange({
+            id: 'preview',
+            name: projectName || 'Brand Identity Package',
+            description: linkLabel || "Hello, here's your project.",
+            client: { name: clientName || 'John Smith', email: clientEmail || '' },
+            amount: Number(amount) || 2500,
+            status: 'awaiting_payment',
+            clientLink: '',
+            createdAt: new Date().toISOString(),
+            dueDate: new Date(Date.now() + 7 * 86400000).toISOString(),
+            files: files || [],
+            milestones: [],
+            requiresSignature: false,
+            theme: {
+                name: 'Lumina Theme',
+                wallpaper: 'linear-gradient(135deg, #f0f4f8, #e2e8f0)',
+                brightness: 'light',
+                layout: 'default'
+            }
+        });
+    }, [projectName, linkLabel, clientName, clientEmail, amount, files, onDraftChange]);
     const [retention, setRetention] = useState<'forever' | '30_days' | '7_days' | '3_days' | '1_day'>('3_days');
     const [showRetentionMenu, setShowRetentionMenu] = useState(false);
     const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -3168,7 +3291,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                 ? 'Link ready'
                                 : createSubView === 'quote'
                                     ? 'Create quote'
-                                    : 'Create project'
+                                    : 'Quick Delivery'
                             : widgetView === 'projects'
                                 ? 'Current projects'
                                 : 'Briefing'}
@@ -3181,13 +3304,13 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                     setShowMoreMenu((open) => !open);
                                     setShowRetentionMenu(false);
                                 }}
-                                className="absolute right-0 w-9 h-9 rounded-xl border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                                className={`absolute ${onClose ? 'right-10' : 'right-0'} w-9 h-9 rounded-xl border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer`}
                                 title="Widget options"
                             >
                                 <MoreHorizontal className="w-4 h-4" />
                     </button>
                             {showMoreMenu && (
-                        <div className={`absolute right-0 top-11 w-48 rounded-2xl border shadow-xl z-20 p-2 ${isDarkMode ? 'bg-[#151521] border-white/10' : 'bg-white border-zinc-200'}`}>
+                        <div className={`absolute ${onClose ? 'right-10' : 'right-0'} top-11 w-48 rounded-2xl border shadow-xl z-20 p-2 ${isDarkMode ? 'bg-[#151521] border-white/10' : 'bg-white border-zinc-200'}`}>
                             <button
                                 onClick={() => {
                                     setShowMoreMenu(false);
@@ -3232,10 +3355,21 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                     ) : (
                         <button
                             onClick={() => { playClick(); setWidgetView('create'); }}
-                            className="absolute right-0 w-9 h-9 rounded-xl border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                            className={`absolute ${onClose ? 'right-10' : 'right-0'} w-9 h-9 rounded-xl border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer`}
                             title="Back to create"
                         >
                             <Plus className="w-4 h-4" />
+                        </button>
+                    )}
+                    {onClose && (
+                        <button
+                            type="button"
+                            onClick={() => { playClick(); onClose(); }}
+                            className="absolute right-0 w-9 h-9 rounded-xl border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                            title="Close delivery widget"
+                            aria-label="Close delivery widget"
+                        >
+                            <X className="w-4 h-4" />
                         </button>
                     )}
                 </div>
@@ -3245,7 +3379,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                 <div className={`grid grid-cols-3 gap-1 p-1 rounded-2xl border ${isDarkMode ? 'border-white/10 bg-white/[0.03]' : 'border-zinc-200 bg-white/70'}`}>
                     <button
                         onClick={() => { playClick(); setWidgetView('create'); }}
-                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${widgetView === 'create' ? (isDarkMode ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
+                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${widgetView === 'create' ? (isDarkMode ? 'bg-lime-400 text-zinc-950 shadow-sm shadow-black/10' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
                     >
                         Create
                     </button>
@@ -3254,13 +3388,13 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                             playClick();
                             setWidgetView('projects');
                         }}
-                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${widgetView === 'projects' ? (isDarkMode ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
+                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${widgetView === 'projects' ? (isDarkMode ? 'bg-lime-400 text-zinc-950 shadow-sm shadow-black/10' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
                     >
                         Current
                     </button>
                     <button
                         onClick={() => { playClick(); setWidgetView('briefing'); }}
-                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${widgetView === 'briefing' ? (isDarkMode ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
+                        className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${widgetView === 'briefing' ? (isDarkMode ? 'bg-lime-400 text-zinc-950 shadow-sm shadow-black/10' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
                     >
                         Briefing
                     </button>
@@ -3281,7 +3415,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                 className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${
                                     createSubView === 'project'
                                         ? isDarkMode
-                                            ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10'
+                                            ? 'bg-lime-400 text-zinc-950 shadow-sm shadow-black/10'
                                             : 'bg-white text-zinc-900 shadow-sm'
                                         : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'
                                 }`}
@@ -3297,7 +3431,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                 className={`h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 ${
                                     createSubView === 'quote'
                                         ? isDarkMode
-                                            ? 'bg-[#bef264] text-zinc-950 shadow-sm shadow-black/10'
+                                            ? 'bg-lime-400 text-zinc-950 shadow-sm shadow-black/10'
                                             : 'bg-white text-zinc-900 shadow-sm'
                                         : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'
                                 }`}
@@ -3357,7 +3491,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                 </button>
                                 <button
                                     onClick={() => { playClick(); setShowQrCode((v) => !v); }}
-                                    className={`h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${showQrCode ? (isDarkMode ? 'bg-[#bef264] text-zinc-950 border border-[#bef264]' : 'bg-[#a3e635]/15 text-[#4d7c0f] border border-[#a3e635]/35') : (isDarkMode ? 'bg-white/8 text-white hover:bg-white/12 border border-white/10' : 'bg-white text-zinc-900 hover:bg-zinc-50 border border-zinc-200')}`}
+                                    className={`h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${showQrCode ? (isDarkMode ? 'bg-lime-400 text-zinc-950 border border-lime-400' : 'bg-lime-400/15 text-[#a3e635] border border-lime-400/35') : (isDarkMode ? 'bg-white/8 text-white hover:bg-white/12 border border-white/10' : 'bg-white text-zinc-900 hover:bg-zinc-50 border border-zinc-200')}`}
                                 >
                                     <QrCode className="w-4 h-4" />
                                     QR code
@@ -3390,7 +3524,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
 
                             <button
                                 onClick={handleCreateAnother}
-                                className={`w-full h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-[#4d7c0f] hover:bg-[#3f6d0b] text-white'}`}
+                                className={`w-full h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode ? 'bg-lime-400 hover:bg-lime-400 text-zinc-950' : 'bg-lime-400 hover:bg-lime-400 text-white'}`}
                             >
                                 <Plus className="w-4 h-4" />
                                 New delivery
@@ -3407,7 +3541,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                             <button
                                 type="button"
                                 onClick={() => { playClick(); setShowQrPopout((v) => !v); }}
-                                className={`h-10 px-3 rounded-xl border text-[10px] font-bold uppercase tracking-widest shadow-sm transition-colors ${showQrPopout ? (isDarkMode ? 'bg-[#bef264] text-zinc-950 border-[#bef264]' : 'bg-[#a3e635]/15 text-[#4d7c0f] border-[#a3e635]/35') : (isDarkMode ? 'bg-[#1f1f2a]/95 text-white border-white/10 hover:bg-[#232332]' : 'bg-white/95 text-zinc-900 border-zinc-200 hover:bg-white')}`}
+                                className={`h-10 px-3 rounded-xl border text-[10px] font-bold uppercase tracking-widest shadow-sm transition-colors ${showQrPopout ? (isDarkMode ? 'bg-lime-400 text-zinc-950 border-lime-400' : 'bg-lime-400/15 text-[#a3e635] border-lime-400/35') : (isDarkMode ? 'bg-[#1f1f2a]/95 text-white border-white/10 hover:bg-[#232332]' : 'bg-white/95 text-zinc-900 border-zinc-200 hover:bg-white')}`}
                             >
                                 <span className="inline-flex items-center gap-1.5">
                                     <QrCode className="w-3.5 h-3.5" />
@@ -3447,7 +3581,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                         <button
                                             type="button"
                                             onClick={handleOpenClientVault}
-                                            className={`w-full h-9 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-[#bef264] text-zinc-950 hover:bg-[#d9f99d]' : 'bg-zinc-900 text-white hover:bg-black'}`}
+                                            className={`w-full h-9 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors ${isDarkMode ? 'bg-lime-400 text-zinc-950 hover:bg-lime-400' : 'bg-zinc-900 text-white hover:bg-black'}`}
                                         >
                                             Open project
                                         </button>
@@ -3536,13 +3670,12 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                 ) : (
                 <div className="flex flex-col flex-1 min-h-0 h-full">
                 <div className="flex-1 min-h-0 overflow-y-auto pr-1 briefing-scroll">
-                <>
                 <div className="grid grid-cols-2 gap-2">
                     <button
                         onClick={() => { playClick(); fileInputRef.current?.click(); }}
                         className={`rounded-2xl py-4 px-3 flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer ${panelSurfaceCls}`}
                     >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-lime-500 text-zinc-950'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-lime-400 text-zinc-950' : 'bg-lime-500 text-zinc-950'}`}>
                             <Plus className="w-4 h-4" />
                         </div>
                         <span className="text-sm text-zinc-800 dark:text-zinc-100">Add files</span>
@@ -3551,13 +3684,14 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                         onClick={() => { playClick(); folderInputRef.current?.click(); }}
                         className={`rounded-2xl py-4 px-3 flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer ${panelSurfaceCls}`}
                     >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-lime-500 text-zinc-950'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-lime-400 text-zinc-950' : 'bg-lime-500 text-zinc-950'}`}>
                             <Box className="w-4 h-4" />
                         </div>
                         <span className="text-sm text-zinc-800 dark:text-zinc-100">Add folders</span>
                     </button>
                 </div>
 
+                <>
                 <div className="mt-4 space-y-1.5">
                     <label className="flex items-center gap-3 cursor-pointer">
                         <button
@@ -3635,7 +3769,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                 <div className={`mt-4 pt-3 border-t ${sectionLineCls} space-y-2.5`}>
                     {(stripeConnected || storageMode !== 'platform') && (
                         <div className="flex items-center justify-end">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#4d7c0f] dark:text-[#bef264]">Synced to settings</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#a3e635] dark:text-lime-400">Synced to settings</span>
                         </div>
                     )}
 
@@ -3645,7 +3779,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                         onClick={() => { playClick(); setStripeExpanded((v) => !v); }}
                         className={`w-full rounded-2xl px-3.5 py-2.5 border flex items-center gap-3 text-left cursor-pointer ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}
                     >
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${stripeConnected ? 'bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-[#bef264]/15 dark:text-[#bef264]' : (isDarkMode ? 'bg-white/10 text-zinc-200' : 'bg-white text-zinc-500 border border-zinc-200')}`}>
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${stripeConnected ? 'bg-lime-400/15 text-[#a3e635] dark:bg-[#bef264]/15 dark:text-lime-400' : (isDarkMode ? 'bg-white/10 text-zinc-200' : 'bg-white text-zinc-500 border border-zinc-200')}`}>
                             <CreditCard className="w-4 h-4" />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -3657,7 +3791,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                             </p>
                         </div>
                         {stripeConnected ? (
-                            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-[#4d7c0f] dark:text-[#bef264]">Active</span>
+                            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-[#a3e635] dark:text-lime-400">Active</span>
                         ) : (
                             <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${stripeExpanded ? 'rotate-180' : ''}`} />
                         )}
@@ -3670,7 +3804,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                             <button
                                 type="button"
                                 onClick={handleConnectStripe}
-                                className={`w-full h-10 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-[#4d7c0f] hover:bg-[#3f6d0b] text-white'}`}
+                                className={`w-full h-10 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode ? 'bg-lime-400 hover:bg-lime-400 text-zinc-950' : 'bg-lime-400 hover:bg-lime-400 text-white'}`}
                             >
                                 <Zap className="w-3.5 h-3.5" />
                                 Connect Stripe
@@ -3680,10 +3814,10 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                     {stripeConnected && stripeExpanded && (
                         <div className={`rounded-2xl border p-3 space-y-2 ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}>
                             <div className="flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
-                                <Check className="w-3.5 h-3.5 text-[#4d7c0f] dark:text-[#bef264]" /> Charges enabled
+                                <Check className="w-3.5 h-3.5 text-[#a3e635] dark:text-lime-400" /> Charges enabled
                             </div>
                             <div className="flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
-                                <Check className="w-3.5 h-3.5 text-[#4d7c0f] dark:text-[#bef264]" /> Payouts enabled
+                                <Check className="w-3.5 h-3.5 text-[#a3e635] dark:text-lime-400" /> Payouts enabled
                             </div>
                             <button
                                 type="button"
@@ -3701,7 +3835,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                         onClick={() => { playClick(); setStorageExpanded((v) => !v); }}
                         className={`w-full rounded-2xl px-3.5 py-2.5 border flex items-center gap-3 text-left cursor-pointer ${panelSurfaceCls} ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}
                     >
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${storageMode !== 'platform' ? 'bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-[#bef264]/15 dark:text-[#bef264]' : (isDarkMode ? 'bg-white/10 text-zinc-200' : 'bg-white text-zinc-500 border border-zinc-200')}`}>
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${storageMode !== 'platform' ? 'bg-lime-400/15 text-[#a3e635] dark:bg-[#bef264]/15 dark:text-lime-400' : (isDarkMode ? 'bg-white/10 text-zinc-200' : 'bg-white text-zinc-500 border border-zinc-200')}`}>
                             <HardDrive className="w-4 h-4" />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -3724,7 +3858,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                         key={opt.id}
                                         type="button"
                                         onClick={() => setStorageMode(opt.id)}
-                                        className={`h-8 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${storageMode === opt.id ? (isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
+                                        className={`h-8 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${storageMode === opt.id ? (isDarkMode ? 'bg-lime-400 text-zinc-950' : 'bg-white text-zinc-900 shadow-sm') : 'text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5'}`}
                                     >
                                         {opt.label}
                                     </button>
@@ -3777,7 +3911,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                 <button
                                     type="button"
                                     onClick={saveStorageDetails}
-                                    className={`w-full h-10 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-[#4d7c0f] hover:bg-[#3f6d0b] text-white'}`}
+                                    className={`w-full h-10 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${isDarkMode ? 'bg-lime-400 hover:bg-lime-400 text-zinc-950' : 'bg-lime-400 hover:bg-lime-400 text-white'}`}
                                 >
                                     <Check className="w-3.5 h-3.5" />
                                     Save & sync
@@ -4012,16 +4146,24 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                 <div className={`shrink-0 pt-3 border-t ${sectionLineCls}`}>
                 <div className="grid grid-cols-2 gap-2">
                     <button
-                        onClick={handleContinue}
-                        className={`h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm ${isDarkMode ? 'bg-white/8 text-white hover:bg-white/12 border border-white/10' : 'bg-white text-zinc-900 hover:bg-zinc-50 border border-zinc-200'}`}
+                        onClick={onOpenStudio || handleContinue}
+                        className={`h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm ${
+                            previewMode
+                                ? isDarkMode
+                                    ? 'bg-white/10 text-white border border-lime-400/40 shadow-[0_0_0_1px_rgba(163, 230, 53,0.18)]'
+                                    : 'bg-white text-zinc-900 border border-lime-300 shadow-[0_10px_28px_rgba(163, 230, 53,0.16)] hover:bg-lime-50'
+                                : isDarkMode
+                                    ? 'bg-white/8 text-white hover:bg-white/12 border border-white/10'
+                                    : 'bg-white text-zinc-900 hover:bg-zinc-50 border border-zinc-200'
+                        }`}
                     >
-                        Studio
-                        <ArrowRight className="w-4 h-4" />
+                        {previewMode ? 'Exit Studio' : 'Studio'}
+                        <ArrowRight className={`w-4 h-4 transition-transform ${previewMode ? 'rotate-180' : ''}`} />
                     </button>
                     <button
                         onClick={handlePublish}
                         disabled={!canPublish || publishState === 'publishing'}
-                        className={`h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm ${!canPublish || publishState === 'publishing' ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-lime-500 hover:bg-blue-700 text-zinc-950'}`}
+                        className={`h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-colors shadow-sm ${!canPublish || publishState === 'publishing' ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${isDarkMode ? 'bg-lime-400 hover:bg-lime-400 text-zinc-950' : 'bg-lime-500 hover:bg-blue-700 text-zinc-950'}`}
                     >
                         {publishState === 'publishing' ? 'Publishing...' : 'Publish'}
                     </button>
@@ -4056,7 +4198,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                             <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1 briefing-scroll">
                                 {briefingItems.map((item) => {
                                     const toneClass = item.tone === 'success'
-                                        ? 'text-[#65a30d] dark:text-lime-400'
+                                        ? 'text-[#a3e635] dark:text-lime-400'
                                         : item.tone === 'warning'
                                             ? 'text-amber-600 dark:text-amber-400'
                                             : 'text-zinc-500 dark:text-zinc-300';
@@ -4109,10 +4251,10 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
                                                 <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                                                     <span className="truncate">{project.name}</span>
                                                     {isLive && (
-                                                        <span className="inline-flex items-center gap-1 rounded-full border border-[#a3e635]/35 bg-[#a3e635]/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#4d7c0f] dark:border-lime-400/30 dark:bg-lime-400/10 dark:text-lime-300">
+                                                        <span className="inline-flex items-center gap-1 rounded-full border border-lime-400/35 bg-lime-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#a3e635] dark:border-lime-400/30 dark:bg-lime-400/10 dark:text-lime-300">
                                                             <span className="relative flex h-2 w-2">
-                                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#65a30d] opacity-70 dark:bg-lime-400" />
-                                                                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#65a30d] dark:bg-lime-400" />
+                                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime-400 opacity-70 dark:bg-lime-400" />
+                                                                <span className="relative inline-flex h-2 w-2 rounded-full bg-lime-400 dark:bg-lime-400" />
                                                             </span>
                                                             Live
                                                         </span>
@@ -4140,12 +4282,144 @@ const FullLayoutWorkspaceRedirect = () => {
     return <Navigate to={`/dashboard${search}`} replace />;
 };
 
+const StudioLivePreviewMock = ({ project, isDarkMode }: { project: Project | null; isDarkMode: boolean }) => {
+    const assets = project?.files?.length ? project.files : STUDIO_PREVIEW_ASSETS;
+    const clientName = project?.client?.name?.trim() || 'John';
+    const projectName = project?.name?.trim() || 'Brand Identity Package';
+    const amount = project?.amount && project.amount > 0 ? project.amount : 2500;
+    const shellCls = isDarkMode
+        ? 'border-white/[0.10] bg-[linear-gradient(180deg,#fbfaf6_0%,#f2f0ea_100%)] text-zinc-950 shadow-[0_30px_90px_rgba(0,0,0,0.34)]'
+        : 'border-zinc-200/80 bg-[linear-gradient(180deg,#fbfaf6_0%,#f2f0ea_100%)] text-zinc-950 shadow-[0_24px_70px_rgba(15,23,42,0.11)]';
+    const dividerCls = 'border-zinc-200/80';
+    const assetCls = 'border-zinc-200/85 bg-white shadow-[0_8px_18px_rgba(15,23,42,0.07)]';
+    const uploadCls = 'border-zinc-300 bg-white/45';
+    const iconForType = (type: FileAsset['type']) => {
+        if (type === 'video') return <Play className="h-5 w-5 fill-white text-white drop-shadow" />;
+        if (type === 'pdf') return <FileText className={`h-5 w-5 ${isDarkMode ? 'text-zinc-300' : 'text-zinc-500'}`} />;
+        if (type === 'archive') return <FileArchive className={`h-5 w-5 ${isDarkMode ? 'text-zinc-300' : 'text-zinc-500'}`} />;
+        if (type === 'design') return <Pencil className={`h-5 w-5 ${isDarkMode ? 'text-zinc-300' : 'text-zinc-500'}`} />;
+        return <ImageIcon className={`h-5 w-5 ${isDarkMode ? 'text-zinc-300' : 'text-zinc-500'}`} />;
+    };
+
+    return (
+        <section className="h-full w-full overflow-hidden p-0">
+            <div className={`flex h-full w-full flex-col overflow-hidden rounded-[24px] border ${shellCls}`}>
+                <div className={`relative shrink-0 overflow-hidden border-b ${dividerCls}`}>
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_94%_7%,rgba(255,255,255,0.96),transparent_23%),radial-gradient(circle_at_14%_0%,rgba(232,230,220,0.78),transparent_38%),linear-gradient(110deg,rgba(239,237,231,0.98)_0%,rgba(248,247,244,0.96)_46%,rgba(255,255,255,0.92)_100%)]" />
+                    <img
+                        src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1800&q=85"
+                        alt=""
+                        className="absolute -left-16 top-0 h-full w-[360px] object-cover opacity-[0.14] saturate-50"
+                    />
+                    <div className="relative px-5 py-5 sm:px-7 lg:px-8">
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-950/45 bg-white/45 font-serif text-lg leading-none text-zinc-950">L/A</div>
+                                <div>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-zinc-950">Lumina</p>
+                                    <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-zinc-500">Aesthetics</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <button className="inline-flex h-10 items-center gap-2 rounded-full bg-white/92 px-4 text-xs font-bold text-zinc-950 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
+                                    <LinkIcon className="h-4 w-4" /> Share portal
+                                </button>
+                                <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white/92 text-zinc-500 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <h1 className="mt-6 max-w-5xl truncate font-serif text-[32px] leading-none tracking-tight text-zinc-950 lg:text-[42px] xl:text-[48px]">{projectName}</h1>
+                        <p className="mt-2 text-sm text-zinc-500">Hello {clientName.split(' ')[0]}, here's your project.</p>
+                        <div className="mt-3 flex items-center gap-2 text-[10px] font-bold text-zinc-500">
+                            <Lock className="h-3.5 w-3.5 text-lime-500" />
+                            <span>Secure client portal</span>
+                        </div>
+
+                        <div className="mt-5 grid rounded-[20px] bg-white/96 px-4 py-3 shadow-[0_18px_44px_rgba(15,23,42,0.10)] lg:grid-cols-4 lg:px-5">
+                            {[
+                                ['Project status', 'In progress', 'Updated just now'],
+                                ['Payment status', '1 of 2 payments', 'Next payment due May 24'],
+                                ['Project progress', '62%', '3 of 5 deliverables'],
+                                ['Total contract', `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'View contract ->'],
+                            ].map((stat, index) => (
+                                <div key={stat[0]} className={`min-w-0 px-0 py-1.5 lg:px-5 ${index > 0 ? 'border-t border-zinc-200/80 lg:border-l lg:border-t-0' : ''}`}>
+                                    <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-400">{stat[0]}</p>
+                                    <p className="mt-1.5 flex items-center gap-2 text-sm font-bold text-zinc-950">
+                                        {index < 2 && <span className="h-2 w-2 rounded-full bg-lime-500" />}
+                                        {stat[1]}
+                                    </p>
+                                    {index === 2 && <div className="mt-2 h-1.5 rounded-full bg-zinc-200"><div className="h-full w-[62%] rounded-full bg-lime-500" /></div>}
+                                    <p className="mt-1.5 truncate text-[10px] text-zinc-500">{stat[2]}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex min-h-0 flex-1 flex-col px-5 py-4 sm:px-7 lg:px-8">
+                    <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+                        <h2 className="font-serif text-xl text-zinc-950">Project Assets <span className="ml-2 rounded-full bg-zinc-100 px-2 py-1 align-middle text-[10px] font-sans font-bold text-zinc-500">{assets.length} items</span></h2>
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-500">
+                            <button className="rounded-xl bg-zinc-950 px-5 py-2 text-white">All</button>
+                            <button className="rounded-xl px-3 py-2 hover:bg-zinc-100 hover:text-zinc-900">Image</button>
+                            <button className="rounded-xl px-3 py-2 hover:bg-zinc-100 hover:text-zinc-900">Document</button>
+                            <button className="rounded-xl px-3 py-2 hover:bg-zinc-100 hover:text-zinc-900">Video</button>
+                            <button className="h-9 w-9 rounded-xl border border-zinc-200 bg-white inline-flex items-center justify-center shadow-sm"><ListIcon className="h-4 w-4 text-zinc-500" /></button>
+                            <button className="h-9 w-9 rounded-xl border border-zinc-200 bg-white inline-flex items-center justify-center shadow-sm"><LayoutGrid className="h-4 w-4 text-zinc-700" /></button>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 grid min-h-0 flex-1 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                        {assets.slice(0, 5).map((asset) => (
+                            <article key={asset.id} className={`flex min-h-0 flex-col overflow-hidden rounded-[16px] border ${assetCls}`}>
+                                <div className="relative min-h-0 flex-1 bg-zinc-100">
+                                    {asset.previewUrl ? <img src={asset.previewUrl} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center">{iconForType(asset.type)}</div>}
+                                    <span className="absolute left-2 top-2 rounded-md bg-white px-2 py-1 text-[8px] font-bold uppercase text-zinc-700 shadow-sm">{asset.type === 'pdf' ? 'PDF' : asset.type === 'archive' ? 'ZIP' : asset.type === 'video' ? 'MP4' : asset.type === 'design' ? 'AI' : 'Image'}</span>
+                                    <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm"><Lock className="h-3.5 w-3.5 text-zinc-500" /></span>
+                                    {asset.type === 'video' && <span className="absolute inset-0 m-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/42 backdrop-blur-sm">{iconForType(asset.type)}</span>}
+                                </div>
+                                <div className="shrink-0 bg-white p-2.5">
+                                    <p className="truncate text-xs font-bold text-zinc-950">{asset.name}</p>
+                                    <div className="mt-1.5 flex items-center justify-between text-[10px] text-zinc-500">
+                                        <span>{asset.size}</span>
+                                        <Download className="h-3.5 w-3.5" />
+                                    </div>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+
+                    <div className={`mt-4 flex h-16 shrink-0 items-center justify-center rounded-[16px] border border-dashed text-center ${uploadCls}`}>
+                        <div className="flex items-center gap-3">
+                            <Upload className="h-6 w-6 text-zinc-500" />
+                            <div className="text-left">
+                                <p className="text-xs font-semibold text-zinc-600">Drag and drop files here or click to upload</p>
+                                <p className="text-[10px] text-zinc-500">You can upload more files at any time</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-3 flex shrink-0 items-center justify-between text-[10px] font-semibold text-zinc-500">
+                        <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" /> Protected by Sendational</span>
+                        <span className="inline-flex items-center gap-5"><span>Need help?</span><span className="inline-flex items-center gap-1.5">Download all <Download className="h-3.5 w-3.5" /></span></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+};
+
 const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layoutMode, onSetLayoutMode, togglePrivacyMode, privacyMode, onSignOut }: any) => {
     const navigate = useNavigate();
+    const [isStudioPreviewMode, setIsStudioPreviewMode] = useState(false);
+    const [studioPreviewProject, setStudioPreviewProject] = useState<Project | null>(null);
     const location = useLocation();
     const stripOffset = useStripOffset();
     const { notifications, markNotificationRead, clearNotifications, saveProject } = useStore();
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false); // NEW State
     const [isRouteMenuOpen, setIsRouteMenuOpen] = useState(false);
     const [assetViewerIndex, setAssetViewerIndex] = useState<number | null>(null);
@@ -4278,11 +4552,17 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
 
     const handleOpenQuickDelivery = useCallback(() => {
         playClick();
-        onSetLayoutMode('dock');
-        const qs = new URLSearchParams(window.location.search);
-        const suffix = qs.get('quickstart') === '1' ? '?quickstart=1' : '';
-        navigate(`/workspace${suffix}`);
-    }, [navigate, onSetLayoutMode]);
+        if (layoutMode === 'full') {
+            // In full workspace mode, open the slide-in delivery modal overlay
+            setIsDeliveryModalOpen(true);
+        } else {
+            // In dock/widget mode, switch to docked layout as before
+            onSetLayoutMode('dock');
+            const qs = new URLSearchParams(window.location.search);
+            const suffix = qs.get('quickstart') === '1' ? '?quickstart=1' : '';
+            navigate(`/workspace${suffix}`);
+        }
+    }, [navigate, onSetLayoutMode, layoutMode]);
 
     const outletCtx = useMemo(
         () => ({
@@ -4294,6 +4574,8 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
         }),
         [privacyMode, layoutMode, handleOpenQuickDelivery, isCompactContent]
     );
+
+    const closeDeliveryModal = useCallback(() => setIsDeliveryModalOpen(false), []);
 
     const [isDraggingGlobal, setIsDraggingGlobal] = useState(false);
 
@@ -4604,13 +4886,13 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                     className={`w-full flex items-center gap-3 px-3 py-3 my-0.5 rounded-2xl transition-all text-left group ${active ? 'bg-zinc-100/90 dark:bg-white/[0.08] shadow-sm' : 'hover:bg-zinc-50 dark:hover:bg-white/[0.04]'}`}
                                 >
                                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${active ? 'bg-white dark:bg-white/[0.08] border border-zinc-200/70 dark:border-white/10 shadow-sm' : 'bg-zinc-100/70 dark:bg-white/[0.04] border border-transparent'}`}>
-                                        <result.icon className={`w-4 h-4 transition-colors ${active ? 'text-[#65a30d] dark:text-[#bef264]' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200'}`} />
+                                        <result.icon className={`w-4 h-4 transition-colors ${active ? 'text-[#a3e635] dark:text-lime-400' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200'}`} />
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100 block truncate">{result.title}</span>
                                         <span className="text-xs text-zinc-500 dark:text-zinc-400 block truncate">{result.subtitle}</span>
                                     </div>
-                                    <span className={`ml-auto shrink-0 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md transition-colors ${active ? 'bg-[#a3e635]/20 dark:bg-[#bef264]/15 text-[#4d7c0f] dark:text-[#bef264] border border-[#a3e635]/35 dark:border-[#bef264]/25' : 'bg-zinc-100 dark:bg-white/5 text-zinc-400 dark:text-zinc-500 border border-zinc-200/70 dark:border-white/10'}`}>{result.kind}</span>
+                                    <span className={`ml-auto shrink-0 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md transition-colors ${active ? 'bg-lime-400/20 dark:bg-[#bef264]/15 text-[#a3e635] dark:text-lime-400 border border-lime-400/35 dark:border-lime-400/25' : 'bg-zinc-100 dark:bg-white/5 text-zinc-400 dark:text-zinc-500 border border-zinc-200/70 dark:border-white/10'}`}>{result.kind}</span>
                     </button>
                             );
                         })}
@@ -4672,7 +4954,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                 <div>
                     <h4 className="font-bold text-zinc-900 dark:text-white leading-tight">{user.name || 'Your Account'}</h4>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-[140px]">{user.email || 'No email on file'}</p>
-                    <span className="text-[10px] font-bold uppercase text-[#4d7c0f] dark:text-lime-400 tracking-wider mt-1 block">Pro Plan</span>
+                    <span className="text-[10px] font-bold uppercase text-[#a3e635] dark:text-lime-400 tracking-wider mt-1 block">Pro Plan</span>
                 </div>
             </div>
 
@@ -4683,7 +4965,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                     {notifications.some((n: any) => !n.read) && (
                         <button
                             onClick={() => notifications.filter((n: any) => !n.read).forEach((n: any) => markNotificationRead(n.id))}
-                            className="text-[10px] font-bold text-[#65a30d] dark:text-lime-400 hover:underline"
+                            className="text-[10px] font-bold text-[#a3e635] dark:text-lime-400 hover:underline"
                         >
                             Mark all read
                         </button>
@@ -4699,7 +4981,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             <div key={n.id} className={`flex gap-3 p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors cursor-pointer group ${n.read ? 'opacity-70' : ''}`}>
                                 <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-zinc-300 dark:bg-zinc-600' : 'bg-red-500 animate-pulse'}`} />
                         <div>
-                                    <p className="text-xs font-bold text-zinc-900 dark:text-white leading-tight group-hover:text-[#65a30d] dark:group-hover:text-lime-400 transition-colors">{n.title}</p>
+                                    <p className="text-xs font-bold text-zinc-900 dark:text-white leading-tight group-hover:text-lime-600 dark:group-hover:text-lime-400 dark:group-hover:text-lime-400 transition-colors">{n.title}</p>
                                     <p className="text-[10px] text-zinc-500 dark:text-zinc-400">{n.body}</p>
                         </div>
                     </div>
@@ -4740,7 +5022,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                         className="p-3 rounded-xl bg-white dark:bg-white/5 hover:bg-zinc-100 dark:hover:bg-white/10 border border-zinc-200/80 dark:border-white/10 transition-all text-center group shadow-sm"
                         title={demoMode ? 'Switch to real backend data' : 'Switch to mock demo data'}
                     >
-                        <Database className={`w-5 h-5 mx-auto mb-1 transition-colors ${demoMode ? 'text-amber-600 dark:text-amber-300' : 'text-[#65a30d] dark:text-lime-300'}`} />
+                        <Database className={`w-5 h-5 mx-auto mb-1 transition-colors ${demoMode ? 'text-amber-600 dark:text-amber-300' : 'text-[#a3e635] dark:text-lime-300'}`} />
                         <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white">{demoMode ? 'Mock' : 'Real'}</span>
                     </button>
                 )}
@@ -4932,7 +5214,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             <header
                 className={`fixed left-0 right-0 z-[100] flex items-center justify-between px-4 sm:px-6 lg:px-8 transition-[top] duration-200 pointer-events-none ${
                     layoutMode === 'full' && !showMobileNav
-                        ? 'bg-[#f0f2f5] dark:bg-cosmic border-b border-zinc-200/60 dark:border-white/10'
+                        ? 'bg-[#f0f2f5] dark:bg-cosmic transition-colors duration-500 ' + (isDeliveryModalOpen ? 'border-transparent' : 'border-b border-zinc-200/60 dark:border-white/10')
                         : ''
                 }`}
                 style={{ top: stripOffset, height: headerHeightPx }}
@@ -5086,19 +5368,47 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             {showDeliveryWidget && (
                 <div
                     className="fixed left-4 right-4 sm:left-8 sm:right-auto z-20 flex items-center transition-[opacity,transform] duration-500 bottom-[calc(88px+env(safe-area-inset-bottom))] lg:bottom-20"
-                    style={{ top: stripOffset + headerHeightPx }}
+                    style={{ top: stripOffset + headerHeightPx + 32 }}
                 >
-                    <DeliveryWidget isDarkMode={isDarkMode} onPublish={saveProject} />
+                    <DeliveryWidget isDarkMode={isDarkMode} onPublish={saveProject} previewMode={isStudioPreviewMode} onOpenStudio={() => setIsStudioPreviewMode((open) => !open)} onDraftChange={setStudioPreviewProject} />
                 </div>
             )}
 
+            {/* Pull tab - full workspace mode only */}
+            {!showMobileNav && layoutMode === 'full' && (
+                <button
+                    type="button"
+                    id="delivery-pull-tab"
+                    onClick={() => { playClick(); setIsDeliveryModalOpen(true); }}
+                    title="Quick Delivery"
+                    aria-label="Open delivery widget"
+                    style={{ top: '50%', transform: isDeliveryModalOpen ? 'translateY(-50%) translateX(-100%)' : 'translateY(-50%) translateX(0)' }}
+                    className={`fixed left-0 z-[60] transition-all duration-300 group ${isDeliveryModalOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                >
+                    <div className={`flex flex-col items-center justify-center gap-1.5 rounded-r-2xl border border-l-0 shadow-lg px-2 py-4 transition-all duration-200 group-hover:shadow-xl ${isDarkMode ? 'bg-[#1a1a23]/90 border-white/10 backdrop-blur-md hover:bg-[#23232e]/95 hover:border-white/20' : 'bg-white/80 border-zinc-200/60 backdrop-blur-md hover:bg-white hover:border-zinc-300/60'}`}>
+                        <Plus className={`w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-90 ${isDarkMode ? 'text-zinc-200' : 'text-zinc-700'}`} />
+                        <span className={`text-[9px] font-bold uppercase tracking-widest leading-none ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`} style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Deliver</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-lime-400 opacity-80 animate-pulse" />
+                    </div>
+                </button>
+            )}
+
+            {/* Delivery modal overlay - full workspace mode */}
+            {!showMobileNav && layoutMode === 'full' && (
+                <div
+                    className={`fixed left-4 lg:left-8 z-[60] flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isDeliveryModalOpen ? 'translate-x-0' : '-translate-x-[150%]'}`}
+                    style={{ top: stripOffset + headerHeightPx, bottom: 80 }}
+                >
+                    <DeliveryWidget isDarkMode={isDarkMode} onPublish={saveProject} onClose={closeDeliveryModal} previewMode={isStudioPreviewMode} onOpenStudio={() => setIsStudioPreviewMode((open) => !open)} onDraftChange={setStudioPreviewProject} />
+                </div>
+            )}
             {/* â”€â”€ Main Page: desktop full layout â”€â”€ */}
             {!showMobileNav && layoutMode === 'full' && (
                 <main
                     className="fixed left-0 right-0 bottom-0 z-[30] overflow-hidden"
                     style={{ top: stripOffset + headerHeightPx }}
                 >
-                    <div className="h-full px-3 sm:px-5 lg:px-6 xl:px-7 pt-3 sm:pt-4 bg-[#f0f2f5] dark:bg-cosmic overflow-y-auto pb-24 sm:pb-28 lg:pb-6">
+                    <div className={`h-full pt-3 sm:pt-4 bg-[#f0f2f5] dark:bg-cosmic overflow-y-auto pb-24 sm:pb-28 lg:pb-6 transition-[padding] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isDeliveryModalOpen ? 'pl-[404px] lg:pl-[436px] pr-4 lg:pr-8' : 'px-3 sm:px-5 lg:px-6 xl:px-7'}`}>
                         <div
                             key={location.pathname}
                             className="animate-route-in min-h-full"
@@ -5110,6 +5420,18 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             )}
 
             {/* â”€â”€ Mobile bottom sheet: pages slide up over the delivery widget backdrop â”€â”€ */}
+            {!showMobileNav && layoutMode === 'full' && isStudioPreviewMode && (
+                <div
+                    className="fixed left-0 right-0 bottom-0 z-[45] pointer-events-auto animate-fade-in"
+                    style={{ top: stripOffset + headerHeightPx }}
+                >
+                    <div className={`absolute inset-0 backdrop-blur-md ${isDarkMode ? 'bg-cosmic/52' : 'bg-[#f0f2f5]/58'}`} />
+                    <div className={`relative h-full overflow-hidden transition-[padding] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isDeliveryModalOpen ? 'pl-[404px] lg:pl-[436px] pr-4 lg:pr-8' : 'px-3 sm:px-5 lg:px-6 xl:px-7'}`}>
+                        <StudioLivePreviewMock project={studioPreviewProject} isDarkMode={isDarkMode} />
+                    </div>
+                </div>
+            )}
+
             {showBottomSheet && (
                 <>
                     {/* Tap-outside dismiss area (top 15% above the sheet) */}
@@ -5144,7 +5466,22 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                 </>
             )}
 
-            {isDockMode && !isPanelOpen && (
+            {(isDockMode || isWidgetOnly) && !isPanelOpen && currentPath === 'workspace' && isStudioPreviewMode && (
+                <>
+                    <div
+                        className={`fixed bottom-0 z-[15] pointer-events-none backdrop-blur-md ${isDarkMode ? 'bg-cosmic/52' : 'bg-[#f0f2f5]/58'} ${isWidgetOnly ? 'left-[404px] right-6 min-[700px]:left-[428px]' : 'left-[420px] right-8 xl:left-[440px]'}`}
+                        style={{ top: stripOffset + headerHeightPx }}
+                    />
+                    <div
+                        className={`fixed bottom-0 z-[16] animate-fade-in ${isWidgetOnly ? 'left-[404px] right-6 min-[700px]:left-[428px]' : 'left-[420px] right-8 xl:left-[440px]'}`}
+                        style={{ top: stripOffset + headerHeightPx }}
+                    >
+                        <StudioLivePreviewMock project={studioPreviewProject} isDarkMode={isDarkMode} />
+                    </div>
+                </>
+            )}
+
+            {isDockMode && !isPanelOpen && !isStudioPreviewMode && (
                 <div
                     className="fixed left-[420px] right-8 top-1/2 -translate-y-1/2 flex flex-col items-center justify-center text-center pointer-events-none z-[15] px-4 xl:px-10 animate-fade-in duration-1000"
                     style={{ top: `calc(50% + ${stripOffset / 2}px)` }}
@@ -5161,7 +5498,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                         From your landing upload
                                     </p>
                                     <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-5xl 2xl:text-[6.5rem] text-zinc-900 dark:text-white tracking-tight leading-[1.12]">
-                                        <span className="italic text-lime-400 dark:text-[#bef264]">
+                                        <span className="italic text-lime-400 dark:text-lime-400">
                                             {quickstartDraftFileCount} file{quickstartDraftFileCount !== 1 ? 's' : ''}
                                         </span>
                                         {' '}
@@ -5181,15 +5518,15 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                                                 {quickstartDraftFiles.map((name) => (
                                                     <div
                                                         key={name}
-                                                        className="rounded-xl border border-[#a3e635]/35 bg-[#a3e635]/15 dark:border-lime-400/20 dark:bg-lime-400/10 px-3 py-2.5 text-left"
+                                                        className="rounded-xl border border-lime-400/35 bg-lime-400/15 dark:border-lime-400/20 dark:bg-lime-400/10 px-3 py-2.5 text-left"
                                                     >
                                                         <div className="flex items-center justify-between gap-2">
-                                                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#4d7c0f] dark:text-lime-300">
+                                                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#a3e635] dark:text-lime-300">
                                                                 New asset
                                                             </span>
                                                             <span className="relative flex h-2 w-2 shrink-0">
-                                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#65a30d] opacity-70 dark:bg-lime-400" />
-                                                                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#65a30d] dark:bg-lime-400" />
+                                                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime-400 opacity-70 dark:bg-lime-400" />
+                                                                <span className="relative inline-flex h-2 w-2 rounded-full bg-lime-400 dark:bg-lime-400" />
                                                             </span>
                                                         </div>
                                                         <p className="mt-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-100 truncate">
@@ -5214,7 +5551,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-[5.9rem] 2xl:text-[8.5rem] text-zinc-900 dark:text-white tracking-tight leading-[1.03] max-w-full px-1 py-4">
                                 <span className="block animate-fade-in">
                                     {heroGreetingPrefix}
-                                    <span className="italic text-lime-400 dark:text-[#bef264]">{greetingName}</span>
+                                    <span className="italic text-lime-400 dark:text-lime-400">{greetingName}</span>
                                     {heroGreetingSuffix}
                                 </span>
                             </h1>
@@ -5234,7 +5571,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
             )}
 
             {/* â”€â”€ Widget-only hero (beside widget on wider, below on narrow) â”€â”€ */}
-            {isWidgetOnly && currentPath === 'workspace' && !workspaceQuickstartActive && (
+            {isWidgetOnly && currentPath === 'workspace' && !workspaceQuickstartActive && !isStudioPreviewMode && (
                 <div
                     className="fixed pointer-events-none z-[15] animate-fade-in duration-1000 hidden min-[700px]:flex items-center justify-start"
                     style={{
@@ -5247,7 +5584,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                     <div className="relative w-full max-w-[min(100%,64rem)]">
                         <h2 className={`max-w-full font-serif text-5xl md:text-6xl lg:text-[3.9rem] text-zinc-900 dark:text-white tracking-tight leading-[1.1] py-4 transition-opacity duration-500 ${showHeroGreeting ? 'opacity-100' : 'opacity-0 pointer-events-none absolute inset-0'}`}>
                             {heroGreetingPrefix}
-                            <span className="italic text-lime-400 dark:text-[#bef264]">{greetingName}</span>
+                            <span className="italic text-lime-400 dark:text-lime-400">{greetingName}</span>
                             {heroGreetingSuffix}
                         </h2>
                         <div className={`space-y-1 transition-opacity duration-500 ${showHeroGreeting ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100'}`}>
@@ -5262,7 +5599,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                 </div>
             )}
 
-            {(isDockMode || isWidgetOnly) && !isPanelOpen && currentPath === 'workspace' && quickstartDraftAssets.length > 0 && !showHeroGreeting && (
+            {(isDockMode || isWidgetOnly) && !isPanelOpen && currentPath === 'workspace' && quickstartDraftAssets.length > 0 && !showHeroGreeting && !isStudioPreviewMode && (
                 <div
                     className={`fixed z-[16] pointer-events-auto ${isWidgetOnly ? 'left-[24px] right-[24px] min-[700px]:left-[404px] min-[700px]:right-[24px]' : 'left-[404px] right-8 xl:left-[424px]'}`}
                     style={{ bottom: 'calc(26px + env(safe-area-inset-bottom))' }}
@@ -5273,7 +5610,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
                             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">
                                 Staged assets
                             </p>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#4d7c0f] dark:text-[#bef264]">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#a3e635] dark:text-lime-400">
                                 {quickstartDraftAssets.length} ready
                             </p>
                         </div>
@@ -6061,7 +6398,7 @@ const AppContent = () => {
                     {firstVisitThemeNotice && (
                             <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[120] px-4">
                             <div className="flex items-center gap-2 rounded-full border border-zinc-200/50 dark:border-white/10 bg-white/30 dark:bg-[#18181b]/90 backdrop-blur-md shadow-lg px-4 py-2 text-[11px] font-bold tracking-wide text-zinc-700 dark:text-zinc-200">
-                                <CheckCircle className="w-4 h-4 text-[#65a30d] dark:text-lime-400" />
+                                <CheckCircle className="w-4 h-4 text-[#a3e635] dark:text-lime-400" />
                                 <span>{firstVisitThemeNotice}</span>
                                 <button
                                     type="button"
@@ -6111,6 +6448,7 @@ const AppContent = () => {
                             <Route path="/activity" element={<Suspense fallback={<PageLoader />}><ActivityView /></Suspense>} />
                             <Route path="/vault" element={<Suspense fallback={<VaultSkeleton />}><VaultView projects={projects} /></Suspense>} />
                             <Route path="/reports" element={<Suspense fallback={<PageLoader />}><ReportsView /></Suspense>} />
+                            <Route path="/test-lab" element={<Suspense fallback={<PageLoader />}><TestLabPage /></Suspense>} />
                             <Route path="/quotes" element={<Suspense fallback={<PageLoader />}><QuotesPage /></Suspense>} />
                             <Route
                                 path="/settings"
@@ -6159,4 +6497,3 @@ export default function App() {
         </StoreProvider>
     );
 }
-

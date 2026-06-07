@@ -12,7 +12,7 @@ import { enforceRateLimit, RateLimitError } from "../_shared/rateLimit.ts";
 // ─── Colours (converted to 0-1 scale for pdf-lib) ───────────────────────────
 const C = {
   black: rgb(0.055, 0.055, 0.071),        // #0E0E12
-  accent: rgb(0.522, 0.671, 0.149),       // #85AB26  (lime-ish, print-safe)
+  accent: rgb(0.494, 0.690, 0.596),       // #a3e635  (lime-ish, print-safe)
   slate: rgb(0.380, 0.400, 0.420),        // #616568
   light: rgb(0.933, 0.937, 0.941),        // #EEF0F0
   white: rgb(1, 1, 1),

@@ -1,0 +1,716 @@
+﻿diff --git a/App.tsx b/App.tsx
+index 2be33a4..aa65ef6 100644
+--- a/App.tsx
++++ b/App.tsx
+@@ -25,7 +25,7 @@ import {
+     BarChart3, FileDigit, Landmark, Printer, PieChart, Users,
+     QrCode, ZoomIn, ZoomOut, Play, Pause, RotateCcw, Maximize2, Minimize2
+ } from 'lucide-react';
+-import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, BarChart, Bar, Cell, Legend, ReferenceLine, YAxis, Pie, PieChart as RePieChart } from 'recharts';
++import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, CartesianGrid, BarChart, Bar, Cell, Legend, ReferenceLine, YAxis, Pie, PieChart as RePieChart } from 'recharts';
+ import { QRCodeSVG } from 'qrcode.react';
+ import { playClick, playSuccess } from './utils/sound';
+ import { useUiAccentHex } from './utils/useUiAccentHex';
+@@ -54,6 +54,7 @@ const _importStorageManagement = () => import('./components/StorageManagementPag
+ const _importReports = () => import('./components/ReportsView');
+ const _importActivity = () => import('./components/ActivityView');
+ const _importQuotes = () => import('./components/QuotesPage');
++const _importTestLab = () => import('./components/TestLabPage');
+ 
+ const CreatorPage = lazy(_importCreator);
+ const ClientPreviewBiz = lazy(_importPreviewBiz);
+@@ -65,6 +66,7 @@ const StorageManagementPage = lazy(_importStorageManagement);
+ const ReportsView = lazy(_importReports);
+ const ActivityView = lazy(_importActivity);
+ const QuotesPage = lazy(_importQuotes);
++const TestLabPage = lazy(_importTestLab);
+ 
+ // Hover-prefetch map ├óΓé¼ΓÇ¥ call the matching _import* fn on nav item hover so the
+ // chunk is in the module cache before the user even clicks the link.
+@@ -77,6 +79,7 @@ const routePreloadMap: Record<string, () => Promise<unknown>> = {
+     quotes: _importQuotes,
+     help: _importHelp,
+     trash: _importTrash,
++    'test-lab': _importTestLab,
+ };
+ import { DB, supabase } from './services/supabaseClient';
+ import { Project, UserProfile, ViewState, FileAsset } from './types';
+@@ -167,6 +170,58 @@ const QUICK_MESSAGE_PRESETS = [
+         text: "Final assets are ready. Review the previews and unlock the full files after payment."
+     }
+ ];
++const STUDIO_PREVIEW_ASSETS: FileAsset[] = [
++    {
++        id: 'studio-brand-guide',
++        name: 'brand_guide.pdf',
++        size: '4.2 MB',
++        type: 'pdf',
++        locked: true,
++        version: 1,
++        uploadDate: '2026-05-24',
++        previewUrl: 'https://images.unsplash.com/photo-1769501210990-a56025a9385a?auto=format&fit=crop&w=900&q=80',
++    },
++    {
++        id: 'studio-logo',
++        name: 'logo_final.png',
++        size: '2.1 MB',
++        type: 'image',
++        locked: true,
++        version: 1,
++        uploadDate: '2026-05-24',
++        previewUrl: 'https://images.unsplash.com/photo-1761577680549-21a6bc9d42f6?auto=format&fit=crop&w=900&q=80',
++    },
++    {
++        id: 'studio-social',
++        name: 'social_media.zip',
++        size: '12 MB',
++        type: 'archive',
++        locked: true,
++        version: 1,
++        uploadDate: '2026-05-24',
++        previewUrl: 'https://images.unsplash.com/photo-1768853972795-2739a9685567?auto=format&fit=crop&w=900&q=80',
++    },
++    {
++        id: 'studio-video',
++        name: 'video_preview.mp4',
++        size: '32 MB',
++        type: 'video',
++        locked: true,
++        version: 1,
++        uploadDate: '2026-05-24',
++        previewUrl: 'https://images.unsplash.com/photo-1536514498073-50e69d39c6cf?auto=format&fit=crop&w=900&q=80',
++    },
++    {
++        id: 'studio-campaign',
++        name: 'campaign_assets.ai',
++        size: '19.8 MB',
++        type: 'design',
++        locked: true,
++        version: 1,
++        uploadDate: '2026-05-24',
++        previewUrl: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&w=900&q=80',
++    },
++];
+ const QUICK_RETENTION_OPTIONS = [
+     { id: 'forever', label: 'Keep forever' },
+     { id: '30_days', label: '30 days' },
+@@ -725,7 +780,7 @@ const CyclingWidget = ({
+         replying
+             ? 'text-[clamp(0.75rem,calc(0.65rem+0.9vw),0.95rem)] leading-snug'
+             : 'text-[clamp(0.8rem,calc(0.62rem+1.35vw),1.1rem)] sm:text-[clamp(0.88rem,calc(0.72rem+1.1vw),1.2rem)] leading-[1.45]';
+-    const slidePad = 'p-4 pb-12 sm:p-5 md:p-6 lg:p-8';
++    const slidePad = 'p-4 pb-14 sm:px-5 sm:pt-5 sm:pb-14 md:px-6 md:pt-6 md:pb-14 lg:px-8 lg:pt-8 lg:pb-14';
+ 
+     const paidProjects = projects.filter((p) => p.status === 'paid' || p.status === 'completed');
+     const pendingProjects = projects.filter((p) => p.status === 'awaiting_payment' || p.status === 'awaiting_signature' || p.status === 'payment_verification');
+@@ -847,7 +902,7 @@ const CyclingWidget = ({
+                                         <feDropShadow dx="0" dy="5" stdDeviation="6" floodColor={chartAccent} floodOpacity="0.8" />
+                                     </filter>
+                                 </defs>
+-                                <Area type="monotone" dataKey="v" stroke={chartAccent} strokeWidth={3} fill="url(#colorHeroMini)" filter="url(#shadow)" />
++                                <Area type="monotone" dataKey="v" stroke="none" fill="url(#colorHeroMini)" filter="url(#shadow)" />
+                             </AreaChart>
+                         </ResponsiveContainer>
+                     </div>
+@@ -913,7 +968,7 @@ const CyclingWidget = ({
+ 
+                         <div className="flex justify-start border-t border-zinc-200/50 pt-4 dark:border-white/[0.06]">
+                             <button type="button" onClick={() => { playClick(); navigate('/storage'); }} className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-indigo-600 transition-colors hover:text-indigo-800 dark:text-indigo-300 dark:hover:text-indigo-200">
+-                                Manage files <ArrowRight className="h-3 w-3" />
++                                Manage Storage <ArrowRight className="h-3 w-3" />
+                             </button>
+                         </div>
+                     </div>
+@@ -1132,7 +1187,7 @@ const CyclingWidget = ({
+                                         <feDropShadow dx="0" dy="5" stdDeviation="6" floodColor={chartAccent} floodOpacity="0.8" />
+                                             </filter>
+                                         </defs>
+-                                <Area type="monotone" dataKey="v" stroke={chartAccent} strokeWidth={3} fill="url(#colorHeroMiniLive)" filter="url(#shadowLive)" />
++                                <Area type="monotone" dataKey="v" stroke="none" fill="url(#colorHeroMiniLive)" filter="url(#shadowLive)" />
+                                     </AreaChart>
+                                 </ResponsiveContainer>
+                     </div>
+@@ -1202,7 +1257,7 @@ const CyclingWidget = ({
+                         <div className="flex items-center justify-between gap-3 border-t border-zinc-200/50 pt-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">
+                             <span>{activeClients} active client{activeClients === 1 ? '' : 's'}</span>
+                             <button type="button" onClick={() => { playClick(); navigate('/vault'); }} className="flex items-center gap-2 text-indigo-600 transition-colors hover:text-indigo-800 dark:text-indigo-300 dark:hover:text-indigo-200">
+-                                Manage files <ArrowRight className="h-3 w-3" />
++                                Manage Storage <ArrowRight className="h-3 w-3" />
+                             </button>
+                         </div>
+                     </div>
+@@ -1375,7 +1430,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
+     // ... same as before
+     const navigate = useNavigate();
+     const location = useLocation();
+-    const { openSearch, isCompactContent = false } = useOutletContext<{ privacyMode: boolean; openSearch?: () => void; isCompactContent?: boolean }>();
++    const { openSearch, openQuickDelivery, isCompactContent = false } = useOutletContext<{ privacyMode: boolean; openSearch?: () => void; openQuickDelivery?: () => void; isCompactContent?: boolean }>();
+     const greetingName = useMemo(() => {
+         const fullName = (user?.name || '').trim();
+         return fullName ? fullName.split(/\s+/)[0] : 'there';
+@@ -1537,7 +1592,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
+                         })()}
+                     </div>
+                     <div className="flex flex-col gap-4 shrink-0 lg:items-end">
+-                        <button type="button" onClick={() => { playClick(); navigate('/create'); }} className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-lime-400 text-zinc-950 font-bold text-xs uppercase tracking-widest hover:opacity-95 transition-opacity shadow-sm w-full sm:w-auto">
++                        <button type="button" onClick={() => { playClick(); if (openQuickDelivery) { openQuickDelivery(); } else { navigate('/create'); } }} className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-lime-400 text-zinc-950 font-bold text-xs uppercase tracking-widest hover:opacity-95 transition-opacity shadow-sm w-full sm:w-auto">
+                             <Plus className="w-4 h-4" /> New Project
+                         </button>
+                         <nav className="flex flex-wrap items-center gap-x-1 gap-y-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 lg:justify-end">
+@@ -1628,7 +1683,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
+                                         <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-[200px] mb-5">
+                                             Everything is up to date. Ready for new incoming clients?
+                                         </p>
+-                                        <button onClick={() => { playClick(); navigate('/create'); }} className="px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-lime-400 text-white dark:text-zinc-950 text-[11px] font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-2 group shadow-lg shadow-black/5">
++                                        <button onClick={() => { playClick(); if (openQuickDelivery) { openQuickDelivery(); } else { navigate('/create'); } }} className="px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-lime-400 text-white dark:text-zinc-950 text-[11px] font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center gap-2 group shadow-lg shadow-black/5">
+                                             <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform" /> Create Project
+                                         </button>
+                                     </div>
+@@ -1638,7 +1693,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
+                                         role="button"
+                                         tabIndex={0}
+                                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click(); }}
+-                                        className="bg-white dark:bg-charcoal border border-zinc-200/50 dark:border-white/5 p-4 rounded-[2rem] flex items-center gap-3 hover:border-zinc-200/50 dark:hover:border-white/20 transition-all cursor-pointer group shadow-sm"
++                                        className="bg-white dark:bg-charcoal p-4 rounded-[2rem] flex items-center gap-3 hover:bg-zinc-50 dark:hover:bg-white/5 transition-all cursor-pointer group shadow-sm"
+                                     >
+                                         <div className={`p-2.5 rounded-xl shrink-0 ${alert.type === 'critical' ? 'bg-red-500/10 text-red-500' : alert.type === 'warning' ? 'bg-amber-500/10 text-amber-500' : 'bg-lime-400/10 text-lime-600'}`}>
+                                             <alert.icon className="w-5 h-5" />
+@@ -1699,7 +1754,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
+                         ) : (
+                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                 {liveClients.map((client) => (
+-                                    <Card key={client.id} className="p-4 flex items-center gap-4 hover:border-lime-400/50 dark:hover:border-lime-400/50 cursor-pointer group" noPadding>
++                                    <Card key={client.id} className="p-4 flex items-center gap-4 hover:border-zinc-300 dark:hover:border-white/20 hover:bg-zinc-50 dark:hover:bg-white/[0.08] cursor-pointer group transition-all duration-300" noPadding>
+                                         <div className="relative shrink-0">
+                                             <img src={client.avatar} className="w-10 h-10 rounded-full object-cover" />
+                                             {client.status === 'viewing' && (
+@@ -1760,7 +1815,7 @@ const DashboardView = ({ projects, user, headerVariant = 'default' }: { projects
+                                     </p>
+                                     
+                                     <div className="flex flex-col sm:flex-row gap-4 mb-4">
+-                                        <button onClick={() => { playClick(); navigate('/create'); }} className="px-6 py-3.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-black/5">
++                                        <button onClick={() => { playClick(); if (openQuickDelivery) { openQuickDelivery(); } else { navigate('/create'); } }} className="px-6 py-3.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:scale-105 transition-transform flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg shadow-black/5">
+                                             <Plus className="w-4 h-4" /> Create Project
+                                         </button>
+                                         <button onClick={() => { playClick(); document.getElementById('vault-tab-draft')?.click(); }} className="px-6 py-3.5 rounded-xl bg-white dark:bg-white/5 border border-zinc-200/50 dark:border-white/10 text-zinc-600 dark:text-zinc-300 text-xs font-bold uppercase tracking-wider hover:bg-zinc-50 dark:hover:bg-white/10 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
+@@ -2575,7 +2630,7 @@ const StageBackground = ({ isDarkMode }: { isDarkMode: boolean }) => (
+ );
+ 
+ /** Self-contained delivery widget ├óΓé¼ΓÇ¥ the "star" of the main surface */
+-const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPublish: (project: Project) => Promise<void> | void }) => {
++const DeliveryWidget = ({ isDarkMode, previewMode, onOpenStudio, onDraftChange, onPublish, onClose }: { isDarkMode: boolean; previewMode?: boolean; onOpenStudio?: () => void; onDraftChange?: (p: Project) => void; onPublish: (project: Project) => Promise<void> | void; onClose?: () => void }) => {
+     const navigate = useNavigate();
+     const toast = useToast();
+     const { projects, user, updateUser } = useStore();
+@@ -2594,6 +2649,29 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
+     const [clientEmail, setClientEmail] = useState(initialDraft?.formData?.client?.email || '');
+     const [enablePayment, setEnablePayment] = useState((initialDraft?.formData?.amount || 0) > 0);
+     const [amount, setAmount] = useState(initialDraft?.formData?.amount ? String(initialDraft.formData.amount) : '');
++    useEffect(() => {
++        if (!onDraftChange) return;
++        onDraftChange({
++            id: 'preview',
++            name: projectName || 'Brand Identity Package',
++            description: linkLabel || "Hello, here's your project.",
++            client: { name: clientName || 'John Smith', email: clientEmail || '' },
++            amount: Number(amount) || 2500,
++            status: 'awaiting_payment',
++            clientLink: '',
++            createdAt: new Date().toISOString(),
++            dueDate: new Date(Date.now() + 7 * 86400000).toISOString(),
++            files: files || [],
++            milestones: [],
++            requiresSignature: false,
++            theme: {
++                name: 'Lumina Theme',
++                wallpaper: 'linear-gradient(135deg, #f0f4f8, #e2e8f0)',
++                brightness: 'light',
++                layout: 'default'
++            }
++        });
++    }, [projectName, linkLabel, clientName, clientEmail, amount, files, onDraftChange]);
+     const [retention, setRetention] = useState<'forever' | '30_days' | '7_days' | '3_days' | '1_day'>('3_days');
+     const [showRetentionMenu, setShowRetentionMenu] = useState(false);
+     const [showMoreMenu, setShowMoreMenu] = useState(false);
+@@ -3168,7 +3246,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
+                                 ? 'Link ready'
+                                 : createSubView === 'quote'
+                                     ? 'Create quote'
+-                                    : 'Create project'
++                                    : 'Quick Delivery'
+                             : widgetView === 'projects'
+                                 ? 'Current projects'
+                                 : 'Briefing'}
+@@ -3181,13 +3259,13 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
+                                     setShowMoreMenu((open) => !open);
+                                     setShowRetentionMenu(false);
+                                 }}
+-                                className="absolute right-0 w-9 h-9 rounded-xl border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
++                                className={`absolute ${onClose ? 'right-10' : 'right-0'} w-9 h-9 rounded-xl border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer`}
+                                 title="Widget options"
+                             >
+                                 <MoreHorizontal className="w-4 h-4" />
+                     </button>
+                             {showMoreMenu && (
+-                        <div className={`absolute right-0 top-11 w-48 rounded-2xl border shadow-xl z-20 p-2 ${isDarkMode ? 'bg-[#151521] border-white/10' : 'bg-white border-zinc-200'}`}>
++                        <div className={`absolute ${onClose ? 'right-10' : 'right-0'} top-11 w-48 rounded-2xl border shadow-xl z-20 p-2 ${isDarkMode ? 'bg-[#151521] border-white/10' : 'bg-white border-zinc-200'}`}>
+                             <button
+                                 onClick={() => {
+                                     setShowMoreMenu(false);
+@@ -3232,12 +3310,23 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
+                     ) : (
+                         <button
+                             onClick={() => { playClick(); setWidgetView('create'); }}
+-                            className="absolute right-0 w-9 h-9 rounded-xl border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
++                            className={`absolute ${onClose ? 'right-10' : 'right-0'} w-9 h-9 rounded-xl border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer`}
+                             title="Back to create"
+                         >
+                             <Plus className="w-4 h-4" />
+                         </button>
+                     )}
++                    {onClose && (
++                        <button
++                            type="button"
++                            onClick={() => { playClick(); onClose(); }}
++                            className="absolute right-0 w-9 h-9 rounded-xl border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
++                            title="Close delivery widget"
++                            aria-label="Close delivery widget"
++                        >
++                            <X className="w-4 h-4" />
++                        </button>
++                    )}
+                 </div>
+             </div>
+ 
+@@ -3536,7 +3625,6 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
+                 ) : (
+                 <div className="flex flex-col flex-1 min-h-0 h-full">
+                 <div className="flex-1 min-h-0 overflow-y-auto pr-1 briefing-scroll">
+-                <>
+                 <div className="grid grid-cols-2 gap-2">
+                     <button
+                         onClick={() => { playClick(); fileInputRef.current?.click(); }}
+@@ -3558,6 +3646,7 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
+                     </button>
+                 </div>
+ 
++                <>
+                 <div className="mt-4 space-y-1.5">
+                     <label className="flex items-center gap-3 cursor-pointer">
+                         <button
+@@ -4012,11 +4101,19 @@ const DeliveryWidget = ({ isDarkMode, onPublish }: { isDarkMode: boolean; onPubl
+                 <div className={`shrink-0 pt-3 border-t ${sectionLineCls}`}>
+                 <div className="grid grid-cols-2 gap-2">
+                     <button
+-                        onClick={handleContinue}
+-                        className={`h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm ${isDarkMode ? 'bg-white/8 text-white hover:bg-white/12 border border-white/10' : 'bg-white text-zinc-900 hover:bg-zinc-50 border border-zinc-200'}`}
++                        onClick={onOpenStudio || handleContinue}
++                        className={`h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm ${
++                            previewMode
++                                ? isDarkMode
++                                    ? 'bg-white/10 text-white border border-lime-400/40 shadow-[0_0_0_1px_rgba(202,249,156,0.18)]'
++                                    : 'bg-white text-zinc-900 border border-lime-300 shadow-[0_10px_28px_rgba(132,204,22,0.16)] hover:bg-lime-50'
++                                : isDarkMode
++                                    ? 'bg-white/8 text-white hover:bg-white/12 border border-white/10'
++                                    : 'bg-white text-zinc-900 hover:bg-zinc-50 border border-zinc-200'
++                        }`}
+                     >
+-                        Studio
+-                        <ArrowRight className="w-4 h-4" />
++                        {previewMode ? 'Exit Studio' : 'Studio'}
++                        <ArrowRight className={`w-4 h-4 transition-transform ${previewMode ? 'rotate-180' : ''}`} />
+                     </button>
+                     <button
+                         onClick={handlePublish}
+@@ -4140,12 +4237,144 @@ const FullLayoutWorkspaceRedirect = () => {
+     return <Navigate to={`/dashboard${search}`} replace />;
+ };
+ 
++const StudioLivePreviewMock = ({ project, isDarkMode }: { project: Project | null; isDarkMode: boolean }) => {
++    const assets = project?.files?.length ? project.files : STUDIO_PREVIEW_ASSETS;
++    const clientName = project?.client?.name?.trim() || 'John';
++    const projectName = project?.name?.trim() || 'Brand Identity Package';
++    const amount = project?.amount && project.amount > 0 ? project.amount : 2500;
++    const shellCls = isDarkMode
++        ? 'border-white/[0.10] bg-[linear-gradient(180deg,#fbfaf6_0%,#f2f0ea_100%)] text-zinc-950 shadow-[0_30px_90px_rgba(0,0,0,0.34)]'
++        : 'border-zinc-200/80 bg-[linear-gradient(180deg,#fbfaf6_0%,#f2f0ea_100%)] text-zinc-950 shadow-[0_24px_70px_rgba(15,23,42,0.11)]';
++    const dividerCls = 'border-zinc-200/80';
++    const assetCls = 'border-zinc-200/85 bg-white shadow-[0_8px_18px_rgba(15,23,42,0.07)]';
++    const uploadCls = 'border-zinc-300 bg-white/45';
++    const iconForType = (type: FileAsset['type']) => {
++        if (type === 'video') return <Play className="h-5 w-5 fill-white text-white drop-shadow" />;
++        if (type === 'pdf') return <FileText className={`h-5 w-5 ${isDarkMode ? 'text-zinc-300' : 'text-zinc-500'}`} />;
++        if (type === 'archive') return <FileArchive className={`h-5 w-5 ${isDarkMode ? 'text-zinc-300' : 'text-zinc-500'}`} />;
++        if (type === 'design') return <Pencil className={`h-5 w-5 ${isDarkMode ? 'text-zinc-300' : 'text-zinc-500'}`} />;
++        return <ImageIcon className={`h-5 w-5 ${isDarkMode ? 'text-zinc-300' : 'text-zinc-500'}`} />;
++    };
++
++    return (
++        <section className="h-full w-full overflow-hidden p-0">
++            <div className={`flex h-full w-full flex-col overflow-hidden rounded-[24px] border ${shellCls}`}>
++                <div className={`relative shrink-0 overflow-hidden border-b ${dividerCls}`}>
++                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_94%_7%,rgba(255,255,255,0.96),transparent_23%),radial-gradient(circle_at_14%_0%,rgba(232,230,220,0.78),transparent_38%),linear-gradient(110deg,rgba(239,237,231,0.98)_0%,rgba(248,247,244,0.96)_46%,rgba(255,255,255,0.92)_100%)]" />
++                    <img
++                        src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1800&q=85"
++                        alt=""
++                        className="absolute -left-16 top-0 h-full w-[360px] object-cover opacity-[0.14] saturate-50"
++                    />
++                    <div className="relative px-5 py-5 sm:px-7 lg:px-8">
++                        <div className="flex items-start justify-between gap-4">
++                            <div className="flex items-center gap-3">
++                                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-950/45 bg-white/45 font-serif text-lg leading-none text-zinc-950">L/A</div>
++                                <div>
++                                    <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-zinc-950">Lumina</p>
++                                    <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-zinc-500">Aesthetics</p>
++                                </div>
++                            </div>
++                            <div className="flex items-center gap-3">
++                                <button className="inline-flex h-10 items-center gap-2 rounded-full bg-white/92 px-4 text-xs font-bold text-zinc-950 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
++                                    <LinkIcon className="h-4 w-4" /> Share portal
++                                </button>
++                                <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white/92 text-zinc-500 shadow-[0_10px_30px_rgba(15,23,42,0.10)]">
++                                    <MoreHorizontal className="h-4 w-4" />
++                                </button>
++                            </div>
++                        </div>
++
++                        <h1 className="mt-6 max-w-5xl truncate font-serif text-[32px] leading-none tracking-tight text-zinc-950 lg:text-[42px] xl:text-[48px]">{projectName}</h1>
++                        <p className="mt-2 text-sm text-zinc-500">Hello {clientName.split(' ')[0]}, here's your project.</p>
++                        <div className="mt-3 flex items-center gap-2 text-[10px] font-bold text-zinc-500">
++                            <Lock className="h-3.5 w-3.5 text-lime-500" />
++                            <span>Secure client portal</span>
++                        </div>
++
++                        <div className="mt-5 grid rounded-[20px] bg-white/96 px-4 py-3 shadow-[0_18px_44px_rgba(15,23,42,0.10)] lg:grid-cols-4 lg:px-5">
++                            {[
++                                ['Project status', 'In progress', 'Updated just now'],
++                                ['Payment status', '1 of 2 payments', 'Next payment due May 24'],
++                                ['Project progress', '62%', '3 of 5 deliverables'],
++                                ['Total contract', `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'View contract ->'],
++                            ].map((stat, index) => (
++                                <div key={stat[0]} className={`min-w-0 px-0 py-1.5 lg:px-5 ${index > 0 ? 'border-t border-zinc-200/80 lg:border-l lg:border-t-0' : ''}`}>
++                                    <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-400">{stat[0]}</p>
++                                    <p className="mt-1.5 flex items-center gap-2 text-sm font-bold text-zinc-950">
++                                        {index < 2 && <span className="h-2 w-2 rounded-full bg-lime-500" />}
++                                        {stat[1]}
++                                    </p>
++                                    {index === 2 && <div className="mt-2 h-1.5 rounded-full bg-zinc-200"><div className="h-full w-[62%] rounded-full bg-lime-500" /></div>}
++                                    <p className="mt-1.5 truncate text-[10px] text-zinc-500">{stat[2]}</p>
++                                </div>
++                            ))}
++                        </div>
++                    </div>
++                </div>
++
++                <div className="flex min-h-0 flex-1 flex-col px-5 py-4 sm:px-7 lg:px-8">
++                    <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
++                        <h2 className="font-serif text-xl text-zinc-950">Project Assets <span className="ml-2 rounded-full bg-zinc-100 px-2 py-1 align-middle text-[10px] font-sans font-bold text-zinc-500">{assets.length} items</span></h2>
++                        <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-500">
++                            <button className="rounded-xl bg-zinc-950 px-5 py-2 text-white">All</button>
++                            <button className="rounded-xl px-3 py-2 hover:bg-zinc-100 hover:text-zinc-900">Image</button>
++                            <button className="rounded-xl px-3 py-2 hover:bg-zinc-100 hover:text-zinc-900">Document</button>
++                            <button className="rounded-xl px-3 py-2 hover:bg-zinc-100 hover:text-zinc-900">Video</button>
++                            <button className="h-9 w-9 rounded-xl border border-zinc-200 bg-white inline-flex items-center justify-center shadow-sm"><ListIcon className="h-4 w-4 text-zinc-500" /></button>
++                            <button className="h-9 w-9 rounded-xl border border-zinc-200 bg-white inline-flex items-center justify-center shadow-sm"><LayoutGrid className="h-4 w-4 text-zinc-700" /></button>
++                        </div>
++                    </div>
++
++                    <div className="mt-4 grid min-h-0 flex-1 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
++                        {assets.slice(0, 5).map((asset) => (
++                            <article key={asset.id} className={`flex min-h-0 flex-col overflow-hidden rounded-[16px] border ${assetCls}`}>
++                                <div className="relative min-h-0 flex-1 bg-zinc-100">
++                                    {asset.previewUrl ? <img src={asset.previewUrl} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center">{iconForType(asset.type)}</div>}
++                                    <span className="absolute left-2 top-2 rounded-md bg-white px-2 py-1 text-[8px] font-bold uppercase text-zinc-700 shadow-sm">{asset.type === 'pdf' ? 'PDF' : asset.type === 'archive' ? 'ZIP' : asset.type === 'video' ? 'MP4' : asset.type === 'design' ? 'AI' : 'Image'}</span>
++                                    <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm"><Lock className="h-3.5 w-3.5 text-zinc-500" /></span>
++                                    {asset.type === 'video' && <span className="absolute inset-0 m-auto flex h-11 w-11 items-center justify-center rounded-full bg-black/42 backdrop-blur-sm">{iconForType(asset.type)}</span>}
++                                </div>
++                                <div className="shrink-0 bg-white p-2.5">
++                                    <p className="truncate text-xs font-bold text-zinc-950">{asset.name}</p>
++                                    <div className="mt-1.5 flex items-center justify-between text-[10px] text-zinc-500">
++                                        <span>{asset.size}</span>
++                                        <Download className="h-3.5 w-3.5" />
++                                    </div>
++                                </div>
++                            </article>
++                        ))}
++                    </div>
++
++                    <div className={`mt-4 flex h-16 shrink-0 items-center justify-center rounded-[16px] border border-dashed text-center ${uploadCls}`}>
++                        <div className="flex items-center gap-3">
++                            <Upload className="h-6 w-6 text-zinc-500" />
++                            <div className="text-left">
++                                <p className="text-xs font-semibold text-zinc-600">Drag and drop files here or click to upload</p>
++                                <p className="text-[10px] text-zinc-500">You can upload more files at any time</p>
++                            </div>
++                        </div>
++                    </div>
++
++                    <div className="mt-3 flex shrink-0 items-center justify-between text-[10px] font-semibold text-zinc-500">
++                        <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" /> Protected by Sendational</span>
++                        <span className="inline-flex items-center gap-5"><span>Need help?</span><span className="inline-flex items-center gap-1.5">Download all <Download className="h-3.5 w-3.5" /></span></span>
++                    </div>
++                </div>
++            </div>
++        </section>
++    );
++};
++
+ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layoutMode, onSetLayoutMode, togglePrivacyMode, privacyMode, onSignOut }: any) => {
+     const navigate = useNavigate();
++    const [isStudioPreviewMode, setIsStudioPreviewMode] = useState(false);
++    const [studioPreviewProject, setStudioPreviewProject] = useState<Project | null>(null);
+     const location = useLocation();
+     const stripOffset = useStripOffset();
+     const { notifications, markNotificationRead, clearNotifications, saveProject } = useStore();
+     const [isSearchOpen, setIsSearchOpen] = useState(false);
++    const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+     const [isProfileOpen, setIsProfileOpen] = useState(false); // NEW State
+     const [isRouteMenuOpen, setIsRouteMenuOpen] = useState(false);
+     const [assetViewerIndex, setAssetViewerIndex] = useState<number | null>(null);
+@@ -4278,11 +4507,17 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
+ 
+     const handleOpenQuickDelivery = useCallback(() => {
+         playClick();
+-        onSetLayoutMode('dock');
+-        const qs = new URLSearchParams(window.location.search);
+-        const suffix = qs.get('quickstart') === '1' ? '?quickstart=1' : '';
+-        navigate(`/workspace${suffix}`);
+-    }, [navigate, onSetLayoutMode]);
++        if (layoutMode === 'full') {
++            // In full workspace mode, open the slide-in delivery modal overlay
++            setIsDeliveryModalOpen(true);
++        } else {
++            // In dock/widget mode, switch to docked layout as before
++            onSetLayoutMode('dock');
++            const qs = new URLSearchParams(window.location.search);
++            const suffix = qs.get('quickstart') === '1' ? '?quickstart=1' : '';
++            navigate(`/workspace${suffix}`);
++        }
++    }, [navigate, onSetLayoutMode, layoutMode]);
+ 
+     const outletCtx = useMemo(
+         () => ({
+@@ -4295,6 +4530,8 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
+         [privacyMode, layoutMode, handleOpenQuickDelivery, isCompactContent]
+     );
+ 
++    const closeDeliveryModal = useCallback(() => setIsDeliveryModalOpen(false), []);
++
+     const [isDraggingGlobal, setIsDraggingGlobal] = useState(false);
+ 
+     useEffect(() => {
+@@ -4932,7 +5169,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
+             <header
+                 className={`fixed left-0 right-0 z-[100] flex items-center justify-between px-4 sm:px-6 lg:px-8 transition-[top] duration-200 pointer-events-none ${
+                     layoutMode === 'full' && !showMobileNav
+-                        ? 'bg-[#f0f2f5] dark:bg-cosmic border-b border-zinc-200/60 dark:border-white/10'
++                        ? 'bg-[#f0f2f5] dark:bg-cosmic transition-colors duration-500 ' + (isDeliveryModalOpen ? 'border-transparent' : 'border-b border-zinc-200/60 dark:border-white/10')
+                         : ''
+                 }`}
+                 style={{ top: stripOffset, height: headerHeightPx }}
+@@ -5086,19 +5323,47 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
+             {showDeliveryWidget && (
+                 <div
+                     className="fixed left-4 right-4 sm:left-8 sm:right-auto z-20 flex items-center transition-[opacity,transform] duration-500 bottom-[calc(88px+env(safe-area-inset-bottom))] lg:bottom-20"
+-                    style={{ top: stripOffset + headerHeightPx }}
++                    style={{ top: stripOffset + headerHeightPx + 32 }}
+                 >
+-                    <DeliveryWidget isDarkMode={isDarkMode} onPublish={saveProject} />
++                    <DeliveryWidget isDarkMode={isDarkMode} onPublish={saveProject} previewMode={isStudioPreviewMode} onOpenStudio={() => setIsStudioPreviewMode((open) => !open)} onDraftChange={setStudioPreviewProject} />
+                 </div>
+             )}
+ 
++            {/* Pull tab - full workspace mode only */}
++            {!showMobileNav && layoutMode === 'full' && (
++                <button
++                    type="button"
++                    id="delivery-pull-tab"
++                    onClick={() => { playClick(); setIsDeliveryModalOpen(true); }}
++                    title="Quick Delivery"
++                    aria-label="Open delivery widget"
++                    style={{ top: '50%', transform: isDeliveryModalOpen ? 'translateY(-50%) translateX(-100%)' : 'translateY(-50%) translateX(0)' }}
++                    className={`fixed left-0 z-[60] transition-all duration-300 group ${isDeliveryModalOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
++                >
++                    <div className={`flex flex-col items-center justify-center gap-1.5 rounded-r-2xl border border-l-0 shadow-lg px-2 py-4 transition-all duration-200 group-hover:shadow-xl ${isDarkMode ? 'bg-[#1a1a23]/90 border-white/10 backdrop-blur-md hover:bg-[#23232e]/95 hover:border-white/20' : 'bg-white/80 border-zinc-200/60 backdrop-blur-md hover:bg-white hover:border-zinc-300/60'}`}>
++                        <Plus className={`w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-90 ${isDarkMode ? 'text-zinc-200' : 'text-zinc-700'}`} />
++                        <span className={`text-[9px] font-bold uppercase tracking-widest leading-none ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`} style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>Deliver</span>
++                        <span className="w-1.5 h-1.5 rounded-full bg-lime-400 opacity-80 animate-pulse" />
++                    </div>
++                </button>
++            )}
++
++            {/* Delivery modal overlay - full workspace mode */}
++            {!showMobileNav && layoutMode === 'full' && (
++                <div
++                    className={`fixed left-4 lg:left-8 z-[60] flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isDeliveryModalOpen ? 'translate-x-0' : '-translate-x-[150%]'}`}
++                    style={{ top: stripOffset + headerHeightPx, bottom: 80 }}
++                >
++                    <DeliveryWidget isDarkMode={isDarkMode} onPublish={saveProject} onClose={closeDeliveryModal} previewMode={isStudioPreviewMode} onOpenStudio={() => setIsStudioPreviewMode((open) => !open)} onDraftChange={setStudioPreviewProject} />
++                </div>
++            )}
+             {/* ├óΓÇ¥Γé¼├óΓÇ¥Γé¼ Main Page: desktop full layout ├óΓÇ¥Γé¼├óΓÇ¥Γé¼ */}
+             {!showMobileNav && layoutMode === 'full' && (
+                 <main
+                     className="fixed left-0 right-0 bottom-0 z-[30] overflow-hidden"
+                     style={{ top: stripOffset + headerHeightPx }}
+                 >
+-                    <div className="h-full px-3 sm:px-5 lg:px-6 xl:px-7 pt-3 sm:pt-4 bg-[#f0f2f5] dark:bg-cosmic overflow-y-auto pb-24 sm:pb-28 lg:pb-6">
++                    <div className={`h-full pt-3 sm:pt-4 bg-[#f0f2f5] dark:bg-cosmic overflow-y-auto pb-24 sm:pb-28 lg:pb-6 transition-[padding] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isDeliveryModalOpen ? 'pl-[404px] lg:pl-[436px] pr-4 lg:pr-8' : 'px-3 sm:px-5 lg:px-6 xl:px-7'}`}>
+                         <div
+                             key={location.pathname}
+                             className="animate-route-in min-h-full"
+@@ -5110,6 +5375,18 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
+             )}
+ 
+             {/* ├óΓÇ¥Γé¼├óΓÇ¥Γé¼ Mobile bottom sheet: pages slide up over the delivery widget backdrop ├óΓÇ¥Γé¼├óΓÇ¥Γé¼ */}
++            {!showMobileNav && layoutMode === 'full' && isStudioPreviewMode && (
++                <div
++                    className="fixed left-0 right-0 bottom-0 z-[45] pointer-events-auto animate-fade-in"
++                    style={{ top: stripOffset + headerHeightPx }}
++                >
++                    <div className={`absolute inset-0 backdrop-blur-md ${isDarkMode ? 'bg-cosmic/52' : 'bg-[#f0f2f5]/58'}`} />
++                    <div className={`relative h-full overflow-hidden transition-[padding] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isDeliveryModalOpen ? 'pl-[404px] lg:pl-[436px] pr-4 lg:pr-8' : 'px-3 sm:px-5 lg:px-6 xl:px-7'}`}>
++                        <StudioLivePreviewMock project={studioPreviewProject} isDarkMode={isDarkMode} />
++                    </div>
++                </div>
++            )}
++
+             {showBottomSheet && (
+                 <>
+                     {/* Tap-outside dismiss area (top 15% above the sheet) */}
+@@ -5144,7 +5421,22 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
+                 </>
+             )}
+ 
+-            {isDockMode && !isPanelOpen && (
++            {(isDockMode || isWidgetOnly) && !isPanelOpen && currentPath === 'workspace' && isStudioPreviewMode && (
++                <>
++                    <div
++                        className={`fixed bottom-0 z-[15] pointer-events-none backdrop-blur-md ${isDarkMode ? 'bg-cosmic/52' : 'bg-[#f0f2f5]/58'} ${isWidgetOnly ? 'left-[404px] right-6 min-[700px]:left-[428px]' : 'left-[420px] right-8 xl:left-[440px]'}`}
++                        style={{ top: stripOffset + headerHeightPx }}
++                    />
++                    <div
++                        className={`fixed bottom-0 z-[16] animate-fade-in ${isWidgetOnly ? 'left-[404px] right-6 min-[700px]:left-[428px]' : 'left-[420px] right-8 xl:left-[440px]'}`}
++                        style={{ top: stripOffset + headerHeightPx }}
++                    >
++                        <StudioLivePreviewMock project={studioPreviewProject} isDarkMode={isDarkMode} />
++                    </div>
++                </>
++            )}
++
++            {isDockMode && !isPanelOpen && !isStudioPreviewMode && (
+                 <div
+                     className="fixed left-[420px] right-8 top-1/2 -translate-y-1/2 flex flex-col items-center justify-center text-center pointer-events-none z-[15] px-4 xl:px-10 animate-fade-in duration-1000"
+                     style={{ top: `calc(50% + ${stripOffset / 2}px)` }}
+@@ -5234,7 +5526,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
+             )}
+ 
+             {/* ├óΓÇ¥Γé¼├óΓÇ¥Γé¼ Widget-only hero (beside widget on wider, below on narrow) ├óΓÇ¥Γé¼├óΓÇ¥Γé¼ */}
+-            {isWidgetOnly && currentPath === 'workspace' && !workspaceQuickstartActive && (
++            {isWidgetOnly && currentPath === 'workspace' && !workspaceQuickstartActive && !isStudioPreviewMode && (
+                 <div
+                     className="fixed pointer-events-none z-[15] animate-fade-in duration-1000 hidden min-[700px]:flex items-center justify-start"
+                     style={{
+@@ -5262,7 +5554,7 @@ const AppLayout = ({ user, projects, isDarkMode, themeMode, onSetThemeMode, layo
+                 </div>
+             )}
+ 
+-            {(isDockMode || isWidgetOnly) && !isPanelOpen && currentPath === 'workspace' && quickstartDraftAssets.length > 0 && !showHeroGreeting && (
++            {(isDockMode || isWidgetOnly) && !isPanelOpen && currentPath === 'workspace' && quickstartDraftAssets.length > 0 && !showHeroGreeting && !isStudioPreviewMode && (
+                 <div
+                     className={`fixed z-[16] pointer-events-auto ${isWidgetOnly ? 'left-[24px] right-[24px] min-[700px]:left-[404px] min-[700px]:right-[24px]' : 'left-[404px] right-8 xl:left-[424px]'}`}
+                     style={{ bottom: 'calc(26px + env(safe-area-inset-bottom))' }}
+@@ -6111,6 +6403,7 @@ const AppContent = () => {
+                             <Route path="/activity" element={<Suspense fallback={<PageLoader />}><ActivityView /></Suspense>} />
+                             <Route path="/vault" element={<Suspense fallback={<VaultSkeleton />}><VaultView projects={projects} /></Suspense>} />
+                             <Route path="/reports" element={<Suspense fallback={<PageLoader />}><ReportsView /></Suspense>} />
++                            <Route path="/test-lab" element={<Suspense fallback={<PageLoader />}><TestLabPage /></Suspense>} />
+                             <Route path="/quotes" element={<Suspense fallback={<PageLoader />}><QuotesPage /></Suspense>} />
+                             <Route
+                                 path="/settings"
+@@ -6159,4 +6452,3 @@ export default function App() {
+         </StoreProvider>
+     );
+ }
+-
+diff --git a/components/ClientPreviewPage.tsx b/components/ClientPreviewPage.tsx
+index 84605c2..16dce45 100644
+--- a/components/ClientPreviewPage.tsx
++++ b/components/ClientPreviewPage.tsx
+@@ -2065,7 +2065,49 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
+                     >
+                         <div className="mt-8 mb-8 hidden lg:block">
+                             <div className="flex items-center gap-3 mb-4">
+-                                <div className="relative group cursor-pointer"><img src={project.client.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"} loading="lazy" decoding="async" className={`w-14 h-14 rounded-full border-2 ${isDarkMode ? 'border-white/10' : 'border-white shadow-sm'} shadow-xl object-cover`} /><div className={`absolute -bottom-1 -right-1 ${isDarkMode ? 'bg-black' : 'bg-white'} rounded-full p-1`}><div className={`w-3 h-3 ${brandGreenBg} rounded-full`} /></div></div>
++                                <div className="relative group cursor-pointer flex items-center justify-center w-14 h-14">
++                                    {/* Dot grid matrix "grill" behind avatar */}
++                                    <svg className="absolute -top-2.5 -right-3.5 w-12 h-12 text-zinc-300 dark:text-zinc-700/60 opacity-60 pointer-events-none z-0" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
++                                        <circle cx="4" cy="4" r="1.5" fill="currentColor"/>
++                                        <circle cx="12" cy="4" r="1.5" fill="currentColor"/>
++                                        <circle cx="20" cy="4" r="1.5" fill="currentColor"/>
++                                        <circle cx="28" cy="4" r="1.5" fill="currentColor"/>
++                                        <circle cx="36" cy="4" r="1.5" fill="currentColor"/>
++                                        <circle cx="44" cy="4" r="1.5" fill="currentColor"/>
++                                        <circle cx="4" cy="12" r="1.5" fill="currentColor"/>
++                                        <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
++                                        <circle cx="20" cy="12" r="1.5" fill="currentColor"/>
++                                        <circle cx="28" cy="12" r="1.5" fill="currentColor"/>
++                                        <circle cx="36" cy="12" r="1.5" fill="currentColor"/>
++                                        <circle cx="44" cy="12" r="1.5" fill="currentColor"/>
++                                        <circle cx="4" cy="20" r="1.5" fill="currentColor"/>
++                                        <circle cx="12" cy="20" r="1.5" fill="currentColor"/>
++                                        <circle cx="20" cy="20" r="1.5" fill="currentColor"/>
++                                        <circle cx="28" cy="20" r="1.5" fill="currentColor"/>
++                                        <circle cx="36" cy="20" r="1.5" fill="currentColor"/>
++                                        <circle cx="44" cy="20" r="1.5" fill="currentColor"/>
++                                        <circle cx="4" cy="28" r="1.5" fill="currentColor"/>
++                                        <circle cx="12" cy="28" r="1.5" fill="currentColor"/>
++                                        <circle cx="20" cy="28" r="1.5" fill="currentColor"/>
++                                        <circle cx="28" cy="28" r="1.5" fill="currentColor"/>
++                                        <circle cx="36" cy="28" r="1.5" fill="currentColor"/>
++                                        <circle cx="44" cy="28" r="1.5" fill="currentColor"/>
++                                        <circle cx="4" cy="36" r="1.5" fill="currentColor"/>
++                                        <circle cx="12" cy="36" r="1.5" fill="currentColor"/>
++                                        <circle cx="20" cy="36" r="1.5" fill="currentColor"/>
++                                        <circle cx="28" cy="36" r="1.5" fill="currentColor"/>
++                                        <circle cx="36" cy="36" r="1.5" fill="currentColor"/>
++                                        <circle cx="44" cy="36" r="1.5" fill="currentColor"/>
++                                        <circle cx="4" cy="44" r="1.5" fill="currentColor"/>
++                                        <circle cx="12" cy="44" r="1.5" fill="currentColor"/>
++                                        <circle cx="20" cy="44" r="1.5" fill="currentColor"/>
++                                        <circle cx="28" cy="44" r="1.5" fill="currentColor"/>
++                                        <circle cx="36" cy="44" r="1.5" fill="currentColor"/>
++                                        <circle cx="44" cy="44" r="1.5" fill="currentColor"/>
++                                    </svg>
++                                    <img src={project.client.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"} loading="lazy" decoding="async" className={`w-14 h-14 rounded-full border-2 ${isDarkMode ? 'border-white/10' : 'border-white shadow-sm'} shadow-xl object-cover relative z-10`} />
++                                    <div className={`absolute -bottom-1 -right-1 ${isDarkMode ? 'bg-black' : 'bg-white'} rounded-full p-1 z-20`}><div className={`w-3 h-3 ${brandGreenBg} rounded-full`} /></div>
++                                </div>
+                                 <div><p className={`text-[10px] font-bold uppercase tracking-widest ${textSecondary} mb-1`}>Delivery For</p><h3 className={`font-bold text-lg leading-none ${textPrimary}`}>{project.client.name}</h3></div>
+                             </div>
+                             <h1 className={`font-sans tracking-tight text-3xl md:text-4xl lg:text-[46px] font-medium ${textPrimary} leading-[0.95] tracking-tight mb-4`}>{project.name}</h1>
+diff --git a/components/ReportsView.tsx b/components/ReportsView.tsx
+index 49d47e9..7062596 100644
+--- a/components/ReportsView.tsx
++++ b/components/ReportsView.tsx
+@@ -886,8 +886,7 @@ const ReportsView = () => {
+                                         type="monotone"
+                                         dataKey="liquid"
+                                         stackId="1"
+-                                        stroke={accentHex}
+-                                        strokeWidth={3}
++                                        stroke="none"
+                                         fill="url(#colorLiquid)"
+                                         animationDuration={1500}
+                                     />
+@@ -895,10 +894,8 @@ const ReportsView = () => {
+                                         type="monotone"
+                                         dataKey="frozen"
+                                         stackId="1"
+-                                        stroke="#94a3b8"
+-                                        strokeWidth={2}
++                                        stroke="none"
+                                         fill="url(#colorFrozen)"
+-                                        strokeDasharray="4 4"
+                                         animationDuration={1500}
+                                     />
+                                 </AreaChart>

@@ -260,7 +260,7 @@ export const PortalStyleLightbox: React.FC<PortalStyleLightboxProps> = ({
                             </button>
                             <p className="text-xs font-mono truncate">{file.name}</p>
                         </div>
-                        <span className="text-[10px] px-2 py-1 rounded border border-[#bef264]/30 text-[#bef264] uppercase tracking-widest font-bold">Workstation</span>
+                        <span className="text-[10px] px-2 py-1 rounded border border-lime-400/30 text-[#a3e635] uppercase tracking-widest font-bold">Workstation</span>
                     </div>
 
                     <div className="flex-1 min-h-0 relative flex items-center justify-center p-8 bg-[#323242]">
@@ -274,7 +274,7 @@ export const PortalStyleLightbox: React.FC<PortalStyleLightboxProps> = ({
                                     key={asset.id}
                                     type="button"
                                     onClick={() => onSelect(i)}
-                                    className={`w-10 h-10 rounded-lg overflow-hidden border-2 ${i === currentIndex ? 'border-[#bef264]' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                    className={`w-10 h-10 rounded-lg overflow-hidden border-2 ${i === currentIndex ? 'border-lime-400' : 'border-transparent opacity-60 hover:opacity-100'}`}
                                 >
                                     {asset.previewUrl ? <img src={asset.previewUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-black/30" />}
                                 </button>
@@ -300,7 +300,7 @@ export const PortalStyleLightbox: React.FC<PortalStyleLightboxProps> = ({
                             placeholder="What needs to change?"
                             className="w-full h-28 rounded-xl bg-white/5 border border-white/10 p-3 text-xs resize-none outline-none"
                         />
-                        <button type="button" onClick={submitRevision} className="mt-2 w-full h-10 rounded-xl bg-[#bef264] text-zinc-900 text-[10px] font-bold uppercase tracking-widest">Send Feedback</button>
+                        <button type="button" onClick={submitRevision} className="mt-2 w-full h-10 rounded-xl bg-lime-400 text-zinc-900 text-[10px] font-bold uppercase tracking-widest">Send Feedback</button>
                     </div>
                 </aside>
             </div>
@@ -371,7 +371,7 @@ export const PortalStyleLightbox: React.FC<PortalStyleLightboxProps> = ({
                     <button
                         type="button"
                         onClick={() => setLoupeOn((v) => !v)}
-                        className={`h-8 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${loupeOn ? 'bg-[#bef264] text-zinc-900 border-[#bef264]' : (isDarkMode ? 'border-white/10 text-zinc-300 hover:bg-white/10' : 'border-zinc-200 text-zinc-600 hover:bg-zinc-100')}`}
+                        className={`h-8 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${loupeOn ? 'bg-lime-400 text-zinc-900 border-lime-400' : (isDarkMode ? 'border-white/10 text-zinc-300 hover:bg-white/10' : 'border-zinc-200 text-zinc-600 hover:bg-zinc-100')}`}
                     >
                         <Search className="w-3.5 h-3.5 inline-block mr-1" /> Lens
                     </button>
@@ -415,7 +415,7 @@ export const PortalStyleLightbox: React.FC<PortalStyleLightboxProps> = ({
                                 key={asset.id}
                                 type="button"
                                 onClick={() => onSelect(i)}
-                                className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${i === currentIndex ? 'border-[#bef264] ring-2 ring-[#bef264]/30' : (isDarkMode ? 'border-white/10 hover:border-white/30' : 'border-zinc-200 hover:border-zinc-400')}`}
+                                className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${i === currentIndex ? 'border-lime-400 ring-2 ring-lime-400/30' : (isDarkMode ? 'border-white/10 hover:border-white/30' : 'border-zinc-200 hover:border-zinc-400')}`}
                             >
                                 {asset.previewUrl ? <img src={asset.previewUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-black/10 flex items-center justify-center"><LayoutGrid className="w-4 h-4 opacity-60" /></div>}
                             </button>

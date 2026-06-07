@@ -185,14 +185,14 @@ const LayoutPaymentCard: React.FC<{ amount: number; isDarkMode: boolean; onPay?:
 				<p className={`text-xs font-bold uppercase tracking-[0.16em] ${isDarkMode ? 'text-zinc-300' : 'text-zinc-500'}`}>Total Due</p>
 				<p className={`${isLarge ? 'text-3xl md:text-[2.2rem] leading-none' : 'text-3xl'} font-serif ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>${amount.toLocaleString()}</p>
 			</div>
-			<div className={`${isLarge ? 'w-12 h-12' : 'w-11 h-11'} rounded-2xl flex items-center justify-center ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-zinc-900 text-white'}`}>
+			<div className={`${isLarge ? 'w-12 h-12' : 'w-11 h-11'} rounded-2xl flex items-center justify-center ${isDarkMode ? 'bg-lime-400 text-zinc-950' : 'bg-zinc-900 text-white'}`}>
 				<CreditCard className={`${isLarge ? 'w-6 h-6' : 'w-5 h-5'}`} />
 			</div>
 		</div>
 		<button
 			type="button"
 			onClick={onPay}
-			className={`w-full ${isLarge ? 'h-12 text-sm' : 'h-11 text-xs'} rounded-xl font-bold uppercase tracking-widest transition-colors ${isDarkMode ? 'bg-[#bef264] text-zinc-950 hover:bg-[#d9f99d]' : 'bg-zinc-900 text-white hover:bg-zinc-800'}`}
+			className={`w-full ${isLarge ? 'h-12 text-sm' : 'h-11 text-xs'} rounded-xl font-bold uppercase tracking-widest transition-colors ${isDarkMode ? 'bg-lime-400 text-zinc-950 hover:bg-lime-400' : 'bg-zinc-900 text-white hover:bg-zinc-800'}`}
 		>
 			{label || 'Pay To Unlock'}
 		</button>
@@ -1261,7 +1261,7 @@ Request Correction
 type="button"
 onClick={() => setOpenSettlementAssetId((prev) => prev === asset.id ? null : asset.id)}
 aria-expanded={isSettlementOpen}
-className={`h-9 md:h-10 px-4 md:px-5 rounded-xl text-xs font-bold uppercase tracking-[0.16em] transition-colors flex items-center gap-2 ${isDarkMode ? 'bg-[#bef264] text-zinc-950 hover:bg-[#d9f99d]' : 'bg-zinc-900 text-white hover:bg-zinc-800'}`}
+className={`h-9 md:h-10 px-4 md:px-5 rounded-xl text-xs font-bold uppercase tracking-[0.16em] transition-colors flex items-center gap-2 ${isDarkMode ? 'bg-lime-400 text-zinc-950 hover:bg-lime-400' : 'bg-zinc-900 text-white hover:bg-zinc-800'}`}
 >
 <CreditCard className="w-3.5 h-3.5" />
 {project.requiresSignature ? (isSettlementOpen ? 'Hide Sign / Pay' : 'Sign / Pay') : (isSettlementOpen ? 'Hide Payment' : 'Pay / Unlock')}

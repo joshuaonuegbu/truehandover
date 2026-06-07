@@ -686,7 +686,7 @@ const ReportsView = () => {
         return `${d.toLocaleString('default', { month: 'long' })} ${d.getFullYear()}`;
     });
 
-    const COLORS = useMemo(() => [accentHex, '#10b981', '#3b82f6', '#94a3b8', '#64748b'], [accentHex]);
+    const COLORS = useMemo(() => [accentHex, '#a3e635', '#3b82f6', '#94a3b8', '#64748b'], [accentHex]);
 
     // 4. Evidence Locker Data (Recent Transactions)
     const mappedProjects = scopedProjects.map(p => ({
@@ -797,7 +797,7 @@ const ReportsView = () => {
                             </PrivacyBlur>
                         </div>
                         <div className="mt-6 flex items-center gap-4">
-                            <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${trendIsPositive ? 'text-[#4d7c0f] dark:text-lime-400 bg-[#a3e635]/15 dark:bg-lime-400/10 border border-[#a3e635]/35 dark:border-transparent' : 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/20'}`}>
+                            <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${trendIsPositive ? 'text-[#a3e635] dark:text-lime-400 bg-lime-400/15 dark:bg-lime-400/10 border border-lime-400/35 dark:border-transparent' : 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/20'}`}>
                                 <ArrowUpRight className={`w-3 h-3 ${trendIsPositive ? '' : 'rotate-90'}`} /> {trendLabel}
                             </span>
                             <span className="text-xs uppercase tracking-wider font-bold text-zinc-500 dark:text-zinc-400">vs Previous Month</span>
@@ -841,7 +841,7 @@ const ReportsView = () => {
                 <div className="flex items-end justify-between mb-8">
                     <h3 className={`font-sans tracking-tight text-3xl tracking-tight ${GRADIENT_TEXT}`}>Analysis & Projections</h3>
                     <div className="hidden md:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                        <div className="flex items-center gap-2"><div className="w-2 h-2 bg-[#4d7c0f] dark:bg-lime-400 rounded-full" /> Cleared (Paid)</div>
+                        <div className="flex items-center gap-2"><div className="w-2 h-2 bg-lime-400 dark:bg-lime-400 rounded-full" /> Cleared (Paid)</div>
                         <div className="flex items-center gap-2"><div className="w-2 h-2 bg-zinc-400 dark:bg-zinc-500 rounded-full" /> Frozen (Locked)</div>
                     </div>
                 </div>
@@ -938,7 +938,7 @@ const ReportsView = () => {
                                 </div>
                                 <button
                                     onClick={() => setExcludeOneOffs(!excludeOneOffs)}
-                                    className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded transition-colors ${excludeOneOffs ? 'bg-[#4d7c0f] text-white dark:bg-lime-400 dark:text-black' : 'bg-zinc-200 text-zinc-500 dark:bg-white/10'}`}
+                                    className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded transition-colors ${excludeOneOffs ? 'bg-lime-400 text-white dark:bg-lime-400 dark:text-black' : 'bg-zinc-200 text-zinc-500 dark:bg-white/10'}`}
                                     title="Toggle to exclude projects under $500"
                                 >
                                     {excludeOneOffs ? 'Recurring Only' : 'All Sources'}
@@ -949,13 +949,13 @@ const ReportsView = () => {
                             <div className="mb-8">
                                 <div className="flex justify-between items-end mb-2">
                                     <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Portfolio Diversity</span>
-                                    <span className={`text-lg font-bold ${diversityScore > 70 ? 'text-[#4d7c0f] dark:text-lime-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
+                                    <span className={`text-lg font-bold ${diversityScore > 70 ? 'text-[#a3e635] dark:text-lime-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
                                         {diversityScore}/100
                                     </span>
                                 </div>
                                 <div className="w-full h-2 bg-zinc-200 dark:bg-white/10 rounded-full overflow-hidden flex">
                                     <div
-                                        className={`h-full transition-all duration-1000 ease-out ${diversityScore > 70 ? 'bg-[#65a30d] dark:bg-lime-400' : 'bg-zinc-500 dark:bg-zinc-400'}`}
+                                        className={`h-full transition-all duration-1000 ease-out ${diversityScore > 70 ? 'bg-lime-400 dark:bg-lime-400' : 'bg-zinc-500 dark:bg-zinc-400'}`}
                                         style={{ width: `${diversityScore}%` }}
                                     />
                                 </div>
@@ -979,7 +979,7 @@ const ReportsView = () => {
                                         <div className="flex items-center gap-3">
                                             <div className="text-[10px] font-mono text-zinc-300 w-3">{i + 1}</div>
                                             <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS[i] }} />
-                                            <span className="text-sm font-bold text-obsidian dark:text-white group-hover:text-[#4d7c0f] dark:group-hover:text-lime-400 transition-colors">{item.name}</span>
+                                            <span className="text-sm font-bold text-obsidian dark:text-white group-hover:text-lime-600 dark:group-hover:text-lime-400 dark:group-hover:text-lime-400 transition-colors">{item.name}</span>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <span className="text-xs font-mono font-medium text-zinc-500">${item.value.toLocaleString()}</span>
@@ -1041,7 +1041,7 @@ const ReportsView = () => {
                                         <td className="py-5 px-4 font-bold text-obsidian dark:text-white">{item.name}</td>
                                         <td className="py-5 px-4 text-zinc-600 dark:text-zinc-300">{item.client}</td>
                                         <td className="py-5 px-4">
-                                            <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Secured' ? 'bg-[#a3e635]/15 text-[#4d7c0f] border border-[#a3e635]/35 dark:bg-lime-400/10 dark:text-lime-400 dark:border-lime-400/20' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
+                                            <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.status === 'Secured' ? 'bg-lime-400/15 text-[#a3e635] border border-lime-400/35 dark:bg-lime-400/10 dark:text-lime-400 dark:border-lime-400/20' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
                                                 {item.status === 'Secured' ? <CheckCircle className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
                                                 {item.status}
                                             </div>
@@ -1087,7 +1087,7 @@ const ReportsView = () => {
                                                         title="Download Rights Transfer Certificate"
                                                         disabled={downloadingRights === item.id}
                                                         onClick={() => handleDownloadRightsTransfer(item.id, item.name)}
-                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm group/btn w-full justify-center disabled:opacity-50 disabled:cursor-wait bg-[#a3e635]/15 dark:bg-blue-900/20 border border-[#a3e635]/35 dark:border-blue-700/30 text-[#4d7c0f] dark:text-lime-400 hover:bg-[#a3e635]/25 dark:hover:bg-blue-900/40"
+                                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm group/btn w-full justify-center disabled:opacity-50 disabled:cursor-wait bg-lime-400/15 dark:bg-blue-900/20 border border-lime-400/35 dark:border-blue-700/30 text-[#a3e635] dark:text-lime-400 hover:bg-lime-400/25 dark:hover:bg-blue-900/40"
                                                     >
                                                         <FileCheck className="w-3.5 h-3.5" />
                                                         {downloadingRights === item.id ? 'Generating…' : 'Rights Certificate'}
@@ -1178,7 +1178,7 @@ const ReportsView = () => {
                             </p>
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                                    <span className="w-2 h-2 rounded-full bg-[#65a30d] dark:bg-lime-400" />
+                                    <span className="w-2 h-2 rounded-full bg-lime-400 dark:bg-lime-400" />
                                     {projects.filter(p => p.dueDate).length} events
                                 </div>
                             </div>

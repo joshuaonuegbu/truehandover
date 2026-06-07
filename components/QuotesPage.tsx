@@ -389,7 +389,7 @@ export default function QuotesPage() {
 
                     <button
                         onClick={downloadQuote}
-                        className="w-full h-11 rounded-xl bg-[#a3e635]/35 hover:bg-[#a3e635]/50 dark:bg-[#bef264] dark:hover:bg-[#d4f58f] text-zinc-900 dark:text-zinc-950 text-[10px] font-bold uppercase tracking-[0.14em] flex items-center justify-center gap-2"
+                        className="w-full h-11 rounded-xl bg-lime-400/35 hover:bg-lime-400/50 dark:bg-[#bef264] dark:hover:bg-[#d9f99d] text-zinc-900 dark:text-zinc-950 text-[10px] font-bold uppercase tracking-[0.14em] flex items-center justify-center gap-2"
                     >
                         <Receipt className="w-3.5 h-3.5" /> Export Quote
                     </button>

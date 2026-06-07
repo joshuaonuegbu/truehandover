@@ -30,13 +30,13 @@ const InputField = ({ label, value, onChange, placeholder, type = "text", icon: 
     <div className={`group space-y-1.5 ${className}`}>
         {label && <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 pl-1">{label}</label>}
         <div className="relative flex items-center">
-            {Icon && <Icon className="absolute left-4 w-4 h-4 text-slate-400 transition-colors group-focus-within:text-lime-400 dark:group-focus-within:text-[#bef264]" />}
+            {Icon && <Icon className="absolute left-4 w-4 h-4 text-slate-400 transition-colors group-focus-within:text-lime-400 dark:group-focus-within:text-[#a3e635]" />}
             <input
                 type={type}
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
-                className={`h-12 w-full ${Icon ? 'pl-11 pr-4' : 'px-4'} rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-900 outline-none ring-0 transition-colors placeholder:text-slate-400 focus:border-lime-400 focus:ring-0 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:focus:border-[#bef264] hover:border-slate-300 dark:hover:border-white/12`}
+                className={`h-12 w-full ${Icon ? 'pl-11 pr-4' : 'px-4'} rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-900 outline-none ring-0 transition-colors placeholder:text-slate-400 focus:border-lime-400 focus:ring-0 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:focus:border-lime-400 hover:border-slate-300 dark:hover:border-white/12`}
             />
         </div>
     </div>
@@ -316,8 +316,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                             <h3 className="font-sans tracking-tight text-xl font-bold text-slate-900 dark:text-white">{formData.name}</h3>
                             <p className="text-xs text-slate-700 dark:text-slate-200 font-semibold">{formData.role || ' '}</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-4">{formData.email}</p>
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#ecfccb] dark:bg-[#bef264]/16 border border-[#bef264] dark:border-[#bef264]/45 rounded-full text-[10px] font-bold uppercase tracking-wider text-[#65a30d] dark:text-[#bef264]">
-                                <Crown className="w-3 h-3 text-[#65a30d] dark:text-[#bef264]" /> Pro Plan
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-lime-400 dark:bg-[#bef264]/16 border border-lime-400 dark:border-lime-400/45 rounded-full text-[10px] font-bold uppercase tracking-wider text-[#a3e635] dark:text-lime-400">
+                                <Crown className="w-3 h-3 text-[#a3e635] dark:text-lime-400" /> Pro Plan
                             </div>
                         </div>
                     </div>
@@ -420,7 +420,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                             <>
                                 <Card>
                                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-white/5">
-                                        <User className="w-5 h-5 text-[#4d7c0f] dark:text-[#bef264]" />
+                                        <User className="w-5 h-5 text-[#a3e635] dark:text-lime-400" />
                                         <h3 className="font-sans tracking-tight text-lg text-slate-900 dark:text-white">Basic Information</h3>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -452,9 +452,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                 <Card noPadding className="relative overflow-hidden !rounded-[2rem] border-zinc-200/70 bg-white shadow-[0_1px_0_rgba(15,23,42,0.04)] dark:border-white/[0.08] dark:bg-white/[0.04] dark:shadow-none">
                                     {/* Light: neutral base + very subtle lime blooms (matches brand / focus accents; avoids strong blue) */}
                                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#f8fafc] via-white to-[#f4f4f5] dark:hidden" />
-                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#ecfccb]/[0.35] via-transparent to-[#d9f99d]/[0.12] dark:hidden" />
-                                    <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-br from-[#bef264]/[0.18] to-[#a3e635]/[0.1] blur-3xl dark:hidden" />
-                                    <div className="pointer-events-none absolute -bottom-16 -left-12 h-40 w-40 rounded-full bg-gradient-to-tr from-[#d9f99d]/[0.14] to-transparent blur-3xl dark:hidden" />
+                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#a3e635]/[0.35] via-transparent to-[#a3e635]/[0.12] dark:hidden" />
+                                    <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-br from-[#a3e635]/[0.18] to-[#a3e635]/[0.1] blur-3xl dark:hidden" />
+                                    <div className="pointer-events-none absolute -bottom-16 -left-12 h-40 w-40 rounded-full bg-gradient-to-tr from-[#a3e635]/[0.14] to-transparent blur-3xl dark:hidden" />
                                     <div
                                         className="pointer-events-none absolute inset-0 opacity-[0.14] dark:hidden"
                                         style={{
@@ -505,7 +505,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                             <div className={`grid grid-cols-1 gap-5 ${isCompactContent ? 'min-[1180px]:grid-cols-2' : 'md:grid-cols-2'}`}>
                                                 <div className="space-y-1.5">
                                                     <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Portal subdomain</label>
-                                                    <div className="flex min-h-[2.75rem] items-center rounded-xl border border-zinc-200/70 bg-[#fafbfc] px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] transition-colors focus-within:border-lime-400 focus-within:ring-0 dark:border-white/[0.1] dark:bg-zinc-950/40 dark:shadow-none dark:focus-within:border-[#bef264]">
+                                                    <div className="flex min-h-[2.75rem] items-center rounded-xl border border-zinc-200/70 bg-[#fafbfc] px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] transition-colors focus-within:border-lime-400 focus-within:ring-0 dark:border-white/[0.1] dark:bg-zinc-950/40 dark:shadow-none dark:focus-within:border-lime-400">
                                                         <span className="mr-1 shrink-0 font-mono text-sm text-zinc-500 dark:text-zinc-500">https://</span>
                                                         <input
                                                             value={formData.subdomain}
@@ -522,7 +522,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
 
                                                 <div className="space-y-1.5">
                                                     <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Exit redirect URL</label>
-                                                    <div className="flex min-h-[2.75rem] items-center rounded-xl border border-zinc-200/70 bg-[#fafbfc] px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] transition-colors focus-within:border-lime-400 focus-within:ring-0 dark:border-white/[0.1] dark:bg-zinc-950/40 dark:shadow-none dark:focus-within:border-[#bef264]">
+                                                    <div className="flex min-h-[2.75rem] items-center rounded-xl border border-zinc-200/70 bg-[#fafbfc] px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] transition-colors focus-within:border-lime-400 focus-within:ring-0 dark:border-white/[0.1] dark:bg-zinc-950/40 dark:shadow-none dark:focus-within:border-lime-400">
                                                         <input
                                                             value={formData.website}
                                                             onChange={(e) => handleChange('website', e.target.value)}
@@ -573,7 +573,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                 </div>
                                             </div>
                                             {stripeConnected && (
-                                                <div className="px-3 py-1 bg-lime-400/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-[#4d7c0f] dark:text-[#bef264] border border-lime-400/20 flex items-center gap-1.5">
+                                                <div className="px-3 py-1 bg-lime-400/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-[#a3e635] dark:text-lime-400 border border-lime-400/20 flex items-center gap-1.5">
                                                     <div className="w-2 h-2 bg-lime-400 rounded-full animate-pulse" />
                                                     Connected
                                                 </div>
@@ -765,7 +765,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                 value={formData.bankInfo}
                                                 onChange={(e) => handleChange('bankInfo', e.target.value)}
                                                 placeholder="Bank Name, SWIFT, IBAN..."
-                                                className="w-full p-4 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl focus:border-lime-400 dark:focus:border-[#bef264] outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 min-h-[140px] resize-none hover:border-slate-300 dark:hover:border-white/10"
+                                                className="w-full p-4 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl focus:border-lime-400 dark:focus:border-lime-400 outline-none transition-all text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 min-h-[140px] resize-none hover:border-slate-300 dark:hover:border-white/10"
                                             />
                                         </div>
                                     </Card>
@@ -822,7 +822,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Host</span>
                                                     <span className="text-slate-900 dark:text-white font-bold">portal</span>
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Value</span>
-                                                    <span className="text-[#4d7c0f] dark:text-[#bef264]">cname.Sendational.com</span>
+                                                    <span className="text-[#a3e635] dark:text-lime-400">cname.Sendational.com</span>
                                                     <span className="text-slate-400 dark:text-slate-500 text-[10px] uppercase font-bold font-sans">Type</span>
                                                     <span>CNAME</span>
                                                 </div>
@@ -858,7 +858,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-[#bef264]/10 dark:text-[#bef264] flex items-center justify-center"><Verified className="w-4 h-4" /></div>
+                                                    <div className="w-8 h-8 rounded-lg bg-lime-400/15 text-[#a3e635] dark:bg-[#bef264]/10 dark:text-lime-400 flex items-center justify-center"><Verified className="w-4 h-4" /></div>
                                                     <div>
                                                         <p className="font-bold text-sm text-slate-900 dark:text-white">Remove Logo</p>
                                                         <p className="text-[10px] text-slate-500">Hide "Powered By"</p>
@@ -908,8 +908,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                             </div>
 
                                             <div className={`p-3 rounded-xl flex items-start gap-3 border ${demoMode ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' : 'bg-lime-400/10 dark:bg-lime-400/10 border-lime-400/20 dark:border-lime-400/20'}`}>
-                                                <FlaskConical className={`w-4 h-4 mt-0.5 shrink-0 ${demoMode ? 'text-amber-600 dark:text-amber-400' : 'text-[#4d7c0f] dark:text-[#bef264]'}`} />
-                                                <p className={`text-[11px] leading-relaxed font-medium ${demoMode ? 'text-amber-800 dark:text-amber-200' : 'text-[#4d7c0f] dark:text-[#bef264]'}`}>
+                                                <FlaskConical className={`w-4 h-4 mt-0.5 shrink-0 ${demoMode ? 'text-amber-600 dark:text-amber-400' : 'text-[#a3e635] dark:text-lime-400'}`} />
+                                                <p className={`text-[11px] leading-relaxed font-medium ${demoMode ? 'text-amber-800 dark:text-amber-200' : 'text-[#a3e635] dark:text-lime-400'}`}>
                                                     {demoMode
                                                         ? 'Demo mode is active. Pre-populated mock data and mock backend services are in use. File uploads and payments are simulated.'
                                                         : 'Live mode is active. The app is connected to your real Supabase backend. Sign in to load your projects.'}
@@ -920,7 +920,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                         <div className="hf-surface mt-6 p-4 bg-white dark:bg-charcoal rounded-[2rem] border border-zinc-200/50 dark:border-white/[0.06] shadow-sm dark:shadow-md overflow-hidden">
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Runtime Info</p>
                                             <div className="space-y-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                                                <div className="flex justify-between"><span>Mode</span><span className={demoMode ? 'text-amber-500' : 'text-[#4d7c0f] dark:text-[#bef264]'}>{demoMode ? 'DEMO' : 'LIVE'}</span></div>
+                                                <div className="flex justify-between"><span>Mode</span><span className={demoMode ? 'text-amber-500' : 'text-[#a3e635] dark:text-lime-400'}>{demoMode ? 'DEMO' : 'LIVE'}</span></div>
                                                 <div className="flex justify-between"><span>VITE_DEMO_MODE</span><span>{import.meta.env.VITE_DEMO_MODE ?? '(not set)'}</span></div>
                                                 <div className="flex justify-between"><span>Environment</span><span>{import.meta.env.MODE}</span></div>
                                                 <div className="flex justify-between"><span>Supabase</span><span>{import.meta.env.VITE_SUPABASE_URL ? '✓ configured' : '✗ missing'}</span></div>
@@ -943,7 +943,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onUpdateUser, onSignO
                                 <Card className="!p-8 relative overflow-hidden">
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-white/5">
-                                            <HardDrive className="w-5 h-5 text-[#4d7c0f] dark:text-[#bef264]" />
+                                            <HardDrive className="w-5 h-5 text-[#a3e635] dark:text-lime-400" />
                                             <div>
                                                 <h3 className="font-sans tracking-tight text-xl text-slate-900 dark:text-white">Storage</h3>
                                                 <p className="text-xs text-slate-500">Choose hosted platform storage, or configure links-only imports.</p>

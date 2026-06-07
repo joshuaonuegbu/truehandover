@@ -58,7 +58,7 @@ const MOCK_ACTIVITY = [
 ];
 
 // ─── Micro chart (inline sparkline SVG) ───────────────────────────────────────
-const Sparkline = ({ data, color = '#bef264', height = 40, width = 120 }: { data: number[]; color?: string; height?: number; width?: number }) => {
+const Sparkline = ({ data, color = '#a3e635', height = 40, width = 120 }: { data: number[]; color?: string; height?: number; width?: number }) => {
     const max = Math.max(...data);
     const min = Math.min(...data);
     const range = max - min || 1;
@@ -160,7 +160,7 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
                         {MOCK_REVENUE.map((v, i) => (
                             <div key={i} className="flex-1 flex flex-col items-center gap-1">
                                 <div className="w-full rounded-sm transition-all"
-                                    style={{ height: `${(v / 72) * 80}px`, background: i === 11 ? (isDark ? '#bef264' : '#65a30d') : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.07)') }} />
+                                    style={{ height: `${(v / 72) * 80}px`, background: i === 11 ? (isDark ? '#a3e635' : '#a3e635') : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.07)') }} />
                                 <span className={`text-[9px] ${subText}`}>{MONTH_LABELS[i]}</span>
                             </div>
                         ))}
@@ -257,7 +257,7 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
                         <p className={`text-[10px] font-bold uppercase tracking-widest ${subText} mb-2`}>{k.label}</p>
                         <p className={`font-sans tracking-tight text-4xl font-bold ${isDark ? 'text-white' : 'text-obsidian'} mb-1`}>{k.value}</p>
                         <p className={`text-xs ${accentText} font-bold`}>{k.sub}</p>
-                        <div className="mt-4"><MiniBarChart data={MOCK_REVENUE} accent={isDark ? '#bef264' : '#65a30d'} /></div>
+                        <div className="mt-4"><MiniBarChart data={MOCK_REVENUE} accent={isDark ? '#a3e635' : '#a3e635'} /></div>
                     </div>
                 ))}
             </div>
@@ -267,7 +267,7 @@ const SidebarClassicContent = ({ section, isDark }: { section: Section; isDark: 
                     <div key={i} className="flex items-center gap-3 mb-3">
                         <span className={`text-xs font-bold w-32 truncate ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>{p.name}</span>
                         <div className="flex-1 h-2 rounded-full overflow-hidden bg-zinc-200 dark:bg-white/5">
-                            <div className="h-full rounded-full" style={{ width: `${(p.amount / 12000) * 100}%`, background: isDark ? '#bef264' : '#65a30d' }} />
+                            <div className="h-full rounded-full" style={{ width: `${(p.amount / 12000) * 100}%`, background: isDark ? '#a3e635' : '#a3e635' }} />
                         </div>
                         <span className={`text-xs font-mono font-bold ${accentText} w-16 text-right`}>${p.amount.toLocaleString()}</span>
                     </div>
@@ -346,7 +346,7 @@ const SidebarClassicLayout = ({ section, isDark }: { section: Section; isDark: b
 // VARIANT 2 — BOLD DARK  (Flux Health / image 2)
 // ══════════════════════════════════════════════════════════════════════════════
 const BoldDarkContent = ({ section, isDark }: { section: Section; isDark: boolean }) => {
-    const acc = '#bef264';
+    const acc = '#a3e635';
     const card = isDark ? 'bg-[#1a1a22] border-white/8' : 'glass-panel';
     const sub = isDark ? 'text-zinc-400' : 'text-zinc-500';
 
@@ -476,7 +476,7 @@ const BoldDarkContent = ({ section, isDark }: { section: Section; isDark: boolea
 };
 
 const BoldDarkLayout = ({ section, isDark }: { section: Section; isDark: boolean }) => {
-    const acc = '#bef264';
+    const acc = '#a3e635';
     return (
         <div className="flex h-full w-full" style={{ background: isDark ? '#0a0a10' : '#0f0f18' }}>
             {/* Always-dark sidebar */}
@@ -495,7 +495,7 @@ const BoldDarkLayout = ({ section, isDark }: { section: Section; isDark: boolean
                     ))}
                 </nav>
                 {/* Upgrade card */}
-                <div className="mx-3 p-4 rounded-3xl" style={{ background: 'linear-gradient(135deg,#bef264 0%,#65a30d 100%)' }}>
+                <div className="mx-3 p-4 rounded-3xl" style={{ background: 'linear-gradient(135deg,#a3e635 0%,#a3e635 100%)' }}>
                     <Crown className="w-5 h-5 text-black mb-2" />
                     <p className="text-black font-semibold text-sm leading-snug">Upgrade to Pro</p>
                     <p className="text-black/70 text-[10px] mt-1 mb-3">Unlock unlimited projects</p>
@@ -523,7 +523,7 @@ const BoldDarkLayout = ({ section, isDark }: { section: Section; isDark: boolean
 // VARIANT 3 — FOCUS FLOW  (Car rental / image 3)
 // ══════════════════════════════════════════════════════════════════════════════
 const FocusFlowContent = ({ section, isDark }: { section: Section; isDark: boolean }) => {
-    const acc = isDark ? '#bef264' : '#16a34a';
+    const acc = isDark ? '#a3e635' : '#a3e635';
     const bgCard = isDark ? 'bg-[#1c1c28] border-white/8' : 'glass-panel/70';
     const sub = isDark ? 'text-zinc-400' : 'text-zinc-500';
     const mainText = isDark ? 'text-white' : 'text-obsidian';
@@ -630,7 +630,7 @@ const FocusFlowContent = ({ section, isDark }: { section: Section; isDark: boole
 const FocusFlowLayout = ({ section, isDark }: { section: Section; isDark: boolean }) => {
     const bg = isDark ? 'bg-[#0d0d14]' : 'bg-[#f7f7f8]';
     const pillBg = isDark ? 'bg-[#1c1c28] border-white/10 text-white' : 'glass-panel text-obsidian';
-    const acc = isDark ? '#bef264' : '#16a34a';
+    const acc = isDark ? '#a3e635' : '#a3e635';
     return (
         <div className={`${bg} h-full w-full flex flex-col`}>
             {/* Floating pill nav */}
@@ -663,7 +663,7 @@ const FocusFlowLayout = ({ section, isDark }: { section: Section; isDark: boolea
 // VARIANT 4 — COMMAND CENTER  (Celoxis / image 4)
 // ══════════════════════════════════════════════════════════════════════════════
 const CommandCenterContent = ({ section, isDark }: { section: Section; isDark: boolean }) => {
-    const acc = isDark ? '#bef264' : '#65a30d';
+    const acc = isDark ? '#a3e635' : '#a3e635';
     const card = isDark ? 'bg-[#18181f] border-white/8' : 'glass-panel/80';
     const sub = isDark ? 'text-zinc-400' : 'text-zinc-500';
     const mainText = isDark ? 'text-white' : 'text-obsidian';
@@ -807,7 +807,7 @@ const CommandCenterLayout = ({ section, isDark }: { section: Section; isDark: bo
 // VARIANT 5 — ANALYTICS HUB  (Syncdesk / image 5)
 // ══════════════════════════════════════════════════════════════════════════════
 const AnalyticsHubContent = ({ section, isDark }: { section: Section; isDark: boolean }) => {
-    const acc = isDark ? '#bef264' : '#16a34a';
+    const acc = isDark ? '#a3e635' : '#a3e635';
     const card = isDark ? 'bg-[#1a1a24] border-white/8' : 'glass-panel/80';
     const sub = isDark ? 'text-zinc-400' : 'text-zinc-500';
     const mainText = isDark ? 'text-white' : 'text-obsidian';
@@ -918,8 +918,8 @@ const AnalyticsHubContent = ({ section, isDark }: { section: Section; isDark: bo
                         <div className="space-y-3">
                             {[{ speaker: 'Joshua', msg: 'Can you check discrepancies in revenue vs. projected values?', time: '10:12' }, { speaker: 'TH AI', msg: 'Main deviations: July $18.9K · August $21.7K · September $11.9K', time: '10:13' }].map((m, i) => (
                                 <div key={i} className={`flex gap-2 ${i % 2 === 1 ? 'flex-row-reverse' : ''}`}>
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${i === 0 ? 'bg-zinc-200 dark:bg-white/10 text-zinc-700 dark:text-white' : 'text-black'}`} style={i === 1 ? { background: '#bef264' } : undefined}>{m.speaker[0]}</div>
-                                    <div className={`rounded-2xl px-3 py-2 text-[10px] leading-relaxed ${i === 0 ? (isDark ? 'bg-white/5 text-zinc-200' : 'bg-zinc-200 text-zinc-700') : 'text-black'}`} style={i === 1 ? { background: '#bef264' } : undefined}>{m.msg}</div>
+                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${i === 0 ? 'bg-zinc-200 dark:bg-white/10 text-zinc-700 dark:text-white' : 'text-black'}`} style={i === 1 ? { background: '#a3e635' } : undefined}>{m.speaker[0]}</div>
+                                    <div className={`rounded-2xl px-3 py-2 text-[10px] leading-relaxed ${i === 0 ? (isDark ? 'bg-white/5 text-zinc-200' : 'bg-zinc-200 text-zinc-700') : 'text-black'}`} style={i === 1 ? { background: '#a3e635' } : undefined}>{m.msg}</div>
                                 </div>
                             ))}
                         </div>
@@ -927,7 +927,7 @@ const AnalyticsHubContent = ({ section, isDark }: { section: Section; isDark: bo
                     <div className="p-3 mt-auto">
                         <div className={`flex items-center gap-2 rounded-xl px-3 py-2 ${isDark ? 'bg-white/5 border border-white/8' : 'bg-editorial border border-zinc-200'}`}>
                             <input readOnly placeholder="Enter your AI request" className="flex-1 bg-transparent text-[10px] outline-none placeholder:text-zinc-400" />
-                            <div className="w-6 h-6 rounded-lg flex items-center justify-center text-black cursor-pointer" style={{ background: '#bef264' }}><Send className="w-3 h-3" /></div>
+                            <div className="w-6 h-6 rounded-lg flex items-center justify-center text-black cursor-pointer" style={{ background: '#a3e635' }}><Send className="w-3 h-3" /></div>
                         </div>
                     </div>
                 </div>

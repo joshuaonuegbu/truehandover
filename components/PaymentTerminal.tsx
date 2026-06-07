@@ -66,7 +66,7 @@ export const PaymentTerminal: React.FC<PaymentTerminalProps> = ({
     // Brand colors - Consistent with App
     const brandGreenBg = isDarkMode ? 'bg-lime-400' : 'bg-lime-400';
     const brandGreenText = isDarkMode ? 'text-lime-400' : 'text-lime-400';
-    const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#bef264]' : 'shadow-[0_0_10px_rgba(190, 242, 100,0.5)]';
+    const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#bef264]' : 'shadow-[0_0_10px_rgba(163, 230, 53,0.5)]';
 
     // --- EFFECTS ---
     

@@ -187,7 +187,7 @@ const ClientLibraryView: React.FC<ClientLibraryViewProps> = ({ projects, isDarkM
                                     Delivered {new Date(libraryProject.createdAt).toLocaleDateString()} - {unlockedFiles.length} assets
                                 </p>
                             </div>
-                            <div className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-lime-400/10 border-lime-400/20 text-[#bef264]' : 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f]'}`}>
+                            <div className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${isDarkMode ? 'bg-lime-400/10 border-lime-400/20 text-[#a3e635]' : 'bg-lime-400/15 border-lime-400/35 text-[#a3e635]'}`}>
                                 Library
                             </div>
                         </div>
@@ -211,7 +211,7 @@ const ClientLibraryView: React.FC<ClientLibraryViewProps> = ({ projects, isDarkM
                                         <p className={`text-sm font-bold truncate ${textPrimary}`}>{file.name}</p>
                                         <p className={`text-[10px] uppercase tracking-widest ${textMuted} mt-1`}>{file.type} - {file.size}</p>
                                         {recentViewedAt && (
-                                            <p className={`text-[10px] mt-1 font-bold uppercase tracking-widest ${isDarkMode ? 'text-[#bef264]' : 'text-[#4d7c0f]'}`}>
+                                            <p className={`text-[10px] mt-1 font-bold uppercase tracking-widest ${isDarkMode ? 'text-[#a3e635]' : 'text-[#a3e635]'}`}>
                                                 Viewed {new Date(recentViewedAt).toLocaleDateString()}
                                             </p>
                                         )}
@@ -221,7 +221,7 @@ const ClientLibraryView: React.FC<ClientLibraryViewProps> = ({ projects, isDarkM
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 onClick={() => handleAssetOpen(file.id)}
-                                                className={`mt-3 h-9 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${isDarkMode ? 'bg-[#bef264] text-zinc-950 hover:bg-[#d9f99d]' : 'bg-zinc-900 text-white hover:bg-zinc-800'}`}
+                                                className={`mt-3 h-9 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${isDarkMode ? 'bg-lime-400 text-zinc-950 hover:bg-lime-400' : 'bg-zinc-900 text-white hover:bg-zinc-800'}`}
                                             >
                                                 <Download className="w-3.5 h-3.5" />
                                                 Open Asset
@@ -310,7 +310,7 @@ const CredentialVaultWidget = ({ credentials, isLocked, isDarkMode }: any) => {
                         <Lock className="w-3 h-3" /> Encrypted
                     </span>
                 ) : (
-                    <span className="flex items-center gap-1 text-[9px] font-bold uppercase text-[#4d7c0f] bg-[#a3e635]/15 px-2 py-1 rounded">
+                    <span className="flex items-center gap-1 text-[9px] font-bold uppercase text-[#a3e635] bg-lime-400/15 px-2 py-1 rounded">
                         <Unlock className="w-3 h-3" /> Unlocked
                     </span>
                 )}
@@ -392,7 +392,7 @@ const CredentialVaultWidget = ({ credentials, isLocked, isDarkMode }: any) => {
 const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, onAssetClick, onRequestCorrection, isPhoneLike, onRename, onResize, onRemove }: any) => {
     const textPrimary = isDarkMode ? 'text-white' : 'text-zinc-900';
     const brandGreenBg = accentDotClass(isDarkMode);
-    const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#bef264]' : 'shadow-[0_0_10px_rgba(190, 242, 100,0.5)]';
+    const brandGreenShadow = isDarkMode ? 'shadow-[0_0_10px_#bef264]' : 'shadow-[0_0_10px_rgba(163,230,53,0.5)]';
     const borderColor = isDarkMode ? 'border-white/5' : 'border-zinc-200';
     // Smaller typography on phone-like viewports
     const titleClass = isPhoneLike ? 'text-xs' : 'text-sm md:text-lg';
@@ -517,7 +517,7 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                             onBlur={() => { if (editingNameVal.trim()) onRename(file.id, editingNameVal.trim()); setEditingNameId(null); }}
                                             onKeyDown={(e) => { if (e.key === 'Enter') { if (editingNameVal.trim()) onRename(file.id, editingNameVal.trim()); setEditingNameId(null); } if (e.key === 'Escape') setEditingNameId(null); }}
                                             onClick={(e) => e.stopPropagation()}
-                                            className={`w-full font-semibold ${titleClass} bg-transparent border-b-2 outline-none truncate ${isDarkMode ? 'text-white border-[#bef264]' : 'text-zinc-900 border-lime-400'}`}
+                                            className={`w-full font-semibold ${titleClass} bg-transparent border-b-2 outline-none truncate ${isDarkMode ? 'text-white border-lime-400' : 'text-zinc-900 border-lime-400'}`}
                                         />
                                     ) : (
                                         <h3
@@ -541,10 +541,10 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                     file.locked && isLocked
                                         ? 'bg-amber-500/10 border-amber-500/20 text-amber-500'
                                         : isDarkMode
-                                            ? 'bg-[#bef264]/10 border-[#bef264]/20 text-[#bef264]'
-                                            : 'bg-[#a3e635]/15 border-[#84cc16]/30 text-[#3f6212]'
+                                            ? 'bg-lime-400/10 border-lime-400/20 text-[#a3e635]'
+                                            : 'bg-lime-400/15 border-lime-400/30 text-[#a3e635]'
                                 }`} title={file.locked && isLocked ? 'Locked until payment' : 'Ready to download'}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${ file.locked && isLocked ? 'bg-amber-400' : 'bg-[#bef264]' } ${!(file.locked && isLocked) ? 'shadow-[0_0_6px_rgba(190,242,100,0.7)]' : ''}`} />
+                                    <span className={`w-1.5 h-1.5 rounded-full ${ file.locked && isLocked ? 'bg-amber-400' : 'bg-lime-400' } ${!(file.locked && isLocked) ? 'shadow-[0_0_6px_rgba(163, 230, 53,0.7)]' : ''}`} />
                                     {file.locked && isLocked ? 'Locked' : 'Ready'}
                                 </div>
                             </div>
@@ -570,7 +570,7 @@ const VisualAssetGrid = ({ files, isLocked, isDarkMode, isEmbedded, revisions, o
                                                 title="Copy SHA-256 hash"
                                                 className={`shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border transition-all ${
                                                     copiedHashId === file.id
-                                                        ? (isDarkMode ? 'bg-blue-900/30 border-blue-700 text-[#bef264]' : 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f]')
+                                                        ? (isDarkMode ? 'bg-blue-900/30 border-blue-700 text-[#a3e635]' : 'bg-lime-400/15 border-lime-400/35 text-[#a3e635]')
                                                         : (isDarkMode ? 'border-white/10 text-zinc-400 hover:text-white hover:bg-white/10' : 'border-zinc-200/50 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100')
                                                 }`}
                                             >
@@ -659,7 +659,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                         <button
                             type="button"
                             onClick={() => onAssetClick(index)}
-                            className={`relative w-20 h-20 sm:w-28 sm:h-28 shrink-0 overflow-hidden rounded-[1.25rem] ring-1 transition-all duration-500 p-0 ${isDarkMode ? 'bg-[#0f0f15] ring-white/10 group-hover:ring-[#bef264]/40 group-hover:shadow-[0_0_20px_rgba(190,242,100,0.15)]' : 'bg-zinc-50 ring-zinc-200/80 group-hover:ring-[#bef264]/50 group-hover:shadow-[0_0_20px_rgba(190,242,100,0.25)]'}`}
+                            className={`relative w-20 h-20 sm:w-28 sm:h-28 shrink-0 overflow-hidden rounded-[1.25rem] ring-1 transition-all duration-500 p-0 ${isDarkMode ? 'bg-[#0f0f15] ring-white/10 group-hover:ring-lime-400/40 group-hover:shadow-[0_0_20px_rgba(163, 230, 53,0.15)]' : 'bg-zinc-50 ring-zinc-200/80 group-hover:ring-lime-400/50 group-hover:shadow-[0_0_20px_rgba(163, 230, 53,0.25)]'}`}
                             aria-label={`View ${file.name}`}
                         >
                             {file.previewUrl ? (
@@ -688,7 +688,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                         <div className="flex items-center gap-2">
                                             <span className={`w-2 h-2 rounded-full ${isFileLocked
                                                 ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.35)]'
-                                                : `${brandGreenBg} ${isDarkMode ? 'shadow-[0_0_12px_rgba(190, 242, 100,0.35)]' : 'shadow-[0_0_10px_rgba(190, 242, 100,0.25)]'}`
+                                                : `${brandGreenBg} ${isDarkMode ? 'shadow-[0_0_12px_rgba(163, 230, 53,0.35)]' : 'shadow-[0_0_10px_rgba(163, 230, 53,0.25)]'}`
                                                 }`} />
                                             {onRename && editingNameId === file.id ? (
                                                 <input
@@ -710,7 +710,7 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                             {isFileLocked ? (
                                         <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Locked</span>
                                             ) : (
-                                                <span className={`shrink-0 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${isDarkMode ? 'text-[#bef264] bg-lime-400/10 border-lime-400/20' : 'text-[#4d7c0f] bg-blue-50 border-blue-200'}`}>Open</span>
+                                                <span className={`shrink-0 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${isDarkMode ? 'text-[#a3e635] bg-lime-400/10 border-lime-400/20' : 'text-[#a3e635] bg-blue-50 border-blue-200'}`}>Open</span>
                                     )}
                                 </div>
 
@@ -766,8 +766,8 @@ const VisualAssetList = ({ files, isLocked, isDarkMode, isEmbedded, onAssetClick
                                         target="_blank"
                                         rel="noopener noreferrer"
                                                 className={`flex items-center gap-2 px-3 py-2 rounded-full border transition-all text-[10px] font-bold uppercase tracking-widest ${isDarkMode
-                                                    ? 'bg-lime-400/10 border-lime-400/20 text-[#bef264] hover:bg-lime-400/20'
-                                                    : 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f] hover:bg-blue-100'}`}
+                                                    ? 'bg-lime-400/10 border-lime-400/20 text-[#a3e635] hover:bg-lime-400/20'
+                                                    : 'bg-lime-400/15 border-lime-400/35 text-[#a3e635] hover:bg-blue-100'}`}
                                         title="Download"
                                     >
                                         <Download className="w-4 h-4" />
@@ -1209,7 +1209,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                                         setImagePreviewError(null);
                                                         setImageRetrySeed((seed) => seed + 1);
                                                     }}
-                                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-[#a3e635] hover:bg-[#84cc16] dark:bg-[#bef264] dark:hover:bg-[#d9f99d] text-zinc-950 text-[10px] font-bold uppercase tracking-wider transition-colors"
+                                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-lime-400 hover:bg-lime-400 dark:bg-[#bef264] dark:hover:bg-[#d9f99d] text-zinc-950 text-[10px] font-bold uppercase tracking-wider transition-colors"
                                                 >
                                                     <RefreshCw className="w-3 h-3" />
                                                     Retry Preview
@@ -1302,7 +1302,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                                                     transition: 'transform 220ms ease'
                                                                 }}
                                                             >
-                                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shadow-lg border border-black/10 cursor-pointer hover:scale-110 transition-transform ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-[#a3e635] text-zinc-950'}`}>
+                                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shadow-lg border border-black/10 cursor-pointer hover:scale-110 transition-transform ${isDarkMode ? 'bg-lime-400 text-zinc-950' : 'bg-lime-400 text-zinc-950'}`}>
                                                                     {index + 1}
                                                                 </div>
                                                                 <div className="absolute top-full mt-2 w-48 p-3 rounded-xl bg-zinc-900 border border-white/10 text-white text-[10px] shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 flex flex-col gap-1">
@@ -1323,7 +1323,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                                             }}
                                                         >
                                                             <div className="relative">
-                                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shadow-lg animate-pulse ${isDarkMode ? 'bg-[#bef264] text-zinc-950' : 'bg-[#a3e635] text-zinc-950'}`} />
+                                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shadow-lg animate-pulse ${isDarkMode ? 'bg-lime-400 text-zinc-950' : 'bg-lime-400 text-zinc-950'}`} />
                                                                 
                                                                 <div 
                                                                         className={`absolute top-full lg:left-1/2 lg:-translate-x-1/2 left-0 mt-3 w-64 p-3 rounded-2xl border shadow-2xl flex flex-col gap-2 cursor-auto ${isDarkMode ? 'bg-zinc-800 border-white/10' : 'bg-white/95 border-zinc-200 text-zinc-900'}`}
@@ -1356,7 +1356,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                                                         >Cancel</button>
                                                                         <button 
                                                                             type="button"
-                                                                            className={`text-[10px] uppercase font-bold tracking-widest rounded-2xl px-3 py-1.5 transition-colors ${isDarkMode ? 'bg-[#bef264] text-zinc-950 hover:bg-[#d9f99d]' : 'bg-[#a3e635] text-zinc-950 hover:bg-[#84cc16]'}`}
+                                                                            className={`text-[10px] uppercase font-bold tracking-widest rounded-2xl px-3 py-1.5 transition-colors ${isDarkMode ? 'bg-lime-400 text-zinc-950 hover:bg-lime-400' : 'bg-lime-400 text-zinc-950 hover:bg-lime-400'}`}
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
                                                                                 submitDraftPin();
@@ -1553,7 +1553,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                             : 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200/50 text-zinc-700'
                                             }`}
                                     />
-                                    {file.locked && isLocked ? <Lock className="w-4 h-4 text-amber-500" /> : <Unlock className={`w-4 h-4 ${isDarkMode ? 'text-[#bef264]' : 'text-blue-600'}`} />}
+                                    {file.locked && isLocked ? <Lock className="w-4 h-4 text-amber-500" /> : <Unlock className={`w-4 h-4 ${isDarkMode ? 'text-[#a3e635]' : 'text-blue-600'}`} />}
                                 </div>
                             </div>
                             <h3 className={`font-bold text-lg leading-tight ${textPrimary} truncate`}>{file.name}</h3>
@@ -1586,7 +1586,7 @@ const VisualLightbox = ({ file, allFiles, currentIndex, isLocked, isDarkMode, th
                                 </>
                             ) : (
                                 <div className="text-center">
-                                    <a href={file.downloadUrl} target="_blank" rel="noopener noreferrer" className={`w-full py-4 rounded-2xl font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-[#a3e635] hover:bg-[#84cc16] text-zinc-950'}`}><Download className="w-4 h-4" /> Download Asset</a>
+                                    <a href={file.downloadUrl} target="_blank" rel="noopener noreferrer" className={`w-full py-4 rounded-2xl font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-lime-400 hover:bg-lime-400 text-zinc-950' : 'bg-lime-400 hover:bg-lime-400 text-zinc-950'}`}><Download className="w-4 h-4" /> Download Asset</a>
                                     <p className="text-[10px] text-zinc-400 mt-3">Full resolution unlocked.</p>
                                 </div>
                             )}
@@ -2180,7 +2180,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                 </div>
                             </div>
                         ) : (
-                            <div className="mt-10"><div className={`flex justify-between items-end border-b border-zinc-200/50 dark:border-white/5 pb-2 mb-4`}><span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm ${isDarkMode ? 'bg-[#bef264]/12 text-[#bef264] border-[#bef264]/25' : 'bg-[#a3e635]/15 text-[#4d7c0f] border-[#a3e635]/35'}`}><span className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-[#bef264] shadow-[0_0_8px_rgba(190,242,100,0.6)]' : 'bg-[#65a30d] shadow-[0_0_8px_rgba(163,230,53,0.55)]'} animate-pulse`} />Project Value</span></div><div className="flex items-center justify-between"><span className={`text-sm font-bold ${textPrimary}`}>Total Contract</span><span className={`text-xl font-sans tracking-tight font-bold ${isDarkMode ? GRADIENT_TEXT : 'text-zinc-900'}`}>${project.amount.toLocaleString()}</span></div></div>
+                            <div className="mt-10"><div className={`flex justify-between items-end border-b border-zinc-200/50 dark:border-white/5 pb-2 mb-4`}><span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm ${isDarkMode ? 'bg-lime-400/12 text-[#a3e635] border-lime-400/25' : 'bg-lime-400/15 text-[#a3e635] border-lime-400/35'}`}><span className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-lime-400 shadow-[0_0_8px_rgba(163, 230, 53,0.6)]' : 'bg-lime-400 shadow-[0_0_8px_rgba(163, 230, 53,0.55)]'} animate-pulse`} />Project Value</span></div><div className="flex items-center justify-between"><span className={`text-sm font-bold ${textPrimary}`}>Total Contract</span><span className={`text-xl font-sans tracking-tight font-bold ${isDarkMode ? GRADIENT_TEXT : 'text-zinc-900'}`}>${project.amount.toLocaleString()}</span></div></div>
                         )}
                     </div>
 
@@ -2536,7 +2536,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                                             <span className={`font-serif font-bold text-base ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                                                 {isCanvasSim ? 'About Sendational' : 'Try Sendational'}
                                             </span>
-                                            <ArrowRight className={`w-4 h-4 ${isDarkMode ? 'text-[#bef264]' : 'text-blue-600'}`} />
+                                            <ArrowRight className={`w-4 h-4 ${isDarkMode ? 'text-[#a3e635]' : 'text-blue-600'}`} />
                                         </div>
                                     </div>
                                 </div>
@@ -2977,7 +2977,7 @@ export const ClientPreviewPage: React.FC<ClientPreviewPageProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setIsLearnMoreOpen(false)}
-                                className={`w-full sm:w-auto px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-[#bef264] hover:bg-[#d9f99d] text-zinc-950' : 'bg-zinc-900 hover:bg-zinc-800 text-white'}`}
+                                className={`w-full sm:w-auto px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-lime-400 hover:bg-lime-400 text-zinc-950' : 'bg-zinc-900 hover:bg-zinc-800 text-white'}`}
                             >
                                 Continue Preview
                             </button>

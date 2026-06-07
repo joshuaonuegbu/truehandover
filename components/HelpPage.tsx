@@ -98,7 +98,7 @@ export default function HelpPage({ onBack }: { onBack: () => void }) {
                             Guides for secure asset delivery, payments, and client access.
                         </p>
                     </div>
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#a3e635]/15 dark:bg-[#bef264]/12 text-[#4d7c0f] dark:text-[#bef264] border border-[#a3e635]/35 dark:border-[#bef264]/30 backdrop-blur-sm text-[10px] font-bold uppercase tracking-widest self-start xl:self-auto">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-lime-400/15 dark:bg-[#bef264]/12 text-[#a3e635] dark:text-lime-400 border border-lime-400/35 dark:border-lime-400/30 backdrop-blur-sm text-[10px] font-bold uppercase tracking-widest self-start xl:self-auto">
                         <LifeBuoy className="w-3 h-3" /> Sendational Support
                     </div>
                 </div>

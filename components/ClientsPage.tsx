@@ -107,7 +107,7 @@ function ClientTier({ ltv }: { ltv: number }) {
         </span>
     );
     if (ltv >= 1000) return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-[#a3e635]/15 text-[#4d7c0f] dark:bg-blue-900/30 dark:text-lime-400 border border-[#a3e635]/35 dark:border-blue-700/30">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-lime-400/15 text-[#a3e635] dark:bg-blue-900/30 dark:text-lime-400 border border-lime-400/35 dark:border-blue-700/30">
             <Star className="w-2.5 h-2.5" /> Silver
         </span>
     );
@@ -200,7 +200,7 @@ function ClientCard({
     const [portalBusy, setPortalBusy] = useState(false);
     const [portalUrl, setPortalUrl] = useState<string>('');
     const [kitDraft, setKitDraft] = useState({
-        primaryColor: brandKit?.primaryColor || '#65a30d',
+        primaryColor: brandKit?.primaryColor || '#a3e635',
         accentColor: brandKit?.accentColor || '#0f172a',
         logoUrl: brandKit?.logoUrl || '',
         notes: brandKit?.notes || '',
@@ -208,7 +208,7 @@ function ClientCard({
 
     useEffect(() => {
         setKitDraft({
-            primaryColor: brandKit?.primaryColor || '#65a30d',
+            primaryColor: brandKit?.primaryColor || '#a3e635',
             accentColor: brandKit?.accentColor || '#0f172a',
             logoUrl: brandKit?.logoUrl || '',
             notes: brandKit?.notes || '',
@@ -413,7 +413,7 @@ function ClientCard({
                     <button
                         onClick={handleCreateRetainer}
                         disabled={retainerBusy || !client.email}
-                        className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-[#a3e635]/35 dark:border-blue-600/40 text-[#4d7c0f] dark:text-lime-400 hover:bg-[#a3e635]/15 dark:hover:bg-blue-900/20 disabled:opacity-50"
+                        className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-lime-400/35 dark:border-blue-600/40 text-[#a3e635] dark:text-lime-400 hover:bg-lime-400/15 dark:hover:bg-blue-900/20 disabled:opacity-50"
                         title="Generate recurring Stripe retainer link"
                     >
                         {retainerBusy ? 'Generating…' : 'Retainer Link'}
@@ -441,7 +441,7 @@ function ClientCard({
                                     value={kitDraft.primaryColor}
                                     onChange={(e) => setKitDraft({ ...kitDraft, primaryColor: e.target.value })}
                                     className="mt-1 w-full h-9 px-3 rounded-lg border border-zinc-200/50 dark:border-white/10 bg-white dark:bg-white/5 text-xs"
-                                    placeholder="#65a30d"
+                                    placeholder="#a3e635"
                                 />
                             </div>
                             <div>

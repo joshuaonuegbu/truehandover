@@ -236,7 +236,7 @@ const Toggle = ({ checked, onChange }: { checked: boolean, onChange: (v: boolean
         role="switch"
         aria-checked={checked}
         onClick={() => { playClick(); onChange(!checked); }}
-        className={`w-11 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${checked ? 'bg-[#65a30d] dark:bg-lime-400' : 'bg-zinc-200 dark:bg-white/10'}`}
+        className={`w-11 h-6 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${checked ? 'bg-lime-400 dark:bg-lime-400' : 'bg-zinc-200 dark:bg-white/10'}`}
     >
         <div className={`absolute top-1 left-1 w-4 h-4 rounded-full shadow-sm transition-all duration-300 ${checked ? 'translate-x-5 bg-white dark:bg-zinc-950' : 'bg-white dark:bg-zinc-500'}`} />
     </button>
@@ -921,7 +921,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                     <div className="flex items-center gap-4">
                         <button
                             onClick={cyclePreviewTheme}
-                            className="p-2 rounded-full bg-zinc-200 dark:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-[#4d7c0f] dark:hover:text-[#4d7c0f] transition-colors"
+                            className="p-2 rounded-full bg-zinc-200 dark:bg-white/10 text-zinc-500 dark:text-zinc-400 hover:text-[#a3e635] dark:hover:text-[#a3e635] transition-colors"
                             title={`Preview Theme: ${previewTheme.charAt(0).toUpperCase() + previewTheme.slice(1)}`}
                         >
                             {previewTheme === 'light' && <Sun className="w-4 h-4" />}
@@ -929,7 +929,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                             {previewTheme === 'system' && <Monitor className="w-4 h-4" />}
                         </button>
                         <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-[#65a30d] dark:bg-lime-400 animate-pulse"></span>
+                            <span className="w-2 h-2 rounded-full bg-lime-400 dark:bg-lime-400 animate-pulse"></span>
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Live Editor</span>
                         </div>
                         <button
@@ -1064,10 +1064,10 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             <div className="flex justify-between items-center mb-1">
                                                 <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Persona</p>
                                                 <div className="flex gap-2">
-                                                    <button onClick={handleAutoGenerateAvatar} className="text-[10px] text-zinc-500 hover:text-[#4d7c0f] dark:hover:text-[#4d7c0f] font-bold hover:underline flex items-center gap-1" title="Generate from Name">
+                                                    <button onClick={handleAutoGenerateAvatar} className="text-[10px] text-zinc-500 hover:text-[#a3e635] dark:hover:text-[#a3e635] font-bold hover:underline flex items-center gap-1" title="Generate from Name">
                                                         <Type className="w-3 h-3" /> Auto
                                                     </button>
-                                                    <button onClick={() => { playClick(); setShowAvatarSelector(!showAvatarSelector); }} className="text-[10px] text-[#4d7c0f] dark:text-lime-400 font-bold hover:underline">
+                                                    <button onClick={() => { playClick(); setShowAvatarSelector(!showAvatarSelector); }} className="text-[10px] text-[#a3e635] dark:text-lime-400 font-bold hover:underline">
                                                         {showAvatarSelector ? 'Close' : 'Browse'}
                                                     </button>
                                                 </div>
@@ -1201,7 +1201,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                     </div>
 
                                                     {linkImportSuccess && (
-                                                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#a3e635]/15 dark:bg-blue-900/20 border border-[#a3e635]/35 dark:border-blue-700/40 text-[#4d7c0f] dark:text-blue-400 text-[10px] font-bold">
+                                                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-lime-400/15 dark:bg-blue-900/20 border border-lime-400/35 dark:border-blue-700/40 text-[#a3e635] dark:text-blue-400 text-[10px] font-bold">
                                                             <CheckCircle className="w-3.5 h-3.5 shrink-0" />
                                                             {linkImportSuccess}
                                                         </div>
@@ -1254,7 +1254,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                     {detectedLinkType && (
                                                         <div className="flex items-center gap-1.5">
                                                             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Detected:</span>
-                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[#a3e635]/15 text-[#4d7c0f] border border-[#a3e635]/35 dark:bg-lime-400/15 dark:text-lime-400 dark:border-lime-400/25">{detectedLinkType}</span>
+                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-lime-400/15 text-[#a3e635] border border-lime-400/35 dark:bg-lime-400/15 dark:text-lime-400 dark:border-lime-400/25">{detectedLinkType}</span>
                                                         </div>
                                                     )}
 
@@ -1275,7 +1275,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                     <div className="flex flex-wrap items-center gap-2">
                                                         <span className="text-xs font-medium tracking-wider text-zinc-500 dark:text-zinc-400">Connected:</span>
                                                         {connectedDriveProviders.length > 0 ? connectedDriveProviders.map((provider) => (
-                                                            <span key={provider} className="px-2 py-1 rounded-full text-xs font-medium tracking-wider bg-[#a3e635]/15 text-[#4d7c0f] border border-[#a3e635]/35 dark:bg-lime-400/15 dark:text-lime-400 dark:border-lime-400/20">
+                                                            <span key={provider} className="px-2 py-1 rounded-full text-xs font-medium tracking-wider bg-lime-400/15 text-[#a3e635] border border-lime-400/35 dark:bg-lime-400/15 dark:text-lime-400 dark:border-lime-400/20">
                                                                 {provider}
                                                             </span>
                                                         )) : (
@@ -1313,7 +1313,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                             />
                                                         ) : (
                                                             <div
-                                                                className="font-bold text-xs truncate dark:text-white cursor-pointer hover:text-[#4d7c0f] dark:hover:text-[#4d7c0f] flex items-center gap-1 group/name"
+                                                                className="font-bold text-xs truncate dark:text-white cursor-pointer hover:text-[#a3e635] dark:hover:text-[#a3e635] flex items-center gap-1 group/name"
                                                                 onClick={() => setEditingFile({ idx: i, value: file.name })}
                                                                 title="Click to rename"
                                                             >
@@ -1337,7 +1337,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                             />
                                                         ) : (
                                                             <div
-                                                                className={`text-[10px] text-zinc-500 ${file.externalUrl ? 'cursor-pointer hover:text-[#4d7c0f] dark:hover:text-[#4d7c0f] transition-colors' : ''}`}
+                                                                className={`text-[10px] text-zinc-500 ${file.externalUrl ? 'cursor-pointer hover:text-[#a3e635] dark:hover:text-[#a3e635] transition-colors' : ''}`}
                                                                 onClick={() => { if (file.externalUrl) setEditingSize({ idx: i, value: file.size }); }}
                                                                 title={file.externalUrl ? 'Click to edit size' : undefined}
                                                             >{file.size}</div>
@@ -1349,7 +1349,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                             setFiles(files.map((f, idx) => idx === i ? { ...f, includeInLibrary: f.includeInLibrary === false ? true : false } : f));
                                                             playClick();
                                                         }}
-                                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border transition-colors ${file.includeInLibrary === false ? 'bg-zinc-200 text-zinc-500 border-zinc-200/50 hover:bg-zinc-200 dark:bg-white/5 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-white/10' : 'bg-[#a3e635]/15 text-[#4d7c0f] border-[#a3e635]/35 hover:bg-[#a3e635]/25 dark:bg-lime-400/10 dark:text-lime-400 dark:border-lime-400/20 dark:hover:bg-lime-400/20'}`}
+                                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border transition-colors ${file.includeInLibrary === false ? 'bg-zinc-200 text-zinc-500 border-zinc-200/50 hover:bg-zinc-200 dark:bg-white/5 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-white/10' : 'bg-lime-400/15 text-[#a3e635] border-lime-400/35 hover:bg-lime-400/25 dark:bg-lime-400/10 dark:text-lime-400 dark:border-lime-400/20 dark:hover:bg-lime-400/20'}`}
                                                         title="Include in client library"
                                                     >
                                                         {file.includeInLibrary === false ? (
@@ -1371,14 +1371,14 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             {isUploading ? (
                                                 <div className="w-full py-4 bg-editorial dark:bg-white/5 rounded-lg border border-zinc-200/50 dark:border-white/10 flex flex-col items-center justify-center gap-2">
                                                     <div className="flex items-center gap-2">
-                                                        <Loader2 className="w-4 h-4 animate-spin text-[#4d7c0f] dark:text-lime-400" />
+                                                        <Loader2 className="w-4 h-4 animate-spin text-[#a3e635] dark:text-lime-400" />
                                                         <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300">
                                                             {uploadProgress.status === 'uploading' ? 'Uploading to R2...' : 'Processing & Watermarking...'}
                                                         </span>
                                                     </div>
                                                     <div className="w-48 h-1 bg-zinc-200 dark:bg-white/10 rounded-full overflow-hidden">
                                                         <div
-                                                            className="h-full bg-[#65a30d] dark:bg-lime-400 transition-all duration-300"
+                                                            className="h-full bg-lime-400 dark:bg-lime-400 transition-all duration-300"
                                                             style={{ width: `${uploadProgress.percent}%` }}
                                                         />
                                                     </div>
@@ -1386,7 +1386,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             ) : (
                                                 <button
                                                     onClick={() => assetInputRef.current?.click()}
-                                                    className="w-full py-3 border-2 border-dashed border-zinc-200/50 dark:border-white/10 rounded-lg text-xs font-bold text-zinc-400 hover:text-[#4d7c0f] hover:border-lime-400 dark:hover:text-[#4d7c0f] dark:hover:border-lime-400 transition-colors flex items-center justify-center gap-2"
+                                                    className="w-full py-3 border-2 border-dashed border-zinc-200/50 dark:border-white/10 rounded-lg text-xs font-bold text-zinc-400 hover:text-[#a3e635] hover:border-lime-400 dark:hover:text-[#a3e635] dark:hover:border-lime-400 transition-colors flex items-center justify-center gap-2"
                                                 >
                                                     <Upload className="w-3 h-3" /> Upload Local File
                                                 </button>
@@ -1508,8 +1508,8 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                 ${formData.theme?.name === 'Custom' ? 'border-lime-400 ring-2 ring-lime-400/20 dark:border-lime-400 dark:ring-lime-400/20' : ''}
                                             `}
                                         >
-                                            <Upload className="w-5 h-5 text-zinc-400 group-hover:text-[#4d7c0f] dark:group-hover:text-[#4d7c0f]" />
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 group-hover:text-[#4d7c0f] dark:group-hover:text-[#4d7c0f]">Upload</span>
+                                            <Upload className="w-5 h-5 text-zinc-400 group-hover:text-lime-600 dark:group-hover:text-lime-400 dark:group-hover:text-lime-400" />
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 group-hover:text-lime-600 dark:group-hover:text-lime-400 dark:group-hover:text-lime-400">Upload</span>
                                         </button>
 
                                         {/* Custom Wallpapers List */}
@@ -1539,7 +1539,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
 
                                                 {formData.theme?.wallpaper === custom.wallpaper && (
                                                     <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
-                                                        <CheckCircle className="w-5 h-5 text-[#4d7c0f] dark:text-lime-400 drop-shadow-md" />
+                                                        <CheckCircle className="w-5 h-5 text-[#a3e635] dark:text-lime-400 drop-shadow-md" />
                                                     </div>
                                                 )}
 
@@ -1586,7 +1586,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                 )}
                                                 {formData.theme?.name === preset.name && !customWallpapers.find(c => c.wallpaper === formData.theme?.wallpaper) && (
                                                     <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                                        <CheckCircle className="w-5 h-5 text-[#4d7c0f] dark:text-lime-400 drop-shadow-md" />
+                                                        <CheckCircle className="w-5 h-5 text-[#a3e635] dark:text-lime-400 drop-shadow-md" />
                                                     </div>
                                                 )}
                                                 <div className="absolute bottom-0 inset-x-0 bg-black/50 p-1 text-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1604,7 +1604,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             </h3>
                                             <button
                                                 onClick={toggleGrain}
-                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium tracking-wider transition-colors ${formData.theme?.showGrain ? 'bg-[#a3e635]/15 text-[#4d7c0f] border-[#a3e635]/35 dark:bg-lime-400/20 dark:text-lime-400 dark:border-lime-400/50 border' : 'bg-zinc-200 dark:bg-white/10 text-zinc-500'}`}
+                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium tracking-wider transition-colors ${formData.theme?.showGrain ? 'bg-lime-400/15 text-[#a3e635] border-lime-400/35 dark:bg-lime-400/20 dark:text-lime-400 dark:border-lime-400/50 border' : 'bg-zinc-200 dark:bg-white/10 text-zinc-500'}`}
                                             >
                                                 {formData.theme?.showGrain ? 'Film Grain ON' : 'Film Grain OFF'}
                                             </button>
@@ -1628,7 +1628,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                     className={`
                                                         aspect-square rounded-lg flex flex-col items-center justify-center gap-1 border transition-all hover:bg-editorial dark:hover:bg-white/5 min-w-0 p-1.5 sm:p-0
                                                         ${formData.theme?.pattern === p.id
-                                                            ? 'border-[#a3e635]/35 bg-[#a3e635]/15 text-[#4d7c0f] dark:border-lime-400 dark:bg-lime-400/10 dark:text-lime-400'
+                                                            ? 'border-lime-400/35 bg-lime-400/15 text-[#a3e635] dark:border-lime-400 dark:bg-lime-400/10 dark:text-lime-400'
                                                             : 'border-zinc-200/50 dark:border-white/10 text-zinc-400'
                                                         }
                                                     `}
@@ -1676,7 +1676,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                     className={`
                                                         px-2 sm:px-3 py-2.5 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all hover:bg-editorial dark:hover:bg-white/5 min-w-0
                                                         ${normalizePortalLayoutForPicker(formData.theme?.layout as string | undefined) === l
-                                                            ? 'border-[#a3e635]/35 bg-[#a3e635]/15 text-[#4d7c0f] dark:border-lime-400 dark:bg-lime-400/10 dark:text-lime-400'
+                                                            ? 'border-lime-400/35 bg-lime-400/15 text-[#a3e635] dark:border-lime-400 dark:bg-lime-400/10 dark:text-lime-400'
                                                             : 'border-zinc-200/50 dark:border-white/10 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'
                                                         }
                                                     `}
@@ -1723,7 +1723,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                         className={`
                                                             px-2 sm:px-3 py-2 rounded-xl border text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.04em] transition-all min-w-0
                                                             ${(formData.theme?.lightbox || 'default') === lens
-                                                                ? 'border-[#a3e635]/35 bg-[#a3e635]/15 text-[#4d7c0f] dark:border-lime-400 dark:bg-lime-400/10 dark:text-lime-400'
+                                                                ? 'border-lime-400/35 bg-lime-400/15 text-[#a3e635] dark:border-lime-400 dark:bg-lime-400/10 dark:text-lime-400'
                                                                 : 'border-zinc-200/50 dark:border-white/10 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-editorial dark:hover:bg-white/5'
                                                             }
                                                         `}
@@ -1754,7 +1754,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                                 playClick();
                                                 setFormData({ ...formData, accessConfig: { ...(formData.accessConfig || {}), mode: 'permanent' } });
                                             }}
-                                            className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === 'permanent' || !formData.accessConfig ? 'bg-[#a3e635]/15 border-[#a3e635]/35 text-[#4d7c0f] dark:bg-lime-400/10 dark:border-lime-400 dark:text-lime-400' : 'bg-editorial dark:bg-white/5 border-transparent text-zinc-400 hover:bg-zinc-200 dark:hover:bg-white/10'}`}
+                                            className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.accessConfig?.mode === 'permanent' || !formData.accessConfig ? 'bg-lime-400/15 border-lime-400/35 text-[#a3e635] dark:bg-lime-400/10 dark:border-lime-400 dark:text-lime-400' : 'bg-editorial dark:bg-white/5 border-transparent text-zinc-400 hover:bg-zinc-200 dark:hover:bg-white/10'}`}
                                         >
                                             <Infinity className="w-5 h-5" />
                                             <span className="text-[9px] font-bold uppercase tracking-wider">Permanent</span>
@@ -2006,7 +2006,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                                             ))}
                                             <button
                                                 onClick={addMilestone}
-                                                className="w-full py-2 border border-dashed border-zinc-200/50 dark:border-white/20 rounded-lg text-xs font-bold uppercase text-zinc-500 hover:text-[#4d7c0f] dark:hover:text-[#4d7c0f] hover:border-lime-400 dark:hover:border-lime-400 transition-colors"
+                                                className="w-full py-2 border border-dashed border-zinc-200/50 dark:border-white/20 rounded-lg text-xs font-bold uppercase text-zinc-500 hover:text-[#a3e635] dark:hover:text-[#a3e635] hover:border-lime-400 dark:hover:border-lime-400 transition-colors"
                                             >
                                                 + Add Milestone
                                             </button>
@@ -2022,7 +2022,7 @@ const CreatorPage: React.FC<CreatorPageProps> = ({ existingProject, allProjects 
                 <div className="p-6 border-t border-zinc-200/80 dark:border-white/5 bg-[#f0f2f5]/92 dark:bg-cosmic/92 backdrop-blur-xl relative z-10">
                     <button
                         onClick={handleSave}
-                        className="w-full py-4 rounded-2xl bg-lime-400 hover:bg-lime-400 text-zinc-950 font-bold text-sm uppercase tracking-widest shadow-[0_16px_40px_rgba(190, 242, 100,0.30)] hover:shadow-[0_20px_48px_rgba(190, 242, 100,0.35)] hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
+                        className="w-full py-4 rounded-2xl bg-lime-400 hover:bg-lime-400 text-zinc-950 font-bold text-sm uppercase tracking-widest shadow-[0_16px_40px_rgba(163, 230, 53,0.30)] hover:shadow-[0_20px_48px_rgba(163, 230, 53,0.35)] hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
                     >
                         <Save className="w-4 h-4" />
                         {existingProject ? 'Publish Changes' : 'Create & Publish'}

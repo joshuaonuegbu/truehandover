@@ -4,7 +4,7 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf
 const C = {
   ink:         rgb(0.07,  0.07,  0.10),
   inkSub:      rgb(0.24,  0.26,  0.30),
-  accentBrand: rgb(0.745, 0.949, 0.392),  // #bef264 � UI brand lime
+  accentBrand: rgb(0.745, 0.949, 0.392),  // #a3e635 � UI brand lime
   accent:      rgb(0.38,  0.58,  0.06),   // darker accessible lime for rules/text
   accentSoft:  rgb(0.91,  0.97,  0.83),
   slate:       rgb(0.46,  0.50,  0.56),

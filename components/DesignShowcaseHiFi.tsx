@@ -253,7 +253,7 @@ const PayflowVariant = ({ activeSection }: { activeSection: string }) => {
                                             <td className="py-4 text-xs font-medium text-gray-500">{t.d}</td>
                                             <td className="py-4">
                                                 <div className="flex items-center gap-2">
-                                                    <div className={`w-2 h-2 rounded-full ${t.s === 'Received' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : t.s === 'Payment' ? 'bg-amber-400' : 'bg-lime-400'}`} />
+                                                    <div className={`w-2 h-2 rounded-full ${t.s === 'Received' ? 'bg-green-500 shadow-[0_0_8px_rgba(163, 230, 53,0.5)]' : t.s === 'Payment' ? 'bg-amber-400' : 'bg-lime-400'}`} />
                                                     <span className="text-xs font-bold text-[#111]">{t.s}</span>
                                                 </div>
                                             </td>
@@ -389,14 +389,14 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
     const walkPct = useMemo(() => Math.max(5, 100 - runPct - workoutPct), [runPct, workoutPct]);
     const bgMain = "#111111"; // Main dark bg
     const bgCard = "#1A1A1A"; // Card bg
-    const accentLime = "#bef264"; // Lime green
+    const accentLime = "#a3e635"; // Lime green
     const accentPurple = "#C4B5FD"; // Light purple
 
     const NavItem = ({ icon: Icon, label, count, active }: any) => (
         <div className={`flex items-center gap-4 px-4 py-3 cursor-pointer group rounded-[20px] transition-all mb-1 ${active ? 'bg-white text-black font-bold shadow-[0_0_20px_rgba(255,255,255,0.1)]' : 'text-gray-400 font-medium hover:bg-[#2A2A2A] hover:text-white'}`}>
             <Icon className="w-5 h-5" />
             <span className="flex-1">{label}</span>
-            {count && <span className={`w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center ${active ? 'bg-black text-white' : 'bg-[#bef264] text-black shadow-[0_0_10px_rgba(190, 242, 100,0.4)]'}`}>{count}</span>}
+            {count && <span className={`w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center ${active ? 'bg-black text-white' : 'bg-lime-400 text-black shadow-[0_0_10px_rgba(163, 230, 53,0.4)]'}`}>{count}</span>}
         </div>
     );
 
@@ -421,8 +421,8 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                 </div>
 
                 {/* Upgrade Card */}
-                <div className="mt-8 bg-[#bef264] rounded-[32px] p-6 relative overflow-hidden group cursor-pointer hover:shadow-[0_0_20px_rgba(190, 242, 100,0.3)] transition-shadow">
-                    <div className="absolute -right-4 top-12 w-24 h-24 bg-[#65a30d] rounded-full blur-2xl opacity-60" />
+                <div className="mt-8 bg-lime-400 rounded-[32px] p-6 relative overflow-hidden group cursor-pointer hover:shadow-[0_0_20px_rgba(163, 230, 53,0.3)] transition-shadow">
+                    <div className="absolute -right-4 top-12 w-24 h-24 bg-lime-400 rounded-full blur-2xl opacity-60" />
                     <p className="font-bold text-lg text-black mb-1 relative z-10">Upgrade to Pro</p>
                     <p className="text-xs text-black/70 mb-4 leading-tight relative z-10 pr-4">Upgrade your account for a fuller experience.</p>
                     <button className="w-full py-3 bg-[#1A1A1A] text-white rounded-xl text-xs font-bold hover:scale-[1.02] transition-transform relative z-10 shadow-lg">Upgrade Now</button>
@@ -435,20 +435,20 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                 <div className="flex justify-between items-start mb-10">
                     <div className="flex items-center gap-4 group cursor-pointer">
                         <div className="relative">
-                            <Avatar src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} className="w-14 h-14 bg-gray-200 border-2 border-[#1A1A1A] group-hover:border-[#bef264] transition-colors" />
+                            <Avatar src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} className="w-14 h-14 bg-gray-200 border-2 border-[#1A1A1A] group-hover:border-lime-400 transition-colors" />
                             <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-[#111]" />
                         </div>
                         <div>
-                            <h2 className="font-bold text-xl text-white flex items-center gap-2 group-hover:text-[#bef264] transition-colors">{user.name} <ChevronDown className="w-4 h-4" /></h2>
+                            <h2 className="font-bold text-xl text-white flex items-center gap-2 group-hover:text-lime-600 dark:group-hover:text-lime-400 transition-colors">{user.name} <ChevronDown className="w-4 h-4" /></h2>
                             <p className="text-sm text-gray-500">{user.email}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="relative group">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-white transition-colors" />
-                            <input type="text" placeholder="Search..." className="pl-10 pr-4 py-3.5 bg-[#1A1A1A] rounded-full text-sm w-72 shadow-inner text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#bef264] transition-all" />
+                            <input type="text" placeholder="Search..." className="pl-10 pr-4 py-3.5 bg-[#1A1A1A] rounded-full text-sm w-72 shadow-inner text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-lime-400 transition-all" />
                         </div>
-                        <button className="bg-[#1A1A1A] w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-[#2A2A2A] hover:text-[#bef264] transition-colors relative">
+                        <button className="bg-[#1A1A1A] w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-[#2A2A2A] hover:text-[#a3e635] transition-colors relative">
                             <Bell className="w-5 h-5" />
                             <span className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full" />
                         </button>
@@ -472,7 +472,7 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                     <div className="bg-[#1A1A1A] rounded-[48px] p-8 shadow-2xl col-span-1 min-h-[340px] flex flex-col relative overflow-hidden group">
                         <div className="flex justify-between items-center mb-6 z-10">
                             <div className="flex items-center gap-2 text-white">
-                                <div className="p-2 bg-white/5 rounded-full"><Zap className="w-4 h-4 text-[#bef264] fill-current" /></div>
+                                <div className="p-2 bg-white/5 rounded-full"><Zap className="w-4 h-4 text-[#a3e635] fill-current" /></div>
                                 <span className="font-bold text-sm">Energy Used</span>
                             </div>
                             <MoreHorizontal className="w-5 h-5 text-gray-600 cursor-pointer hover:text-white" />
@@ -481,7 +481,7 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                             <span className="text-5xl font-bold tracking-tighter">{energyKcal}k</span>
                             <span className="text-sm text-gray-500 font-bold">projects active</span>
                         </div>
-                        <div className="absolute top-24 right-8 bg-[#bef264] text-black text-[10px] font-bold px-3 py-1.5 rounded-full z-20 shadow-[0_0_15px_rgba(190, 242, 100,0.5)]">+5%</div>
+                        <div className="absolute top-24 right-8 bg-lime-400 text-black text-[10px] font-bold px-3 py-1.5 rounded-full z-20 shadow-[0_0_15px_rgba(163, 230, 53,0.5)]">+5%</div>
 
                         {/* Abstract Bubble Chart */}
                         <div className="absolute bottom-[-20px] left-1/2 -translate-x-1/2 w-full h-[220px]">
@@ -493,7 +493,7 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                                 <span className="font-bold text-xl">1.2k</span>
                                 <span className="text-[10px] uppercase font-bold text-white/50">kcal</span>
                             </div>
-                            <div className="absolute top-36 left-28 w-24 h-24 rounded-full bg-[#bef264] flex items-center justify-center flex-col z-20 border-4 border-[#111] shadow-lg hover:scale-105 transition-transform cursor-pointer">
+                            <div className="absolute top-36 left-28 w-24 h-24 rounded-full bg-lime-400 flex items-center justify-center flex-col z-20 border-4 border-[#111] shadow-lg hover:scale-105 transition-transform cursor-pointer">
                                 <span className="font-bold text-lg text-black">500</span>
                                 <span className="text-[10px] uppercase font-bold text-black/50">kcal</span>
                             </div>
@@ -529,7 +529,7 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                         <div className="bg-[#1A1A1A] rounded-[40px] p-7 shadow-lg flex flex-col justify-between border border-white/5">
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-white/5 rounded-full"><Zap className="w-5 h-5 text-[#bef264] fill-current" /></div>
+                                    <div className="p-2 bg-white/5 rounded-full"><Zap className="w-5 h-5 text-[#a3e635] fill-current" /></div>
                                     <span className="font-bold text-sm text-white">Activity</span>
                                 </div>
                                 <MoreHorizontal className="w-5 h-5 text-gray-600" />
@@ -545,7 +545,7 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                                 </div>
                             </div>
                             <div className="w-full h-1.5 bg-gray-800 rounded-full mt-2 overflow-hidden">
-                                <div className="w-[65%] h-full bg-gradient-to-r from-[#bef264] to-[#65a30d] shadow-[0_0_10px_#bef264]" />
+                                <div className="w-[65%] h-full bg-gradient-to-r from-[#a3e635] to-[#a3e635] shadow-[0_0_10px_#a3e635]" />
                             </div>
                         </div>
                     </div>
@@ -562,7 +562,7 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                         <div className="flex items-baseline gap-2 mb-6">
                             <span className="text-6xl font-bold text-white tracking-tighter">{wellnessIndex}</span>
                             <span className="text-xl text-gray-600 font-bold">%</span>
-                            <span className="ml-2 bg-[#bef264] text-black px-2.5 py-1 rounded-lg text-[10px] font-bold">{paidCount}/{totalCount} paid</span>
+                            <span className="ml-2 bg-lime-400 text-black px-2.5 py-1 rounded-lg text-[10px] font-bold">{paidCount}/{totalCount} paid</span>
                         </div>
 
                         {/* Dot Matrix Chart */}
@@ -582,11 +582,11 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
                     <div className="col-span-1 bg-white rounded-[48px] p-8 shadow-lg flex flex-col justify-between min-h-[200px]">
                         {/* Progress Indicators */}
-                        {[['Paid', runPct, 'bg-[#C4B5FD] shadow-[0_0_10px_#C4B5FD]'], ['Pending', workoutPct, 'bg-black'], ['Draft', walkPct, 'bg-[#bef264] shadow-[0_0_10px_#bef264]']].map(([l, pct, cls], i) => (
+                        {[['Paid', runPct, 'bg-[#C4B5FD] shadow-[0_0_10px_#C4B5FD]'], ['Pending', workoutPct, 'bg-black'], ['Draft', walkPct, 'bg-lime-400 shadow-[0_0_10px_#a3e635]']].map(([l, pct, cls], i) => (
                             <div key={i} className="mb-4 last:mb-0 group cursor-pointer">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-4xl font-bold text-black tracking-tight group-hover:scale-105 transition-transform origin-left">{pct}<span className="text-lg text-gray-300 ml-1">%</span></span>
-                                    <span className="text-xs font-bold flex items-center gap-2 text-black bg-gray-50 px-3 py-1 rounded-full uppercase tracking-wider">{l} <div className={`w-2 h-2 rounded-full ${['bg-[#C4B5FD]', 'bg-black', 'bg-[#bef264]'][i]}`} /></span>
+                                    <span className="text-xs font-bold flex items-center gap-2 text-black bg-gray-50 px-3 py-1 rounded-full uppercase tracking-wider">{l} <div className={`w-2 h-2 rounded-full ${['bg-[#C4B5FD]', 'bg-black', 'bg-lime-400'][i]}`} /></span>
                                 </div>
                                 <div className="w-full h-4 rounded-full bg-gray-100 overflow-hidden box-content border border-gray-100/50">
                                     <div className={`h-full rounded-full ${cls as string}`} style={{ width: `${pct}%` }} />
@@ -610,7 +610,7 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                         <div className="flex gap-16 mb-8 relative z-10">
                             <div>
                                 <div className="flex items-baseline gap-1">
-                                    <h3 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#bef264] to-white drop-shadow-sm">85</h3>
+                                    <h3 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#a3e635] to-white drop-shadow-sm">85</h3>
                                     <span className="text-lg font-bold text-gray-500">%</span>
                                 </div>
                                 <p className="text-xs text-gray-400 mt-2 font-medium uppercase tracking-wider">Sleep Efficiency</p>
@@ -627,7 +627,7 @@ const FluxVariant = ({ activeSection }: { activeSection: string }) => {
                         <div className="flex-1 flex items-end justify-between gap-6 h-40 relative z-10">
                             {[40, 55, 30, 45, 80, 25, 35, 40].map((h, i) => (
                                 <div key={i} className="flex-1 flex flex-col items-center gap-3 group cursor-pointer">
-                                    <div className={`w-full rounded-t-xl transition-all duration-300 ${i === 4 ? 'bg-gradient-to-t from-[#bef264] to-[#efffcc] shadow-[0_0_20px_rgba(190, 242, 100,0.3)] scale-y-105' : 'bg-[#252525] border-t border-white/5 hover:bg-[#333]'}`} style={{ height: `${h}%` }}>
+                                    <div className={`w-full rounded-t-xl transition-all duration-300 ${i === 4 ? 'bg-gradient-to-t from-[#a3e635] to-[#a3e635] shadow-[0_0_20px_rgba(163, 230, 53,0.3)] scale-y-105' : 'bg-[#252525] border-t border-white/5 hover:bg-[#333]'}`} style={{ height: `${h}%` }}>
                                         {i === 4 && <div className="absolute w-full h-full left-4 bg-[#C4B5FD] rounded-t-xl -z-10 opacity-30 blur-sm" />}
                                     </div>
                                     <span className={`text-[10px] uppercase font-bold tracking-wider ${i === 4 ? 'text-white' : 'text-gray-600'}`}>{['Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec', 'Jan'][i]}</span>
@@ -1106,12 +1106,12 @@ const CeloxisVariant = ({ activeSection }: { activeSection: string }) => {
                                         <span className="col-span-2 text-sm font-bold text-gray-800 pl-2 border-l-4 border-transparent group-hover:border-yellow-400 transition-colors">{row.n}</span>
 
                                         <div className="flex items-center justify-center gap-2">
-                                            <div className={`w-2 h-2 rounded-full ${row.s === 'On Track' ? 'bg-green-400 shadow-[0_0_5px_limegreen]' : row.s === 'Delayed' ? 'bg-red-400' : 'bg-orange-400'}`} />
+                                            <div className={`w-2 h-2 rounded-full ${row.s === 'On Track' ? 'bg-green-400 shadow-[0_0_5px_#a3e635]' : row.s === 'Delayed' ? 'bg-red-400' : 'bg-orange-400'}`} />
                                             <span className="text-xs font-medium text-gray-600 hidden xl:inline">{row.s}</span>
                                         </div>
 
                                         <div className="flex items-center justify-center gap-2">
-                                            <div className={`w-2 h-2 rounded-full ${row.b === 'On Track' ? 'bg-green-400 shadow-[0_0_5px_limegreen]' : row.b === 'Delayed' ? 'bg-red-400' : 'bg-orange-400'}`} />
+                                            <div className={`w-2 h-2 rounded-full ${row.b === 'On Track' ? 'bg-green-400 shadow-[0_0_5px_#a3e635]' : row.b === 'Delayed' ? 'bg-red-400' : 'bg-orange-400'}`} />
                                             <span className="text-xs font-medium text-gray-600 hidden xl:inline">{row.b}</span>
                                         </div>
 
@@ -1473,7 +1473,7 @@ const CallAIVariant = ({ activeSection }: { activeSection: string }) => {
 
             {/* Sidebar (Glass) */}
             <div className="w-20 bg-white/40 backdrop-blur-xl rounded-[32px] flex flex-col items-center py-8 gap-8 border border-white/50 shadow-lg z-20 shrink-0 mr-6">
-                <div className="w-10 h-10 bg-[#bef264] rounded-xl flex items-center justify-center text-black font-bold shadow-lg shadow-lime-400/40">C</div>
+                <div className="w-10 h-10 bg-lime-400 rounded-xl flex items-center justify-center text-black font-bold shadow-lg shadow-lime-400/40">C</div>
                 <div className="flex flex-col gap-6 w-full px-2">
                     {[LayoutGrid, MessageSquare, User, Activity, Box].map((I, i) => (
                         <div key={i} className={`h-12 w-12 mx-auto rounded-2xl flex items-center justify-center cursor-pointer transition-all ${i === 1 ? 'bg-white shadow-md text-black scale-105' : 'text-gray-500 hover:bg-white/50 hover:text-black'}`}>
@@ -2808,7 +2808,7 @@ const CheckBoxVariant = ({ activeSection }: { activeSection: string }) => {
                              </div>
                              <div className="flex gap-12 mb-6">
                                  <div>
-                                     <div className="text-[10px] mb-1 text-[#bef264] flex items-center gap-1">▲ </div>
+                                     <div className="text-[10px] mb-1 text-[#a3e635] flex items-center gap-1">▲ </div>
                                      <div className="text-4xl font-light tracking-tighter text-white">2,4%</div>
                                      <div className="text-[10px] font-bold text-gray-500 mt-1">Web Surfing</div>
                                  </div>
@@ -2821,7 +2821,7 @@ const CheckBoxVariant = ({ activeSection }: { activeSection: string }) => {
                              {/* Neon Lines Chart */}
                              <div className="absolute bottom-6 left-6 right-6 h-16">
                                  <svg className="w-full h-full overflow-visible" preserveAspectRatio="none">
-                                     <path d="M0,40 L30,45 L60,20 L90,50 L120,45 L150,30 L180,40 L210,35" stroke="#bef264" fill="none" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+                                     <path d="M0,40 L30,45 L60,20 L90,50 L120,45 L150,30 L180,40 L210,35" stroke="#a3e635" fill="none" strokeWidth="2" vectorEffect="non-scaling-stroke" />
                                      <path d="M0,50 L30,60 L60,40 L90,60 L120,55 L150,45 L180,50" stroke="#FB923C" fill="none" strokeWidth="2" vectorEffect="non-scaling-stroke" />
                                  </svg>
                              </div>
@@ -2835,7 +2835,7 @@ const CheckBoxVariant = ({ activeSection }: { activeSection: string }) => {
                              </div>
                              <div className="flex gap-12 mb-6">
                                  <div>
-                                     <div className="text-[10px] mb-1 text-[#bef264] flex items-center gap-1">▲ </div>
+                                     <div className="text-[10px] mb-1 text-[#a3e635] flex items-center gap-1">▲ </div>
                                      <div className="text-4xl font-light tracking-tighter text-white">2,8%</div>
                                      <div className="text-[10px] font-bold text-gray-500 mt-1">Partners</div>
                                  </div>
@@ -2851,7 +2851,7 @@ const CheckBoxVariant = ({ activeSection }: { activeSection: string }) => {
                                      <div key={col} className="flex flex-col gap-1.5 justify-end h-16">
                                          {Array.from({length: 4}).map((_, row) => {
                                              const active = Math.random() > 0.5;
-                                             const color = Math.random() > 0.7 ? 'bg-orange-400' : 'bg-[#bef264]';
+                                             const color = Math.random() > 0.7 ? 'bg-orange-400' : 'bg-lime-400';
                                              return (
                                                 <div key={row} className={`w-1.5 h-1.5 rounded-full ${active ? color : 'bg-[#222]'}`} />
                                              )
@@ -2874,13 +2874,13 @@ const CheckBoxVariant = ({ activeSection }: { activeSection: string }) => {
                              <div className="flex-1 flex items-end justify-between gap-2 pb-8">
                                  {[
                                      {h: 40, c: 'bg-white', val: 52, b: 'bg-orange-400', bv: 81},
-                                     {h: 60, c: 'bg-[#bef264]', val: 96, b: 'bg-orange-400', bv: 25},
-                                     {h: 50, c: 'bg-[#bef264]', val: 48, b: 'bg-white', bv: 51},
-                                     {h: 70, c: 'bg-[#bef264]', val: 80, b: 'bg-orange-400', bv: 49},
-                                     {h: 30, c: 'bg-orange-400', val: 34, b: 'bg-[#bef264]', bv: 67},
-                                     {h: 80, c: 'bg-[#bef264]', val: 92, b: 'bg-white', bv: 28},
-                                     {h: 45, c: 'bg-[#bef264]', val: 58, b: 'bg-orange-400', bv: 20},
-                                     {h: 65, c: 'bg-orange-400', val: 84, b: 'bg-[#bef264]', bv: 39},
+                                     {h: 60, c: 'bg-lime-400', val: 96, b: 'bg-orange-400', bv: 25},
+                                     {h: 50, c: 'bg-lime-400', val: 48, b: 'bg-white', bv: 51},
+                                     {h: 70, c: 'bg-lime-400', val: 80, b: 'bg-orange-400', bv: 49},
+                                     {h: 30, c: 'bg-orange-400', val: 34, b: 'bg-lime-400', bv: 67},
+                                     {h: 80, c: 'bg-lime-400', val: 92, b: 'bg-white', bv: 28},
+                                     {h: 45, c: 'bg-lime-400', val: 58, b: 'bg-orange-400', bv: 20},
+                                     {h: 65, c: 'bg-orange-400', val: 84, b: 'bg-lime-400', bv: 39},
                                      {h: 35, c: 'bg-white', val: 36, b: 'bg-orange-400', bv: 72},
                                  ].map((col, i) => (
                                      <div key={i} className="flex flex-col gap-2 items-center h-full justify-end group cursor-pointer hover:opacity-80 transition-opacity">
@@ -2897,7 +2897,7 @@ const CheckBoxVariant = ({ activeSection }: { activeSection: string }) => {
 
                              <div className="flex items-center gap-6 mt-auto pt-4 border-t border-white/5 text-[10px] font-bold text-gray-500">
                                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-white" /> Resources</div>
-                                 <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-[#bef264]" /> Valid</div>
+                                 <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-lime-400" /> Valid</div>
                                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-orange-400" /> Invalid</div>
                                  <div className="ml-auto text-white">Total: 1,012</div>
                              </div>
@@ -2921,7 +2921,7 @@ const CheckBoxVariant = ({ activeSection }: { activeSection: string }) => {
                                      {/* Row 1 */}
                                      <div className="flex items-center">
                                          <span className="w-12 text-[10px] font-bold text-gray-500 shrink-0">30.09</span>
-                                         <div className="ml-4 w-40 h-8 bg-[#bef264] rounded-full flex items-center px-2 justify-between cursor-pointer hover:scale-105 transition-transform text-black">
+                                         <div className="ml-4 w-40 h-8 bg-lime-400 rounded-full flex items-center px-2 justify-between cursor-pointer hover:scale-105 transition-transform text-black">
                                              <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center"><Zap className="w-3 h-3 text-lime-600" /></div>
                                              <span className="text-[9px] font-bold mr-2">16</span>
                                          </div>
@@ -2949,11 +2949,11 @@ const CheckBoxVariant = ({ activeSection }: { activeSection: string }) => {
                                       {/* Row 4 */}
                                      <div className="flex items-center pt-8">
                                          <span className="w-12 text-[10px] font-bold text-gray-500 shrink-0">25.09</span>
-                                         <div className="ml-24 w-56 h-8 bg-[#bef264] rounded-full flex items-center px-2 justify-between cursor-pointer hover:scale-105 transition-transform text-black">
+                                         <div className="ml-24 w-56 h-8 bg-lime-400 rounded-full flex items-center px-2 justify-between cursor-pointer hover:scale-105 transition-transform text-black">
                                               <div className="flex -space-x-2 pl-1">
-                                                 <Avatar size="sm" src="https://api.dicebear.com/7.x/avataaars/svg?seed=C" className="w-6 h-6 border border-[#bef264] bg-white ring-1 ring-black" />
-                                                 <Avatar size="sm" src="https://api.dicebear.com/7.x/avataaars/svg?seed=D" className="w-6 h-6 border border-[#bef264] bg-white ring-1 ring-black" />
-                                                  <Avatar size="sm" src="https://api.dicebear.com/7.x/avataaars/svg?seed=E" className="w-6 h-6 border border-[#bef264] bg-white ring-1 ring-black" />
+                                                 <Avatar size="sm" src="https://api.dicebear.com/7.x/avataaars/svg?seed=C" className="w-6 h-6 border border-lime-400 bg-white ring-1 ring-black" />
+                                                 <Avatar size="sm" src="https://api.dicebear.com/7.x/avataaars/svg?seed=D" className="w-6 h-6 border border-lime-400 bg-white ring-1 ring-black" />
+                                                  <Avatar size="sm" src="https://api.dicebear.com/7.x/avataaars/svg?seed=E" className="w-6 h-6 border border-lime-400 bg-white ring-1 ring-black" />
                                               </div>
                                              <span className="text-[9px] font-bold mr-2">19</span>
                                          </div>
@@ -2966,7 +2966,7 @@ const CheckBoxVariant = ({ activeSection }: { activeSection: string }) => {
                              </div>
 
                               <div className="flex items-center gap-6 pt-4 text-[10px] font-bold text-gray-500">
-                                 <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-[#bef264]" /> Customer</div>
+                                 <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-lime-400" /> Customer</div>
                                  <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full border border-orange-400" /> Product</div>
                                  <div className="ml-auto text-white">Total: 284</div>
                              </div>

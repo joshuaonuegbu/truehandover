@@ -135,11 +135,11 @@ export const TabButton: React.FC<TabButtonProps> = ({
     text-zinc-900 dark:text-white
     bg-white dark:bg-white/[0.08]
     ring-1 ring-zinc-200/80 dark:ring-white/10
-    shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_24px_rgba(190,242,100,0.06)]
+    shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_24px_rgba(163, 230, 53,0.06)]
   `;
 
   const iconClasses = isActive
-    ? 'text-[#65a30d] dark:text-[#bef264] scale-105 transition-transform duration-300'
+    ? 'text-[#a3e635] dark:text-lime-400 scale-105 transition-transform duration-300'
     : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors duration-200';
 
   const textWeightClasses = isActive ? 'font-bold' : 'font-semibold';
@@ -165,7 +165,7 @@ export const TabButton: React.FC<TabButtonProps> = ({
         {label}
       </span>
       {isActive && (
-        <span className="absolute bottom-1 w-1 h-1 rounded-full bg-[#65a30d] dark:bg-[#bef264] shadow-[0_0_8px_rgba(190,242,100,0.8)] animate-pulse" />
+        <span className="absolute bottom-1 w-1 h-1 rounded-full bg-lime-400 dark:bg-[#bef264] shadow-[0_0_8px_rgba(163, 230, 53,0.8)] animate-pulse" />
       )}
     </button>
   );
