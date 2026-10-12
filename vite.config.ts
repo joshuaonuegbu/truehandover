@@ -43,6 +43,8 @@ function redirectLegacyAppPath(): Plugin {
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
+      // GitHub Pages serves this project at /truehandover/.
+      base: '/truehandover/',
       server: {
         port: 3000,
         host: '0.0.0.0',
@@ -53,18 +55,15 @@ export default defineConfig(({ mode }) => {
         tailwindcss(),
         react(),
         VitePWA({
-          registerType: 'autoUpdate',   // push updates automatically so UI edits propagate without manual prompt
+          registerType: 'autoUpdate',
           injectRegister: 'auto',
           workbox: {
             cleanupOutdatedCaches: true,
-            // Pre-cache every JS/CSS chunk that Vite emits
             globPatterns: ['**/*.{js,css,html,svg,png,ico,woff,woff2}'],
-            // Don't let the SW intercept Supabase or Stripe API calls
             navigateFallback: 'index.html',
             navigateFallbackDenylist: [/^\/api\//, /^\/rest\//, /^\/auth\//],
             runtimeCaching: [
               {
-                // SWR ensures cached assets render fast while pulling fresh chunks in the background.
                 urlPattern: ({ request }) =>
                   request.destination === 'script' ||
                   request.destination === 'style' ||
@@ -72,11 +71,10 @@ export default defineConfig(({ mode }) => {
                 handler: 'StaleWhileRevalidate',
                 options: {
                   cacheName: 'static-assets',
-                  expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 }, // 30 days
+                  expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 },
                 },
               },
               {
-                // Stale-while-revalidate for images
                 urlPattern: ({ request }) => request.destination === 'image',
                 handler: 'StaleWhileRevalidate',
                 options: {
@@ -87,7 +85,7 @@ export default defineConfig(({ mode }) => {
             ],
           },
           devOptions: {
-            enabled: false,             // don't run SW in dev (avoids stale cache confusion)
+            enabled: false,
           },
           manifest: {
             name: 'Sendational',
@@ -97,10 +95,10 @@ export default defineConfig(({ mode }) => {
             background_color: '#0f0f15',
             display: 'standalone',
             orientation: 'portrait-primary',
-            scope: '/',
-            start_url: '/workspace',
+            scope: '/truehandover/',
+            start_url: '/truehandover/workspace',
             icons: [
-              { src: '/icon.svg?v=heartmark-20260324', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
+              { src: '/truehandover/icon.svg?v=heartmark-20260324', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
             ],
           },
         }),
